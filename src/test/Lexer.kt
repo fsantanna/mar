@@ -1,8 +1,11 @@
 package test
 
 import mar.*
+import org.junit.FixMethodOrder
 import org.junit.Test
+import org.junit.runners.MethodSorters
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class Lexer {
     
     // SYMBOL

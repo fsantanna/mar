@@ -1,8 +1,11 @@
 package mar
 
 import java.io.File
+import java.io.Reader
 import java.util.*
 
+val VALGRIND = ""
+val THROW = false
 var DUMP = true
 val PATH = File(File(System.getProperty("java.class.path")).absolutePath).parent
 
@@ -83,7 +86,7 @@ object G {
     var tk0: Tk? = null
     var tk1: Tk? = null
 
-    var outer: Stmt.Do? = null
+    var outer: Expr? = null
     var ns: MutableMap<Node,Stmt> = mutableMapOf()
     var ups: MutableMap<Node,Node> = mutableMapOf()
     var tags: MutableMap<String,Tk.Type> = mutableMapOf()
@@ -108,4 +111,80 @@ object G {
         nonlocs.clear()
         mems.clear()
     }
+}
+
+fun exec (hold: Boolean, cmds: List<String>): Pair<Boolean,String> {
+    //System.err.println(cmds.joinToString(" "))
+    val (x,y) = if (hold) {
+        Pair(ProcessBuilder.Redirect.PIPE, true)
+    } else {
+        Pair(ProcessBuilder.Redirect.INHERIT, false)
+    }
+    val p = ProcessBuilder(cmds)
+        .redirectOutput(x)
+        .redirectError(x)
+        .redirectErrorStream(y)
+        .start()
+    val ret = p.waitFor()
+    val str = p.inputStream.bufferedReader().readText()
+    return Pair(ret==0, str)
+}
+fun exec (hold: Boolean, cmd: String): Pair<Boolean,String> {
+    return exec(hold, cmd.split(' '))
+}
+
+fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String, Int, Int>, Reader>>, out: String, args: List<String>): String {
+    if (verbose) {
+        System.err.println("... parsing ...")
+    }
+    G.reset()
+    G.tks = inps.lexer()
+    parser_lexer()
+    G.outer = try {
+        parser_expr()
+    } catch (e: Throwable) {
+        if (THROW) {
+            throw e
+        }
+        return e.message!! + "\n"
+    }
+    //println(es.to_str())
+    val c = try {
+        if (verbose) {
+            System.err.println("... mar -> c ...")
+        }
+        coder_main()
+    } catch (e: Throwable) {
+        if (THROW) {
+            throw e
+        }
+        return e.message!! + "\n"
+    }
+    if (verbose) {
+        System.err.println("... c -> exe ...")
+    }
+    File("$out.c").writeText(c)
+    val cmd = listOf("gcc", "-Werror", "$out.c", "-l", "m", "-o", "$out.exe") + args
+    if (verbose) {
+        System.err.println("\t" + cmd.joinToString(" "))
+    }
+    val (ok2, out2) = exec(true, cmd)
+    if (!ok2) {
+        return out2
+    }
+    if (verbose) {
+        System.err.println("... executing ...")
+    }
+    val (_, out3) = exec(tst, "$VALGRIND./$out.exe")
+    //println(out3)
+    return out3
+}
+
+fun test (inp: String, pre: Boolean=false): String {
+    //println(inp)
+    val prelude = "build/prelude.mar"
+    val inps = listOf(Pair(Triple("anon",1,1), inp.reader())) + if (!pre) emptyList() else {
+        listOf(Pair(Triple(prelude,1,1), File(prelude).reader()))
+    }
+    return all(true, false, inps, "out", emptyList())
 }
