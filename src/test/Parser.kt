@@ -10,58 +10,62 @@ class Parser {
     fun aa_01_var () {
         G.tks = (" x ").lexer()
         parser_lexer()
-        val e = parser_expr_prim()
+        val e = parser_expr_2_prim()
         assert(e is Expr.Acc && e.tk.str == "x")
     }
     @Test
     fun aa_02_var_err () {
         G.tks = (" { ").lexer()
         parser_lexer()
-        assert(trap { parser_expr_prim() } == "anon : (lin 1, col 2) : expected expression : have \"{\"")
+        assert(trap { parser_expr_2_prim() } == "anon : (lin 1, col 2) : expected expression : have \"{\"")
     }
     @Test
     fun aa_03_var_err () {
         G.tks = ("  ").lexer()
         parser_lexer()
-        assert(trap { parser_expr_prim() } == "anon : (lin 1, col 3) : expected expression : have end of file")
+        assert(trap { parser_expr_2_prim() } == "anon : (lin 1, col 3) : expected expression : have end of file")
     }
     @Test
     fun aa_04_evt () {
         G.tks = (" evt ").lexer()
         parser_lexer()
-        val e = parser_expr_prim()
+        val e = parser_expr_2_prim()
         assert(e is Expr.Acc && e.tk.str == "evt")
     }
     @Test
     fun aa_05_err () {
         G.tks = (" err ").lexer()
         parser_lexer()
-        val e = parser_expr_prim()
+        val e = parser_expr_2_prim()
         assert(e is Expr.Acc && e.tk.str == "err")
     }
-    /*
 
     // PARENS
 
     @Test
     fun bb_01_expr_parens() {
-        val l = lexer(" ( a ) ")
-        val parser = Parser(l)
-        val e = parser_expr_prim()
+        G.tks = (" ( a ) ").lexer()
+        parser_lexer()
+        val e = parser_expr_2_prim()
         assert(e is Expr.Acc && e.tk.str == "a")
     }
     @Test
     fun bb_02_expr_parens_err() {
-        val l = lexer(" ( a  ")
-        val parser = Parser(l)
-        assert(trap { parser_expr_prim() } == "anon : (lin 1, col 7) : expected \")\" : have end of file")
+        G.tks = (" ( a  ").lexer()
+        parser_lexer()
+        assert(trap { parser_expr_2_prim() } == "anon : (lin 1, col 7) : expected \")\" : have end of file")
     }
+
+    // BINARY
+
     @Test
-    fun bb_03_op_prec_err() {
-        val l = lexer("println(2 * 3 - 1)")
-        val parser = Parser(l)
-        assert(trap { parser_expr() } == "anon : (lin 1, col 15) : binary operation error : expected surrounding parentheses")
+    fun cc_01_bin_err() {
+        G.tks = ("2 * 3 - 1").lexer()
+        parser_lexer()
+        //parser_expr_1_bin()
+        assert(trap { parser_expr_1_bin() } == "anon : (lin 1, col 7) : binary operation error : expected surrounding parentheses")
     }
+    /*
     @Test
     fun bb_04_op_prec_ok() {
         val l = lexer("println(2 * (3 - 1))")

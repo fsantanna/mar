@@ -71,7 +71,7 @@ fun parser_lexer () {
     G.tk1 = G.tks!!.next()
 }
 
-fun parser_expr_prim (): Expr {
+fun parser_expr_2_prim (): Expr {
     return when {
         accept_enu("Nat")  -> Expr.Nat(G.tk0 as Tk.Nat)
         accept_enu("Var")  -> Expr.Acc(G.tk0 as Tk.Var)
@@ -79,9 +79,24 @@ fun parser_expr_prim (): Expr {
         accept_fix("true")  -> Expr.Bool(G.tk0 as Tk.Fix)
         accept_enu("Chr")  -> Expr.Char(G.tk0 as Tk.Chr)
         accept_enu("Num")  -> Expr.Num(G.tk0 as Tk.Num)
-        else -> {
-            err_expected(G.tk1!!, "expression")
-            error("unreachable")
-        }
+        accept_fix("(")     -> parser_expr().let { accept_fix_err(")") ; it }
+        else                    -> err_expected(G.tk1!!, "expression")
     }
+}
+
+fun parser_expr_1_bin (xop: String? = null, xe1: Expr? = null): Expr {
+    val e1 = if (xe1 !== null) xe1 else parser_expr_2_prim()
+    if (!accept_enu("Op")) {
+        return e1
+    }
+    val op = G.tk0!! as Tk.Op
+    if (xop!==null && xop!=op.str) {
+        err(op, "binary operation error : expected surrounding parentheses")
+    }
+    val e2 = parser_expr_2_prim()
+    return parser_expr_1_bin(op.str, Expr.Op(op, listOf(e1,e2)))
+}
+
+fun parser_expr (): Expr {
+    return parser_expr_1_bin()
 }

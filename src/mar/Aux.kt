@@ -40,7 +40,7 @@ fun err (pos: Pos, str: String): Nothing {
 fun err (tk: Tk, str: String): Nothing {
     err(tk.pos, str)
 }
-fun err_expected (tk: Tk, str: String) {
+fun err_expected (tk: Tk, str: String): Nothing {
     val have = when {
         (tk is Tk.Eof) -> "end of file"
         else -> '"' + tk.str + '"'
