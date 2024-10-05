@@ -37,6 +37,19 @@ fun Expr.to_str (pre: Boolean = false): String {
     }
 }
 
-fun List<Expr>.to_str (pre: Boolean=false): String {
+fun Var_Type.to_str (pre: Boolean = false): String {
+    val (id,tp) = this
+    return id.fpre(pre) + id.str + ": " + tp.fpre(pre) + tp.str
+}
+
+fun Stmt.to_str (pre: Boolean = false): String {
+    return when (this) {
+        is Stmt.Dcl -> "var " + this.var_type.to_str(pre)
+        is Stmt.Set -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
+        else -> TODO()
+    }
+}
+
+fun List<Stmt>.to_str (pre: Boolean=false): String {
     return this.map { it.to_str(pre) }.joinToString(";\n") + ";\n"
 }

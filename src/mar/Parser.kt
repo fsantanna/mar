@@ -39,12 +39,11 @@ fun check_enu (enu: String): Boolean {
 fun check_enu_err (str: String): Boolean {
     val ret = check_enu(str)
     val err = when (str) {
-        "Eof" -> "end of file"
-        "Fix" -> "TODO"
-        "Id"  -> "identifier"
-        "Tag" -> "tag"
-        "Num" -> "number"
-        "Nat" -> "native"
+        "Eof"  -> "end of file"
+        "Var"  -> "variable"
+        "Type" -> "type"
+        "Num"  -> "number"
+        "Nat"  -> "native"
         else   -> TODO(str)
     }
 
@@ -99,4 +98,46 @@ fun parser_expr_1_bin (xop: String? = null, xe1: Expr? = null): Expr {
 
 fun parser_expr (): Expr {
     return parser_expr_1_bin()
+}
+
+fun parser_var_type (): Var_Type {
+    accept_enu_err("Var")
+    val id = G.tk0 as Tk.Var
+    accept_fix_err(":")
+    accept_enu_err("Type")
+    val tp = G.tk0 as Tk.Type
+    return Pair(id, tp)
+}
+
+fun parser_stmt (): Stmt {
+    return when {
+        accept_fix("var") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            val id_tp = parser_var_type()
+            Stmt.Dcl(tk0, id_tp)
+        }
+        accept_fix("set") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            val dst = parser_expr()
+            accept_fix_err("=")
+            val src = parser_expr()
+            if (!dst.is_lval()) {
+                err(tk0, "set error : expected assignable destination")
+            }
+            Stmt.Set(tk0, dst, src)
+        }
+        accept_enu("Nat") -> Stmt.Nat(G.tk0 as Tk.Nat)
+        else -> err_expected(G.tk1!!, "statement")
+    }
+}
+
+fun parser_stmts (eof: Boolean = false): List<Stmt> {
+    val ret = mutableListOf<Stmt>()
+    while (!check_fix("}") && !check_enu("Eof")) {
+        ret.add(parser_stmt())
+    }
+    if (eof) {
+        check_enu_err("Eof")
+    }
+    return ret
 }

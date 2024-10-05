@@ -76,6 +76,23 @@ class Parser {
         assert(e.to_str() == "(2 * (3 - 1))")
     }
 
+    // DCL / SET
+
+    @Test
+    fun dd_01_dcl () {
+        G.tks = ("var x: Int").lexer()
+        parser_lexer()
+        val e = parser_stmt()
+        assert(e.to_str() == "var x: Int")
+    }
+    @Test
+    fun dd_02_set () {
+        G.tks = ("set x = 10").lexer()
+        parser_lexer()
+        val e = parser_stmt()
+        assert(e.to_str() == "set x = 10")
+    }
+
     // NUM / NIL / BOOL
 /*
     @Test
