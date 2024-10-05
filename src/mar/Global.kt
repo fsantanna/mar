@@ -3,6 +3,7 @@ package mar
 import java.io.File
 import java.util.*
 
+var DUMP = true
 val PATH = File(File(System.getProperty("java.class.path")).absolutePath).parent
 
 val OPERATORS = Pair (
@@ -44,7 +45,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
     data class Char (val tk_: Tk.Chr): Expr(G.N++, tk_)
     data class Num  (val tk_: Tk.Num): Expr(G.N++, tk_)
 
-    data class Op   (val tk_: Tk.Op, val es: List<Expr>): Expr(G.N++, tk_)
+    data class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)
 }
 
 sealed class Stmt (var n: Int, val tk: Tk) {

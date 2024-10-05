@@ -94,7 +94,7 @@ fun parser_expr_1_bin (xop: String? = null, xe1: Expr? = null): Expr {
         err(op, "binary operation error : expected surrounding parentheses")
     }
     val e2 = parser_expr_2_prim()
-    return parser_expr_1_bin(op.str, Expr.Op(op, listOf(e1,e2)))
+    return parser_expr_1_bin(op.str, Expr.Bin(op, e1, e2))
 }
 
 fun parser_expr (): Expr {

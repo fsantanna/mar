@@ -65,17 +65,16 @@ class Parser {
         //parser_expr_1_bin()
         assert(trap { parser_expr_1_bin() } == "anon : (lin 1, col 7) : binary operation error : expected surrounding parentheses")
     }
-    /*
     @Test
-    fun bb_04_op_prec_ok() {
-        val l = lexer("println(2 * (3 - 1))")
-        val parser = Parser(l)
-        val e = parser_expr()
-        assert(e.to_str() == "println({{*}}(2,{{-}}(3,1)))")
+    fun cc_02_bin() {
+        G.tks = ("2 * (3 - 1)").lexer()
+        parser_lexer()
+        val e = parser_expr_1_bin()
+        assert(e.to_str() == "(2 * (3 - 1))")
     }
 
     // NUM / NIL / BOOL
-
+/*
     @Test
     fun cc_01_num() {
         val l = lexer(" 1.5F ")
