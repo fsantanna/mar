@@ -6,6 +6,7 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Dcl   -> this.var_type.let { (id,tp) -> tp.str + " " + id.str + ";" }
         is Stmt.Set   -> this.dst.to_str(pre) + " = " + this.src.to_str(pre) + ";"
         is Stmt.Nat   -> this.tk.str
+        is Stmt.Call  -> this.call.to_str(pre) + ";"
         else          -> TODO()
     }
 }

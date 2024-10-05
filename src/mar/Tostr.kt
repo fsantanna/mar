@@ -27,6 +27,7 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Bool   -> this.tk.str
         is Expr.Char   -> this.tk.str
         is Expr.Num    -> this.tk.str
+        is Expr.Null   -> this.tk.str
         is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk.str + " " + this.e2.to_str(pre) + ")"
         is Expr.Call   -> this.f.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
     }.let {

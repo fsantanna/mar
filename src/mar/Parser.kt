@@ -102,6 +102,7 @@ fun parser_expr_3_prim (): Expr {
         accept_fix("true")  -> Expr.Bool(G.tk0 as Tk.Fix)
         accept_enu("Chr")  -> Expr.Char(G.tk0 as Tk.Chr)
         accept_enu("Num")  -> Expr.Num(G.tk0 as Tk.Num)
+        accept_fix("null")  -> Expr.Null(G.tk0 as Tk.Fix)
         accept_fix("(")     -> parser_expr().let { accept_fix_err(")") ; it }
         else                    -> err_expected(G.tk1!!, "expression")
     }
@@ -116,67 +117,6 @@ fun parser_expr_2_suf (xe: Expr? = null): Expr {
 
     return parser_expr_2_suf(
         when (G.tk0!!.str) {
-            /*
-            "[" -> {
-                // PPP
-                val xop = (CEU>=99 && (this.acceptFix("=") || this.acceptOp("+") || this.acceptOp("-")))
-                if (!xop) {
-                    val idx = this.expr()
-                    this.acceptFix_err("]")
-                    Expr.Index(e.tk, e, idx)
-                } else {
-                    val ret = when (this.tk0.str) {
-                        "=" -> this.nest("""
-                                ${e.to_str(true)} thus { \ceu_ppp_${G.N} =>
-                                    `/* = */`
-                                    ceu_ppp_${G.N}[#ceu_ppp_${G.N}-1]
-                                }
-                            """)
-                        "+" -> this.nest("""
-                                ${e.to_str(true)} thus { \ceu_ppp_${G.N} =>
-                                    `/* + */`
-                                    ceu_ppp_${G.N}[#ceu_ppp_${G.N}]
-                                }
-                            """)
-                        "-" -> this.nest("""
-                                ${e.to_str(true)} thus { \ceu_x_${G.N} =>
-                                    `/* - */`
-                                    ceu_x_${G.N}[#ceu_x_${G.N}-1] thus { \ceu_y_${G.N} =>
-                                        set ceu_x_${G.N}[#ceu_x_${G.N}-1] = nil
-                                        ceu_y_${G.N}
-                                    }
-                                }
-                            """)
-                        else -> error("impossible case")
-                    }
-                    this.acceptFix_err("]")
-                    ret
-                }
-            }
-            "." -> when {
-                (CEU>=99 && this.acceptFix("(")) -> {
-                    val nn = G.N++
-                    this.acceptEnu_err("Tag")
-                    val tag = this.tk0
-                    this.acceptFix_err(")")
-                    val acc = Expr.Acc(Tk.Id("ceu_cast_$nn", e.tk.pos.copy()))
-                    this.nest("""
-                            ${e.to_str(true)} thus { \ceu_cast_$nn ${tag.str} =>
-                                ${this.expr_4_suf(acc).to_str(true)}
-                            }
-                        """) //.let { println(it);it })
-                }
-                (CEU>=4 && this.acceptFix("pub")) -> Expr.Pub(e.tk, e)
-                this.acceptEnu("Fix") -> {
-                    if (!KEYWORDS.contains(this.tk0.str)) {
-                        err(this.tk0, "invalid field : unexpected \"${this.tk0.str}\"")
-                    }
-                    Expr.Index(e.tk, e, Expr.Tag(Tk.Tag(':' + this.tk0.str, this.tk0.pos.copy())))
-                }
-                this.acceptEnu_err("Id") -> Expr.Index(e.tk, e, Expr.Tag(Tk.Tag(':' + this.tk0.str, this.tk0.pos.copy())))
-                else -> error("impossible case")
-            }
-             */
             "(" -> {
                 val args = parser_list(",",")") { parser_expr() }
                 Expr.Call(e.tk, e, args)
@@ -230,7 +170,15 @@ fun parser_stmt (): Stmt {
             Stmt.Set(tk0, dst, src)
         }
         accept_enu("Nat") -> Stmt.Nat(G.tk0 as Tk.Nat)
-        else -> err_expected(G.tk1!!, "statement")
+        else -> {
+            val tk1 = G.tk1!!
+            val call = parser_expr_2_suf()
+            if (call is Expr.Call) {
+                Stmt.Call(call.tk, call)
+            } else {
+                err_expected(G.tk1!!, "statement")
+            }
+        }
     }
 }
 

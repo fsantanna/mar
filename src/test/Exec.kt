@@ -44,16 +44,21 @@ class Exec {
         assert(out == "11\n") { out }
     }
 
-    /*
-    // PRINT
+    // CALL / PRINT
 
     @Test
-    fun aa_00_print_err() {
+    fun aa_01_print() {
         val out = test("""
-            println(1,2)
+            ```
+            void print_int (int v) {
+                printf("%d\n", v);
+            }
+            ```
+            print_int(1)
         """)
-        assert(out == "1\t2\n") { out }
+        assert(out == "1\n") { out }
     }
+    /*
     @Test
     fun aa_01_print() {
         val out = test("""

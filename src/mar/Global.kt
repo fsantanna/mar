@@ -25,6 +25,7 @@ val KEYWORDS: SortedSet<String> = (
         "data", "do", "else",
         "false", "func'", "group", "if",
         "set", "true",
+        "null",
         "var",
     ).toSortedSet()
 )
@@ -48,6 +49,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
     data class Bool (val tk_: Tk.Fix): Expr(G.N++, tk_)
     data class Char (val tk_: Tk.Chr): Expr(G.N++, tk_)
     data class Num  (val tk_: Tk.Num): Expr(G.N++, tk_)
+    data class Null (val tk_: Tk.Fix): Expr(G.N++, tk_)
 
     data class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)
     data class Call (val tk_: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, tk_)
@@ -79,6 +81,7 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     data class Tasks   (val tk_: Tk.Fix, val max: Stmt): Stmt(G.N++, tk_)
 
     data class Nat     (val tk_: Tk.Nat): Stmt(G.N++, tk_)
+    data class Call    (val tk_: Tk, val call: Expr.Call): Stmt(G.N++, tk_)
 }
 
 typealias Node = Int
