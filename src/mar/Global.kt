@@ -26,7 +26,6 @@ val KEYWORDS: SortedSet<String> = (
         "false", "func'", "group", "if",
         "set", "true",
         "null",
-        "var",
     ).toSortedSet()
 )
 
@@ -56,29 +55,8 @@ sealed class Expr (var n: Int, val tk: Tk) {
 }
 
 sealed class Stmt (var n: Int, val tk: Tk) {
-    data class Proto   (val tk_: Tk.Fix, val nst: Boolean, val fake: Boolean, val tag: Tk.Type?, val pars: List<Stmt.Dcl>, val blk: Block): Stmt(G.N++, tk_)
-    data class Block   (val tk_: Tk, val es: List<Stmt>) : Stmt(G.N++, tk_)
-    data class Group   (val tk_: Tk.Fix, val es: List<Stmt>) : Stmt(G.N++, tk_)
-    data class Enclose (val tk_: Tk.Fix, val tag: Tk.Type, val es: List<Stmt>): Stmt(G.N++, tk_)
-    data class Escape  (val tk_: Tk.Fix, val tag: Tk.Type, val e: Stmt?): Stmt(G.N++, tk_)
-    data class Dcl     (val tk_: Tk.Fix, val var_type: Var_Type):  Stmt(G.N++, tk_)
+    data class Block   (val tk_: Tk, val vs: List<Var_Type>, val ss: List<Stmt>) : Stmt(G.N++, tk_)
     data class Set     (val tk_: Tk.Fix, val dst: Expr, val src: Expr): Stmt(G.N++, tk_)
-    data class If      (val tk_: Tk.Fix, val cnd: Stmt, val t: Stmt, val f: Stmt): Stmt(G.N++, tk_)
-    data class Loop    (val tk_: Tk.Fix, val blk: Stmt): Stmt(G.N++, tk_)
-    data class Data    (val tk_: Tk.Type, val ids: List<Var_Type>): Stmt(G.N++, tk_)
-    data class Drop    (val tk_: Tk.Fix, val e: Stmt): Stmt(G.N++, tk_)
-
-    data class Catch   (val tk_: Tk.Fix, val tag: Tk.Type?, val blk: Stmt.Block): Stmt(G.N++, tk_)
-    data class Defer   (val tk_: Tk.Fix, val blk: Stmt.Block): Stmt(G.N++, tk_)
-
-    data class Yield   (val tk_: Tk.Fix, val e: Stmt): Stmt(G.N++, tk_)
-    data class Resume  (val tk_: Tk.Fix, val co: Stmt, val args: List<Stmt>): Stmt(G.N++, tk_)
-
-    data class Spawn   (val tk_: Tk.Fix, val tsks: Stmt?, val tsk: Stmt, val args: List<Stmt>): Stmt(G.N++, tk_)
-    data class Delay   (val tk_: Tk.Fix): Stmt(G.N++, tk_)
-    data class Pub     (val tk_: Tk, val tsk: Stmt?): Stmt(G.N++, tk_)
-    data class Toggle  (val tk_: Tk.Fix, val tsk: Stmt, val on: Stmt): Stmt(G.N++, tk_)
-    data class Tasks   (val tk_: Tk.Fix, val max: Stmt): Stmt(G.N++, tk_)
 
     data class Nat     (val tk_: Tk.Nat): Stmt(G.N++, tk_)
     data class Call    (val tk_: Tk, val call: Expr.Call): Stmt(G.N++, tk_)
@@ -149,15 +127,18 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String, Int, Int
     if (verbose) {
         System.err.println("... parsing ...")
     }
-    val ss = try {
-        parser_stmts(true)
+    G.outer = try {
+        check_fix("do")
+        val blk = parser_stmt() as Stmt.Block
+        check_enu_err("Eof")
+        blk
     } catch (e: Throwable) {
         if (THROW) {
             throw e
         }
         return e.message!! + "\n"
     }
-    G.outer = Stmt.Block(tk0, ss)
+    //check_vars()
 
     if (verbose) {
         System.err.println("... mar -> c ...")

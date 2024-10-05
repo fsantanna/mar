@@ -7,9 +7,10 @@ import org.junit.runners.MethodSorters
 
 fun test_int (src: String): String {
     return test("""
-        var v: Int
-        set v = $src
-        `printf("%d\n", v);`
+        do [v: Int] {
+            set v = $src
+            `printf("%d\n", v);`
+        }
     """)
 }
 
@@ -37,9 +38,10 @@ class Exec {
     @Test
     fun bb_01_nat_printf() {
         val out = test("""
-            var x: Int
-            set x = 1 + 10
-            `printf("%d\n", x);`
+            do [x: Int] {
+                set x = 1 + 10
+                `printf("%d\n", x);`
+            }
         """)
         assert(out == "11\n") { out }
     }
@@ -47,199 +49,43 @@ class Exec {
     // CALL / PRINT
 
     @Test
-    fun aa_01_print() {
+    fun cc_01_print() {
         val out = test("""
-            ```
-            void print_int (int v) {
-                printf("%d\n", v);
+            do [] {
+                ```
+                void print_int (int v) {
+                    printf("%d\n", v);
+                }
+                ```
+                print_int(1)
             }
-            ```
-            print_int(1)
         """)
         assert(out == "1\n") { out }
     }
-    /*
+
+    // TYPE / CHECK
+
     @Test
-    fun aa_01_print() {
+    fun dd_01_type() {
         val out = test("""
-            println(10)
-        """)
-        assert(out == "10\n") { out }
-    }
-    @Test
-    fun aa_02_print() {
-        val out = test("""
-            print([10])
-            println(20)
-        """)
-        assert(out == "[10]20\n") { out }
-    }
-    @Test
-    fun aa_03_print() {
-        val out = test(
-            """
-            println(func' () { nil })
-        """
-        )
-        assert(out.contains("func: 0x")) { out }
-    }
-    @Test
-    fun aa_04_print() {
-        val out = test(
-            """
-            println([[],[1,2,3]])
-            println(func' () { nil })
-        """
-        )
-        assert(out.contains("[[],[1,2,3]]\nfunc: 0x")) { out }
-    }
-    @Test
-    fun aa_05_print() {
-        val out = test("""
-            var f
-            set f = (func' () { nil })
-            do {
-                var g
-                set g = f
-                ;;nil
+            do [x: Int] {
+                set x = true
             }
-            println(f)
         """)
-        assert(out.contains("func: 0x")) { out }
-    }
-    @Test
-    fun aa_06_print_err() {
-        val out = test(
-            """
-            println(1)
-        """
-        )
-        assert(out == "1\n") { out }
-    }
-    @Test
-    fun aa_07_print_err() {
-        val out = test(
-            """
-            print(1)
-            print()
-            print(2)
-            println()
-            println(3)
-        """
-        )
-        assert(out == "12\n3\n") { out }
-    }
-    @Test
-    fun aa_08_print_err() {
-        val out = test("""
-            println()
-        """)
-        assert(out == "\n") { out }
-    }
-    @Test
-    fun aa_09_print() {
-        val out = test("print(nil)")
-        assert(out == "nil") { out }
-    }
-    @Test
-    fun aa_10_print() {
-        val out = test("print(true)")
-        assert(out == "true") { out }
-    }
-    @Test
-    fun aa_11_print() {
-        val out = test("println(false)")
-        assert(out == "false\n") { out }
+        assert(out == "ERROR\n") { out }
     }
 
     // VAR
 
+    /*
     @Test
     fun bb_01_var() {
         val out = test("""
-            var v
-            print(v)
-        """)
-        assert(out == "nil") { out }
-    }
-    @Test
-    fun bb_02_var() {
-        val out = test(
-            """
-            var vvv = 1
-            print(vvv)
-        """
-        )
-        assert(out == "1") { out }
-    }
-    @Test
-    fun bb_03_var() {
-        val out = test(
-            """
-            var this-is-a-var = 1
-            print(this-is-a-var)
-        """
-        )
-        assert(out == "1") { out }
-    }
-    @Test
-    fun bb_04_var_kebab_amb() {
-        val out = test(
-            """
-            var x = 10
-            var y = 5
-            println(x-y)
-        """
-        )
-        //assert(out == "anon : (lin 4, col 21) : access error : \"x-y\" is ambiguous with \"x\"") { out }
-        assert(out == "anon : (lin 4, col 21) : access error : variable \"x-y\" is not declared\n") { out }
-    }
-    @Test
-    fun bb_05_var_kebab_amb() {
-        val out = test(
-            """
-            var x = 10
-            val y-z = 5
-            println(h-y-z)
-        """
-        )
-        //assert(out == "anon : (lin 4, col 21) : access error : \"h-y-z\" is ambiguous with \"y-z\"") { out }
-        assert(out == "anon : (lin 4, col 21) : access error : variable \"h-y-z\" is not declared\n") { out }
-    }
-    @Test
-    fun bb_06_val() {
-        val out = test(
-            """
-            val v
+            var v: U8
             set v = 10
-        """
-        )
-        assert(out == "anon : (lin 3, col 13) : set error : destination is immutable\n") { out }
-    }
-    @Test
-    fun bb_07_und() {
-        val out = test(
-            """
-            val _ = 10
-            println(_)
-        """
-        )
+            `printf("%d\n", v);`
+        """)
         assert(out == "10\n") { out }
-    }
-    @Test
-    fun bb_08_und() {
-        val out = test(
-            """
-            do {
-                val _ = println(10)
-            }
-            do {
-                val _ = println(20)
-            }
-            println(:ok)
-        """
-        )
-        assert(out == "10\n20\n:ok\n") { out }
     }
     @Test
     fun bb_09_nested_var() {

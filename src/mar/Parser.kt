@@ -154,10 +154,17 @@ fun parser_var_type (): Var_Type {
 
 fun parser_stmt (): Stmt {
     return when {
-        accept_fix("var") -> {
+        accept_fix("do") -> {
             val tk0 = G.tk0 as Tk.Fix
-            val id_tp = parser_var_type()
-            Stmt.Dcl(tk0, id_tp)
+            accept_fix_err("[")
+            val vs = parser_list(",","]") {
+                parser_var_type()
+            }
+            accept_fix_err("{")
+            val ss = parser_list(null, "}") {
+                parser_stmt()
+            }
+            Stmt.Block(tk0, vs, ss)
         }
         accept_fix("set") -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -180,15 +187,4 @@ fun parser_stmt (): Stmt {
             }
         }
     }
-}
-
-fun parser_stmts (eof: Boolean = false): List<Stmt> {
-    val ret = mutableListOf<Stmt>()
-    while (!check_fix("}") && !check_enu("Eof")) {
-        ret.add(parser_stmt())
-    }
-    if (eof) {
-        check_enu_err("Eof")
-    }
-    return ret
 }

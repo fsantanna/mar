@@ -46,12 +46,9 @@ fun Var_Type.to_str (pre: Boolean = false): String {
 
 fun Stmt.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Stmt.Dcl -> "var " + this.var_type.to_str(pre)
+        is Stmt.Block -> "do [" + (this.vs.map { (id,tp) -> id.str + ": " + tp.str }.joinToString(",")) + "] {\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
         is Stmt.Set -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
+        is Stmt.Call -> this.call.to_str(pre)
         else -> TODO()
     }
-}
-
-fun List<Stmt>.to_str (pre: Boolean=false): String {
-    return this.map { it.to_str(pre) }.joinToString(";\n") + ";\n"
 }
