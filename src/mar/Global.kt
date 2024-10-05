@@ -8,6 +8,7 @@ val VALGRIND = ""
 val THROW = false
 var DUMP = true
 val PATH = File(File(System.getProperty("java.class.path")).absolutePath).parent
+val D = "\$"
 
 val OPERATORS = Pair (
     setOf('+', '-', '*', '/', '%', '>', '<', '=', '|', '&'),
@@ -49,6 +50,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
     data class Num  (val tk_: Tk.Num): Expr(G.N++, tk_)
 
     data class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)
+    data class Call (val tk_: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, tk_)
 }
 
 sealed class Stmt (var n: Int, val tk: Tk) {

@@ -43,6 +43,12 @@ class Lexer {
         assert(tks.next() is Tk.Eof)
         assert(!tks.hasNext())
     }
+    @Test
+    fun bb_02_type() {
+        val tks = ("Int").lexer()
+        assert(tks.next().let { it is Tk.Type && it.str == "Int" })
+        assert(tks.next() is Tk.Eof)
+    }
 
     // COMMENT
     
@@ -145,13 +151,58 @@ class Lexer {
         assert(tks.next().let { it is Tk.Chr && it.str == "'\\\\'" })
         assert(tks.next().let { it is Tk.Eof && it.pos.lin==1 && it.pos.col==19 })
     }
+    @Test
+    fun ee_02_chr_err() {
+        val tks = "'x".lexer()
+        assert(trap { tks.next() } == "anon : (lin 1, col 3) : char error : expected '")
+    }
+    @Test
+    fun ee_03_chr_err() {
+        val tks = "'\\'".lexer()
+        assert(trap { tks.next() } == "anon : (lin 1, col 4) : char error : expected '")
+    }
+    @Test
+    fun ee_04_chr_err() {
+        val tks = "'\\n".lexer()
+        assert(trap { tks.next() } == "anon : (lin 1, col 4) : char error : expected '")
+    }
+    @Test
+    fun ee_05_chr_err() {
+        val tks = "'abc'".lexer()
+        assert(trap { tks.next() } == "anon : (lin 1, col 4) : char error : expected '")
+    }
+    @Test
+    fun ee_06_chr() {
+        val tks = "\"\\\\\"".lexer()
+        assert(tks.next().let { it.str=="#["})
+        println(tks.next().let { it.str=="\\" })
+        assert(tks.next().let { it.str=="]"})
+    }
+    @Test
+    fun ee_07_chr() {
+        val tks = "\"\\\"".lexer()
+        assert(trap { tks.next() } == "anon : (lin 1, col 1) : string error : unterminated \"")
+    }
+    @Test
+    fun ee_08_chr() {
+        val tks = "'\\n'".lexer()
+        assert(tks.next().str == "'\\n'")
+    }
 
-    // TYPE
+    // NAT
 
     @Test
-    fun ff_01_type() {
-        val tks = ("Int").lexer()
-        assert(tks.next().let { it is Tk.Type && it.str == "Int" })
-        assert(tks.next() is Tk.Eof)
+    fun ff_01_native() {
+        val tks = """
+            ` abc `
+            `{ijk}`
+            ` {i${D}jk} `
+            `  {ijk} 
+        """.trimIndent().lexer()
+        assert(tks.next().let { it is Tk.Nat && it.pos.lin==1 && it.pos.col==1 && it.str==" abc " })
+        assert(tks.next().let { it is Tk.Nat && it.pos.lin==2 && it.pos.col==1 && it.str=="{ijk}" })
+        assert(tks.next().let { it is Tk.Nat && it.pos.lin==3 && it.pos.col==1 && it.str==" {i\$jk} " })
+        //println(tks.next())
+        assert(trap { tks.next() } == "anon : (lin 4, col 10) : native error : expected \"`\"")
     }
 }
