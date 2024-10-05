@@ -37,6 +37,14 @@ sealed class Tk (val str: String, val pos: Pos) {
     data class Nat (val str_: String, val pos_: Pos, val tag: String?, val n_: Int=G.N++): Tk(str_, pos_)
 }
 
+sealed class Expr (var n: Int, val tk: Tk) {
+    data class Nat  (val tk_: Tk.Nat): Expr(G.N++, tk_)
+    data class Acc  (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, tk_)
+    data class Bool (val tk_: Tk.Fix): Expr(G.N++, tk_)
+    data class Char (val tk_: Tk.Chr): Expr(G.N++, tk_)
+    data class Num  (val tk_: Tk.Num): Expr(G.N++, tk_)
+}
+
 sealed class Stmt (var n: Int, val tk: Tk) {
     data class Proto   (val tk_: Tk.Fix, val nst: Boolean, val fake: Boolean, val tag: Tk.Type?, val pars: List<Stmt.Dcl>, val blk: Do): Stmt(G.N++, tk_)
     data class Do      (val tk_: Tk, val es: List<Stmt>) : Stmt(G.N++, tk_)
@@ -61,25 +69,17 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     data class Pub     (val tk_: Tk, val tsk: Stmt?): Stmt(G.N++, tk_)
     data class Toggle  (val tk_: Tk.Fix, val tsk: Stmt, val on: Stmt): Stmt(G.N++, tk_)
     data class Tasks   (val tk_: Tk.Fix, val max: Stmt): Stmt(G.N++, tk_)
-
-    data class Nat     (val tk_: Tk.Nat): Stmt(G.N++, tk_)
-    data class Acc     (val tk_: Tk.Var, val ign: Boolean=false): Stmt(G.N++, tk_)
-    data class Nil     (val tk_: Tk.Fix): Stmt(G.N++, tk_)
-    data class Tag     (val tk_: Tk.Type): Stmt(G.N++, tk_)
-    data class Bool    (val tk_: Tk.Fix): Stmt(G.N++, tk_)
-    data class Char    (val tk_: Tk.Chr): Stmt(G.N++, tk_)
-    data class Num     (val tk_: Tk.Num): Stmt(G.N++, tk_)
-    data class Tuple   (val tk_: Tk.Fix, val args: List<Stmt>): Stmt(G.N++, tk_)
-    data class Vector  (val tk_: Tk.Fix, val args: List<Stmt>): Stmt(G.N++, tk_)
-    data class Dict    (val tk_: Tk.Fix, val args: List<Pair<Stmt,Stmt>>): Stmt(G.N++, tk_)
-    data class Index   (val tk_: Tk, val col: Stmt, val idx: Stmt): Stmt(G.N++, tk_)
-    data class Call    (val tk_: Tk, val clo: Stmt, val args: List<Stmt>): Stmt(G.N++, tk_)
 }
 
 typealias Node = Int
 
 object G {
     var N: Int = 1
+
+    var tks: Iterator<Tk>? = null
+    var tk0: Tk? = null
+    var tk1: Tk? = null
+
     var outer: Stmt.Do? = null
     var ns: MutableMap<Node,Stmt> = mutableMapOf()
     var ups: MutableMap<Node,Node> = mutableMapOf()
@@ -91,6 +91,11 @@ object G {
 
     fun reset () {
         N = 1
+
+        tks = null
+        tk0 = null
+        tk1 = null
+
         outer = null
         ns.clear()
         ups.clear()

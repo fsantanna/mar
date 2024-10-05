@@ -31,12 +31,12 @@ fun iseof (n: Int): Boolean {
 
 typealias Lexer = List<Pair<Triple<String,Int,Int>,Reader>>
 
-fun String.lexer (): Sequence<Tk> {
+fun String.lexer (): Iterator<Tk> {
     val lex: Lexer = listOf(Pair(Triple("anon",1,1), this.reader()))
     return lex.lexer()
 }
 
-fun Lexer.lexer (): Sequence<Tk> = sequence {
+fun Lexer.lexer (): Iterator<Tk> = sequence {
     val stack = ArrayDeque<Lex>()
     val comms = ArrayDeque<String>()
 
@@ -354,4 +354,4 @@ fun Lexer.lexer (): Sequence<Tk> = sequence {
             }
         }
     }
-}
+}.iterator()

@@ -9,8 +9,7 @@ class Lexer {
     
     @Test
     fun aa_01_syms() {
-        val l = ("{ } ( ; ( = ) ) - , ][ / * + .").lexer()
-        val tks = l.iterator()
+        val tks = ("{ } ( ; ( = ) ) - , ][ / * + .").lexer()
         assert(tks.next().str == "{")
         assert(tks.next().str == "}")
         assert(tks.next().str == "(")
@@ -34,8 +33,7 @@ class Lexer {
 
     @Test
     fun bb_01_ids() {
-        val l = ("if xxx Type").lexer()
-        val tks = l.iterator()
+        val tks = ("if xxx Type").lexer()
         assert(tks.next().let { it is Tk.Fix  && it.str == "if" })
         assert(tks.next().let { it is Tk.Var  && it.str == "xxx" })
         assert(tks.next().let { it is Tk.Type && it.str == "Type" })
@@ -47,7 +45,7 @@ class Lexer {
     
     @Test
     fun cc_01_comments() {
-        val l = ("""
+        val tks = ("""
             x - y - z ;;
             var ;;x
             ;;
@@ -55,7 +53,6 @@ class Lexer {
             ;; -
             -
         """.trimIndent()).lexer()
-        val tks = l.iterator()
         assert(tks.next().let { it is Tk.Var && it.pos.lin==1 && it.pos.col==1 && it.str == "x" })
         assert(tks.next().let { it is Tk.Op  && it.pos.lin==1 && it.pos.col==3 && it.str == "-" })
         assert(tks.next().let { it is Tk.Var && it.pos.lin==1 && it.pos.col==5 && it.str == "y" })
@@ -68,13 +65,12 @@ class Lexer {
     }
     @Test
     fun cc_02_comments() {
-        val l = ("""
+        val tks = ("""
             x ;;;
             var ;;x
             val ;;; y
             z
         """.trimIndent()).lexer()
-        val tks = l.iterator()
         //println(tks.next())
         assert(tks.next().let { it is Tk.Var && it.pos.lin==1 && it.pos.col==1 && it.str == "x" })
         assert(tks.next().let { it is Tk.Var && it.pos.lin==3 && it.pos.col==9 && it.str == "y" })
@@ -82,7 +78,7 @@ class Lexer {
     }
     @Test
     fun cc_03_comments() {
-        val l = ("""
+        val tks = ("""
             x
             ;;;
             ;;;;
@@ -95,35 +91,56 @@ class Lexer {
             ;;;
             y
         """.trimIndent()).lexer()
-        val tks = l.iterator()
         assert(tks.next().let { it is Tk.Var && it.str == "x" })
         assert(tks.next().let { it is Tk.Var && it.str == "y" })
     }
     @Test
     fun cc_04_comments_err() {
-        val l = ("""
+        val tks = ("""
             x
             ;;;
             ;;;;
             ;;;
             y
         """.trimIndent()).lexer()
-        val tks = l.iterator()
         assert(tks.next().let { it is Tk.Var && it.str == "x" })
         assert(tks.next().let { it is Tk.Eof })
     }
     @Test
     fun cc_05_comments_err() {
-        val l = ("""
+        val tks = ("""
             x
             ;;;;
             ;;;
             ;;;;
             y
         """.trimIndent()).lexer()
-        val tks = l.iterator()
         assert(tks.next().let { it is Tk.Var && it.str == "x" })
         assert(tks.next().let { it is Tk.Var && it.str == "y" })
         assert(tks.next().let { it is Tk.Eof })
     }
+
+    // OPERATOR
+
+    @Test
+    fun dd_01_ops() {
+        val tks = ("&& + >=").lexer()
+        assert(tks.next().let { it is Tk.Op  && it.str == "&&" })
+        assert(tks.next().let { it is Tk.Op  && it.str == "+" })
+        assert(tks.next().let { it is Tk.Op  && it.str == ">=" })
+        assert(tks.next().let { it is Tk.Eof && it.pos.lin==1 && it.pos.col==8 })
+    }
+
+    // CHAR
+
+    @Test
+    fun ee_01_chr() {
+        val tks = ("'x' '\\n' '\\'' '\\\\'").lexer()
+        assert(tks.next().let { it is Tk.Chr && it.str == "'x'" })
+        assert(tks.next().let { it is Tk.Chr && it.str == "'\\n'" })
+        assert(tks.next().let { it is Tk.Chr && it.str == "'\\\''" })
+        assert(tks.next().let { it is Tk.Chr && it.str == "'\\\\'" })
+        assert(tks.next().let { it is Tk.Eof && it.pos.lin==1 && it.pos.col==19 })
+    }
+
 }

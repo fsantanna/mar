@@ -1,54 +1,5 @@
 package mar
 
-fun <K,V> List<Map<K,V>>.union (): Map<K,V> {
-    return this.fold(emptyMap()) { acc, value -> acc + value }
-}
-
-fun <V> Stmt.dn_collect (f: (Stmt)->List<V>?): List<V> {
-    val v = f(this)
-    if (v === null) {
-        return emptyList()
-    }
-    return v + when (this) {
-        is Stmt.Proto  -> this.blk.dn_collect(f) + this.pars.map { it.dn_collect(f) }.flatten()
-        is Stmt.Do     -> this.es.map { it.dn_collect(f) }.flatten()
-        is Stmt.Group  -> this.es.map { it.dn_collect(f) }.flatten()
-        is Stmt.Enclose -> this.es.map { it.dn_collect(f) }.flatten()
-        is Stmt.Escape -> this.e?.dn_collect(f) ?: emptyList()
-        is Stmt.Dcl    -> this.src?.dn_collect(f) ?: emptyList()
-        is Stmt.Set    -> this.dst.dn_collect(f) + this.src.dn_collect(f)
-        is Stmt.If     -> this.cnd.dn_collect(f) + this.t.dn_collect(f) + this.f.dn_collect(f)
-        is Stmt.Loop   -> this.blk.dn_collect(f)
-        is Stmt.Drop   -> this.e.dn_collect(f)
-
-        is Stmt.Catch  -> this.blk.dn_collect(f)
-        is Stmt.Defer  -> this.blk.dn_collect(f)
-
-        is Stmt.Yield  -> this.e.dn_collect(f)
-        is Stmt.Resume -> this.co.dn_collect(f) + this.args.map { it.dn_collect(f) }.flatten()
-
-        is Stmt.Spawn  -> (this.tsks?.dn_collect(f) ?: emptyList()) + this.tsk.dn_collect(f) + this.args.map { it.dn_collect(f) }.flatten()
-        is Stmt.Delay  -> emptyList()
-        is Stmt.Pub    -> this.tsk?.dn_collect(f) ?: emptyList()
-        is Stmt.Toggle -> this.tsk.dn_collect(f) + this.on.dn_collect(f)
-        is Stmt.Tasks  -> this.max.dn_collect(f)
-
-        is Stmt.Tuple  -> this.args.map { it.dn_collect(f) }.flatten()
-        is Stmt.Vector -> this.args.map { it.dn_collect(f) }.flatten()
-        is Stmt.Dict   -> this.args.map { it.first.dn_collect(f) + it.second.dn_collect(f) }.flatten()
-        is Stmt.Index  -> this.col.dn_collect(f) + this.idx.dn_collect(f)
-        is Stmt.Call   -> this.clo.dn_collect(f) + this.args.map { it.dn_collect(f) }.flatten()
-
-        is Stmt.Acc, is Stmt.Data, is Stmt.Nat,
-        is Stmt.Nil, is Stmt.Tag, is Stmt.Bool,
-        is Stmt.Char, is Stmt.Num -> emptyList()
-    }
-}
-
-fun Stmt.dn_visit (f: (Stmt)->Unit) {
-    this.dn_collect { f(it) ; emptyList<Unit>() }
-}
-
 fun trap (f: ()->Unit): String {
     try {
         f()
