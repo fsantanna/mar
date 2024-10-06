@@ -49,6 +49,7 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Char   -> this.tk.str
         is Expr.Num    -> this.tk.str
         is Expr.Null   -> this.tk.str
+        is Expr.Unit   -> "()"
         is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk.str + " " + this.e2.to_str(pre) + ")"
         is Expr.Call   -> this.f.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
     }.let {
@@ -67,11 +68,12 @@ fun Var_Type.to_str (pre: Boolean = false): String {
 
 fun Stmt.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Stmt.Func  -> "set " + this.tk_.str + " = " + this.tp.to_str(pre) + " {\n" + this.blk.ss.map { it.to_str(pre) }.joinToString("\n") + "}"
-        is Stmt.Block -> "do [" + (this.vs.map { (id,tp) -> id.str + ": " + tp.to_str(pre) }.joinToString(",")) + "] {\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
-        is Stmt.Set   -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
-        is Stmt.Call  -> this.call.to_str(pre)
-        is Stmt.Nat   -> TODO()
+        is Stmt.Func   -> "set " + this.tk_.str + " = " + this.tp.to_str(pre) + " {\n" + this.blk.ss.map { it.to_str(pre) }.joinToString("\n") + "}"
+        is Stmt.Return -> "return(" + this.e.to_str(pre) + ")"
+        is Stmt.Block  -> "do [" + (this.vs.map { (id,tp) -> id.str + ": " + tp.to_str(pre) }.joinToString(",")) + "] {\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
+        is Stmt.Set    -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
+        is Stmt.Call   -> this.call.to_str(pre)
+        is Stmt.Nat    -> TODO()
     }.let {
         when {
             !pre -> it

@@ -7,6 +7,7 @@ fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?): List<V> {
     }
     return v + when (this) {
         is Stmt.Func -> this.blk.dn_collect(fs,fe)
+        is Stmt.Return -> this.e.dn_collect(fe)
         is Stmt.Block -> this.ss.map { it.dn_collect(fs,fe) }.flatten()
         is Stmt.Set -> this.dst.dn_collect(fe) + this.src.dn_collect(fe)
         is Stmt.Call -> this.call.dn_collect(fe)
@@ -21,7 +22,7 @@ fun <V> Expr.dn_collect (f: (Expr)->List<V>?): List<V> {
     return v + when (this) {
         is Expr.Bin -> this.e1.dn_collect(f) + this.e2.dn_collect(f)
         is Expr.Call -> this.f.dn_collect(f) + this.args.map { it.dn_collect(f) }.flatten()
-        is Expr.Acc, is Expr.Nat, is Expr.Null,
+        is Expr.Acc, is Expr.Nat, is Expr.Null, is Expr.Unit,
         is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()
     }
 }

@@ -136,7 +136,14 @@ fun parser_expr_3_prim (): Expr {
         accept_enu("Chr")  -> Expr.Char(G.tk0 as Tk.Chr)
         accept_enu("Num")  -> Expr.Num(G.tk0 as Tk.Num)
         accept_fix("null")  -> Expr.Null(G.tk0 as Tk.Fix)
-        accept_fix("(")     -> parser_expr().let { accept_fix_err(")") ; it }
+        accept_fix("(")     -> {
+            val tk0 = G.tk0 as Tk.Fix
+            if (accept_fix(")")) {
+                Expr.Unit(tk0)
+            } else {
+                parser_expr().let { accept_fix_err(")") ; it }
+            }
+        }
         else                    -> err_expected(G.tk1!!, "expression")
     }
 }
@@ -216,6 +223,12 @@ fun parser_stmt (): Stmt {
                 }
                 Stmt.Set(tk0, dst, src)
             }
+        }
+        accept_fix("return") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            check_fix_err("(")
+            val e = parser_expr()
+            Stmt.Return(tk0, e)
         }
         accept_enu("Nat") -> Stmt.Nat(G.tk0 as Tk.Nat)
         else -> {

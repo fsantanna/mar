@@ -44,6 +44,12 @@ fun check_types () {
                     err(me.tk, "invalid set : types mismatch")
                 }
             }
+            is Stmt.Return -> {
+                val func = me.fupx().up_first { it is Stmt.Func } as Stmt.Func
+                if (!func.tp.out.is_sup_of(me.e.type())) {
+                    err(me.tk, "invalid return : types mismatch")
+                }
+            }
             else -> {}
         }
     }

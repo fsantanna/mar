@@ -23,7 +23,7 @@ val OPERATORS = Pair (
 val KEYWORDS: SortedSet<String> = (
     setOf (
         "do","false", "func",
-        "null", "set", "true",
+        "null", "return", "set", "true",
     ).toSortedSet()
 )
 
@@ -57,13 +57,15 @@ sealed class Expr (var n: Int, val tk: Tk) {
     data class Char (val tk_: Tk.Chr): Expr(G.N++, tk_)
     data class Num  (val tk_: Tk.Num): Expr(G.N++, tk_)
     data class Null (val tk_: Tk.Fix): Expr(G.N++, tk_)
+    data class Unit (val tk_: Tk.Fix): Expr(G.N++, tk_)
 
     data class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)
     data class Call (val tk_: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, tk_)
 }
 
 sealed class Stmt (var n: Int, val tk: Tk) {
-    data class Func    (val tk_: Tk.Var, val tp: Type.Func, val blk: Stmt.Block) : Stmt(G.N++, tk_)
+    data class Func    (val tk_: Tk.Var, val tp: Type.Func.Vars, val blk: Stmt.Block) : Stmt(G.N++, tk_)
+    data class Return  (val tk_: Tk.Fix, val e: Expr) : Stmt(G.N++, tk_)
     data class Block   (val tk_: Tk, val vs: List<Var_Type>, val ss: List<Stmt>) : Stmt(G.N++, tk_)
     data class Set     (val tk_: Tk.Fix, val dst: Expr, val src: Expr): Stmt(G.N++, tk_)
 

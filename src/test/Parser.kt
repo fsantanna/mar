@@ -203,7 +203,7 @@ class Parser {
         assert(trap { parser_stmt() } == "anon : (lin 2, col 27) : expected variable : have \"Int\"")
     }
     @Test
-    fun ee_03x_func() {
+    fun ee_04_func() {
         G.tks = ("""
             do [f: func (Int) -> Int] {
                 set f = func (a:Int) -> Int {
@@ -216,6 +216,19 @@ class Parser {
                 "set f = func (a: Int) -> Int {\n" +
                 "}\n" +
                 "}") { e.to_str() }
+    }
+    @Test
+    fun ee_05_return() {
+        G.tks = ("return(10)").lexer()
+        parser_lexer()
+        val e = parser_stmt()
+        assert(e.to_str() == "return(10)") { e.to_str() }
+    }
+    @Test
+    fun ee_06_return_Err() {
+        G.tks = ("return 10").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 8) : expected \"(\" : have \"10\"")
     }
 
     // NUM / NIL / BOOL
