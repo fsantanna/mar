@@ -1,5 +1,37 @@
 package mar
 
+fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?): List<V> {
+    val v = fs(this)
+    if (v === null) {
+        return emptyList()
+    }
+    return v + when (this) {
+        is Stmt.Block -> this.ss.map { it.dn_collect(fs,fe) }.flatten()
+        is Stmt.Set -> this.dst.dn_collect(fe) + this.src.dn_collect(fe)
+        is Stmt.Call -> this.call.dn_collect(fe)
+        is Stmt.Nat -> emptyList()
+    }
+}
+fun <V> Expr.dn_collect (f: (Expr)->List<V>?): List<V> {
+    val v = f(this)
+    if (v === null) {
+        return emptyList()
+    }
+    return v + when (this) {
+        is Expr.Bin -> this.e1.dn_collect(f) + this.e2.dn_collect(f)
+        is Expr.Call -> this.f.dn_collect(f) + this.args.map { it.dn_collect(f) }.flatten()
+        is Expr.Acc, is Expr.Nat, is Expr.Null,
+        is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()
+    }
+}
+
+fun Stmt.dn_visit (fs: (Stmt)->Unit, fe: (Expr)->Unit) {
+    this.dn_collect({ fs(it) ; emptyList<Unit>() }, { fe(it) ; emptyList<Unit>() })
+}
+fun Expr.dn_visit (f: (Expr)->Unit) {
+    this.dn_collect { f(it) ; emptyList<Unit>() }
+}
+
 fun trap (f: ()->Unit): String {
     try {
         f()

@@ -39,7 +39,7 @@ sealed class Tk (val str: String, val pos: Pos) {
     data class Var  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)  // up: 0=var, 1=upvar, 2=upref
     data class Num (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
     data class Chr (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
-    data class Nat (val str_: String, val pos_: Pos, val tag: String?, val n_: Int=G.N++): Tk(str_, pos_)
+    data class Nat (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
 }
 
 sealed class Expr (var n: Int, val tk: Tk) {
@@ -72,7 +72,7 @@ object G {
     var tk1: Tk? = null
 
     var outer: Stmt? = null
-    var ns: MutableMap<Node,Stmt> = mutableMapOf()
+    var ns: MutableMap<Node,Any> = mutableMapOf()
     var ups: MutableMap<Node,Node> = mutableMapOf()
     var tags: MutableMap<String,Tk.Type> = mutableMapOf()
     val datas = mutableMapOf<String,List<Var_Type>>()
@@ -122,23 +122,24 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String, Int, Int
     G.reset()
     G.tks = inps.lexer()
     parser_lexer()
-    val tk0 = G.tk1!!
 
     if (verbose) {
         System.err.println("... parsing ...")
     }
-    G.outer = try {
+    try {
         check_fix("do")
-        val blk = parser_stmt() as Stmt.Block
+        G.outer = parser_stmt() as Stmt.Block
         check_enu_err("Eof")
-        blk
+        cache_ns()
+        cache_ups()
+        check_vars()
     } catch (e: Throwable) {
         if (THROW) {
             throw e
         }
         return e.message!! + "\n"
     }
-    //check_vars()
+
 
     if (verbose) {
         System.err.println("... mar -> c ...")

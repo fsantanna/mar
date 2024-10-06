@@ -22,7 +22,7 @@ fun Tk.fpre (pre: Boolean): String {
 
 fun Expr.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Expr.Nat    -> "```" + this.tk_.tag.cond { it+" " } + this.tk.str + "```"
+        is Expr.Nat    -> "```" + this.tk.str + "```"
         is Expr.Acc    -> this.ign.cond { "__" } + this.tk.str
         is Expr.Bool   -> this.tk.str
         is Expr.Char   -> this.tk.str

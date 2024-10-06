@@ -183,7 +183,7 @@ fun parser_stmt (): Stmt {
             if (call is Expr.Call) {
                 Stmt.Call(call.tk, call)
             } else {
-                err_expected(G.tk1!!, "statement")
+                err_expected(tk1, "statement")
             }
         }
     }

@@ -68,22 +68,25 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
         }
     }
 
-    fun read2Until (f: (x: Char)->Boolean): String? {
+    fun read2Until (f: (x: Char)->Boolean): String {
         var ret = ""
         while (true) {
             val (n,x) = read2()
             when {
                 iseof(n) -> {
                     unread2(n)
-                    return null
+                    break
                 }
-                f(x) -> break
+                f(x) -> {
+                    ret += x
+                    break
+                }
                 else -> ret += x
             }
         }
         return ret
     }
-    fun read2Until (x: Char): String? {
+    fun read2Until (x: Char): String {
         return read2Until { it == x }
     }
     fun read2While (f: (x: Char)->Boolean): String {
@@ -129,7 +132,7 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                                     comms.addFirst(x4)
                                 }
                                 do {
-                                    if (read2Until(';') == null) {
+                                    if (read2Until(';').last() != ';') {
                                         break@outer
                                     }
                                     x4 = ";" + read2While(';')
@@ -185,121 +188,19 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
             }
             (x == '`') -> {
                 val open = x + read2While('`')
-                var nat = ""
-                val tag = read2().let { (n2,x2) ->
-                    if (x2 != ':') {
-                        unread2(n2)
-                        null
+                var close = ""
+                val nat = read2Until {
+                    if (it == '`') {
+                        close = close + it
                     } else {
-                        val tag = x2 + read2While { it.isLetterOrDigit() || it=='.' }
-                        if (tag.length < 2) {
-                            err(pos, "tag error : expected identifier")
-                        }
-                        tag
+                        close = ""
                     }
+                    (close == open)
                 }
-                while (true) {
-                    val (n2,x2) = read2()
-                    when {
-                        iseof(n2) -> {
-                            err(stack.first().toPos(), "native error : expected \"$open\"")
-                        }
-                        (x2 == '`') -> {
-                            val xxx = stack.first().toPos().let { Pos(it.file,it.lin,it.col-1,it.brks) }
-                            val close = x2 + read2While('`')
-                            if (open == close) {
-                                break
-                            } else {
-                                err(xxx, "native error : expected \"$open\"")
-                            }
-                        }
-                    }
-                    nat += x2
+                if (open != close) {
+                    err(pos, "token error : unterminated \"$open\"")
                 }
-                //println(":$pay:")
-                yield(Tk.Nat(nat, pos, tag))
-            }
-            (x == '^') -> {
-                val (_,x2) = read2()
-                if (x2 != '[') {
-                    err(pos, "token ^ error : expected \"^[\"")
-                }
-                val (n3, x3) = read2()
-                val file: String? = if (x3 == '"') {
-                    val f = read2Until('"')
-                    if (f == null) {
-                        err(pos, "token ^ error : unterminated \"")
-                    }
-                    f
-                } else {
-                    unread2(n3)
-                    null
-                }
-
-                val lin: Int? = if (file == null) {
-                    read2While { it.isDigit() }.toIntOrNull()
-                } else {
-                    val (n4, x4) = read2()
-                    if (x4 == ',') {
-                        read2While { it.isDigit() }.let {
-                            if (it.isEmpty()) {
-                                err(pos, "token ^ error : expected number")
-                            }
-                            it.toInt()
-                        }
-                    } else {
-                        unread2(n4)
-                        null
-                    }
-                }
-                val col: Int? = if (lin == null) {
-                    null
-                } else {
-                    val (n5, x5) = read2()
-                    if (x5 == ',') {
-                        read2While { it.isDigit() }.let {
-                            if (it.isEmpty()) {
-                                err(pos, "token ^ error : expected number")
-                            }
-                            it.toInt()
-                        }
-                    } else {
-                        unread2(n5)
-                        null
-                    }
-                }
-
-                if (file == null && lin == null) {
-                    err(pos, "token ^ error")
-                }
-
-                val (_, x6) = read2()
-                if (x6 != ']') {
-                    err(pos, "token ^ error : expected \"]\"")
-                }
-                val (n7, x7) = read2()
-                when {
-                    iseof(n7) -> unread2(n7)
-                    (x7 == '\n') -> {}  // skip leading \n
-                    else -> unread2(n7) //err(pos, "token ^ error : expected end of line")
-                }
-
-                when {
-                    (file != null && lin == null && col == null) -> {
-                        val f = FileX(file)
-                        if (!f.exists()) {
-                            err(pos, "token ^ error : file not found : $file")
-                        }
-                        stack.addFirst(Lex(file, 1, 1, 0, 0, PushbackReader(StringReader(f.readText()), 2)))
-                    }
-
-                    (lin != null) -> stack.first().let {
-                        it.file = if (file == null) it.file else file
-                        it.lin = lin
-                        it.col = if (col == null) 1 else col
-                    }
-                    else -> error("bug found")
-                }
+                yield(Tk.Nat(nat.dropLast(close.length), pos))
             }
             (x == '\'') -> {
                 val (n2,x2) = read2()
@@ -321,17 +222,18 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
             }
             (x == '"') -> {
                 var n = 0
+                var brk = false
                 val v = read2Until {
-                    val brk = (it=='"' && n%2==0)
+                    brk = (it=='"' && n%2==0)
                     n = if (it == '\\') n+1 else 0
                     brk
                 }
-                if (v == null) {
-                    err(pos, "string error : unterminated \"")
+                if (!brk) {
+                    err(pos, "token error : unterminated \"")
                 }
                 yield(Tk.Fix("#[", pos))
                 var i = 0
-                while (i < v.length) {
+                while (i < v.length-1) {
                     if (i > 0) {
                         yield(Tk.Fix(",", pos))
                     }

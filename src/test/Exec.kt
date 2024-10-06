@@ -57,13 +57,13 @@ class Exec {
                     printf("%d\n", v);
                 }
                 ```
-                print_int(1)
+                (`print_int`)(1)
             }
         """)
         assert(out == "1\n") { out }
     }
 
-    // TYPE / CHECK
+    // TYPE / VAR / CHECK
 
     @Test
     fun dd_01_type() {
@@ -73,6 +73,29 @@ class Exec {
             }
         """)
         assert(out == "ERROR\n") { out }
+    }
+    @Test
+    fun dd_02_var_dup() {
+        val out = test("""
+            do [x: Int] {
+                do [x: Int] {
+                }
+            }
+        """
+        )
+        //assert(out == "10\n") { out }
+        assert(out == "anon : (lin 3, col 21) : declaration error : variable \"x\" is already declared\n") { out }
+    }
+    @Test
+    fun dd_03_var_none() {
+        val out = test("""
+            do [] {
+                f()
+            }
+        """
+        )
+        //assert(out == "10\n") { out }
+        assert(out == "anon : (lin 3, col 17) : access error : variable \"f\" is not declared\n") { out }
     }
 
     // VAR

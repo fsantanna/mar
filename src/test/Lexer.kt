@@ -181,7 +181,7 @@ class Lexer {
     @Test
     fun ee_07_chr() {
         val tks = "\"\\\"".lexer()
-        assert(trap { tks.next() } == "anon : (lin 1, col 1) : string error : unterminated \"")
+        assert(trap { tks.next() } == "anon : (lin 1, col 1) : token error : unterminated \"")
     }
     @Test
     fun ee_08_chr() {
@@ -202,7 +202,6 @@ class Lexer {
         assert(tks.next().let { it is Tk.Nat && it.pos.lin==1 && it.pos.col==1 && it.str==" abc " })
         assert(tks.next().let { it is Tk.Nat && it.pos.lin==2 && it.pos.col==1 && it.str=="{ijk}" })
         assert(tks.next().let { it is Tk.Nat && it.pos.lin==3 && it.pos.col==1 && it.str==" {i\$jk} " })
-        //println(tks.next())
-        assert(trap { tks.next() } == "anon : (lin 4, col 10) : native error : expected \"`\"")
+        assert(trap { tks.next() } == "anon : (lin 4, col 1) : token error : unterminated \"`\"")
     }
 }
