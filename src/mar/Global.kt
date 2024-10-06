@@ -61,6 +61,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
 }
 
 sealed class Stmt (var n: Int, val tk: Tk) {
+    data class Func    (val tk_: Tk.Var, val tp: Type.Func, val blk: Stmt.Block) : Stmt(G.N++, tk_)
     data class Block   (val tk_: Tk, val vs: List<Var_Type>, val ss: List<Stmt>) : Stmt(G.N++, tk_)
     data class Set     (val tk_: Tk.Fix, val dst: Expr, val src: Expr): Stmt(G.N++, tk_)
 

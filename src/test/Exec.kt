@@ -98,54 +98,24 @@ class Exec {
         assert(out == "anon : (lin 3, col 17) : access error : variable \"f\" is not declared\n") { out }
     }
 
-    // VAR
+    // FUNC
+
+    @Test
+    fun ee_01_func() {
+        val out = test("""
+            do [f: func (Int) -> Int] {
+                set f = func (Int) -> Int {
+                    do [v: Int] {
+                        return v
+                    }
+                }
+                `printf("%d\n", f(10));`
+            }
+        """)
+        assert(out == "10\n") { out }
+    }
 
     /*
-    @Test
-    fun bb_01_var() {
-        val out = test("""
-            var v: U8
-            set v = 10
-            `printf("%d\n", v);`
-        """)
-        assert(out == "10\n") { out }
-    }
-    @Test
-    fun bb_09_nested_var() {
-        val out = test(
-            """
-            val x = do {
-                val x = 10
-                x
-            }
-            println(x)
-        """
-        )
-        //assert(out == "10\n") { out }
-        assert(out == "anon : (lin 3, col 17) : declaration error : variable \"x\" is already declared\n") { out }
-    }
-    @Test
-    fun bb_10_var() {
-        val out = test("""
-            do {
-                val x = println(10)
-                println(x)
-            }
-        """)
-        assert(out == "10\n10\n") { out }
-    }
-    @Test
-    fun bb_11_err() {
-        val out = test("""
-            var f = func' () {
-                t
-            }
-            var t = 10
-            println(f())
-        """)
-        //assert(out == "anon : (lin 3, col 17) : access error : variable \"t\" is not declared\n") { out }
-        assert(out == "10\n") { out }
-    }
     @Test
     fun bb_12_hold() {
         DEBUG = true

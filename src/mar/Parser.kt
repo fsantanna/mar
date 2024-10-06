@@ -189,11 +189,20 @@ fun parser_stmt (): Stmt {
             val tk0 = G.tk0 as Tk.Fix
             val dst = parser_expr()
             accept_fix_err("=")
-            val src = parser_expr()
-            if (!dst.is_lval()) {
-                err(tk0, "set error : expected assignable destination")
+            if (dst is Expr.Acc && check_fix("func")) {
+                val tp = parser_type() as Type.Func
+                accept_fix_err("{")
+                check_fix_err("do")
+                val blk = parser_stmt() as Stmt.Block
+                accept_fix_err("}")
+                Stmt.Func(dst.tk_, tp, blk)
+            } else {
+                val src = parser_expr()
+                if (!dst.is_lval()) {
+                    err(tk0, "set error : expected assignable destination")
+                }
+                Stmt.Set(tk0, dst, src)
             }
-            Stmt.Set(tk0, dst, src)
         }
         accept_enu("Nat") -> Stmt.Nat(G.tk0 as Tk.Nat)
         else -> {

@@ -6,6 +6,7 @@ fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?): List<V> {
         return emptyList()
     }
     return v + when (this) {
+        is Stmt.Func -> this.blk.dn_collect(fs,fe)
         is Stmt.Block -> this.ss.map { it.dn_collect(fs,fe) }.flatten()
         is Stmt.Set -> this.dst.dn_collect(fe) + this.src.dn_collect(fe)
         is Stmt.Call -> this.call.dn_collect(fe)

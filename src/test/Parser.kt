@@ -173,6 +173,35 @@ class Parser {
         val e = parser_stmt()
         assert(e.to_str() == "set x = 10")
     }
+    @Test
+    fun ee_03_func() {
+        G.tks = ("""
+            do [f: func (Int) -> Int] {
+                set f = func (Int) -> Int {
+                    do [a:Int] {
+                        ;;return 10
+                    }
+                }
+            }
+        """).lexer()
+        parser_lexer()
+        val e = parser_stmt()
+        assert(e.to_str() == "set x = 10") { e.to_str() }
+    }
+    @Test
+    fun ee_04_func_err() {
+        G.tks = ("""
+            do [f: func () -> ()] {
+                set f = func () -> Int {
+                    do [] {
+                        ;;return 10
+                    }
+                }
+            }
+        """).lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "TODO")
+    }
 
     // NUM / NIL / BOOL
 
