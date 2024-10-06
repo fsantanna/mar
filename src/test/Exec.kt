@@ -72,7 +72,7 @@ class Exec {
                 set x = true
             }
         """)
-        assert(out == "ERROR\n") { out }
+        assert(out == "anon : (lin 3, col 17) : invalid set : types mismatch\n") { out }
     }
     @Test
     fun dd_02_var_dup() {

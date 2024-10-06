@@ -13,9 +13,11 @@ fun Any.ups (): List<Any> {
     return this.ups_until { false }
 }
 
-fun Any.up_first (cnd: (Any)->Boolean): Any? {
+fun Any.up_first (cnd: (Any)->Any?): Any? {
+    val v = cnd(this)
     return when {
-        cnd(this) -> this
+        (v == true) -> this
+        (v!=false && v!=null) -> v
         (this is Stmt) -> this.fup()?.up_first(cnd)
         (this is Expr) -> this.fup()?.up_first(cnd)
         else -> error("impossible case")
