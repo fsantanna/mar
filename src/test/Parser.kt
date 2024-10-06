@@ -65,6 +65,7 @@ class Parser {
         parser_lexer()
         val tp = parser_type()
         assert(tp is Type.Func && (tp.out as Type.Basic).tk.str=="Int")
+        assert(tp.to_str() == "func () -> Int")
     }
 
     // PARENS
