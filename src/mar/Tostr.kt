@@ -24,8 +24,15 @@ fun Type.to_str (pre: Boolean = false): String {
     return when (this) {
         is Type.Any -> TODO()
         is Type.Basic -> this.tk.str
-        is Type.Func -> "func (" + this.inps.map { it.to_str(pre) }.joinToString(",") + ") -> " + this.out.to_str(pre)
         is Type.Unit -> "()"
+        is Type.Func -> {
+            val inps = if (this is Type.Func.Vars) {
+                this.inps_.map { it.to_str(pre) }.joinToString(",")
+            } else {
+                this.inps.map { it.to_str(pre) }.joinToString(",")
+            }
+            "func (" + inps + ") -> " + this.out.to_str(pre)
+        }
     }.let {
         when {
             !pre -> it

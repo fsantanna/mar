@@ -30,14 +30,14 @@ val KEYWORDS: SortedSet<String> = (
 typealias Var_Type = Pair<Tk.Var,Type>
 
 sealed class Tk (val str: String, val pos: Pos) {
-    data class Eof (val pos_: Pos, val n_: Int=G.N++): Tk("", pos_)
-    data class Fix (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
+    data class Eof  (val pos_: Pos, val n_: Int=G.N++): Tk("", pos_)
+    data class Fix  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
     data class Type (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
-    data class Op  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
+    data class Op   (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
     data class Var  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)  // up: 0=var, 1=upvar, 2=upref
-    data class Num (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
-    data class Chr (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
-    data class Nat (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
+    data class Num  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
+    data class Chr  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
+    data class Nat  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
 }
 
 sealed class Type (var n: Int, val tk: Tk) {
@@ -45,7 +45,9 @@ sealed class Type (var n: Int, val tk: Tk) {
     data class Any   (val tk_: Tk): Type(G.N++, tk_)
     data class Unit  (val tk_: Tk.Fix): Type(G.N++, tk_)
     data class Basic (val tk_: Tk.Type): Type(G.N++, tk_)
-    data class Func  (val tk_: Tk.Fix, val inps: List<Type>, val out: Type): Type(G.N++, tk_)
+    open class Func  (val tk_: Tk.Fix, val inps: List<Type>, val out: Type): Type(G.N++, tk_) {
+        data class Vars (val tk__: Tk.Fix, val inps_: List<Var_Type>, val out_: Type): Func(tk__, inps_.map { (_,tp) -> tp }, out_)
+    }
 }
 
 sealed class Expr (var n: Int, val tk: Tk) {

@@ -67,6 +67,26 @@ class Parser {
         assert(tp is Type.Func && (tp.out as Type.Basic).tk.str=="Int")
         assert(tp.to_str() == "func () -> Int")
     }
+    @Test
+    fun aj_04_type () {
+        G.tks = ("func (x: Int) -> Int").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Func && (tp.out as Type.Basic).tk.str=="Int")
+        assert(tp.to_str() == "func (x: Int) -> Int")
+    }
+    @Test
+    fun aj_05_type () {
+        G.tks = ("func (Int, x: Int) -> ()").lexer()
+        parser_lexer()
+        assert(trap { parser_type() } == "anon : (lin 1, col 12) : expected type : have \"x\"")
+    }
+    @Test
+    fun aj_06_type () {
+        G.tks = ("func (x: Int, Int) -> ()").lexer()
+        parser_lexer()
+        assert(trap { parser_type() } == "anon : (lin 1, col 15) : expected variable : have \"Int\"")
+    }
 
     // PARENS
 
