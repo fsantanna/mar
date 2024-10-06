@@ -134,6 +134,28 @@ class Exec {
         assert(out == "anon : (lin 4, col 21) : invalid return : types mismatch\n") { out }
     }
 
+    // PROTOS / TYPES / NORMAL / NESTED / CLOSURE
+
+    @Test
+    fun ef_01_func() {
+        val out = test("""
+            do [i: Int, f: func () -> Int] {
+                set i = 10
+                set f = func () -> Int {
+                    do [j: Int, g: func () -> Int] {
+                        set j = 20
+                        set g = func () -> Int {
+                            return(i + j)
+                        }
+                        `printf("%d\n", g());`
+                    }
+                }
+                f()
+            }
+        """)
+        assert(out == "30\n") { out }
+    }
+
     /*
     @Test
     fun bb_12_hold() {

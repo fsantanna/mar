@@ -59,7 +59,7 @@ fun check_types () {
                 err(me.tk, "invalid operation : types mismatch")
             }
             is Expr.Call -> {
-                val tp = me.type()
+                val tp = me.f.type()
                 val ok = when {
                     (tp is Type.Any) -> true
                     (tp !is Type.Proto.Func) -> false
