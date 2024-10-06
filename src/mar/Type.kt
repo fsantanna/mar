@@ -6,7 +6,7 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Any) -> true
         (this is Type.Unit  && other is Type.Unit)  -> true
         (this is Type.Basic && other is Type.Basic) -> (this.tk.str == other.tk.str)
-        (this is Type.Func  && other is Type.Func)  -> this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
+        (this is Type.Proto.Func  && other is Type.Proto.Func)  -> this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
         else -> false
     }
 }
@@ -51,7 +51,7 @@ fun Expr.type (): Type {
         }
         is Expr.Bool -> Type.Basic(Tk.Type( "Bool", this.tk.pos.copy()))
         is Expr.Call -> this.f.type().let {
-            if (it is Type.Any) it else (it as Type.Func).out
+            if (it is Type.Any) it else (it as Type.Proto.Func).out
         }
         is Expr.Char -> Type.Basic(Tk.Type( "Char", this.tk.pos.copy()))
         is Expr.Nat -> Type.Any(this.tk)

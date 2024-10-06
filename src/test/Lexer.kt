@@ -46,10 +46,11 @@ class Lexer {
 
     @Test
     fun bb_01_ids() {
-        val tks = ("if xxx Type return").lexer()
+        val tks = ("if xxx Type coro return").lexer()
         assert(tks.next().let { it is Tk.Var  && it.str == "if" })
         assert(tks.next().let { it is Tk.Var  && it.str == "xxx" })
         assert(tks.next().let { it is Tk.Type && it.str == "Type" })
+        assert(tks.next().let { it is Tk.Fix  && it.str == "coro" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "return" })
         assert(tks.next() is Tk.Eof)
         assert(!tks.hasNext())

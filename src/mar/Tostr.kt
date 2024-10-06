@@ -25,13 +25,16 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Any -> TODO()
         is Type.Basic -> this.tk.str
         is Type.Unit -> "()"
-        is Type.Func -> {
-            val inps = if (this is Type.Func.Vars) {
-                this.inps_.map { it.to_str(pre) }.joinToString(",")
-            } else {
-                this.inps.map { it.to_str(pre) }.joinToString(",")
+        is Type.Proto -> {
+            val inps = when (this) {
+                is Type.Proto.Func.Vars -> this.inps__.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Coro.Vars -> this.inps__.map { it.to_str(pre) }.joinToString(",")
+                else -> this.inps.map { it.to_str(pre) }.joinToString(",")
             }
-            "func (" + inps + ") -> " + this.out.to_str(pre)
+            when (this) {
+                is Type.Proto.Func -> "func (" + inps + ") -> " + this.out.to_str(pre)
+                is Type.Proto.Coro -> "coro (" + inps + ") -> " + this.yld.to_str(pre) + " -> " + this.out.to_str(pre)
+            }
         }
     }.let {
         when {
@@ -68,7 +71,8 @@ fun Var_Type.to_str (pre: Boolean = false): String {
 
 fun Stmt.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Stmt.Func   -> "set " + this.tk_.str + " = " + this.tp.to_str(pre) + " {\n" + this.blk.ss.map { it.to_str(pre) }.joinToString("\n") + "}"
+        is Stmt.Proto.Func -> "set " + this.tk_.str + " = " + this.tp.to_str(pre) + " {\n" + this.blk.ss.map { it.to_str(pre) }.joinToString("\n") + "}"
+        is Stmt.Proto.Coro -> TODO()
         is Stmt.Return -> "return(" + this.e.to_str(pre) + ")"
         is Stmt.Block  -> "do [" + (this.vs.map { (id,tp) -> id.str + ": " + tp.to_str(pre) }.joinToString(",")) + "] {\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
         is Stmt.Set    -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)

@@ -34,7 +34,7 @@ fun check_vars () {
 fun check_types () {
     fun fs (me: Stmt) {
         when (me) {
-            is Stmt.Func -> {
+            is Stmt.Proto -> {
                 if (!me.tp.is_same_of(me.tk_.type(me)!!)) {
                     err(me.tk, "invalid declaration : types mismatch")
                 }
@@ -45,7 +45,7 @@ fun check_types () {
                 }
             }
             is Stmt.Return -> {
-                val func = me.fupx().up_first { it is Stmt.Func } as Stmt.Func
+                val func = me.fupx().up_first { it is Stmt.Proto } as Stmt.Proto
                 if (!func.tp.out.is_sup_of(me.e.type())) {
                     err(me.tk, "invalid return : types mismatch")
                 }
@@ -62,7 +62,7 @@ fun check_types () {
                 val tp = me.type()
                 val ok = when {
                     (tp is Type.Any) -> true
-                    (tp !is Type.Func) -> false
+                    (tp !is Type.Proto.Func) -> false
                     (tp.inps.size != me.args.size) -> false
                     else -> tp.inps.zip(me.args).all { (par, arg) ->
                         par.is_sup_of(arg.type())

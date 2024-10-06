@@ -118,9 +118,9 @@ fun parser_type (req_vars: Boolean = false): Type {
             accept_fix("->")
             val out = parser_type(req_vars)
             if (vars) {
-                Type.Func.Vars(tk0, inps as List<Var_Type>, out)
+                Type.Proto.Func.Vars(tk0, inps as List<Var_Type>, out)
             } else {
-                Type.Func(tk0, inps.map { (_,tp) -> tp }, out)
+                Type.Proto.Func(tk0, inps.map { (_,tp) -> tp }, out)
             }
         }
         else -> err_expected(G.tk1!!, "type")
@@ -210,12 +210,12 @@ fun parser_stmt (): Stmt {
             val dst = parser_expr()
             accept_fix_err("=")
             if (dst is Expr.Acc && check_fix("func")) {
-                val tp = parser_type(true) as Type.Func.Vars
+                val tp = parser_type(true) as Type.Proto.Func.Vars
                 accept_fix_err("{")
                 val ss = parser_list(null, "}") {
                     parser_stmt()
                 }
-                Stmt.Func(dst.tk_, tp, Stmt.Block(tp.tk_, tp.inps_, ss))
+                Stmt.Proto.Func(dst.tk_, tp, Stmt.Block(tp.tk_, tp.inps__, ss))
             } else {
                 val src = parser_expr()
                 if (!dst.is_lval()) {

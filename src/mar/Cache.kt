@@ -28,7 +28,7 @@ fun cache_ns () {
 fun cache_ups () {
     fun fs (me: Stmt) {
         when (me) {
-            is Stmt.Func -> G.ups[me.blk.n] = me.n
+            is Stmt.Proto -> G.ups[me.blk.n] = me.n
             is Stmt.Return -> G.ups[me.e.n] = me.n
             is Stmt.Block -> me.ss.forEach { G.ups[it.n] = me.n }
             is Stmt.Set -> {
