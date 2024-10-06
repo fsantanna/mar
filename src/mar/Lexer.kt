@@ -170,6 +170,7 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                 val op = x + read2While { it in OPERATORS.first }
                 when {
                     (op == "=") -> yield(Tk.Fix(op, pos))
+                    (op == "->") -> yield(Tk.Fix(op, pos))
                     (op in OPERATORS.second) -> yield(Tk.Op(op, pos))
                     else -> err(pos, "token error : unexpected $x")
                 }

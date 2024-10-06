@@ -2,7 +2,7 @@ package mar
 
 fun Stmt.coder (pre: Boolean = false): String {
     return when (this) {
-        is Stmt.Block -> "{\n" + this.vs.map { (id,tp) -> tp.str + " " + id.str + ";\n" }.joinToString("") + this.ss.map { it.coder(pre) + "\n" }.joinToString("") + "}"
+        is Stmt.Block -> "{\n" + this.vs.map { (id,tp) -> tp.to_str(pre) + " " + id.str + ";\n" }.joinToString("") + this.ss.map { it.coder(pre) + "\n" }.joinToString("") + "}"
         is Stmt.Set   -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
         is Stmt.Nat   -> this.tk.str
         is Stmt.Call  -> this.call.coder(pre) + ";"

@@ -31,13 +31,23 @@ class Lexer {
         assert(tks.next() is Tk.Eof)
         assert(!tks.hasNext())
     }
+    @Test
+    fun aa_02_syms() {
+        val tks = ("= == - ->").lexer()
+        assert(tks.next().let { it is Tk.Fix && it.str=="=" })
+        assert(tks.next().let { it is Tk.Op  && it.str=="==" })
+        assert(tks.next().let { it is Tk.Op  && it.str=="-" })
+        assert(tks.next().let { it is Tk.Fix && it.str=="->" })
+        assert(tks.next() is Tk.Eof)
+        assert(!tks.hasNext())
+    }
 
     // ID / KEYWORD / VAR / TYPE
 
     @Test
     fun bb_01_ids() {
         val tks = ("if xxx Type").lexer()
-        assert(tks.next().let { it is Tk.Fix  && it.str == "if" })
+        assert(tks.next().let { it is Tk.Var  && it.str == "if" })
         assert(tks.next().let { it is Tk.Var  && it.str == "xxx" })
         assert(tks.next().let { it is Tk.Type && it.str == "Type" })
         assert(tks.next() is Tk.Eof)

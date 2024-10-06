@@ -43,6 +43,30 @@ class Parser {
         assert(e is Expr.Acc && e.tk.str == "err")
     }
 
+    // TYPES
+
+    @Test
+    fun aj_01_type () {
+        G.tks = ("Int").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Basic && tp.tk.str=="Int")
+    }
+    @Test
+    fun aj_02_type () {
+        G.tks = ("func (Int,Int) -> ()").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Func && tp.tk.str=="func" && tp.inps.size==2 && tp.out is Type.Unit)
+    }
+    @Test
+    fun aj_03_type () {
+        G.tks = ("func () -> Int").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Func && (tp.out as Type.Basic).tk.str=="Int")
+    }
+
     // PARENS
 
     @Test
@@ -92,14 +116,14 @@ class Parser {
     // DO
 
     @Test
-    fun dd_do_err() {
+    fun dd_01_do() {
         G.tks = ("do [] {}").lexer()
         parser_lexer()
         val s = parser_stmt()
         assert(s is Stmt.Block && s.ss.isEmpty())
     }
     @Test
-    fun expr_do2() {
+    fun dd_02_do() {
         G.tks = """
             do [
                 i: Int
@@ -113,7 +137,7 @@ class Parser {
         assert(s.to_str() == "do [i: Int" + "] {\nset i = 1\n}") { s.to_str() }
     }
     @Test
-    fun expr_do3() {
+    fun dd_03_do() {
         G.tks = ("do [] ;;;(a);;; { print(a) }").lexer()
         parser_lexer()
         val s = parser_stmt()
@@ -121,7 +145,7 @@ class Parser {
         assert(s.to_str() == "do [] {\nprint(a)\n}") { s.to_str() }
     }
     @Test
-    fun expr_do4() {
+    fun dd_04_do() {
         G.tks = "do [x:X] { do [y:Y] {  }}".lexer()
         parser_lexer()
         val s = parser_stmt()
@@ -135,14 +159,14 @@ class Parser {
     // DCL / SET
 
     @Test
-    fun dd_01_dcl () {
+    fun ee_01_dcl () {
         G.tks = ("do [x: Int] {}").lexer()
         parser_lexer()
         val e = parser_stmt()
         assert(e.to_str() == "do [x: Int] {\n}") { e.to_str() }
     }
     @Test
-    fun dd_02_set () {
+    fun ee_02_set () {
         G.tks = ("set x = 10").lexer()
         parser_lexer()
         val e = parser_stmt()
@@ -152,35 +176,35 @@ class Parser {
     // NUM / NIL / BOOL
 
     @Test
-    fun cc_01_num() {
+    fun ff_01_num() {
         G.tks = (" 1.5F ").lexer()
         parser_lexer()
         val e = parser_expr_3_prim()
         assert(e is Expr.Num && e.tk.str == "1.5F")
     }
     @Test
-    fun cc_02_nil() {
+    fun ff_02_nil() {
         G.tks = ("null").lexer()
         parser_lexer()
         val e = parser_expr_3_prim()
         assert(e is Expr.Null && e.tk.str == "null")
     }
     @Test
-    fun cc_03_true() {
+    fun ff_03_true() {
         G.tks = ("true").lexer()
         parser_lexer()
         val e = parser_expr_3_prim()
         assert(e is Expr.Bool && e.tk.str == "true")
     }
     @Test
-    fun cc_04_false() {
+    fun ff_04_false() {
         G.tks = ("false").lexer()
         parser_lexer()
         val e = parser_expr_3_prim()
         assert(e is Expr.Bool && e.tk.str == "false")
     }
     @Test
-    fun cc_05_char() {
+    fun ff_05_char() {
         G.tks = ("'x'").lexer()
         parser_lexer()
         val e = parser_expr_3_prim()
@@ -190,21 +214,21 @@ class Parser {
     // CALL
 
     @Test
-    fun dd_01_call() {
+    fun gg_01_call() {
         G.tks = (" f (1.5F, x) ").lexer()
         parser_lexer()
         val e = parser_expr_2_suf()
         assert(e is Expr.Call && e.tk.str=="f" && e.f is Expr.Acc && e.args.size==2)
     }
     @Test
-    fun dd_02_call() {
+    fun gg_02_call() {
         G.tks = (" f() ").lexer()
         parser_lexer()
         val e = parser_expr_2_suf()
         assert(e is Expr.Call && e.f.tk.str=="f" && e.f is Expr.Acc && e.args.size==0)
     }
     @Test
-    fun dd_03_call() {
+    fun gg_03_call() {
         G.tks = (" f(x,8)() ").lexer()
         parser_lexer()
         val e = parser_expr_2_suf()
@@ -212,13 +236,13 @@ class Parser {
         assert(e.to_str() == "f(x,8)()")
     }
     @Test
-    fun dd_04_call_err() {
+    fun gg_04_call_err() {
         G.tks = ("f (999 ").lexer()
         parser_lexer()
         assert(trap { parser_expr_2_suf() } == "anon : (lin 1, col 8) : expected \",\" : have end of file")
     }
     @Test
-    fun dd_05_call_err() {
+    fun gg_05_call_err() {
         G.tks = (" f ({ ").lexer()
         parser_lexer()
         assert(trap { parser_expr_2_suf() } == "anon : (lin 1, col 5) : expected expression : have \"{\"")

@@ -31,30 +31,11 @@ fun check_vars () {
     G.outer!!.dn_visit(::fs, ::fe)
 }
 
-fun Expr.type (): String {
-    return when (this) {
-        is Expr.Acc -> {
-            this.up_first {
-                if (it !is Stmt.Block) false else {
-                    it.vs.find { it.first.str == this.tk.str }?.second?.str
-                }
-            } as String
-        }
-        is Expr.Bin -> TODO()
-        is Expr.Bool -> "Bool"
-        is Expr.Call -> TODO()
-        is Expr.Char -> "Char"
-        is Expr.Nat -> "?"
-        is Expr.Null -> TODO()
-        is Expr.Num -> "Int"
-    }
-}
-
 fun check_types () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Set -> {
-                if (me.dst.type() != me.src.type()) {
+                if (!me.dst.type().is_sup_of(me.src.type())) {
                     err(me.tk, "invalid set : types mismatch")
                 }
             }
@@ -63,8 +44,22 @@ fun check_types () {
     }
     fun fe (me: Expr) {
         when (me) {
+            is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {
+                err(me.tk, "invalid operation : types mismatch")
+            }
             is Expr.Call -> {
-
+                val tp = me.type()
+                val ok = when {
+                    (tp is Type.Any) -> true
+                    (tp !is Type.Func) -> false
+                    (tp.inps.size != me.args.size) -> false
+                    else -> tp.inps.zip(me.args).all { (par, arg) ->
+                        par.is_sup_of(arg.type())
+                    }
+                }
+                if (!ok) {
+                    err(me.tk, "invalid call : types mismatch")
+                }
             }
             else -> {}
         }

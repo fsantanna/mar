@@ -22,14 +22,12 @@ val OPERATORS = Pair (
 
 val KEYWORDS: SortedSet<String> = (
     setOf (
-        "data", "do", "else",
-        "false", "func'", "group", "if",
-        "set", "true",
-        "null",
+        "do","false", "func",
+        "null", "set", "true",
     ).toSortedSet()
 )
 
-typealias Var_Type  = Pair<Tk.Var,Tk.Type>
+typealias Var_Type = Pair<Tk.Var,Type>
 
 sealed class Tk (val str: String, val pos: Pos) {
     data class Eof (val pos_: Pos, val n_: Int=G.N++): Tk("", pos_)
@@ -40,6 +38,14 @@ sealed class Tk (val str: String, val pos: Pos) {
     data class Num (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
     data class Chr (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
     data class Nat (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
+}
+
+sealed class Type (var n: Int, val tk: Tk) {
+    //data class Top   (val tk_: Tk): Type(G.N++, tk_)
+    data class Any   (val tk_: Tk): Type(G.N++, tk_)
+    data class Unit  (val tk_: Tk.Fix): Type(G.N++, tk_)
+    data class Basic (val tk_: Tk.Type): Type(G.N++, tk_)
+    data class Func  (val tk_: Tk.Fix, val inps: List<Type>, val out: Type): Type(G.N++, tk_)
 }
 
 sealed class Expr (var n: Int, val tk: Tk) {

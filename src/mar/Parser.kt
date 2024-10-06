@@ -94,6 +94,26 @@ fun <T> parser_list (sep: String?, close: ()->Boolean, func: () -> T): List<T> {
     return l
 }
 
+fun parser_type (): Type {
+    return when {
+        accept_fix("(") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            accept_fix_err(")")
+            Type.Unit(tk0)
+        }
+        accept_enu("Type") -> Type.Basic(G.tk0 as Tk.Type)
+        accept_fix("func") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            accept_fix_err("(")
+            val inps = parser_list(",", ")") { parser_type() }
+            accept_fix("->")
+            val out = parser_type()
+            Type.Func(tk0, inps, out)
+        }
+        else -> err_expected(G.tk1!!, "type")
+    }
+}
+
 fun parser_expr_3_prim (): Expr {
     return when {
         accept_enu("Nat")  -> Expr.Nat(G.tk0 as Tk.Nat)
@@ -147,8 +167,7 @@ fun parser_var_type (): Var_Type {
     accept_enu_err("Var")
     val id = G.tk0 as Tk.Var
     accept_fix_err(":")
-    accept_enu_err("Type")
-    val tp = G.tk0 as Tk.Type
+    val tp = parser_type()
     return Pair(id, tp)
 }
 
