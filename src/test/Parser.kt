@@ -196,31 +196,26 @@ class Parser {
     @Test
     fun ee_03_func() {
         G.tks = ("""
+            set f = func (Int) -> Int {
+            }
+        """).lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 2, col 27) : expected variable : have \"Int\"")
+    }
+    @Test
+    fun ee_03x_func() {
+        G.tks = ("""
             do [f: func (Int) -> Int] {
-                set f = func (Int) -> Int {
-                    do [a:Int] {
-                        ;;return 10
-                    }
+                set f = func (a:Int) -> Int {
                 }
             }
         """).lexer()
         parser_lexer()
         val e = parser_stmt()
-        assert(e.to_str() == "set x = 10") { e.to_str() }
-    }
-    @Test
-    fun ee_04_func_err() {
-        G.tks = ("""
-            do [f: func () -> ()] {
-                set f = func () -> Int {
-                    do [] {
-                        ;;return 10
-                    }
-                }
-            }
-        """).lexer()
-        parser_lexer()
-        assert(trap { parser_stmt() } == "TODO")
+        assert(e.to_str() == "do [f: func (Int) -> Int] {\n" +
+                "set f = func (a: Int) -> Int {\n" +
+                "}\n" +
+                "}") { e.to_str() }
     }
 
     // NUM / NIL / BOOL

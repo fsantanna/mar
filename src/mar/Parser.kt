@@ -94,7 +94,7 @@ fun <T> parser_list (sep: String?, close: ()->Boolean, func: () -> T): List<T> {
     return l
 }
 
-fun parser_type (): Type {
+fun parser_type (req_vars: Boolean = false): Type {
     return when {
         accept_fix("(") -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -105,7 +105,7 @@ fun parser_type (): Type {
         accept_fix("func") -> {
             val tk0 = G.tk0 as Tk.Fix
             accept_fix_err("(")
-            val vars = check_enu("Var")
+            val vars = req_vars || check_enu("Var")
             val inps = parser_list(",", ")") {
                 val id = if (!vars) null else {
                     accept_enu_err("Var")
@@ -113,10 +113,10 @@ fun parser_type (): Type {
                     accept_fix_err(":")
                     tk
                 }
-                Pair(id, parser_type())
+                Pair(id, parser_type(req_vars))
             }
             accept_fix("->")
-            val out = parser_type()
+            val out = parser_type(req_vars)
             if (vars) {
                 Type.Func.Vars(tk0, inps as List<Var_Type>, out)
             } else {
@@ -203,12 +203,12 @@ fun parser_stmt (): Stmt {
             val dst = parser_expr()
             accept_fix_err("=")
             if (dst is Expr.Acc && check_fix("func")) {
-                val tp = parser_type() as Type.Func
+                val tp = parser_type(true) as Type.Func.Vars
                 accept_fix_err("{")
-                check_fix_err("do")
-                val blk = parser_stmt() as Stmt.Block
-                accept_fix_err("}")
-                Stmt.Func(dst.tk_, tp, blk)
+                val ss = parser_list(null, "}") {
+                    parser_stmt()
+                }
+                Stmt.Func(dst.tk_, tp, Stmt.Block(tp.tk_, tp.inps_, ss))
             } else {
                 val src = parser_expr()
                 if (!dst.is_lval()) {

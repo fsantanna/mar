@@ -6,14 +6,18 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Any) -> true
         (this is Type.Unit  && other is Type.Unit)  -> true
         (this is Type.Basic && other is Type.Basic) -> (this.tk.str == other.tk.str)
-        (this is Type.Func  && other is Type.Func)  -> TODO()
+        (this is Type.Func  && other is Type.Func)  -> this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
         else -> false
     }
 }
 
+fun Type.is_same_of (other: Type): Boolean {
+    return this.is_sup_of(other) && other.is_sup_of(this)
+}
+
 fun Expr.Bin.args (tp1: Type, tp2: Type): Boolean {
     return when (this.tk_.str) {
-        "==", "!=" -> tp1.is_sup_of(tp2) && tp2.is_sup_of(tp1)
+        "==", "!=" -> tp1.is_same_of(tp2)
         ">", "<", ">=", "<=",
         "+", "-", "*", "/", "%" -> {
             tp1.is_sup_of(Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))) &&
@@ -27,15 +31,17 @@ fun Expr.Bin.args (tp1: Type, tp2: Type): Boolean {
     }
 }
 
+fun Tk.Var.type (fr: Any): Type? {
+    return fr.up_first {
+        if (it !is Stmt.Block) false else {
+            it.vs.find { it.first.str == this.str }?.second
+        }
+    } as Type?
+}
+
 fun Expr.type (): Type {
     return when (this) {
-        is Expr.Acc -> {
-            this.up_first {
-                if (it !is Stmt.Block) false else {
-                    it.vs.find { it.first.str == this.tk.str }?.second
-                }
-            } as Type
-        }
+        is Expr.Acc -> this.tk_.type(this)!!
         is Expr.Bin -> when (this.tk_.str) {
             "==", "!=",
             ">", "<", ">=", "<=",

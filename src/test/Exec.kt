@@ -104,15 +104,23 @@ class Exec {
     fun ee_01_func() {
         val out = test("""
             do [f: func (Int) -> Int] {
-                set f = func (Int) -> Int {
-                    do [v: Int] {
-                        return v
-                    }
+                set f = func (v: Int) -> Int {
+                    return v
                 }
                 `printf("%d\n", f(10));`
             }
         """)
         assert(out == "10\n") { out }
+    }
+    @Test
+    fun ee_02_func_err() {
+        val out = test("""
+            do [f: func () -> ()] {
+                set f = func () -> Int {
+                }
+            }
+        """)
+        assert(out == "anon : (lin 3, col 21) : invalid declaration : types mismatch\n") { out }
     }
 
     /*

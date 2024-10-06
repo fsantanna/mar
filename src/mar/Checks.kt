@@ -34,6 +34,11 @@ fun check_vars () {
 fun check_types () {
     fun fs (me: Stmt) {
         when (me) {
+            is Stmt.Func -> {
+                if (!me.tp.is_same_of(me.tk_.type(me)!!)) {
+                    err(me.tk, "invalid declaration : types mismatch")
+                }
+            }
             is Stmt.Set -> {
                 if (!me.dst.type().is_sup_of(me.src.type())) {
                     err(me.tk, "invalid set : types mismatch")
