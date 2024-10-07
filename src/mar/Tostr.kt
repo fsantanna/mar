@@ -78,7 +78,7 @@ fun Var_Type.to_str (pre: Boolean = false): String {
 
 fun Stmt.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Stmt.Proto.Func -> "set " + this.tk_.str + " = " + this.tp.to_str(pre) + " {\n" + this.blk.ss.map { it.to_str(pre) }.joinToString("\n") + "}"
+        is Stmt.Proto.Func -> "func " + this.id.str + " " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.map { it.to_str(pre) }.joinToString("\n") + "}"
         is Stmt.Proto.Coro -> TODO()
         is Stmt.Return -> "return(" + this.e.to_str(pre) + ")"
         is Stmt.Block  -> "do [" + (this.vs.map { (id,tp) -> id.str + ": " + tp.to_str(pre) }.joinToString(",")) + "] {\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"

@@ -20,7 +20,7 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Proto -> {
             when (this) {
                 is Stmt.Proto.Func ->
-                    this.tp_.out.coder(pre) + " " + this.tk.str + "(" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ") {\n" + this.blk.ss.map { it.coder(pre)+"\n" }.joinToString("") + "}"
+                    this.tp_.out.coder(pre) + " " + this.id.str + "(" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ") {\n" + this.blk.ss.map { it.coder(pre)+"\n" }.joinToString("") + "}"
                 is Stmt.Proto.Coro ->
                     TODO()
             }

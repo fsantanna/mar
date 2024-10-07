@@ -35,7 +35,7 @@ fun check_types () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Proto -> {
-                if (!me.tp.is_same_of(me.tk_.type(me)!!)) {
+                if (!me.tp.is_same_of(me.id.type(me)!!)) {
                     err(me.tk, "invalid declaration : types mismatch")
                 }
             }

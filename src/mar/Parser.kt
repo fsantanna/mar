@@ -102,25 +102,10 @@ fun parser_var_type (): Var_Type {
     return Pair(id, tp)
 }
 
-fun parser_type (req_vars: Boolean = false): Type {
+fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
     return when {
-        accept_fix("(") -> {
-            val tp = if (check_fix(")")) {
-                Type.Unit(G.tk0 as Tk.Fix)
-            } else {
-                parser_type(req_vars)
-            }
-            accept_fix_err(")")
-            tp
-        }
-        accept_enu("Type") -> Type.Basic(G.tk0 as Tk.Type)
-        accept_enu("Op") -> {
-            val tk0 = G.tk0 as Tk.Op
-            val ptr = parser_type(req_vars)
-            Type.Pointer(tk0, ptr)
-        }
-        accept_fix("func") || accept_fix("coro") -> {
-            val tk0 = G.tk0 as Tk.Fix
+        (pre!=null || accept_fix("func") || accept_fix("coro")) -> {
+            val tk0 = pre ?: (G.tk0 as Tk.Fix)
             accept_fix_err("(")
             val vars = req_vars || check_enu("Var")
             val inps = parser_list(",", ")") {
@@ -143,6 +128,21 @@ fun parser_type (req_vars: Boolean = false): Type {
                 (mid!=null && !vars) -> Type.Proto.Coro(tk0, inps as List<Type>, mid, out)
                 else -> error("impossible case")
             }
+        }
+        accept_fix("(") -> {
+            val tp = if (check_fix(")")) {
+                Type.Unit(G.tk0 as Tk.Fix)
+            } else {
+                parser_type(req_vars)
+            }
+            accept_fix_err(")")
+            tp
+        }
+        accept_enu("Type") -> Type.Basic(G.tk0 as Tk.Type)
+        accept_enu("Op") -> {
+            val tk0 = G.tk0 as Tk.Op
+            val ptr = parser_type(req_vars)
+            Type.Pointer(tk0, ptr)
         }
         else -> err_expected(G.tk1!!, "type")
     }
@@ -260,25 +260,27 @@ fun parser_stmt (): Stmt {
             val tk0 = G.tk0 as Tk.Fix
             val dst = parser_expr()
             accept_fix_err("=")
-            if (dst is Expr.Acc && (check_fix("func") || check_fix("coro"))) {
-                val tp = parser_type(true)
-                accept_fix_err("{")
-                val ss = parser_list(null, "}") {
-                    parser_stmt()
-                }
-                when (tp) {
-                    is Type.Proto.Func.Vars ->
-                        Stmt.Proto.Func(dst.tk_, tp, Stmt.Block(tp.tk_, tp.inps__, ss))
-                    is Type.Proto.Coro.Vars ->
-                        Stmt.Proto.Coro(dst.tk_, tp, Stmt.Block(tp.tk_, tp.inps__, ss))
-                    else -> error("impossible case")
-                }
-            } else {
-                val src = parser_expr()
-                if (!dst.is_lval()) {
-                    err(tk0, "set error : expected assignable destination")
-                }
-                Stmt.Set(tk0, dst, src)
+            val src = parser_expr()
+            if (!dst.is_lval()) {
+                err(tk0, "set error : expected assignable destination")
+            }
+            Stmt.Set(tk0, dst, src)
+        }
+        (accept_fix("func") || accept_fix("coro")) -> {
+            val tk0 = G.tk0 as Tk.Fix
+            accept_enu_err("Var")
+            val id = G.tk0 as Tk.Var
+            val tp = parser_type(true, tk0)
+            accept_fix_err("{")
+            val ss = parser_list(null, "}") {
+                parser_stmt()
+            }
+            when (tp) {
+                is Type.Proto.Func.Vars ->
+                    Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk_, tp.inps__, ss))
+                is Type.Proto.Coro.Vars ->
+                    Stmt.Proto.Coro(tk0, id, tp, Stmt.Block(tp.tk_, tp.inps__, ss))
+                else -> error("impossible case")
             }
         }
         accept_fix("return") -> {

@@ -79,9 +79,9 @@ sealed class Expr (var n: Int, val tk: Tk) {
 }
 
 sealed class Stmt (var n: Int, val tk: Tk) {
-    sealed class Proto (val tk_: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, tk_) {
-        data class Func (val tk__: Tk.Var, val tp_: Type.Proto.Func.Vars, val blk_: Stmt.Block) : Stmt.Proto(tk__, tp_, blk_)
-        data class Coro (val tk__: Tk.Var, val tp_: Type.Proto.Coro.Vars, val blk_: Stmt.Block) : Stmt.Proto(tk__, tp_, blk_)
+    sealed class Proto (val tk_: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, tk_) {
+        data class Func (val tk__: Tk.Fix, val id_: Tk.Var, val tp_: Type.Proto.Func.Vars, val blk_: Stmt.Block) : Stmt.Proto(tk__, id_, tp_, blk_)
+        data class Coro (val tk__: Tk.Fix, val id_: Tk.Var, val tp_: Type.Proto.Coro.Vars, val blk_: Stmt.Block) : Stmt.Proto(tk__, id_, tp_, blk_)
     }
     data class Return  (val tk_: Tk.Fix, val e: Expr) : Stmt(G.N++, tk_)
     data class Block   (val tk_: Tk, val vs: List<Var_Type>, val ss: List<Stmt>) : Stmt(G.N++, tk_)

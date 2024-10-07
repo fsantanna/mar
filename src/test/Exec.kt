@@ -111,7 +111,7 @@ class Exec  {
     fun ee_01_func() {
         val out = test("""
             do [f: func (Int) -> Int] {
-                set f = func (v: Int) -> Int {
+                func f (v: Int) -> Int {
                     return(v)
                 }
                 `printf("%d\n", f(10));`
@@ -123,17 +123,17 @@ class Exec  {
     fun ee_02_func_err() {
         val out = test("""
             do [f: func () -> ()] {
-                set f = func () -> Int {
+                func f () -> Int {
                 }
             }
         """)
-        assert(out == "anon : (lin 3, col 21) : invalid declaration : types mismatch\n") { out }
+        assert(out == "anon : (lin 3, col 17) : invalid declaration : types mismatch\n") { out }
     }
     @Test
     fun ee_03_func_err() {
         val out = test("""
             do [f: func () -> Int] {
-                set f = func () -> Int {
+                func f () -> Int {
                     return ()
                 }
             }
@@ -148,10 +148,10 @@ class Exec  {
         val out = test("""
             do [i: Int, f: func () -> ()] {
                 set i = 10
-                set f = func () -> () {
+                func f () -> () {
                     do [j: Int, g: func () -> Int] {
                         set j = 20
-                        set g = func () -> Int {
+                        func g () -> Int {
                             return(i + j)
                         }
                         `printf("%d\n", g());`
@@ -167,10 +167,10 @@ class Exec  {
         val out = test("""
             do [i: Int, f: func () -> (\func () -> Int), gg: (\func () -> Int)] {
                 set i = 10
-                set f = func () -> (\func () -> Int) {
+                func f () -> (\func () -> Int) {
                     do [j: Int, g: func () -> Int] {
                         set j = 20
-                        set g = func () -> Int {
+                        func g () -> Int {
                             return(i + j)
                         }
                         return(\g)
@@ -189,7 +189,7 @@ class Exec  {
     fun ff_01_coro () {
         val out = test("""
             do [co: coro () -> () -> ()] {
-                set co = coro () -> () -> () {
+                coro co () -> () -> () {
                     do [v: Int] {
                         set v = 10
                         `printf("%d\n", v);`

@@ -212,24 +212,24 @@ class Parser {
     @Test
     fun ee_03_func() {
         G.tks = ("""
-            set f = func (Int) -> Int {
+            func f (Int) -> Int {
             }
         """).lexer()
         parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 2, col 27) : expected variable : have \"Int\"")
+        assert(trap { parser_stmt() } == "anon : (lin 2, col 21) : expected variable : have \"Int\"")
     }
     @Test
     fun ee_04_func() {
         G.tks = ("""
             do [f: func (Int) -> Int] {
-                set f = func (a:Int) -> Int {
+                func f (a:Int) -> Int {
                 }
             }
         """).lexer()
         parser_lexer()
         val e = parser_stmt()
         assert(e.to_str() == "do [f: func (Int) -> Int] {\n" +
-                "set f = func (a: Int) -> Int {\n" +
+                "func f (a: Int) -> Int {\n" +
                 "}\n" +
                 "}") { e.to_str() }
     }
