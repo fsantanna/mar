@@ -1,34 +1,52 @@
 package mar
 
-fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?): List<V> {
+fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V> {
     val v = fs(this)
     if (v === null) {
         return emptyList()
     }
     return v + when (this) {
-        is Stmt.Proto -> this.blk.dn_collect(fs,fe)
+        is Stmt.Proto -> this.blk.dn_collect(fs,fe,ft) + this.tp.dn_collect(ft)
         is Stmt.Return -> this.e.dn_collect(fe)
-        is Stmt.Block -> this.ss.map { it.dn_collect(fs,fe) }.flatten()
+        is Stmt.Block -> this.vs.map { (_,tp) -> tp.dn_collect(ft) }.flatten() + this.ss.map { it.dn_collect(fs,fe,ft) }.flatten()
         is Stmt.Set -> this.dst.dn_collect(fe) + this.src.dn_collect(fe)
         is Stmt.Call -> this.call.dn_collect(fe)
         is Stmt.Nat -> emptyList()
     }
 }
-fun <V> Expr.dn_collect (f: (Expr)->List<V>?): List<V> {
-    val v = f(this)
+fun <V> Expr.dn_collect (fe: (Expr)->List<V>?): List<V> {
+    val v = fe(this)
     if (v === null) {
         return emptyList()
     }
     return v + when (this) {
-        is Expr.Bin -> this.e1.dn_collect(f) + this.e2.dn_collect(f)
-        is Expr.Call -> this.f.dn_collect(f) + this.args.map { it.dn_collect(f) }.flatten()
+        is Expr.Spawn -> this.co.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
+        is Expr.Resume -> this.xco.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
+        is Expr.Yield -> this.arg.dn_collect(fe)
+        is Expr.Uno -> this.e.dn_collect(fe)
+        is Expr.Bin -> this.e1.dn_collect(fe) + this.e2.dn_collect(fe)
+        is Expr.Call -> this.f.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
         is Expr.Acc, is Expr.Nat, is Expr.Null, is Expr.Unit,
         is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()
     }
 }
+fun <V> Type.dn_collect (ft: (Type)->List<V>?): List<V> {
+    val v = ft(this)
+    if (v === null) {
+        return emptyList()
+    }
+    return v + when (this) {
+        is Type.Any -> emptyList()
+        is Type.Basic -> emptyList()
+        is Type.Pointer -> this.ptr.dn_collect(ft)
+        is Type.Proto.Coro -> this.inps_.map { it.dn_collect(ft) }.flatten() + this.res.dn_collect(ft) + this.out_.dn_collect(ft)
+        is Type.Proto.Func -> this.inps_.map { it.dn_collect(ft) }.flatten() + this.out_.dn_collect(ft)
+        is Type.Unit -> emptyList()
+    }
+}
 
-fun Stmt.dn_visit (fs: (Stmt)->Unit, fe: (Expr)->Unit) {
-    this.dn_collect({ fs(it) ; emptyList<Unit>() }, { fe(it) ; emptyList<Unit>() })
+fun Stmt.dn_visit (fs: (Stmt)->Unit, fe: (Expr)->Unit, ft: (Type)->Unit) {
+    this.dn_collect({ fs(it) ; emptyList<Unit>() }, { fe(it) ; emptyList<Unit>() }, { ft(it) ; emptyList<Unit>() })
 }
 fun Expr.dn_visit (f: (Expr)->Unit) {
     this.dn_collect { f(it) ; emptyList<Unit>() }

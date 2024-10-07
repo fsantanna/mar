@@ -4,9 +4,10 @@ fun Type.is_sup_of (other: Type): Boolean {
     return when {
         //(this is Type.Top) -> true
         (this is Type.Any) -> true
-        (this is Type.Unit  && other is Type.Unit)  -> true
-        (this is Type.Basic && other is Type.Basic) -> (this.tk.str == other.tk.str)
-        (this is Type.Proto.Func  && other is Type.Proto.Func)  -> this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
+        (this is Type.Unit       && other is Type.Unit)       -> true
+        (this is Type.Basic      && other is Type.Basic)      -> (this.tk.str == other.tk.str)
+        (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
+        (this is Type.Proto.Func && other is Type.Proto.Func) -> this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
         else -> false
     }
 }
@@ -41,7 +42,15 @@ fun Tk.Var.type (fr: Any): Type? {
 
 fun Expr.type (): Type {
     return when (this) {
-        is Expr.Acc -> this.tk_.type(this)!!
+        is Expr.Spawn -> TODO()
+        is Expr.Resume -> TODO()
+        is Expr.Yield -> TODO()
+
+        is Expr.Uno -> when (this.tk_.str) {
+            "-" -> Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))
+            "\\" -> Type.Pointer(Tk.Op("\\", this.tk.pos.copy()), this.e.type())
+            else -> error("impossible case")
+        }
         is Expr.Bin -> when (this.tk_.str) {
             "==", "!=",
             ">", "<", ">=", "<=",
@@ -49,10 +58,12 @@ fun Expr.type (): Type {
             "+", "-", "*", "/", "%" -> Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))
             else -> error("impossible case")
         }
-        is Expr.Bool -> Type.Basic(Tk.Type( "Bool", this.tk.pos.copy()))
         is Expr.Call -> this.f.type().let {
             if (it is Type.Any) it else (it as Type.Proto.Func).out
         }
+
+        is Expr.Acc -> this.tk_.type(this)!!
+        is Expr.Bool -> Type.Basic(Tk.Type( "Bool", this.tk.pos.copy()))
         is Expr.Char -> Type.Basic(Tk.Type( "Char", this.tk.pos.copy()))
         is Expr.Nat -> Type.Any(this.tk)
         is Expr.Null -> TODO()

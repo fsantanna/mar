@@ -25,6 +25,7 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Any -> TODO()
         is Type.Basic -> this.tk.str
         is Type.Unit -> "()"
+        is Type.Pointer -> "\\" + this.ptr.to_str(pre)
         is Type.Proto -> {
             val inps = when (this) {
                 is Type.Proto.Func.Vars -> this.inps__.map { it.to_str(pre) }.joinToString(",")
@@ -33,7 +34,7 @@ fun Type.to_str (pre: Boolean = false): String {
             }
             when (this) {
                 is Type.Proto.Func -> "func (" + inps + ") -> " + this.out.to_str(pre)
-                is Type.Proto.Coro -> "coro (" + inps + ") -> " + this.yld.to_str(pre) + " -> " + this.out.to_str(pre)
+                is Type.Proto.Coro -> "coro (" + inps + ") -> " + this.res.to_str(pre) + " -> " + this.out.to_str(pre)
             }
         }
     }.let {
@@ -53,6 +54,12 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Num    -> this.tk.str
         is Expr.Null   -> this.tk.str
         is Expr.Unit   -> "()"
+
+        is Expr.Spawn  -> "spawn " + this.co.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
+        is Expr.Resume -> "resume " + this.xco.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
+        is Expr.Yield  -> "yield(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
+
+        is Expr.Uno    -> "(" + this.tk.str + this.e.to_str(pre) + ")"
         is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk.str + " " + this.e2.to_str(pre) + ")"
         is Expr.Call   -> this.f.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
     }.let {

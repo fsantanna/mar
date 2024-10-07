@@ -94,40 +94,61 @@ fun <T> parser_list (sep: String?, close: ()->Boolean, func: () -> T): List<T> {
     return l
 }
 
+fun parser_var_type (): Var_Type {
+    accept_enu_err("Var")
+    val id = G.tk0 as Tk.Var
+    accept_fix_err(":")
+    val tp = parser_type()
+    return Pair(id, tp)
+}
+
 fun parser_type (req_vars: Boolean = false): Type {
     return when {
         accept_fix("(") -> {
-            val tk0 = G.tk0 as Tk.Fix
+            val tp = if (check_fix(")")) {
+                Type.Unit(G.tk0 as Tk.Fix)
+            } else {
+                parser_type(req_vars)
+            }
             accept_fix_err(")")
-            Type.Unit(tk0)
+            tp
         }
         accept_enu("Type") -> Type.Basic(G.tk0 as Tk.Type)
-        accept_fix("func") -> {
+        accept_enu("Op") -> {
+            val tk0 = G.tk0 as Tk.Op
+            val ptr = parser_type(req_vars)
+            Type.Pointer(tk0, ptr)
+        }
+        accept_fix("func") || accept_fix("coro") -> {
             val tk0 = G.tk0 as Tk.Fix
             accept_fix_err("(")
             val vars = req_vars || check_enu("Var")
             val inps = parser_list(",", ")") {
-                val id = if (!vars) null else {
-                    accept_enu_err("Var")
-                    val tk = G.tk0 as Tk.Var
-                    accept_fix_err(":")
-                    tk
+                if (vars) {
+                    parser_var_type()
+                } else {
+                    parser_type(req_vars)
                 }
-                Pair(id, parser_type(req_vars))
             }
-            accept_fix("->")
+            val mid = if (tk0.str == "func") null else {
+                accept_fix_err("->")
+                parser_type(req_vars)
+            }
+            accept_fix_err("->")
             val out = parser_type(req_vars)
-            if (vars) {
-                Type.Proto.Func.Vars(tk0, inps as List<Var_Type>, out)
-            } else {
-                Type.Proto.Func(tk0, inps.map { (_,tp) -> tp }, out)
+            when {
+                (mid==null &&  vars) -> Type.Proto.Func.Vars(tk0, inps as List<Var_Type>, out)
+                (mid==null && !vars) -> Type.Proto.Func(tk0, inps as List<Type>, out)
+                (mid!=null &&  vars) -> Type.Proto.Coro.Vars(tk0, inps as List<Var_Type>, mid, out)
+                (mid!=null && !vars) -> Type.Proto.Coro(tk0, inps as List<Type>, mid, out)
+                else -> error("impossible case")
             }
         }
         else -> err_expected(G.tk1!!, "type")
     }
 }
 
-fun parser_expr_3_prim (): Expr {
+fun parser_expr_4_prim (): Expr {
     return when {
         accept_enu("Nat")  -> Expr.Nat(G.tk0 as Tk.Nat)
         accept_enu("Var")  -> Expr.Acc(G.tk0 as Tk.Var)
@@ -144,18 +165,45 @@ fun parser_expr_3_prim (): Expr {
                 parser_expr().let { accept_fix_err(")") ; it }
             }
         }
+
+        accept_fix("spawn") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            val co = parser_expr_4_prim()
+            accept_fix_err("(")
+            val args = parser_list(",",")") { parser_expr() }
+            Expr.Spawn(tk0, co, args)
+        }
+        accept_fix("resume") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            val xco = parser_expr_4_prim()
+            accept_fix_err("(")
+            val args = parser_list(",",")") { parser_expr() }
+            Expr.Resume(tk0, xco, args)
+        }
+        accept_fix("yield") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            accept_fix_err("(")
+            val arg = if (check_fix(")")) {
+                Expr.Unit(G.tk0 as Tk.Fix)
+            } else {
+                parser_expr()
+            }
+            accept_fix_err(")")
+            Expr.Yield(tk0, arg)
+        }
+
         else                    -> err_expected(G.tk1!!, "expression")
     }
 }
 
-fun parser_expr_2_suf (xe: Expr? = null): Expr {
-    val e = if (xe !== null) xe else parser_expr_3_prim()
+fun parser_expr_3_suf (xe: Expr? = null): Expr {
+    val e = if (xe !== null) xe else parser_expr_4_prim()
     val ok = accept_fix("[") || accept_fix(".") || accept_fix("(")
     if (!ok) {
         return e
     }
 
-    return parser_expr_2_suf(
+    return parser_expr_3_suf(
         when (G.tk0!!.str) {
             "(" -> {
                 val args = parser_list(",",")") { parser_expr() }
@@ -166,8 +214,19 @@ fun parser_expr_2_suf (xe: Expr? = null): Expr {
     )
 }
 
+fun parser_expr_2_pre (): Expr {
+    return when {
+        accept_enu("Op") -> {
+            val op = G.tk0 as Tk.Op
+            val e = parser_expr_2_pre()
+            Expr.Uno(op, e)
+        }
+        else -> parser_expr_3_suf()
+    }
+}
+
 fun parser_expr_1_bin (xop: String? = null, xe1: Expr? = null): Expr {
-    val e1 = if (xe1 !== null) xe1 else parser_expr_2_suf()
+    val e1 = if (xe1 !== null) xe1 else parser_expr_2_pre()
     if (!accept_enu("Op")) {
         return e1
     }
@@ -175,20 +234,12 @@ fun parser_expr_1_bin (xop: String? = null, xe1: Expr? = null): Expr {
     if (xop!==null && xop!=op.str) {
         err(op, "binary operation error : expected surrounding parentheses")
     }
-    val e2 = parser_expr_2_suf()
+    val e2 = parser_expr_2_pre()
     return parser_expr_1_bin(op.str, Expr.Bin(op, e1, e2))
 }
 
 fun parser_expr (): Expr {
     return parser_expr_1_bin()
-}
-
-fun parser_var_type (): Var_Type {
-    accept_enu_err("Var")
-    val id = G.tk0 as Tk.Var
-    accept_fix_err(":")
-    val tp = parser_type()
-    return Pair(id, tp)
 }
 
 fun parser_stmt (): Stmt {
@@ -209,13 +260,19 @@ fun parser_stmt (): Stmt {
             val tk0 = G.tk0 as Tk.Fix
             val dst = parser_expr()
             accept_fix_err("=")
-            if (dst is Expr.Acc && check_fix("func")) {
-                val tp = parser_type(true) as Type.Proto.Func.Vars
+            if (dst is Expr.Acc && (check_fix("func") || check_fix("coro"))) {
+                val tp = parser_type(true)
                 accept_fix_err("{")
                 val ss = parser_list(null, "}") {
                     parser_stmt()
                 }
-                Stmt.Proto.Func(dst.tk_, tp, Stmt.Block(tp.tk_, tp.inps__, ss))
+                when (tp) {
+                    is Type.Proto.Func.Vars ->
+                        Stmt.Proto.Func(dst.tk_, tp, Stmt.Block(tp.tk_, tp.inps__, ss))
+                    is Type.Proto.Coro.Vars ->
+                        Stmt.Proto.Coro(dst.tk_, tp, Stmt.Block(tp.tk_, tp.inps__, ss))
+                    else -> error("impossible case")
+                }
             } else {
                 val src = parser_expr()
                 if (!dst.is_lval()) {
@@ -233,7 +290,7 @@ fun parser_stmt (): Stmt {
         accept_enu("Nat") -> Stmt.Nat(G.tk0 as Tk.Nat)
         else -> {
             val tk1 = G.tk1!!
-            val call = parser_expr_2_suf()
+            val call = parser_expr_3_suf()
             if (call is Expr.Call) {
                 Stmt.Call(call.tk, call)
             } else {

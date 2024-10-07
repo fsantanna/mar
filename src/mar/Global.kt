@@ -11,19 +11,21 @@ val PATH = File(File(System.getProperty("java.class.path")).absolutePath).parent
 val D = "\$"
 
 val OPERATORS = Pair (
-    setOf('+', '-', '*', '/', '%', '>', '<', '=', '|', '&'),
+    setOf('+', '-', '*', '/', '%', '>', '<', '=', '|', '&', '\\'),
     setOf(
         "==", "!=",
         ">", "<", ">=", "<=",
         "||", "&&",
         "+", "-", "*", "/", "%",
+        "\\",
     )
 )
 
 val KEYWORDS: SortedSet<String> = (
     setOf (
         "do", "coro", "false", "func",
-        "null", "return", "set", "true",
+        "null", "resume", "return", "set",
+        "spawn", "true", "yield",
     ).toSortedSet()
 )
 
@@ -45,14 +47,15 @@ sealed class Type (var n: Int, val tk: Tk) {
     data class Any   (val tk_: Tk): Type(G.N++, tk_)
     data class Unit  (val tk_: Tk.Fix): Type(G.N++, tk_)
     data class Basic (val tk_: Tk.Type): Type(G.N++, tk_)
+    data class Pointer (val tk_: Tk.Op, val ptr: Type): Type(G.N++, tk_)
     sealed class Proto (val tk_: Tk.Fix, val inps: List<Type>, val out: Type): Type(G.N++, tk_) {
         open class Func (val tk__: Tk.Fix, val inps_: List<Type>, val out_: Type): Proto(tk__, inps_, out_) {
             data class Vars(val tk___: Tk.Fix, val inps__: List<Var_Type>, val out__: Type) :
                 Func(tk___, inps__.map { (_, tp) -> tp }, out__)
         }
-        open class Coro (val tk__: Tk.Fix, val inps_: List<Type>, val yld: Type, val out_: Type): Proto(tk__, inps_, out_) {
-            data class Vars(val tk___: Tk.Fix, val inps__: List<Var_Type>, val yld_: Type, val out__: Type) :
-                Coro(tk___, inps__.map { (_, tp) -> tp }, yld_, out__)
+        open class Coro (val tk__: Tk.Fix, val inps_: List<Type>, val res: Type, val out_: Type): Proto(tk__, inps_, out_) {
+            data class Vars(val tk___: Tk.Fix, val inps__: List<Var_Type>, val res_: Type, val out__: Type) :
+                Coro(tk___, inps__.map { (_, tp) -> tp }, res_, out__)
         }
     }
 }
@@ -66,6 +69,11 @@ sealed class Expr (var n: Int, val tk: Tk) {
     data class Null (val tk_: Tk.Fix): Expr(G.N++, tk_)
     data class Unit (val tk_: Tk.Fix): Expr(G.N++, tk_)
 
+    data class Spawn  (val tk_: Tk.Fix, val co: Expr, val args: List<Expr>): Expr(G.N++, tk_)
+    data class Resume (val tk_: Tk.Fix, val xco: Expr, val args: List<Expr>): Expr(G.N++, tk_)
+    data class Yield  (val tk_: Tk.Fix, val arg: Expr): Expr(G.N++, tk_)
+
+    data class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, tk_)
     data class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)
     data class Call (val tk_: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, tk_)
 }

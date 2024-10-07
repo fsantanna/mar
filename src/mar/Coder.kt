@@ -9,8 +9,9 @@ fun Type.coder (pre: Boolean = false): String {
     return when (this) {
         is Type.Any -> TODO()
         is Type.Basic -> this.tk.str
-        is Type.Unit -> TODO()
-        is Type.Proto -> TODO()
+        is Type.Unit -> "void"
+        is Type.Pointer -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
+        is Type.Proto -> "CEU_Proto_$n"
     }
 }
 
@@ -19,13 +20,13 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Proto -> {
             when (this) {
                 is Stmt.Proto.Func ->
-                    this.tp_.out.to_str(pre) + " " + this.tk.str + "(" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ") {\n" + this.blk.ss.map { it.coder(pre)+"\n" }.joinToString("") + "}"
+                    this.tp_.out.coder(pre) + " " + this.tk.str + "(" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ") {\n" + this.blk.ss.map { it.coder(pre)+"\n" }.joinToString("") + "}"
                 is Stmt.Proto.Coro ->
                     TODO()
             }
         }
         is Stmt.Return -> "return (" + this.e.coder(pre) + ");"
-        is Stmt.Block  -> "{\n" + this.vs.filter { (_,tp) -> tp !is Type.Proto }.map { (id,tp) -> tp.to_str(pre) + " " + id.str + ";\n" }.joinToString("") + this.ss.map { it.coder(pre) + "\n" }.joinToString("") + "}"
+        is Stmt.Block  -> "{\n" + this.vs.filter { (_,tp) -> tp !is Type.Proto }.map { (id,tp) -> tp.coder(pre) + " " + id.str + ";\n" }.joinToString("") + this.ss.map { it.coder(pre) + "\n" }.joinToString("") + "}"
         is Stmt.Set    -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
         is Stmt.Nat    -> this.tk.str
         is Stmt.Call   -> this.call.coder(pre) + ";"
@@ -33,12 +34,30 @@ fun Stmt.coder (pre: Boolean = false): String {
 }
 
 fun Expr.coder (pre: Boolean = false): String {
+    fun String.op_ceu_to_c (): String {
+        return when (this) {
+            "\\" -> "&"
+            else -> this
+        }
+    }
     return when (this) {
-        is Expr.Nat -> this.tk.str
-        is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str + " " + this.e2.coder(pre) + ")"
+        is Expr.Uno -> "(" + this.tk.str.op_ceu_to_c() + this.e.coder(pre) + ")"
+        is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_ceu_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
+        is Expr.Nat -> this.tk.str
         else -> this.to_str(pre)
     }
+}
+
+fun coder_types (): String {
+    fun ft (me: Type): List<Type.Proto.Func> {
+        return when (me) {
+            is Type.Proto.Func -> listOf(me)
+            else -> emptyList()
+        }
+    }
+    val ts = G.outer!!.dn_collect({ emptyList() }, { emptyList() }, ::ft)
+    return ts.reversed().map { "typedef ${it.out_.coder()} (*CEU_Proto_${it.n}) (${it.inps_.map { it.coder() }.joinToString(",")});\n" }.joinToString("")
 }
 
 fun coder_main (pre: Boolean): String {
@@ -52,6 +71,8 @@ fun coder_main (pre: Boolean): String {
         #define null  NULL
         #define true  1
         #define false 0
+        
+        ${coder_types()}
         
         int main (void) {
             ${G.outer!!.coder(pre)}

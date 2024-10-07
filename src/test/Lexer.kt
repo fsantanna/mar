@@ -46,12 +46,13 @@ class Lexer {
 
     @Test
     fun bb_01_ids() {
-        val tks = ("if xxx Type coro return").lexer()
+        val tks = ("if xxx Type coro return yield").lexer()
         assert(tks.next().let { it is Tk.Var  && it.str == "if" })
         assert(tks.next().let { it is Tk.Var  && it.str == "xxx" })
         assert(tks.next().let { it is Tk.Type && it.str == "Type" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "coro" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "return" })
+        assert(tks.next().let { it is Tk.Fix  && it.str == "yield" })
         assert(tks.next() is Tk.Eof)
         assert(!tks.hasNext())
     }
@@ -145,11 +146,12 @@ class Lexer {
 
     @Test
     fun dd_01_ops() {
-        val tks = ("&& + >=").lexer()
+        val tks = ("&& + \\ >=").lexer()
         assert(tks.next().let { it is Tk.Op  && it.str == "&&" })
         assert(tks.next().let { it is Tk.Op  && it.str == "+" })
+        assert(tks.next().let { it is Tk.Op  && it.str == "\\" })
         assert(tks.next().let { it is Tk.Op  && it.str == ">=" })
-        assert(tks.next().let { it is Tk.Eof && it.pos.lin==1 && it.pos.col==8 })
+        assert(tks.next().let { it is Tk.Eof && it.pos.lin==1 && it.pos.col==10 })
     }
 
     // CHAR

@@ -13,33 +13,33 @@ class Parser {
     fun aa_01_var () {
         G.tks = (" x ").lexer()
         parser_lexer()
-        val e = parser_expr_3_prim()
+        val e = parser_expr_4_prim()
         assert(e is Expr.Acc && e.tk.str == "x")
     }
     @Test
     fun aa_02_var_err () {
         G.tks = (" { ").lexer()
         parser_lexer()
-        assert(trap { parser_expr_3_prim() } == "anon : (lin 1, col 2) : expected expression : have \"{\"")
+        assert(trap { parser_expr_4_prim() } == "anon : (lin 1, col 2) : expected expression : have \"{\"")
     }
     @Test
     fun aa_03_var_err () {
         G.tks = ("  ").lexer()
         parser_lexer()
-        assert(trap { parser_expr_3_prim() } == "anon : (lin 1, col 3) : expected expression : have end of file")
+        assert(trap { parser_expr_4_prim() } == "anon : (lin 1, col 3) : expected expression : have end of file")
     }
     @Test
     fun aa_04_evt () {
         G.tks = (" evt ").lexer()
         parser_lexer()
-        val e = parser_expr_3_prim()
+        val e = parser_expr_4_prim()
         assert(e is Expr.Acc && e.tk.str == "evt")
     }
     @Test
     fun aa_05_err () {
         G.tks = (" err ").lexer()
         parser_lexer()
-        val e = parser_expr_3_prim()
+        val e = parser_expr_4_prim()
         assert(e is Expr.Acc && e.tk.str == "err")
     }
 
@@ -87,6 +87,22 @@ class Parser {
         parser_lexer()
         assert(trap { parser_type() } == "anon : (lin 1, col 15) : expected variable : have \"Int\"")
     }
+    @Test
+    fun aj_07_type_ptr () {
+        G.tks = ("\\Int").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Pointer && tp.ptr is Type.Basic)
+        assert(tp.to_str() == "\\Int")
+    }
+    @Test
+    fun aj_08_type_coro () {
+        G.tks = ("coro () -> () -> ()").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Proto.Coro && tp.res is Type.Unit)
+        assert(tp.to_str() == "coro () -> () -> ()")
+    }
 
     // PARENS
 
@@ -94,14 +110,14 @@ class Parser {
     fun bb_01_expr_parens() {
         G.tks = (" ( a ) ").lexer()
         parser_lexer()
-        val e = parser_expr_3_prim()
+        val e = parser_expr_4_prim()
         assert(e is Expr.Acc && e.tk.str == "a")
     }
     @Test
     fun bb_02_expr_parens_err() {
         G.tks = (" ( a  ").lexer()
         parser_lexer()
-        assert(trap { parser_expr_3_prim() } == "anon : (lin 1, col 7) : expected \")\" : have end of file")
+        assert(trap { parser_expr_4_prim() } == "anon : (lin 1, col 7) : expected \")\" : have end of file")
     }
     @Test
     fun bb_03_op_prec_err() {
@@ -237,35 +253,35 @@ class Parser {
     fun ff_01_num() {
         G.tks = (" 1.5F ").lexer()
         parser_lexer()
-        val e = parser_expr_3_prim()
+        val e = parser_expr_4_prim()
         assert(e is Expr.Num && e.tk.str == "1.5F")
     }
     @Test
     fun ff_02_nil() {
         G.tks = ("null").lexer()
         parser_lexer()
-        val e = parser_expr_3_prim()
+        val e = parser_expr_4_prim()
         assert(e is Expr.Null && e.tk.str == "null")
     }
     @Test
     fun ff_03_true() {
         G.tks = ("true").lexer()
         parser_lexer()
-        val e = parser_expr_3_prim()
+        val e = parser_expr_4_prim()
         assert(e is Expr.Bool && e.tk.str == "true")
     }
     @Test
     fun ff_04_false() {
         G.tks = ("false").lexer()
         parser_lexer()
-        val e = parser_expr_3_prim()
+        val e = parser_expr_4_prim()
         assert(e is Expr.Bool && e.tk.str == "false")
     }
     @Test
     fun ff_05_char() {
         G.tks = ("'x'").lexer()
         parser_lexer()
-        val e = parser_expr_3_prim()
+        val e = parser_expr_4_prim()
         assert(e is Expr.Char && e.tk.str == "'x'")
     }
 
@@ -275,21 +291,21 @@ class Parser {
     fun gg_01_call() {
         G.tks = (" f (1.5F, x) ").lexer()
         parser_lexer()
-        val e = parser_expr_2_suf()
+        val e = parser_expr_3_suf()
         assert(e is Expr.Call && e.tk.str=="f" && e.f is Expr.Acc && e.args.size==2)
     }
     @Test
     fun gg_02_call() {
         G.tks = (" f() ").lexer()
         parser_lexer()
-        val e = parser_expr_2_suf()
+        val e = parser_expr_3_suf()
         assert(e is Expr.Call && e.f.tk.str=="f" && e.f is Expr.Acc && e.args.size==0)
     }
     @Test
     fun gg_03_call() {
         G.tks = (" f(x,8)() ").lexer()
         parser_lexer()
-        val e = parser_expr_2_suf()
+        val e = parser_expr_3_suf()
         assert(e is Expr.Call && e.f is Expr.Call && e.args.size==0)
         assert(e.to_str() == "f(x,8)()")
     }
@@ -297,12 +313,39 @@ class Parser {
     fun gg_04_call_err() {
         G.tks = ("f (999 ").lexer()
         parser_lexer()
-        assert(trap { parser_expr_2_suf() } == "anon : (lin 1, col 8) : expected \",\" : have end of file")
+        assert(trap { parser_expr_3_suf() } == "anon : (lin 1, col 8) : expected \",\" : have end of file")
     }
     @Test
     fun gg_05_call_err() {
         G.tks = (" f ({ ").lexer()
         parser_lexer()
-        assert(trap { parser_expr_2_suf() } == "anon : (lin 1, col 5) : expected expression : have \"{\"")
+        assert(trap { parser_expr_3_suf() } == "anon : (lin 1, col 5) : expected expression : have \"{\"")
+    }
+
+    // SPAWN / RESUME / YIELD
+
+    @Test
+    fun hh_01_spawn() {
+        G.tks = ("spawn f(1)").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e is Expr.Spawn && e.co is Expr.Acc && e.args.size==1)
+        assert(e.to_str() == "spawn f(1)")
+    }
+    @Test
+    fun hh_02_resume() {
+        G.tks = ("resume xf()").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e is Expr.Resume && e.xco is Expr.Acc && e.args.size==0)
+        assert(e.to_str() == "resume xf()")
+    }
+    @Test
+    fun hh_03_yield() {
+        G.tks = ("yield()").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e is Expr.Yield && e.arg is Expr.Unit)
+        assert(e.to_str() == "yield()") { e.to_str() }
     }
 }

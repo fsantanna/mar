@@ -28,7 +28,7 @@ fun check_vars () {
             else -> {}
         }
     }
-    G.outer!!.dn_visit(::fs, ::fe)
+    G.outer!!.dn_visit(::fs, ::fe, {})
 }
 
 fun check_types () {
@@ -75,5 +75,5 @@ fun check_types () {
             else -> {}
         }
     }
-    G.outer!!.dn_visit(::fs, ::fe)
+    G.outer!!.dn_visit(::fs, ::fe, {})
 }
