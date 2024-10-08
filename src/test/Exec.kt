@@ -133,8 +133,8 @@ class Exec  {
     fun ff_01_coro () {
         val out = test("""
             do [
-                xco: xcoro () -> ()
-                co:  coro () -> () -> ()
+                xco: xcoro () -> (),
+                co:  coro () -> () -> (),
             ] {
                 coro co () -> () -> () {
                     `puts("OK");`

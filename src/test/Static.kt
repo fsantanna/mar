@@ -139,7 +139,22 @@ class Static {
         assert(out == "anon : (lin 4, col 21) : invalid return : types mismatch") { out!! }
     }
     @Test
-    fun bb_05_coro_err() {
+    fun bb_15_func_nested_ok() {
+        val out = static("""
+            do [] {
+                do [g: func () -> ()] {
+                    func g () -> () {
+                    }
+                }
+            }
+        """)
+        assert(out == null) { out!! }
+    }
+
+    // TYPE / CORO / XCORO
+
+    @Test
+    fun bc_01_coro_err() {
         val out = static("""
             do [f: \coro () -> () -> Int] {
                 spawn f()
@@ -148,7 +163,7 @@ class Static {
         assert(out == "anon : (lin 3, col 17) : invalid spawn : expected coroutine prototype") { out!! }
     }
     @Test
-    fun bb_06_coro_err() {
+    fun bc_02_coro_err() {
         val out = static("""
             do [f: coro (Int) -> () -> Int] {
                 coro f (x: Int) -> () -> Int {
@@ -159,7 +174,7 @@ class Static {
         assert(out == "anon : (lin 5, col 17) : invalid spawn : types mismatch") { out!! }
     }
     @Test
-    fun bb_07_coro_ok() {
+    fun bc_03_coro_ok() {
         val out = static("""
             do [f: coro (Int) -> () -> Int] {
                 coro f (x: Int) -> () -> Int {
@@ -170,7 +185,7 @@ class Static {
         assert(out == null) { out!! }
     }
     @Test
-    fun bb_08_exe_coro_err () {
+    fun bc_04_exe_coro_err () {
         val out = static("""
             do [
                 xco: xcoro (Int) -> (),
@@ -184,7 +199,7 @@ class Static {
         assert(out == "anon : (lin 8, col 27) : invalid spawn : types mismatch") { out!! }
     }
     @Test
-    fun bb_09_exe_coro_err () {
+    fun bc_05_exe_coro_err () {
         val out = static("""
             do [] {
                 spawn (1)()
@@ -193,13 +208,14 @@ class Static {
         assert(out == "anon : (lin 3, col 17) : invalid spawn : expected coroutine prototype") { out!! }
     }
     @Test
-    fun bb_10_func_nested_ok() {
+    fun bc_06_exe_coro_ok () {
         val out = static("""
-            do [] {
-                do [g: func () -> ()] {
-                    func g () -> () {
-                    }
-                }
+            do [
+                xco: xcoro () -> (),
+                co:  coro () -> () -> (),
+            ] {
+                coro co () -> () -> () {}
+                set xco = spawn co()
             }
         """)
         assert(out == null) { out!! }
