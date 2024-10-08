@@ -55,11 +55,29 @@ fun Expr.dn_visit (f: (Expr)->Unit) {
     this.dn_collect { f(it) ; emptyList<Unit>() }
 }
 
-fun Stmt.dn_filter (fs: (Stmt)->Boolean, fe: (Expr)->Boolean, ft: (Type)->Boolean): List<Any> {
+fun Stmt.dn_filter (fs: (Stmt)->Boolean?, fe: (Expr)->Boolean?, ft: (Type)->Boolean?): List<Any> {
     return this.dn_collect (
-        { if (fs(it)) listOf(it) else emptyList() },
-        { if (fe(it)) listOf(it) else emptyList() },
-        { if (ft(it)) listOf(it) else emptyList() }
+        {
+            when (fs(it)) {
+                null -> null
+                false -> emptyList()
+                true -> listOf(it)
+            }
+        },
+        {
+            when (fe(it)) {
+                null -> null
+                false -> emptyList()
+                true -> listOf(it)
+            }
+        },
+        {
+            when (ft(it)) {
+                null -> null
+                false -> emptyList()
+                true -> listOf(it)
+            }
+        },
     )
 }
 

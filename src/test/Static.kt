@@ -60,29 +60,29 @@ class Static {
     }
     @Test
     fun aa_04_func_err () {
-        val out = test("""
+        val out = static("""
             do [
                 f: func () -> (),
             ] {
                 ;; missing implementation
             }
         """)
-        assert(out == "anon : (lin 3, col 17) : declaration error : missing implementation\n") { out }
+        assert(out == "anon : (lin 3, col 17) : declaration error : missing implementation") { out!! }
     }
     @Test
     fun aa_05_coro_err () {
-        val out = test("""
+        val out = static("""
             do [
                 co: coro () -> () -> (),
             ] {
                 ;; missing implementation
             }
         """)
-        assert(out == "anon : (lin 3, col 17) : declaration error : missing implementation\n") { out }
+        assert(out == "anon : (lin 3, col 17) : declaration error : missing implementation") { out!! }
     }
     @Test
     fun aa_06_coro_decl_err () {
-        val out = test("""
+        val out = static("""
             do [
                 ;; missing declaration
             ] {
@@ -90,7 +90,7 @@ class Static {
                 }
             }
         """)
-        assert(out == "anon : (lin 5, col 17) : implementation error : variable \"f\" is not declared\n") { out }
+        assert(out == "anon : (lin 5, col 17) : implementation error : variable \"f\" is not declared") { out!! }
     }
 
 
@@ -171,7 +171,7 @@ class Static {
     }
     @Test
     fun bb_08_exe_coro_err () {
-        val out = test("""
+        val out = static("""
             do [
                 xco: xcoro (Int) -> (),
                 co:  coro () -> () -> (),
@@ -181,15 +181,27 @@ class Static {
                 set xco = spawn co()
             }
         """)
-        assert(out == "anon : (lin 8, col 27) : invalid spawn : types mismatch\n") { out }
+        assert(out == "anon : (lin 8, col 27) : invalid spawn : types mismatch") { out!! }
     }
     @Test
     fun bb_09_exe_coro_err () {
-        val out = test("""
+        val out = static("""
             do [] {
                 spawn (1)()
             }
         """)
-        assert(out == "anon : (lin 3, col 17) : invalid spawn : expected coroutine prototype\n") { out }
+        assert(out == "anon : (lin 3, col 17) : invalid spawn : expected coroutine prototype") { out!! }
+    }
+    @Test
+    fun bb_10_func_nested_ok() {
+        val out = static("""
+            do [] {
+                do [g: func () -> ()] {
+                    func g () -> () {
+                    }
+                }
+            }
+        """)
+        assert(out == null) { out!! }
     }
 }

@@ -15,7 +15,17 @@ fun check_vars () {
                     }
                 }
                 val dcls  = me.vs.filter { it.second is Type.Proto }
-                val impls = me.dn_filter({ it is Stmt.Proto }, {false}, {false}) as List<Stmt.Proto>
+                val impls = me.dn_filter (
+                    {
+                        when (it) {
+                            is Stmt.Block -> if (it == me) false else null
+                            is Stmt.Proto -> true
+                            else -> false
+                        }
+                    },
+                    {false},
+                    {false}
+                ) as List<Stmt.Proto>
                 val dcl_wo_impl = dcls.find { (id,_) -> impls.none { impl -> impl.id.str == id.str } }
                 if (dcl_wo_impl != null) {
                     err(dcl_wo_impl.first, "declaration error : missing implementation")

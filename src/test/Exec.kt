@@ -133,7 +133,7 @@ class Exec  {
     fun ff_01_coro () {
         val out = test("""
             do [
-                xco: exe-coro () -> ()
+                xco: xcoro () -> ()
                 co:  coro () -> () -> ()
             ] {
                 coro co () -> () -> () {
