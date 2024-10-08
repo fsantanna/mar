@@ -166,32 +166,6 @@ fun parser_expr_4_prim (): Expr {
             }
         }
 
-        accept_fix("spawn") -> {
-            val tk0 = G.tk0 as Tk.Fix
-            val co = parser_expr_4_prim()
-            accept_fix_err("(")
-            val args = parser_list(",",")") { parser_expr() }
-            Expr.Spawn(tk0, co, args)
-        }
-        accept_fix("resume") -> {
-            val tk0 = G.tk0 as Tk.Fix
-            val xco = parser_expr_4_prim()
-            accept_fix_err("(")
-            val args = parser_list(",",")") { parser_expr() }
-            Expr.Resume(tk0, xco, args)
-        }
-        accept_fix("yield") -> {
-            val tk0 = G.tk0 as Tk.Fix
-            accept_fix_err("(")
-            val arg = if (check_fix(")")) {
-                Expr.Unit(G.tk0 as Tk.Fix)
-            } else {
-                parser_expr()
-            }
-            accept_fix_err(")")
-            Expr.Yield(tk0, arg)
-        }
-
         else                    -> err_expected(G.tk1!!, "expression")
     }
 }
@@ -242,7 +216,7 @@ fun parser_expr (): Expr {
     return parser_expr_1_bin()
 }
 
-fun parser_stmt (): Stmt {
+fun parser_stmt (set: Expr? = null): Stmt {
     return when {
         accept_fix("do") -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -260,11 +234,15 @@ fun parser_stmt (): Stmt {
             val tk0 = G.tk0 as Tk.Fix
             val dst = parser_expr()
             accept_fix_err("=")
-            val src = parser_expr()
-            if (!dst.is_lval()) {
-                err(tk0, "set error : expected assignable destination")
+            if (check_fix("spawn") || check_fix("resume") || check_fix("yield")) {
+                parser_stmt(dst)
+            } else {
+                val src = parser_expr()
+                if (!dst.is_lval()) {
+                    err(tk0, "set error : expected assignable destination")
+                }
+                Stmt.Set(tk0, dst, src)
             }
-            Stmt.Set(tk0, dst, src)
         }
         (accept_fix("func") || accept_fix("coro")) -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -289,6 +267,33 @@ fun parser_stmt (): Stmt {
             val e = parser_expr()
             Stmt.Return(tk0, e)
         }
+
+        accept_fix("spawn") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            val co = parser_expr_4_prim()
+            accept_fix_err("(")
+            val args = parser_list(",",")") { parser_expr() }
+            Stmt.Spawn(tk0, set, co, args)
+        }
+        accept_fix("resume") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            val xco = parser_expr_4_prim()
+            accept_fix_err("(")
+            val args = parser_list(",",")") { parser_expr() }
+            Stmt.Resume(tk0, set, xco, args)
+        }
+        accept_fix("yield") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            accept_fix_err("(")
+            val arg = if (check_fix(")")) {
+                Expr.Unit(G.tk0 as Tk.Fix)
+            } else {
+                parser_expr()
+            }
+            accept_fix_err(")")
+            Stmt.Yield(tk0, set, arg)
+        }
+
         accept_enu("Nat") -> Stmt.Nat(G.tk0 as Tk.Nat)
         else -> {
             val tk1 = G.tk1!!

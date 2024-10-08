@@ -328,24 +328,48 @@ class Parser {
     fun hh_01_spawn() {
         G.tks = ("spawn f(1)").lexer()
         parser_lexer()
-        val e = parser_expr()
-        assert(e is Expr.Spawn && e.co is Expr.Acc && e.args.size==1)
-        assert(e.to_str() == "spawn f(1)")
+        val s = parser_stmt()
+        assert(s is Stmt.Spawn && s.co is Expr.Acc && s.args.size==1)
+        assert(s.to_str() == "spawn f(1)")
     }
     @Test
     fun hh_02_resume() {
         G.tks = ("resume xf()").lexer()
         parser_lexer()
-        val e = parser_expr()
-        assert(e is Expr.Resume && e.xco is Expr.Acc && e.args.size==0)
-        assert(e.to_str() == "resume xf()")
+        val s = parser_stmt()
+        assert(s is Stmt.Resume && s.xco is Expr.Acc && s.args.size==0)
+        assert(s.to_str() == "resume xf()")
     }
     @Test
     fun hh_03_yield() {
         G.tks = ("yield()").lexer()
         parser_lexer()
-        val e = parser_expr()
-        assert(e is Expr.Yield && e.arg is Expr.Unit)
-        assert(e.to_str() == "yield()") { e.to_str() }
+        val s = parser_stmt()
+        assert(s is Stmt.Yield && s.arg is Expr.Unit)
+        assert(s.to_str() == "yield()") { s.to_str() }
+    }
+    @Test
+    fun hh_04_spawn() {
+        G.tks = ("set x = spawn f()").lexer()
+        parser_lexer()
+        val s = parser_stmt()
+        assert(s is Stmt.Spawn && s.co is Expr.Acc && s.args.size==0)
+        assert(s.to_str() == "set x = spawn f()")
+    }
+    @Test
+    fun hh_05_resume() {
+        G.tks = ("set x = resume xf(false)").lexer()
+        parser_lexer()
+        val s = parser_stmt()
+        assert(s is Stmt.Resume && s.xco is Expr.Acc && s.args.size==1)
+        assert(s.to_str() == "set x = resume xf(false)")
+    }
+    @Test
+    fun hh_06_yield() {
+        G.tks = ("set y = yield(null)").lexer()
+        parser_lexer()
+        val s = parser_stmt()
+        assert(s is Stmt.Yield && s.arg is Expr.Null)
+        assert(s.to_str() == "set y = yield(null)") { s.to_str() }
     }
 }

@@ -69,10 +69,6 @@ sealed class Expr (var n: Int, val tk: Tk) {
     data class Null (val tk_: Tk.Fix): Expr(G.N++, tk_)
     data class Unit (val tk_: Tk.Fix): Expr(G.N++, tk_)
 
-    data class Spawn  (val tk_: Tk.Fix, val co: Expr, val args: List<Expr>): Expr(G.N++, tk_)
-    data class Resume (val tk_: Tk.Fix, val xco: Expr, val args: List<Expr>): Expr(G.N++, tk_)
-    data class Yield  (val tk_: Tk.Fix, val arg: Expr): Expr(G.N++, tk_)
-
     data class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, tk_)
     data class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)
     data class Call (val tk_: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, tk_)
@@ -86,6 +82,10 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     data class Return  (val tk_: Tk.Fix, val e: Expr) : Stmt(G.N++, tk_)
     data class Block   (val tk_: Tk, val vs: List<Var_Type>, val ss: List<Stmt>) : Stmt(G.N++, tk_)
     data class Set     (val tk_: Tk.Fix, val dst: Expr, val src: Expr): Stmt(G.N++, tk_)
+
+    data class Spawn  (val tk_: Tk.Fix, val dst: Expr?, val co: Expr, val args: List<Expr>): Stmt(G.N++, tk_)
+    data class Resume (val tk_: Tk.Fix, val dst: Expr?, val xco: Expr, val args: List<Expr>): Stmt(G.N++, tk_)
+    data class Yield  (val tk_: Tk.Fix, val dst: Expr?, val arg: Expr): Stmt(G.N++, tk_)
 
     data class Nat     (val tk_: Tk.Nat): Stmt(G.N++, tk_)
     data class Call    (val tk_: Tk, val call: Expr.Call): Stmt(G.N++, tk_)

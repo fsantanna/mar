@@ -28,6 +28,9 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Return -> "return (" + this.e.coder(pre) + ");"
         is Stmt.Block  -> "{\n" + this.vs.filter { (_,tp) -> tp !is Type.Proto }.map { (id,tp) -> tp.coder(pre) + " " + id.str + ";\n" }.joinToString("") + this.ss.map { it.coder(pre) + "\n" }.joinToString("") + "}"
         is Stmt.Set    -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
+
+        is Stmt.Spawn, is Stmt.Resume, is Stmt.Yield -> TODO()
+
         is Stmt.Nat    -> this.tk.str
         is Stmt.Call   -> this.call.coder(pre) + ";"
     }
@@ -45,7 +48,9 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_ceu_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
         is Expr.Nat -> this.tk.str
-        else -> this.to_str(pre)
+
+        is Expr.Acc, is Expr.Bool, is Expr.Char,
+        is Expr.Null, is Expr.Num, is Expr.Unit -> this.to_str(pre)
     }
 }
 

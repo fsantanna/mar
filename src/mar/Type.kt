@@ -42,10 +42,6 @@ fun Tk.Var.type (fr: Any): Type? {
 
 fun Expr.type (): Type {
     return when (this) {
-        is Expr.Spawn -> TODO()
-        is Expr.Resume -> TODO()
-        is Expr.Yield -> TODO()
-
         is Expr.Uno -> when (this.tk_.str) {
             "-" -> Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))
             "\\" -> Type.Pointer(Tk.Op("\\", this.tk.pos.copy()), this.e.type())

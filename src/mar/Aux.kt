@@ -10,6 +10,11 @@ fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Type)-
         is Stmt.Return -> this.e.dn_collect(fe)
         is Stmt.Block -> this.vs.map { (_,tp) -> tp.dn_collect(ft) }.flatten() + this.ss.map { it.dn_collect(fs,fe,ft) }.flatten()
         is Stmt.Set -> this.dst.dn_collect(fe) + this.src.dn_collect(fe)
+
+        is Stmt.Spawn -> this.co.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
+        is Stmt.Resume -> this.xco.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
+        is Stmt.Yield -> this.arg.dn_collect(fe)
+
         is Stmt.Call -> this.call.dn_collect(fe)
         is Stmt.Nat -> emptyList()
     }
@@ -20,9 +25,6 @@ fun <V> Expr.dn_collect (fe: (Expr)->List<V>?): List<V> {
         return emptyList()
     }
     return v + when (this) {
-        is Expr.Spawn -> this.co.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
-        is Expr.Resume -> this.xco.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
-        is Expr.Yield -> this.arg.dn_collect(fe)
         is Expr.Uno -> this.e.dn_collect(fe)
         is Expr.Bin -> this.e1.dn_collect(fe) + this.e2.dn_collect(fe)
         is Expr.Call -> this.f.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
