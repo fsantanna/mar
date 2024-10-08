@@ -292,8 +292,13 @@ fun parser_stmt (set: Expr? = null): Stmt {
             val tk0 = G.tk0 as Tk.Fix
             val xco = parser_expr_4_prim()
             accept_fix_err("(")
-            val args = parser_list(",",")") { parser_expr() }
-            Stmt.Resume(tk0, set, xco, args)
+            val arg = if (check_fix(")")) {
+                Expr.Unit(G.tk0 as Tk.Fix)
+            } else {
+                parser_expr()
+            }
+            accept_fix_err(")")
+            Stmt.Resume(tk0, set, xco, arg)
         }
         accept_fix("yield") -> {
             val tk0 = G.tk0 as Tk.Fix

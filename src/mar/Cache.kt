@@ -38,15 +38,16 @@ fun cache_ups () {
             }
 
             is Stmt.Spawn -> {
-                if (me.dst != null) {
-                    G.ups[me.dst.n] = me.n
-                }
+                G.ups[me.dst.n] = me.n
                 G.ups[me.co.n] = me.n
                 me.args.forEach { G.ups[it.n] = me.n }
             }
             is Stmt.Resume -> {
+                if (me.dst != null) {
+                    G.ups[me.dst.n] = me.n
+                }
                 G.ups[me.xco.n] = me.n
-                me.args.forEach { G.ups[it.n] = me.n }
+                G.ups[me.arg.n] = me.n
             }
             is Stmt.Yield -> {
                 G.ups[me.arg.n] = me.n

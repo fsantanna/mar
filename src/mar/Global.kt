@@ -85,7 +85,7 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     data class Set     (val tk_: Tk.Fix, val dst: Expr, val src: Expr): Stmt(G.N++, tk_)
 
     data class Spawn  (val tk_: Tk.Fix, val dst: Expr, val co: Expr, val args: List<Expr>): Stmt(G.N++, tk_)
-    data class Resume (val tk_: Tk.Fix, val dst: Expr?, val xco: Expr, val args: List<Expr>): Stmt(G.N++, tk_)
+    data class Resume (val tk_: Tk.Fix, val dst: Expr?, val xco: Expr, val arg: Expr): Stmt(G.N++, tk_)
     data class Yield  (val tk_: Tk.Fix, val dst: Expr?, val arg: Expr): Stmt(G.N++, tk_)
 
     data class Nat     (val tk_: Tk.Nat): Stmt(G.N++, tk_)

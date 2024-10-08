@@ -90,6 +90,18 @@ fun check_types () {
                     err(me.tk, "invalid spawn : types mismatch")
                 }
             }
+            is Stmt.Resume -> {
+                val xco = me.xco.type()
+                if (xco !is Type.XCoro) {
+                    err(me.tk, "invalid resume : expected active coroutine")
+                }
+
+                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(xco.out)
+                val ok2 = xco.inp.is_sup_of(me.arg.type())
+                if (!ok1 || !ok2) {
+                    err(me.tk, "invalid resume : types mismatch")
+                }
+            }
             else -> {}
         }
     }

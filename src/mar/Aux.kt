@@ -12,7 +12,7 @@ fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Type)-
         is Stmt.Set -> this.dst.dn_collect(fe) + this.src.dn_collect(fe)
 
         is Stmt.Spawn -> this.co.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
-        is Stmt.Resume -> this.xco.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
+        is Stmt.Resume -> this.xco.dn_collect(fe) + this.arg.dn_collect(fe)
         is Stmt.Yield -> this.arg.dn_collect(fe)
 
         is Stmt.Call -> this.call.dn_collect(fe)

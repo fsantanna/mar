@@ -79,7 +79,8 @@ fun Stmt.coder (pre: Boolean = false): String {
             ${this.dst.coder(pre)} = exe;
             """
         }
-        is Stmt.Resume, is Stmt.Yield -> TODO()
+        is Stmt.Resume -> TODO()
+        is Stmt.Yield -> TODO()
 
         is Stmt.Nat    -> this.tk.str
         is Stmt.Call   -> this.call.coder(pre) + ";"

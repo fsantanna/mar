@@ -151,7 +151,7 @@ class Static {
         assert(out == null) { out!! }
     }
 
-    // TYPE / CORO / XCORO
+    // TYPE / CORO / XCORO / SPAWN / RESUME
 
     @Test
     fun bc_01_coro_err() {
@@ -219,5 +219,57 @@ class Static {
             }
         """)
         assert(out == null) { out!! }
+    }
+    @Test
+    fun bc_07_exe_resume_ok () {
+        val out = static("""
+            do [
+                xco: xcoro () -> Int,
+                co:  coro () -> () -> Int,
+            ] {
+                coro co () -> () -> Int {}
+                set xco = spawn co()
+                resume xco()
+            }
+        """)
+        assert(out == null) { out!! }
+    }
+    @Test
+    fun bc_08_exe_resume () {
+        val out = static("""
+            do [] {
+                resume 1()
+            }
+        """)
+        assert(out == "anon : (lin 3, col 17) : invalid resume : expected active coroutine") { out!! }
+    }
+    @Test
+    fun bc_09_exe_resume_err () {
+        val out = static("""
+            do [
+                xco: xcoro () -> (),
+                co:  coro () -> () -> (),
+            ] {
+                coro co () -> () -> () {}
+                set xco = spawn co()
+                resume xco(1)
+            }
+        """)
+        assert(out == "anon : (lin 8, col 17) : invalid resume : types mismatch") { out!! }
+    }
+    @Test
+    fun bc_10_exe_resume_err () {
+        val out = static("""
+            do [
+                xco: xcoro () -> (),
+                co:  coro () -> () -> (),
+                v: Int,
+            ] {
+                coro co () -> () -> () {}
+                set xco = spawn co()
+                set v = resume xco(1)
+            }
+        """)
+        assert(out == "anon : (lin 9, col 25) : invalid resume : types mismatch") { out!! }
     }
 }
