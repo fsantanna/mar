@@ -1,5 +1,7 @@
 package mar
 
+import java.io.File
+
 fun Var_Type.coder (pre: Boolean = false): String {
     val (id,tp) = this
     return tp.coder(pre) + " " + id.str
@@ -22,14 +24,20 @@ fun Stmt.coder (pre: Boolean = false): String {
                 is Stmt.Proto.Func ->
                     this.tp_.out.coder(pre) + " " + this.id.str + "(" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ") {\n" + this.blk.ss.map { it.coder(pre)+"\n" }.joinToString("") + "}"
                 is Stmt.Proto.Coro ->
-                    TODO()
+                    this.tp_.out.coder(pre) + " " + this.id.str + "(" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ") {\n" + this.blk.ss.map { it.coder(pre)+"\n" }.joinToString("") + "}"
             }
         }
         is Stmt.Return -> "return (" + this.e.coder(pre) + ");"
         is Stmt.Block  -> "{\n" + this.vs.filter { (_,tp) -> tp !is Type.Proto }.map { (id,tp) -> tp.coder(pre) + " " + id.str + ";\n" }.joinToString("") + this.ss.map { it.coder(pre) + "\n" }.joinToString("") + "}"
         is Stmt.Set    -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
 
-        is Stmt.Spawn, is Stmt.Resume, is Stmt.Yield -> TODO()
+        is Stmt.Spawn -> {
+            """
+            CEU_Exe* ceu_exe_$n = ceu_create_exe(sizeof(CEU_Exe), clo CEU_LEX_X(COMMA ceux->depth-1));
+            
+        """
+        }
+        is Stmt.Resume, is Stmt.Yield -> TODO()
 
         is Stmt.Nat    -> this.tk.str
         is Stmt.Call   -> this.call.coder(pre) + ";"
@@ -77,6 +85,7 @@ fun coder_main (pre: Boolean): String {
         #define true  1
         #define false 0
         
+        ${File("Prelude.c").readLines()}
         ${coder_types()}
         
         int main (void) {
