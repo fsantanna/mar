@@ -23,10 +23,17 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Proto -> {
             when (this) {
                 is Stmt.Proto.Func ->
-                    this.tp_.out.coder(pre) + " " + this.id.str + "(" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ") {\n" + this.blk.ss.map { it.coder(pre)+"\n" }.joinToString("") + "}"
+                    this.tp_.out.coder(pre) + " " + this.id.str + "(" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro ->
-                    this.tp_.out.coder(pre) + " " + this.id.str + "(" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ") {\n" + this.blk.ss.map { it.coder(pre)+"\n" }.joinToString("") + "}"
+                    this.tp_.out.coder(pre) + " " + this.id.str + "(" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ")"
+            } + """
+            {
+                ${(this is Stmt.Proto.Coro).cond { """
+                    return;     // first implicit yield
+                """ }}
+                ${this.blk.ss.map { it.coder(pre)+"\n" }.joinToString("")}
             }
+            """
         }
         is Stmt.Return -> "return (" + this.e.coder(pre) + ");"
         is Stmt.Block  -> "{\n" + this.vs.filter { (_,tp) -> tp !is Type.Proto }.map { (id,tp) -> tp.coder(pre) + " " + id.str + ";\n" }.joinToString("") + this.ss.map { it.coder(pre) + "\n" }.joinToString("") + "}"
