@@ -13,7 +13,8 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Basic -> this.tk.str
         is Type.Unit -> "void"
         is Type.Pointer -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
-        is Type.Proto -> "CEU_Proto_$n"
+        is Type.Proto -> "CEU_Proto__${this.out.coder()}__${this.inps.map { it.coder() }.joinToString("_")}"
+
     }
 }
 
@@ -32,9 +33,14 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Set    -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
 
         is Stmt.Spawn -> {
+            val tp  = this.co.type() as Type.Proto.Coro
+            val tpx = Type.Proto.Func(tp.tk_, tp.inps, tp.out).coder()
             """
-            CEU_Exe* ceu_exe_$n = ceu_create_exe(sizeof(CEU_Exe), clo CEU_LEX_X(COMMA ceux->depth-1));
-            
+            {
+                $tpx proto = ${this.co.coder(pre)};
+                CEU_Exe* exe = ceu_create_exe(proto, 0);
+                proto(${this.args.map { it.coder(pre) }.joinToString(",")});
+            }            
         """
         }
         is Stmt.Resume, is Stmt.Yield -> TODO()
@@ -66,17 +72,25 @@ fun coder_types (): String {
     fun ft (me: Type): List<Type.Proto.Func> {
         return when (me) {
             is Type.Proto.Func -> listOf(me)
+            is Type.Proto.Coro -> {
+                val res = if (me.res is Type.Unit) emptyList() else listOf(me.res)
+                val tp1 = ft(Type.Proto.Func(me.tk_, me.inps, me.out))
+                val tp2 = ft(Type.Proto.Func(me.tk_, res, me.out))
+                tp1 + tp2
+            }
             else -> emptyList()
         }
     }
     val ts = G.outer!!.dn_collect({ emptyList() }, { emptyList() }, ::ft)
-    return ts.reversed().map { "typedef ${it.out_.coder()} (*CEU_Proto_${it.n}) (${it.inps_.map { it.coder() }.joinToString(",")});\n" }.joinToString("")
+    return ts.reversed().map { "typedef ${it.out_.coder()} (*${it.coder()}) (${it.inps_.map { it.coder() }.joinToString(",")});\n" }.joinToString("")
 }
 
 fun coder_main (pre: Boolean): String {
     return """
-        #include <stdio.h>
+        #include <assert.h>
         #include <stdint.h>
+        #include <stdio.h>
+        #include <stdlib.h>
         
         typedef int     Int;
         typedef uint8_t U8;

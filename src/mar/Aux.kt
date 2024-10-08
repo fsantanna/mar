@@ -41,8 +41,8 @@ fun <V> Type.dn_collect (ft: (Type)->List<V>?): List<V> {
         is Type.Any -> emptyList()
         is Type.Basic -> emptyList()
         is Type.Pointer -> this.ptr.dn_collect(ft)
-        is Type.Proto.Coro -> this.inps_.map { it.dn_collect(ft) }.flatten() + this.res.dn_collect(ft) + this.out_.dn_collect(ft)
-        is Type.Proto.Func -> this.inps_.map { it.dn_collect(ft) }.flatten() + this.out_.dn_collect(ft)
+        is Type.Proto.Coro -> (this.inps + this.res + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
+        is Type.Proto.Func -> (this.inps + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
         is Type.Unit -> emptyList()
     }
 }

@@ -134,6 +134,19 @@ class Exec  {
         val out = test("""
             do [co: coro () -> () -> ()] {
                 coro co () -> () -> () {
+                    `puts("OK");`
+                }
+                spawn co()
+                ;;resume co()
+            }
+        """)
+        assert(out == "30\n") { out }
+    }
+    @Test
+    fun ff_0X_coro () {
+        val out = test("""
+            do [co: coro () -> () -> ()] {
+                coro co () -> () -> () {
                     do [v: Int] {
                         set v = 10
                         `printf("%d\n", v);`
