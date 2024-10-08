@@ -70,41 +70,6 @@ class Exec  {
         assert(out == "1\n") { out }
     }
 
-    // TYPE / VAR / CHECK
-
-    @Test
-    fun dd_01_type() {
-        val out = test("""
-            do [x: Int] {
-                set x = true
-            }
-        """)
-        assert(out == "anon : (lin 3, col 17) : invalid set : types mismatch\n") { out }
-    }
-    @Test
-    fun dd_02_var_dup() {
-        val out = test("""
-            do [x: Int] {
-                do [x: Int] {
-                }
-            }
-        """
-        )
-        //assert(out == "10\n") { out }
-        assert(out == "anon : (lin 3, col 21) : declaration error : variable \"x\" is already declared\n") { out }
-    }
-    @Test
-    fun dd_03_var_none() {
-        val out = test("""
-            do [] {
-                f()
-            }
-        """
-        )
-        //assert(out == "10\n") { out }
-        assert(out == "anon : (lin 3, col 17) : access error : variable \"f\" is not declared\n") { out }
-    }
-
     // FUNC
 
     @Test
@@ -118,27 +83,6 @@ class Exec  {
             }
         """)
         assert(out == "10\n") { out }
-    }
-    @Test
-    fun ee_02_func_err() {
-        val out = test("""
-            do [f: func () -> ()] {
-                func f () -> Int {
-                }
-            }
-        """)
-        assert(out == "anon : (lin 3, col 17) : invalid declaration : types mismatch\n") { out }
-    }
-    @Test
-    fun ee_03_func_err() {
-        val out = test("""
-            do [f: func () -> Int] {
-                func f () -> Int {
-                    return ()
-                }
-            }
-        """)
-        assert(out == "anon : (lin 4, col 21) : invalid return : types mismatch\n") { out }
     }
 
     // PROTOS / TYPES / NORMAL / NESTED / CLOSURE

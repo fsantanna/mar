@@ -54,10 +54,10 @@ fun Expr.dn_visit (f: (Expr)->Unit) {
     this.dn_collect { f(it) ; emptyList<Unit>() }
 }
 
-fun trap (f: ()->Unit): String {
+fun trap (f: ()->Unit): String? {
     try {
         f()
-        error("impossible case")
+        return null
     } catch (e: Throwable) {
         return e.message!!
     }

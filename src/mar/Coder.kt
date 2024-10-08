@@ -85,7 +85,7 @@ fun coder_main (pre: Boolean): String {
         #define true  1
         #define false 0
         
-        ${File("Prelude.c").readLines()}
+        ${File("src/mar/Prelude.c").readLines().joinToString("\n")}
         ${coder_types()}
         
         int main (void) {
