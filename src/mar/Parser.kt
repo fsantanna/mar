@@ -281,7 +281,7 @@ fun parser_stmt (set: Expr? = null): Stmt {
             Stmt.Return(tk0, e)
         }
 
-        accept_fix("spawn") -> {
+        (set!=null && accept_fix("spawn")) -> {
             val tk0 = G.tk0 as Tk.Fix
             val co = parser_expr_4_prim()
             accept_fix_err("(")

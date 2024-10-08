@@ -76,14 +76,9 @@ fun check_types () {
                     err(me.tk, "invalid spawn : expected coroutine prototype")
                 }
 
-                val tp = me.dst?.type()
-                val ok1 = when {
-                    (tp == null) -> true
-                    else -> {
-                        val xtp = Type.XCoro(co.tk_, co.res, co.out)
-                        xtp.is_sup_of(tp)
-                    }
-                }
+                val tp = me.dst.type()
+                val xtp = Type.XCoro(co.tk_, co.res, co.out)
+                val ok1 = xtp.is_sup_of(tp)
 
                 val ok2 = when {
                     (co.inps.size != me.args.size) -> false

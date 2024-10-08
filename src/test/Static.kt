@@ -157,10 +157,10 @@ class Static {
     fun bc_01_coro_err() {
         val out = static("""
             do [f: \coro () -> () -> Int] {
-                spawn f()
+                set `_` = spawn f()
             }
         """)
-        assert(out == "anon : (lin 3, col 17) : invalid spawn : expected coroutine prototype") { out!! }
+        assert(out == "anon : (lin 3, col 27) : invalid spawn : expected coroutine prototype") { out!! }
     }
     @Test
     fun bc_02_coro_err() {
@@ -168,10 +168,10 @@ class Static {
             do [f: coro (Int) -> () -> Int] {
                 coro f (x: Int) -> () -> Int {
                 }
-                spawn f()
+                set `_` = spawn f()
             }
         """)
-        assert(out == "anon : (lin 5, col 17) : invalid spawn : types mismatch") { out!! }
+        assert(out == "anon : (lin 5, col 27) : invalid spawn : types mismatch") { out!! }
     }
     @Test
     fun bc_03_coro_ok() {
@@ -179,7 +179,7 @@ class Static {
             do [f: coro (Int) -> () -> Int] {
                 coro f (x: Int) -> () -> Int {
                 }
-                spawn f(10)
+                set `_` = spawn f(10)
             }
         """)
         assert(out == null) { out!! }
@@ -202,10 +202,10 @@ class Static {
     fun bc_05_exe_coro_err () {
         val out = static("""
             do [] {
-                spawn (1)()
+                set `_` = spawn (1)()
             }
         """)
-        assert(out == "anon : (lin 3, col 17) : invalid spawn : expected coroutine prototype") { out!! }
+        assert(out == "anon : (lin 3, col 27) : invalid spawn : expected coroutine prototype") { out!! }
     }
     @Test
     fun bc_06_exe_coro_ok () {

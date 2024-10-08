@@ -336,9 +336,7 @@ class Parser {
     fun hh_01_spawn() {
         G.tks = ("spawn f(1)").lexer()
         parser_lexer()
-        val s = parser_stmt()
-        assert(s is Stmt.Spawn && s.co is Expr.Acc && s.args.size==1)
-        assert(s.to_str() == "spawn f(1)")
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 1) : expected expression : have \"spawn\"")
     }
     @Test
     fun hh_02_resume() {

@@ -3,7 +3,7 @@ package mar
 fun Type.is_sup_of (other: Type): Boolean {
     return when {
         //(this is Type.Top) -> true
-        (this is Type.Any) -> true
+        (this is Type.Any || other is Type.Any) -> true
         (this is Type.Unit       && other is Type.Unit)       -> true
         (this is Type.Basic      && other is Type.Basic)      -> (this.tk.str == other.tk.str)
         (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
