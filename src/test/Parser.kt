@@ -103,6 +103,14 @@ class Parser {
         assert(tp is Type.Proto.Coro && tp.res is Type.Unit)
         assert(tp.to_str() == "coro () -> () -> ()")
     }
+    @Test
+    fun aj_09_type_xcoro () {
+        G.tks = ("xcoro (Int) -> Int").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.XCoro && tp.inp is Type.Basic)
+        assert(tp.to_str() == "xcoro (Int) -> Int")
+    }
 
     // PARENS
 

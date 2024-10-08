@@ -132,12 +132,28 @@ class Exec  {
     @Test
     fun ff_01_coro () {
         val out = test("""
+            do [
+                xco: exe-coro () -> ()
+                co:  coro () -> () -> ()
+            ] {
+                coro co () -> () -> () {
+                    `puts("OK");`
+                }
+                set xco = spawn co()
+                `puts("END");`
+            }
+        """)
+        assert(out == "END\n") { out }
+    }
+    @Test
+    fun ff_02_coro () {
+        val out = test("""
             do [co: coro () -> () -> ()] {
                 coro co () -> () -> () {
                     `puts("OK");`
                 }
                 spawn co()
-                ;;resume co()
+                resume co()
             }
         """)
         assert(out == "30\n") { out }

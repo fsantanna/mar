@@ -58,6 +58,41 @@ class Static {
         )
         assert(out == "anon : (lin 3, col 17) : access error : variable \"f\" is not declared") { out!! }
     }
+    @Test
+    fun aa_04_func_err () {
+        val out = test("""
+            do [
+                f: func () -> (),
+            ] {
+                ;; missing implementation
+            }
+        """)
+        assert(out == "anon : (lin 3, col 17) : declaration error : missing implementation\n") { out }
+    }
+    @Test
+    fun aa_05_coro_err () {
+        val out = test("""
+            do [
+                co: coro () -> () -> (),
+            ] {
+                ;; missing implementation
+            }
+        """)
+        assert(out == "anon : (lin 3, col 17) : declaration error : missing implementation\n") { out }
+    }
+    @Test
+    fun aa_06_coro_decl_err () {
+        val out = test("""
+            do [
+                ;; missing declaration
+            ] {
+                func f () -> () {
+                }
+            }
+        """)
+        assert(out == "anon : (lin 5, col 17) : implementation error : variable \"f\" is not declared\n") { out }
+    }
+
 
     // TYPE
 
@@ -116,19 +151,45 @@ class Static {
     fun bb_06_coro_err() {
         val out = static("""
             do [f: coro (Int) -> () -> Int] {
+                coro f (x: Int) -> () -> Int {
+                }
                 spawn f()
             }
         """)
-        assert(out == "anon : (lin 3, col 17) : invalid spawn : types mismatch") { out!! }
+        assert(out == "anon : (lin 5, col 17) : invalid spawn : types mismatch") { out!! }
     }
     @Test
     fun bb_07_coro_ok() {
         val out = static("""
             do [f: coro (Int) -> () -> Int] {
+                coro f (x: Int) -> () -> Int {
+                }
                 spawn f(10)
             }
         """)
         assert(out == null) { out!! }
     }
-
+    @Test
+    fun bb_08_exe_coro_err () {
+        val out = test("""
+            do [
+                xco: xcoro (Int) -> (),
+                co:  coro () -> () -> (),
+            ] {
+                coro co () -> () -> () {
+                }
+                set xco = spawn co()
+            }
+        """)
+        assert(out == "anon : (lin 8, col 27) : invalid spawn : types mismatch\n") { out }
+    }
+    @Test
+    fun bb_09_exe_coro_err () {
+        val out = test("""
+            do [] {
+                spawn (1)()
+            }
+        """)
+        assert(out == "anon : (lin 3, col 17) : invalid spawn : expected coroutine prototype\n") { out }
+    }
 }

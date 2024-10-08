@@ -39,11 +39,12 @@ fun <V> Type.dn_collect (ft: (Type)->List<V>?): List<V> {
     }
     return v + when (this) {
         is Type.Any -> emptyList()
+        is Type.Unit -> emptyList()
         is Type.Basic -> emptyList()
         is Type.Pointer -> this.ptr.dn_collect(ft)
-        is Type.Proto.Coro -> (this.inps + this.res + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
         is Type.Proto.Func -> (this.inps + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
-        is Type.Unit -> emptyList()
+        is Type.Proto.Coro -> (this.inps + this.res + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
+        is Type.XCoro -> listOf(this.inp, this.out).map { it.dn_collect(ft) }.flatten()
     }
 }
 
@@ -52,6 +53,14 @@ fun Stmt.dn_visit (fs: (Stmt)->Unit, fe: (Expr)->Unit, ft: (Type)->Unit) {
 }
 fun Expr.dn_visit (f: (Expr)->Unit) {
     this.dn_collect { f(it) ; emptyList<Unit>() }
+}
+
+fun Stmt.dn_filter (fs: (Stmt)->Boolean, fe: (Expr)->Boolean, ft: (Type)->Boolean): List<Any> {
+    return this.dn_collect (
+        { if (fs(it)) listOf(it) else emptyList() },
+        { if (fe(it)) listOf(it) else emptyList() },
+        { if (ft(it)) listOf(it) else emptyList() }
+    )
 }
 
 fun trap (f: ()->Unit): String? {

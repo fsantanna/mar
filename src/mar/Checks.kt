@@ -14,6 +14,16 @@ fun check_vars () {
                         err(id, "declaration error : variable \"${id.str}\" is already declared")
                     }
                 }
+                val dcls  = me.vs.filter { it.second is Type.Proto }
+                val impls = me.dn_filter({ it is Stmt.Proto }, {false}, {false}) as List<Stmt.Proto>
+                val dcl_wo_impl = dcls.find { (id,_) -> impls.none { impl -> impl.id.str == id.str } }
+                if (dcl_wo_impl != null) {
+                    err(dcl_wo_impl.first, "declaration error : missing implementation")
+                }
+                val impl_wo_dcl = impls.find { impl -> dcls.none { (id,_) -> impl.id.str == id.str } }
+                if (impl_wo_dcl != null) {
+                    err(impl_wo_dcl.tk, "implementation error : variable \"${impl_wo_dcl.id.str}\" is not declared")
+                }
             }
             else -> {}
         }
@@ -51,17 +61,27 @@ fun check_types () {
                 }
             }
             is Stmt.Spawn -> {
-                val tp = me.co.type()
-                if (tp !is Type.Proto.Coro) {
+                val co = me.co.type()
+                if (co !is Type.Proto.Coro) {
                     err(me.tk, "invalid spawn : expected coroutine prototype")
                 }
-                val ok = when {
-                    (tp.inps.size != me.args.size) -> false
-                    else -> tp.inps.zip(me.args).all { (par, arg) ->
+
+                val tp = me.dst?.type()
+                val ok1 = when {
+                    (tp == null) -> true
+                    else -> {
+                        val xtp = Type.XCoro(co.tk_, co.res, co.out)
+                        xtp.is_sup_of(tp)
+                    }
+                }
+
+                val ok2 = when {
+                    (co.inps.size != me.args.size) -> false
+                    else -> co.inps.zip(me.args).all { (par, arg) ->
                         par.is_sup_of(arg.type())
                     }
                 }
-                if (!ok) {
+                if (!ok1 || !ok2) {
                     err(me.tk, "invalid spawn : types mismatch")
                 }
             }

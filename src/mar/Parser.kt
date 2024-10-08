@@ -129,6 +129,19 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
                 else -> error("impossible case")
             }
         }
+        accept_fix("xcoro") -> {
+            val tk0 = pre ?: (G.tk0 as Tk.Fix)
+            accept_fix_err("(")
+            val inp = if (check_fix(")")) {
+                Type.Unit(G.tk0 as Tk.Fix)
+            } else {
+                parser_type(req_vars)
+            }
+            accept_fix_err(")")
+            accept_fix_err("->")
+            val out = parser_type(req_vars)
+            Type.XCoro(tk0, inp, out)
+        }
         accept_fix("(") -> {
             val tp = if (check_fix(")")) {
                 Type.Unit(G.tk0 as Tk.Fix)

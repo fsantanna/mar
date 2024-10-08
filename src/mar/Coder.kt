@@ -14,7 +14,7 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Unit -> "void"
         is Type.Pointer -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Proto -> "CEU_Proto__${this.out.coder()}__${this.inps.map { it.coder() }.joinToString("_")}"
-
+        is Type.XCoro -> "CEU_Proto__${this.out.coder()}__${this.inp.coder()}"
     }
 }
 
