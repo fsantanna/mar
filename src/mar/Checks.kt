@@ -50,6 +50,21 @@ fun check_types () {
                     err(me.tk, "invalid return : types mismatch")
                 }
             }
+            is Stmt.Spawn -> {
+                val tp = me.co.type()
+                if (tp !is Type.Proto.Coro) {
+                    err(me.tk, "invalid spawn : expected coroutine prototype")
+                }
+                val ok = when {
+                    (tp.inps.size != me.args.size) -> false
+                    else -> tp.inps.zip(me.args).all { (par, arg) ->
+                        par.is_sup_of(arg.type())
+                    }
+                }
+                if (!ok) {
+                    err(me.tk, "invalid spawn : types mismatch")
+                }
+            }
             else -> {}
         }
     }
