@@ -13,7 +13,7 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Unit -> "void"
         is Type.Pointer -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Proto -> "CEU_Proto__${this.out.coder()}__${this.inps.map { it.coder() }.joinToString("_")}"
-        is Type.XCoro -> TODO() //"CEU_Proto__${this.out.coder()}__${this.inp.coder()}"
+        is Type.XCoro -> "CEU_Exe__${this.out.coder()}__${this.inp.coder()}"
     }
 }
 
@@ -41,7 +41,7 @@ fun coder_types_xcoros (): String {
         """
         typedef struct CEU_Exe__$pre {
             _CEU_Exe_
-            CEU_Proto__$pre
+            CEU_Proto__$pre proto;
             char mem[0];
         } CEU_Exe__$pre;
     """ }.joinToString("")
@@ -69,11 +69,13 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Set    -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
 
         is Stmt.Spawn -> {
-            val tp = this.dst.type() as Type.XCoro
-            val x = tp.out.coder() + "__" + tp.inp.coder()
+            val tp = this.co.type() as Type.Proto.Coro
+            val xtp = this.dst.type() as Type.XCoro
+            val x = xtp.out.coder() + "__" + xtp.inp.coder()
             """
-            CEU_Exe_$x exe = { CEU_EXE_STATUS_YIELDED, 0, ${this.co.coder(pre)} };
-            exe.proto(&exe, ${this.args.map { it.coder(pre) }.joinToString(",")});
+            CEU_Proto__${tp.out.coder(pre)}__${tp.inps.map { it.coder(pre) }.joinToString("_")} proto = ${this.co.coder(pre)};
+            CEU_Exe__$x exe = { CEU_EXE_STATUS_YIELDED, 0, (CEU_Proto__${tp.out.coder(pre)}__${tp.res.coder(pre)}) proto };
+            proto(${(listOf("&exe") + this.args.map { it.coder(pre) }).joinToString(",")});
             ${this.dst.coder(pre)} = exe;
             """
         }

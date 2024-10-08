@@ -148,12 +148,15 @@ class Exec  {
     @Test
     fun ff_02_coro () {
         val out = test("""
-            do [co: coro () -> () -> ()] {
+            do [
+                co: coro () -> () -> (),
+                xco: xcoro () -> (),
+            ] {
                 coro co () -> () -> () {
                     `puts("OK");`
                 }
-                spawn co()
-                resume co()
+                set xco = spawn co()
+                resume xco()
             }
         """)
         assert(out == "30\n") { out }
