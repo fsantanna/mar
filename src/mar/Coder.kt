@@ -12,7 +12,7 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Basic -> this.tk.str
         is Type.Unit -> "void"
         is Type.Pointer -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
-        is Type.Proto.Func -> "CEU_Func__${this.out.coder()}__${this.inps.to_void().map { it.coder() }.joinToString("_")}"
+        is Type.Proto.Func -> "CEU_Func__${this.out.coder()}__${this.inps.to_void().map { it.coder() }.joinToString("__")}"
         is Type.Proto.Coro -> "CEU_Coro__${this.out.coder()}__CEUX"
         is Type.XCoro -> "CEU_XCoro__${this.out.coder()}__${listOf(this.inp).pre_ceux(this.inp.tk).trim().map { it.coder() }.joinToString("__") }"
     }
@@ -55,14 +55,26 @@ fun Stmt.coder (pre: Boolean = false): String {
                     this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro -> {
                     val x = this.tp_.out.coder() + "__" + listOf(this.tp_.res).pre_ceux(this.tp_.res.tk).trim().map { it.coder() }.joinToString("__")
-                    this.tp_.out.coder(pre) + " " + this.id.str + " (CEU_XCoro__$x* ceu_exe, ...)"
+                    this.tp_.out.coder(pre) + " " + this.id.str + " (CEU_XCoro__$x* ceu_xcoro, ...)"
                 }
             } + """
             {
-                ${(this is Stmt.Proto.Coro).cond { """
-                    switch (ceu_exe->pc) {
+                ${(this is Stmt.Proto.Coro).cond {
+                    val tp = this.tp as Type.Proto.Coro.Vars
+                    """
+                    va_list ceu_args;
+                    va_start(ceu_args, ceu_xcoro);
+                    ${tp.inps__.map { (id,tp) ->
+                        val tpx = tp.coder(pre)
+                        """
+                        $tpx ${id.str} = va_arg(ceu_args, $tpx);
+                        """
+                    }.joinToString("")}
+                    va_end(ceu_args);
+                    
+                    switch (ceu_xcoro->pc) {
                         case 0:
-                            ceu_exe->pc++;
+                            ceu_xcoro->pc++;
                             return;     // first implicit yield
                         case 1:
                 """ }}
@@ -95,8 +107,8 @@ fun Stmt.coder (pre: Boolean = false): String {
             val x = xtp.out.coder() + "__" + listOf(xtp.inp).pre_ceux(xtp.inp.tk).trim().map { it.coder() }.joinToString("__")
             """
             {
-                CEU_XCoro__$x ceu_exe_$n = ${this.xco.coder(pre)};
-                ${this.dst.cond { it.coder(pre) + " = "}} ceu_exe_$n.proto(&ceu_exe_$n);
+                CEU_XCoro__$x ceu_xcoro_$n = ${this.xco.coder(pre)};
+                ${this.dst.cond { it.coder(pre) + " = "}} ceu_xcoro_$n.proto(&ceu_xcoro_$n);
             }
         """
         }
@@ -130,6 +142,7 @@ fun coder_main (pre: Boolean): String {
         #include <stdint.h>
         #include <stdio.h>
         #include <stdlib.h>
+        #include <stdarg.h>
         
         typedef void*   CEUX;
         typedef int     Int;

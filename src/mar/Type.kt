@@ -9,7 +9,7 @@ fun List<Type>.trim (): List<Type> {
         (this.size <= 1) -> this
         (this.first() is Type.Unit) -> this.drop(1)
         (this.last()  is Type.Unit) -> this.dropLast(1)
-        else -> error("impossible case")
+        else -> this
     }
 }
 

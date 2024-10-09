@@ -162,9 +162,28 @@ class Exec  {
         assert(out == "OK\n") { out }
     }
     @Test
+    fun ff_03_coro () {
+        val out = test("""
+            do [
+                co: coro (Int) -> (Int) -> (),
+                xco: xcoro (Int) -> (),
+            ] {
+                coro co (v: Int) -> (Int) -> () {
+                    `printf("%d\n", v);`
+                }
+                set xco = spawn co(10)
+                resume xco(20)
+            }
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
     fun ff_0X_coro () {
         val out = test("""
-            do [co: coro () -> () -> ()] {
+            do [
+                co: coro (Int) -> () -> ()
+                xco: xcoro () -> (),
+            ] {
                 coro co () -> () -> () {
                     do [v: Int] {
                         set v = 10
