@@ -272,4 +272,34 @@ class Static {
         """)
         assert(out == "anon : (lin 9, col 25) : invalid resume : types mismatch") { out!! }
     }
+    @Test
+    fun bc_11_exe_resume_err () {
+        val out = static("""
+            do [
+                xco: xcoro () -> (),
+                co:  coro () -> () -> (),
+                v: Int,
+            ] {
+                coro co () -> () -> () {}
+                set xco = spawn co()
+                set v = resume xco()
+            }
+        """)
+        assert(out == "anon : (lin 9, col 25) : invalid resume : types mismatch") { out!! }
+    }
+    @Test
+    fun bc_12_exe_resume_err () {
+        val out = static("""
+            do [
+                xco: xcoro () -> (),
+                co:  coro () -> () -> (),
+                v: Int,
+            ] {
+                coro co () -> () -> () {}
+                set xco = spawn co()
+                resume xco()
+            }
+        """)
+        assert(out == null) { out!! }
+    }
 }

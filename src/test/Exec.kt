@@ -159,7 +159,7 @@ class Exec  {
                 resume xco()
             }
         """)
-        assert(out == "30\n") { out }
+        assert(out == "OK\n") { out }
     }
     @Test
     fun ff_0X_coro () {
