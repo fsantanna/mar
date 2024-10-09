@@ -169,7 +169,7 @@ class Exec  {
                 xco: xcoro (Int) -> (),
             ] {
                 coro co (v: Int) -> (Int) -> () {
-                    `printf("%d\n", v);`
+                    `printf("%d\n", ceu_xcoro->mem.v);`
                 }
                 set xco = spawn co(10)
                 resume xco(20)
