@@ -13,8 +13,8 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Unit -> "void"
         is Type.Pointer -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Proto.Func -> "CEU_Func__${this.out.coder()}__${this.inps.to_void().map { it.coder() }.joinToString("__")}"
-        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder()}__CEUX"
-        is Type.XCoro -> "CEU_XCoro__${this.out.coder()}__${listOf(this.inp).pre_ceux(this.inp.tk).trim().map { it.coder() }.joinToString("__") }"
+        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder()}__${listOf(this.res).pre_ceux(this.res.tk).trim().map { it.coder() }.joinToString("__") }"
+        is Type.XCoro -> "CEU_XCoro__${this.out.coder()}__${listOf(this.res).pre_ceux(this.res.tk).trim().map { it.coder() }.joinToString("__") }"
     }
 }
 
@@ -27,7 +27,7 @@ fun coder_types_protos (): String {
             is Type.Proto.Coro -> listOf (
                 "typedef ${me.out.coder()} (*${me.coder()}) (CEUX, ...)"
             )
-            is Type.XCoro -> ft(Type.Proto.Func(me.tk_, listOf(me.inp).pre_ceux(me.tk), me.out))
+            is Type.XCoro -> ft(Type.Proto.Func(me.tk_, listOf(me.res).pre_ceux(me.tk), me.out))
             else -> emptyList()
         }
     }
@@ -37,7 +37,7 @@ fun coder_types_protos (): String {
 fun coder_types_xcoros (): String {
     val xs = G.outer!!.dn_filter({false}, {false}, { it is Type.XCoro }) as List<Type.XCoro>
     return xs.map {
-        val pre = (listOf(it.out.coder()) + listOf(it.inp).pre_ceux(it.tk).map { it.coder() }).joinToString("__")
+        val pre = (listOf(it.out.coder()) + listOf(it.res).pre_ceux(it.tk).map { it.coder() }).joinToString("__")
         """
         typedef struct CEU_XCoro__$pre {
             _CEU_Exe_
@@ -92,11 +92,11 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Spawn -> {
             val tp = this.co.type() as Type.Proto.Coro
             val xtp = this.dst.type() as Type.XCoro
-            val x = xtp.out.coder() + "__" + listOf(xtp.inp).pre_ceux(xtp.inp.tk).trim().map { it.coder() }.joinToString("__")
+            val x = xtp.out.coder() + "__" + listOf(xtp.res).pre_ceux(xtp.res.tk).trim().map { it.coder() }.joinToString("__")
             """
             {
                 CEU_Coro__$x ceu_coro_$n = (CEU_Coro__$x) ${this.co.coder(pre)};
-                CEU_XCoro__$x ceu_xcoro_$n = { CEU_EXE_STATUS_YIELDED, 0, (CEU_Coro__${tp.out.coder(pre)}__CEUX) ceu_coro_$n };
+                CEU_XCoro__$x ceu_xcoro_$n = { CEU_EXE_STATUS_YIELDED, 0, (CEU_Coro__${tp.out.coder(pre)}__${listOf(tp.res).pre_ceux(tp.res.tk).trim().map { it.coder() }.joinToString("__") }) ceu_coro_$n };
                 ceu_coro_$n(${(listOf("&ceu_xcoro_$n") + this.args.map { it.coder(pre) }).joinToString(",")});
                 ${this.dst.coder(pre)} = ceu_xcoro_$n;
             }
@@ -104,7 +104,7 @@ fun Stmt.coder (pre: Boolean = false): String {
         }
         is Stmt.Resume -> {
             val xtp = this.xco.type() as Type.XCoro
-            val x = xtp.out.coder() + "__" + listOf(xtp.inp).pre_ceux(xtp.inp.tk).trim().map { it.coder() }.joinToString("__")
+            val x = xtp.out.coder() + "__" + listOf(xtp.res).pre_ceux(xtp.res.tk).trim().map { it.coder() }.joinToString("__")
             """
             {
                 CEU_XCoro__$x ceu_xcoro_$n = ${this.xco.coder(pre)};

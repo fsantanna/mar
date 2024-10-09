@@ -108,7 +108,7 @@ class Parser {
         G.tks = ("xcoro (Int) -> Int").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.XCoro && tp.inp is Type.Basic)
+        assert(tp is Type.XCoro && tp.res is Type.Basic)
         assert(tp.to_str() == "xcoro (Int) -> Int")
     }
 

@@ -97,7 +97,7 @@ fun check_types () {
                 }
 
                 val ok1 = (me.dst == null) || me.dst.type().is_sup_of(xco.out)
-                val ok2 = xco.inp.is_sup_of(me.arg.type())
+                val ok2 = xco.res.is_sup_of(me.arg.type())
                 if (!ok1 || !ok2) {
                     err(me.tk, "invalid resume : types mismatch")
                 }

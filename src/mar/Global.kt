@@ -58,7 +58,7 @@ sealed class Type (var n: Int, val tk: Tk) {
                 Coro(tk___, inps__.map { (_, tp) -> tp }, res_, out__)
         }
     }
-    data class XCoro (val tk_: Tk.Fix, val inp: Type, val out: Type): Type(G.N++, tk_)
+    data class XCoro (val tk_: Tk.Fix, val res: Type, val out: Type): Type(G.N++, tk_)
 }
 
 sealed class Expr (var n: Int, val tk: Tk) {
