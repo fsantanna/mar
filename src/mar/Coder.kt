@@ -105,10 +105,11 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Resume -> {
             val xtp = this.xco.type() as Type.XCoro
             val x = xtp.out.coder() + "__" + listOf(xtp.res).pre_ceux(xtp.res.tk).trim().map { it.coder() }.joinToString("__")
+            val args = "&ceu_xcoro_$n" + if (this.arg.type() is Type.Unit) "" else ","+this.arg.coder(pre)
             """
             {
                 CEU_XCoro__$x ceu_xcoro_$n = ${this.xco.coder(pre)};
-                ${this.dst.cond { it.coder(pre) + " = "}} ceu_xcoro_$n.proto(&ceu_xcoro_$n);
+                ${this.dst.cond { it.coder(pre) + " = "}} ceu_xcoro_$n.proto($args);
             }
         """
         }
