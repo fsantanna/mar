@@ -27,7 +27,7 @@ fun coder_types_protos (): String {
             is Type.Proto.Coro -> listOf (
                 "typedef ${me.out.coder()} (*${me.coder()}) (CEUX, ...)"
             )
-            is Type.XCoro -> ft(Type.Proto.Func(me.tk_, listOf(me.res).pre_ceux(me.tk), me.out))
+            is Type.XCoro -> ft(Type.Proto.Func(me.tk_, me.out, listOf(me.res).pre_ceux(me.tk)))
             else -> emptyList()
         }
     }

@@ -77,7 +77,7 @@ fun check_types () {
                 }
 
                 val tp = me.dst.type()
-                val xtp = Type.XCoro(co.tk_, co.res, co.out)
+                val xtp = Type.XCoro(co.tk_, co.out, co.res)
                 val ok1 = xtp.is_sup_of(tp)
 
                 val ok2 = when {

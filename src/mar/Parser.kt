@@ -122,10 +122,10 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
             accept_fix_err("->")
             val out = parser_type(req_vars)
             when {
-                (mid==null &&  vars) -> Type.Proto.Func.Vars(tk0, inps as List<Var_Type>, out)
-                (mid==null && !vars) -> Type.Proto.Func(tk0, inps as List<Type>, out)
-                (mid!=null &&  vars) -> Type.Proto.Coro.Vars(tk0, inps as List<Var_Type>, mid, out)
-                (mid!=null && !vars) -> Type.Proto.Coro(tk0, inps as List<Type>, mid, out)
+                (mid==null &&  vars) -> Type.Proto.Func.Vars(tk0, out, inps as List<Var_Type>)
+                (mid==null && !vars) -> Type.Proto.Func(tk0, out, inps as List<Type>)
+                (mid!=null &&  vars) -> Type.Proto.Coro.Vars(tk0, out, inps as List<Var_Type>, mid)
+                (mid!=null && !vars) -> Type.Proto.Coro(tk0, out, inps as List<Type>, mid)
                 else -> error("impossible case")
             }
         }
@@ -140,7 +140,7 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
             accept_fix_err(")")
             accept_fix_err("->")
             val out = parser_type(req_vars)
-            Type.XCoro(tk0, inp, out)
+            Type.XCoro(tk0, out, inp)
         }
         accept_fix("(") -> {
             val tp = if (check_fix(")")) {
