@@ -12,8 +12,8 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Basic -> this.tk.str
         is Type.Unit -> "void"
         is Type.Pointer -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
-        is Type.Proto -> "CEU_Proto__${this.out.coder()}__${this.inps.map { it.coder() }.joinToString("_")}"
-        is Type.XCoro -> "CEU_Exe__${this.out.coder()}__${this.inp.coder()}"
+        is Type.Proto -> "CEU_Proto__${this.out.coder()}__${this.inps.to_void().map { it.coder() }.joinToString("_")}"
+        is Type.XCoro -> "CEU_Exe__${this.out.coder()}__${listOf(this.inp).pre_ceux(this.inp.tk).trim().map { it.coder() }.joinToString("__") }"
     }
 }
 
@@ -22,22 +22,22 @@ fun coder_types_protos (): String {
         return when (me) {
             is Type.Proto.Func -> listOf(me)
             is Type.Proto.Coro -> {
-                val res = if (me.res is Type.Unit) emptyList() else listOf(me.res)
+                val res = me.res.to_list()
                 val tp1 = ft(Type.Proto.Func(me.tk_, me.inps, me.out))
                 val tp2 = ft(Type.Proto.Func(me.tk_, res, me.out))
                 tp1 + tp2
             }
-            is Type.XCoro -> ft(Type.Proto.Func(me.tk_, listOf(me.inp), me.out))
+            is Type.XCoro -> ft(Type.Proto.Func(me.tk_, listOf(me.inp).pre_ceux(me.tk), me.out))
             else -> emptyList()
         }
     }
     val ts = G.outer!!.dn_collect({ emptyList() }, { emptyList() }, ::ft)
-    return ts.reversed().map { "typedef ${it.out_.coder()} (*${it.coder()}) (${it.inps_.map { it.coder() }.joinToString(",")});\n" }.joinToString("")
+    return ts.reversed().map { "typedef ${it.out.coder()} (*${it.coder()}) (${it.inps.map { it.coder() }.joinToString(",")});\n" }.joinToString("")
 }
 fun coder_types_xcoros (): String {
     val xs = G.outer!!.dn_filter({false}, {false}, { it is Type.XCoro }) as List<Type.XCoro>
     return xs.map {
-        val pre = it.out.coder() + "__" + it.inp.coder()
+        val pre = (listOf(it.out.coder()) + listOf(it.inp).pre_ceux(it.tk).map { it.coder() }).joinToString("__")
         """
         typedef struct CEU_Exe__$pre {
             _CEU_Exe_
@@ -71,15 +71,26 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Spawn -> {
             val tp = this.co.type() as Type.Proto.Coro
             val xtp = this.dst.type() as Type.XCoro
-            val x = xtp.out.coder() + "__" + xtp.inp.coder()
+            val x = xtp.out.coder() + "__" + listOf(xtp.inp).pre_ceux(xtp.inp.tk).trim().map { it.coder() }.joinToString("__")
             """
-            CEU_Proto__${tp.out.coder(pre)}__${tp.inps.map { it.coder(pre) }.joinToString("_")} proto = ${this.co.coder(pre)};
-            CEU_Exe__$x exe = { CEU_EXE_STATUS_YIELDED, 0, (CEU_Proto__${tp.out.coder(pre)}__${tp.res.coder(pre)}) proto };
-            proto(${(listOf("&exe") + this.args.map { it.coder(pre) }).joinToString(",")});
-            ${this.dst.coder(pre)} = exe;
+            {
+                CEU_Proto__$x proto = ${this.co.coder(pre)};
+                CEU_Exe__$x exe = { CEU_EXE_STATUS_YIELDED, 0, (CEU_Proto__${tp.out.coder(pre)}__${tp.res.coder(pre)}) proto };
+                proto(${(listOf("&exe") + this.args.map { it.coder(pre) }).joinToString(",")});
+                ${this.dst.coder(pre)} = exe;
+            }
             """
         }
-        is Stmt.Resume -> TODO()
+        is Stmt.Resume -> {
+            val xtp = this.xco.type() as Type.XCoro
+            val x = xtp.out.coder() + "__" + listOf(xtp.inp).pre_ceux(xtp.inp.tk).trim().map { it.coder() }.joinToString("__")
+            """
+            {
+                CEU_Exe__$x exe = ${this.xco.coder(pre)};
+                ${this.dst.cond { it.coder(pre) + " = "}} exe.proto(&exe);
+            }
+        """
+        }
         is Stmt.Yield -> TODO()
 
         is Stmt.Nat    -> this.tk.str
@@ -111,6 +122,7 @@ fun coder_main (pre: Boolean): String {
         #include <stdio.h>
         #include <stdlib.h>
         
+        typedef void*   CEUX;
         typedef int     Int;
         typedef uint8_t U8;
         

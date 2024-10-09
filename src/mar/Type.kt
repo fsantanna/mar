@@ -1,5 +1,33 @@
 package mar
 
+fun List<Type>.pre_ceux (tk: Tk): List<Type> {
+    return (listOf(Type.Basic(Tk.Type("CEUX",tk.pos.copy()))) + this).trim()
+}
+
+fun List<Type>.trim (): List<Type> {
+    return when {
+        (this.size <= 1) -> this
+        (this.first() is Type.Unit) -> this.drop(1)
+        (this.last()  is Type.Unit) -> this.dropLast(1)
+        else -> error("impossible case")
+    }
+}
+
+fun Type.to_list (): List<Type> {
+    return if (this is Type.Unit) {
+        emptyList()
+    } else {
+        listOf(this)
+    }
+}
+
+fun List<Type>.to_void (): List<Type> {
+    return when {
+        (this.size == 0) -> listOf(Type.Unit(Tk.Fix("(", G.tk0!!.pos.copy())))
+        else -> this
+    }
+}
+
 fun Type.is_sup_of (other: Type): Boolean {
     return when {
         //(this is Type.Top) -> true
