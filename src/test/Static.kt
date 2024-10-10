@@ -74,7 +74,7 @@ class Static {
     fun aa_05_coro_err () {
         val out = static("""
             do [
-                co: coro () -> () -> (),
+                co: coro () -> (),
             ] {
                 ;; missing implementation
             }
@@ -157,8 +157,8 @@ class Static {
     @Test
     fun bc_01_coro_err() {
         val out = static("""
-            do [f: \coro () -> () -> Int] {
-                set `_` = spawn f()
+            do [f: \coro () -> ()] {
+                set `_` = create(f) ;; err: f \coro
             }
         """)
         assert(out == "anon : (lin 3, col 27) : spawn error : expected coroutine prototype") { out!! }
@@ -166,21 +166,29 @@ class Static {
     @Test
     fun bc_02_coro_err() {
         val out = static("""
-            do [f: coro (Int) -> () -> Int] {
-                coro f (x: Int) -> () -> Int {
+            do [
+                f: coro (Int) -> Int,
+                z: xcoro (Int) -> Int,
+            ] {
+                coro f (x: Int) -> Int {
                 }
-                set `_` = spawn f()
+                set z = create(f)
+                resume z()  ;; err f(Int)
             }
         """)
-        assert(out == "anon : (lin 5, col 27) : spawn error : types mismatch") { out!! }
+        assert(out == "anon : (lin 9, col 17) : resume error : types mismatch") { out!! }
     }
     @Test
     fun bc_03_coro_ok() {
         val out = static("""
-            do [f: coro (Int) -> () -> Int] {
-                coro f (x: Int) -> () -> Int {
+            do [
+                f: coro (Int) -> Int,
+                x: xcoro (Int) -> Int,
+            ] {
+                coro f (v: Int) -> Int {
                 }
-                set `_` = spawn f(10)
+                set x = create(f)
+                resume x(10)
             }
         """)
         assert(out == null) { out!! }
@@ -190,20 +198,20 @@ class Static {
         val out = static("""
             do [
                 xco: xcoro (Int) -> (),
-                co:  coro () -> () -> (),
+                co:  coro () -> (),
             ] {
-                coro co () -> () -> () {
+                coro co () -> () {
                 }
-                set xco = spawn co()
+                set xco = create(co)
             }
         """)
-        assert(out == "anon : (lin 8, col 27) : spawn error : types mismatch") { out!! }
+        assert(out == "anon : (lin 8, col 27) : create error : types mismatch") { out!! }
     }
     @Test
     fun bc_05_exe_coro_err () {
         val out = static("""
             do [] {
-                set `_` = spawn (1)()
+                set `_` = create(1)
             }
         """)
         assert(out == "anon : (lin 3, col 27) : spawn error : expected coroutine prototype") { out!! }
@@ -213,10 +221,11 @@ class Static {
         val out = static("""
             do [
                 xco: xcoro () -> (),
-                co:  coro () -> () -> (),
+                co:  coro () -> (),
             ] {
-                coro co () -> () -> () {}
-                set xco = spawn co()
+                coro co () -> () {}
+                set xco = create(co)
+                resume xco()
             }
         """)
         assert(out == null) { out!! }
@@ -226,10 +235,10 @@ class Static {
         val out = static("""
             do [
                 xco: xcoro () -> Int,
-                co:  coro () -> () -> Int,
+                co:  coro () -> Int,
             ] {
-                coro co () -> () -> Int {}
-                set xco = spawn co()
+                coro co () -> Int {}
+                set xco = create(co)
                 resume xco()
             }
         """)
@@ -249,10 +258,10 @@ class Static {
         val out = static("""
             do [
                 xco: xcoro () -> (),
-                co:  coro () -> () -> (),
+                co:  coro () -> (),
             ] {
-                coro co () -> () -> () {}
-                set xco = spawn co()
+                coro co () -> () {}
+                set xco = create(co)
                 resume xco(1)
             }
         """)
@@ -263,11 +272,11 @@ class Static {
         val out = static("""
             do [
                 xco: xcoro () -> (),
-                co:  coro () -> () -> (),
+                co:  coro () -> (),
                 v: Int,
             ] {
-                coro co () -> () -> () {}
-                set xco = spawn co()
+                coro co () -> () {}
+                set xco = create(co)
                 set v = resume xco(1)
             }
         """)
@@ -278,11 +287,11 @@ class Static {
         val out = static("""
             do [
                 xco: xcoro () -> (),
-                co:  coro () -> () -> (),
+                co:  coro () -> (),
                 v: Int,
             ] {
-                coro co () -> () -> () {}
-                set xco = spawn co()
+                coro co () -> () {}
+                set xco = create(co)
                 set v = resume xco()
             }
         """)
@@ -293,11 +302,11 @@ class Static {
         val out = static("""
             do [
                 xco: xcoro () -> (),
-                co:  coro () -> () -> (),
+                co:  coro () -> (),
                 v: Int,
             ] {
-                coro co () -> () -> () {}
-                set xco = spawn co()
+                coro co () -> () {}
+                set xco = create(co)
                 resume xco()
             }
         """)
@@ -317,9 +326,9 @@ class Static {
         val out = static("""
             do [
                 xco: xcoro () -> (),
-                co:  coro () -> () -> (),
+                co:  coro () -> (),
             ] {
-                coro co () -> () -> () {
+                coro co () -> () {
                     do [x: Int] {
                         set x = yield()
                     }
@@ -333,9 +342,9 @@ class Static {
         val out = static("""
             do [
                 xco: xcoro () -> (),
-                co:  coro () -> () -> (),
+                co:  coro () -> (),
             ] {
-                coro co () -> () -> () {
+                coro co () -> () {
                     yield(10)
                 }
             }

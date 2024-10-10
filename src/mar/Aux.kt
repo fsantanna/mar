@@ -11,9 +11,9 @@ fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Type)-
         is Stmt.Block -> this.vs.map { (_,tp) -> tp.dn_collect(ft) }.flatten() + this.ss.map { it.dn_collect(fs,fe,ft) }.flatten()
         is Stmt.Set -> this.dst.dn_collect(fe) + this.src.dn_collect(fe)
 
-        is Stmt.Spawn -> this.co.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
-        is Stmt.Resume -> this.xco.dn_collect(fe) + this.arg.dn_collect(fe)
-        is Stmt.Yield -> this.arg.dn_collect(fe)
+        is Stmt.Create -> this.dst.dn_collect(fe) + this.co.dn_collect(fe)
+        is Stmt.Resume -> (this.dst?.dn_collect(fe) ?: emptyList()) + this.xco.dn_collect(fe) + this.arg.dn_collect(fe)
+        is Stmt.Yield  -> (this.dst?.dn_collect(fe) ?: emptyList()) + this.arg.dn_collect(fe)
 
         is Stmt.Call -> this.call.dn_collect(fe)
         is Stmt.Nat -> emptyList()
@@ -42,9 +42,8 @@ fun <V> Type.dn_collect (ft: (Type)->List<V>?): List<V> {
         is Type.Unit -> emptyList()
         is Type.Basic -> emptyList()
         is Type.Pointer -> this.ptr.dn_collect(ft)
-        is Type.Proto.Func -> (this.inps + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
-        is Type.Proto.Coro -> (this.inps + this.res + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
-        is Type.XCoro -> listOf(this.res, this.out).map { it.dn_collect(ft) }.flatten()
+        is Type.Proto -> (this.inps + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
+        is Type.XCoro -> (this.inps + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
     }
 }
 

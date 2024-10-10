@@ -37,10 +37,9 @@ fun cache_ups () {
                 G.ups[me.src.n] = me.n
             }
 
-            is Stmt.Spawn -> {
+            is Stmt.Create -> {
                 G.ups[me.dst.n] = me.n
                 G.ups[me.co.n] = me.n
-                me.args.forEach { G.ups[it.n] = me.n }
             }
             is Stmt.Resume -> {
                 if (me.dst != null) {

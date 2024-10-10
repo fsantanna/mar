@@ -134,12 +134,12 @@ class Exec  {
         val out = test("""
             do [
                 xco: xcoro () -> (),
-                co:  coro () -> () -> (),
+                co:  coro () -> (),
             ] {
-                coro co () -> () -> () {
+                coro co () -> () {
                     `puts("OK");`
                 }
-                set xco = spawn co()
+                set xco = create(co)
                 `puts("END");`
             }
         """)
@@ -149,13 +149,13 @@ class Exec  {
     fun ff_02_coro () {
         val out = test("""
             do [
-                co: coro () -> () -> (),
+                co: coro () -> (),
                 xco: xcoro () -> (),
             ] {
-                coro co () -> () -> () {
+                coro co () -> () {
                     `puts("OK");`
                 }
-                set xco = spawn co()
+                set xco = create(co)
                 resume xco()
             }
         """)
@@ -165,14 +165,14 @@ class Exec  {
     fun ff_03_coro () {
         val out = test("""
             do [
-                co: coro (Int) -> (Int) -> (),
+                co: coro (Int) -> (),
                 xco: xcoro (Int) -> (),
             ] {
-                coro co (v: Int) -> (Int) -> () {
+                coro co (v: Int) -> () {
                     `printf("%d\n", ceu_xcoro->mem.v);`
                 }
-                set xco = spawn co(10)
-                resume xco(20)
+                set xco = create(co)
+                resume xco(10)
             }
         """)
         assert(out == "10\n") { out }
@@ -181,18 +181,18 @@ class Exec  {
     fun ff_04_coro () {
         val out = test("""
             do [
-                co: coro (Int) -> () -> (),
+                co: coro (Int) -> (),
                 xco: xcoro () -> (),
             ] {
-                coro co (v: Int) -> () -> () {
+                coro co (v: Int) -> () {
                     `printf("%d\n", ceu_xcoro->mem.v);`
                     yield()
                     set v = v + 10
                     `printf("%d\n", ceu_xcoro->mem.v);`
                 }
-                set xco = spawn co(10)
-                resume xco()
-                resume xco()
+                set xco = create(co)
+                resume xco(10)
+                resume xco(99)
             }
         """)
         assert(out == "10\n20\n") { out }
@@ -201,23 +201,23 @@ class Exec  {
     fun ff_05_coro () {
         val out = test("""
             do [
-                co: coro (Int,Int) -> (Int) -> Int,
+                co: coro (Int) -> (Int) -> Int,
                 xco: xcoro (Int) -> Int,
-                xy: Int,
-                z2: Int,
+                x1: Int,
+                y1: Int,
             ] {
-                coro co (x:Int, y:Int) -> (Int) -> Int {
-                    do [z: Int] {
-                        set z = yield(x+y)
-                        return(z * 2)
+                coro co (x2:Int) -> (Int) -> Int {
+                    do [y2: Int] {
+                        set y2 = yield(x2*2)
+                        return(y2 * 2)
                     }
                 }
-                set xco = spawn co(10,20)
-                set xy = resume xco(0)
-                set z2 = resume xco(xy)
-                `printf("%d\n", z2);`
+                set xco = create(co)
+                set x1 = resume xco(5)
+                set y1 = resume xco(x1 + 10)
+                `printf("%d\n", y1);`
             }
         """)
-        assert(out == "60\n") { out }
+        assert(out == "40\n") { out }
     }
 }

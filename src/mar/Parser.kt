@@ -106,6 +106,7 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
     return when {
         (pre!=null || accept_fix("func") || accept_fix("coro")) -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
+            val isf = (tk0.str == "func")
             accept_fix_err("(")
             val vars = req_vars || check_enu("Var")
             val inps = parser_list(",", ")") {
@@ -115,32 +116,33 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
                     parser_type(req_vars)
                 }
             }
-            val mid = if (tk0.str == "func") null else {
-                accept_fix_err("->")
-                parser_type(req_vars)
+            if (!isf) {
+                if (inps.size >= 2) {
+                    err(tk0, "${tk0.str} error : unexpected second argument")
+                }
             }
             accept_fix_err("->")
             val out = parser_type(req_vars)
             when {
-                (mid==null &&  vars) -> Type.Proto.Func.Vars(tk0, out, inps as List<Var_Type>)
-                (mid==null && !vars) -> Type.Proto.Func(tk0, out, inps as List<Type>)
-                (mid!=null &&  vars) -> Type.Proto.Coro.Vars(tk0, out, inps as List<Var_Type>, mid)
-                (mid!=null && !vars) -> Type.Proto.Coro(tk0, out, inps as List<Type>, mid)
+                ( isf &&  vars) -> Type.Proto.Func.Vars(tk0, out, inps as List<Var_Type>)
+                ( isf && !vars) -> Type.Proto.Func(tk0, out, inps as List<Type>)
+                (!isf &&  vars) -> Type.Proto.Coro.Vars(tk0, out, inps as List<Var_Type>)
+                (!isf && !vars) -> Type.Proto.Coro(tk0, out, inps as List<Type>)
                 else -> error("impossible case")
             }
         }
         accept_fix("xcoro") -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
             accept_fix_err("(")
-            val inp = if (check_fix(")")) {
-                Type.Unit(G.tk0 as Tk.Fix)
-            } else {
+            val inps = parser_list(",", ")") {
                 parser_type(req_vars)
             }
-            accept_fix_err(")")
+            if (inps.size >= 2) {
+                err(tk0, "xcoro error : unexpected second argument")
+            }
             accept_fix_err("->")
             val out = parser_type(req_vars)
-            Type.XCoro(tk0, out, inp)
+            Type.XCoro(tk0, out, inps)
         }
         accept_fix("(") -> {
             val tp = if (check_fix(")")) {
@@ -247,7 +249,7 @@ fun parser_stmt (set: Expr? = null): Stmt {
             val tk0 = G.tk0 as Tk.Fix
             val dst = parser_expr()
             accept_fix_err("=")
-            if (check_fix("spawn") || check_fix("resume") || check_fix("yield")) {
+            if (check_fix("create") || check_fix("resume") || check_fix("yield")) {
                 parser_stmt(dst)
             } else {
                 val src = parser_expr()
@@ -281,12 +283,12 @@ fun parser_stmt (set: Expr? = null): Stmt {
             Stmt.Return(tk0, e)
         }
 
-        (set!=null && accept_fix("spawn")) -> {
+        (set!=null && accept_fix("create")) -> {
             val tk0 = G.tk0 as Tk.Fix
-            val co = parser_expr_4_prim()
             accept_fix_err("(")
-            val args = parser_list(",",")") { parser_expr() }
-            Stmt.Spawn(tk0, set, co, args)
+            val co = parser_expr()
+            accept_fix_err(")")
+            Stmt.Create(tk0, set, co)
         }
         accept_fix("resume") -> {
             val tk0 = G.tk0 as Tk.Fix

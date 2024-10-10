@@ -70,24 +70,15 @@ fun check_types () {
                     err(me.tk, "return error : types mismatch")
                 }
             }
-            is Stmt.Spawn -> {
+            is Stmt.Create -> {
                 val co = me.co.type()
                 if (co !is Type.Proto.Coro) {
                     err(me.tk, "spawn error : expected coroutine prototype")
                 }
-
                 val tp = me.dst.type()
-                val xtp = Type.XCoro(co.tk_, co.out, co.res)
-                val ok1 = xtp.is_sup_of(tp)
-
-                val ok2 = when {
-                    (co.inps.size != me.args.size) -> false
-                    else -> co.inps.zip(me.args).all { (par, arg) ->
-                        par.is_sup_of(arg.type())
-                    }
-                }
-                if (!ok1 || !ok2) {
-                    err(me.tk, "spawn error : types mismatch")
+                val xtp = Type.XCoro(co.tk_, co.out, co.inps)
+                if (!xtp.is_sup_of(tp)) {
+                    err(me.tk, "create error : types mismatch")
                 }
             }
             is Stmt.Resume -> {
@@ -97,7 +88,12 @@ fun check_types () {
                 }
 
                 val ok1 = (me.dst == null) || me.dst.type().is_sup_of(xco.out)
-                val ok2 = xco.res.is_sup_of(me.arg.type())
+                val ok2 = me.arg.type().let {
+                    when {
+                        (xco.inps.size == 0) -> it is Type.Unit
+                        else -> xco.inps.first().is_sup_of(it)
+                    }
+                }
                 if (!ok1 || !ok2) {
                     err(me.tk, "resume error : types mismatch")
                 }
@@ -108,7 +104,11 @@ fun check_types () {
                     err(me.tk, "yield error : expected enclosing coro")
                 }
                 val xco = up.tp_
-                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(xco.res)
+                val ok1 = when {
+                    (me.dst == null) -> true
+                    (xco.inps.size == 0) -> me.dst.type() is Type.Unit
+                    else -> me.dst.type().is_sup_of(xco.inps.first())
+                }
                 val ok2 = xco.out.is_sup_of(me.arg.type())
                 if (!ok1 || !ok2) {
                     err(me.tk, "yield error : types mismatch")

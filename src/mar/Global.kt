@@ -23,9 +23,9 @@ val OPERATORS = Pair (
 
 val KEYWORDS: SortedSet<String> = (
     setOf (
-        "do", "coro", "false", "func",
+        "do", "coro", "create", "false", "func",
         "null", "resume", "return", "set",
-        "spawn", "true", "xcoro", "yield",
+        "true", "xcoro", "yield",
     ).toSortedSet()
 )
 
@@ -53,12 +53,12 @@ sealed class Type (var n: Int, val tk: Tk) {
             data class Vars (val tk___: Tk.Fix, val out__: Type, val inps__: List<Var_Type>) :
                 Func(tk___, out__, inps__.map { (_, tp) -> tp })
         }
-        open class Coro (val tk__: Tk.Fix, val out_: Type, val inps_: List<Type>, val res: Type): Proto(tk__, out_, inps_) {
-            data class Vars (val tk___: Tk.Fix, val out__: Type, val inps__: List<Var_Type>, val res_: Type) :
-                Coro(tk___, out__, inps__.map { (_, tp) -> tp }, res_)
+        open class Coro (val tk__: Tk.Fix, val out_: Type, val inps_: List<Type>): Proto(tk__, out_, inps_) {
+            data class Vars (val tk___: Tk.Fix, val out__: Type, val inps__: List<Var_Type>) :
+                Coro(tk___, out__, inps__.map { (_, tp) -> tp })
         }
     }
-    data class XCoro (val tk_: Tk.Fix, val out: Type, val res: Type): Type(G.N++, tk_)
+    data class XCoro (val tk_: Tk.Fix, val out: Type, val inps: List<Type>): Type(G.N++, tk_)
 }
 
 sealed class Expr (var n: Int, val tk: Tk) {
@@ -84,7 +84,7 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     data class Block   (val tk_: Tk, val vs: List<Var_Type>, val ss: List<Stmt>) : Stmt(G.N++, tk_)
     data class Set     (val tk_: Tk.Fix, val dst: Expr, val src: Expr): Stmt(G.N++, tk_)
 
-    data class Spawn  (val tk_: Tk.Fix, val dst: Expr, val co: Expr, val args: List<Expr>): Stmt(G.N++, tk_)
+    data class Create (val tk_: Tk.Fix, val dst: Expr, val co: Expr): Stmt(G.N++, tk_)
     data class Resume (val tk_: Tk.Fix, val dst: Expr?, val xco: Expr, val arg: Expr): Stmt(G.N++, tk_)
     data class Yield  (val tk_: Tk.Fix, val dst: Expr?, val arg: Expr): Stmt(G.N++, tk_)
 

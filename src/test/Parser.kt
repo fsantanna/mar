@@ -97,19 +97,31 @@ class Parser {
     }
     @Test
     fun aj_08_type_coro () {
-        G.tks = ("coro () -> () -> ()").lexer()
+        G.tks = ("coro () -> ()").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Proto.Coro && tp.res is Type.Unit)
-        assert(tp.to_str() == "coro () -> () -> ()")
+        assert(tp is Type.Proto.Coro && tp.inps.size==0)
+        assert(tp.to_str() == "coro () -> ()")
     }
     @Test
     fun aj_09_type_xcoro () {
         G.tks = ("xcoro (Int) -> Int").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.XCoro && tp.res is Type.Basic)
-        assert(tp.to_str() == "xcoro (Int) -> Int")
+        assert(tp is Type.XCoro && tp.inps.first() is Type.Basic)
+        assert(tp.to_str() == "xcoro (Int) -> Int") { tp.to_str() }
+    }
+    @Test
+    fun aj_10_type_coro_err () {
+        G.tks = ("coro (Int,Int) -> ()").lexer()
+        parser_lexer()
+        assert(trap { parser_type() } == "anon : (lin 1, col 1) : coro error : unexpected second argument")
+    }
+    @Test
+    fun aj_11_type_xcoro_err () {
+        G.tks = ("xcoro (Int,Int) -> Int").lexer()
+        parser_lexer()
+        assert(trap { parser_type() } == "anon : (lin 1, col 1) : xcoro error : unexpected second argument")
     }
 
     // PARENS
@@ -334,9 +346,9 @@ class Parser {
 
     @Test
     fun hh_01_spawn() {
-        G.tks = ("spawn f(1)").lexer()
+        G.tks = ("create(f)").lexer()
         parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 1, col 1) : expected expression : have \"spawn\"")
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 1) : expected expression : have \"create\"")
     }
     @Test
     fun hh_02_resume() {
@@ -356,11 +368,11 @@ class Parser {
     }
     @Test
     fun hh_04_spawn() {
-        G.tks = ("set x = spawn f()").lexer()
+        G.tks = ("set x = create(f)").lexer()
         parser_lexer()
         val s = parser_stmt()
-        assert(s is Stmt.Spawn && s.co is Expr.Acc && s.args.size==0)
-        assert(s.to_str() == "set x = spawn f()")
+        assert(s is Stmt.Create && s.co is Expr.Acc)
+        assert(s.to_str() == "set x = create(f)")
     }
     @Test
     fun hh_05_resume() {

@@ -14,9 +14,9 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Unit       && other is Type.Unit)       -> true
         (this is Type.Basic      && other is Type.Basic)      -> (this.tk.str == other.tk.str)
         (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
-        (this is Type.Proto.Func && other is Type.Proto.Func) -> this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
-        (this is Type.Proto.Coro && other is Type.Proto.Coro) -> this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.out.is_sup_of(this.out)
-        (this is Type.XCoro      && other is Type.XCoro)      -> this.res.is_sup_of(other.res) && other.out.is_sup_of(this.out)
+        (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
+        (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
+        (this is Type.XCoro      && other is Type.XCoro)      -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
         else -> false
     }
 }
