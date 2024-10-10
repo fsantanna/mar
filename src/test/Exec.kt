@@ -169,7 +169,7 @@ class Exec  {
                 xco: xcoro (Int) -> (),
             ] {
                 coro co (v: Int) -> () {
-                    `printf("%d\n", ceu_xcoro->mem.v);`
+                    `printf("%d\n", ceu_xco->mem.v);`
                 }
                 set xco = create(co)
                 resume xco(10)
@@ -185,10 +185,10 @@ class Exec  {
                 xco: xcoro () -> (),
             ] {
                 coro co (v: Int) -> () {
-                    `printf("%d\n", ceu_xcoro->mem.v);`
+                    `printf("%d\n", ceu_xco->mem.v);`
                     yield()
                     set v = v + 10
-                    `printf("%d\n", ceu_xcoro->mem.v);`
+                    `printf("%d\n", ceu_xco->mem.v);`
                 }
                 set xco = create(co)
                 resume xco(10)

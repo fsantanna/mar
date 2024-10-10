@@ -29,9 +29,13 @@ fun coder_types_protos (pre: Boolean): String {
             is Type.Proto.Func -> listOf (
                 "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")})"
             )
-            is Type.Proto.Coro -> listOf (
-                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (CEUX, ...)"
-            )
+            is Type.Proto.Coro -> {
+                val xco = "struct " + me.coder(pre).coro_to_xcoro()
+                listOf (
+                    "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) ($xco* ceu_xco ${me.inps.map { ","+it.coder(pre) }.joinToString("")})",
+                    xco,
+                )
+            }
             else -> emptyList()
         }
     }
@@ -73,13 +77,13 @@ fun Stmt.coder (pre: Boolean = false): String {
                     this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro -> {
                     val x = this.tp.coder(pre).coro_to_xcoro()
-                    this.tp_.out.coder(pre) + " " + this.id.str + " ($x* ceu_xcoro ${this.tp_.inps__.map { "," + it.coder(pre) }.joinToString("")})"
+                    this.tp_.out.coder(pre) + " " + this.id.str + " ($x* ceu_xco ${this.tp_.inps__.map { "," + it.coder(pre) }.joinToString("")})"
                 }
             } + """
             {
                 ${(this is Stmt.Proto.Coro).cond {
                     """                    
-                    switch (ceu_xcoro->pc) {
+                    switch (ceu_xco->pc) {
                         case 0:
                 """ }}
                 ${this.blk.ss.map {
@@ -112,7 +116,6 @@ fun Stmt.coder (pre: Boolean = false): String {
         }
         is Stmt.Resume -> {
             val xco = this.xco.coder(pre)
-            val xtp = this.xco.type() as Type.XCoro
             val args = "&$xco" + if (this.arg.type() is Type.Unit) "" else ","+this.arg.coder(pre)
             """
             ${this.dst.cond { it.coder(pre) + " = "}} $xco.proto($args);
@@ -121,13 +124,13 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Yield -> {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
             """
-                ceu_xcoro->pc = ${this.n};
+                ceu_xco->pc = ${this.n};
                 return ${this.arg.coder(pre)};
             case ${this.n}:
                 ${(this.dst).cond { """
                     {
                         va_list ceu_args;
-                        va_start(ceu_args, ceu_xcoro);
+                        va_start(ceu_args, ceu_xco);
                         ${this.dst!!.coder(pre)} = va_arg(ceu_args, ${tp.out.coder(pre)});
                         va_end(ceu_args);
                     }
@@ -154,7 +157,7 @@ fun Expr.coder (pre: Boolean = false): String {
 
         is Expr.Acc -> {
             if (this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) {
-                "ceu_xcoro->mem.${this.tk.str}"
+                "ceu_xco->mem.${this.tk.str}"
             } else {
                 this.tk.str
             }
@@ -173,7 +176,6 @@ fun coder_main (pre: Boolean): String {
         #include <stdlib.h>
         #include <stdarg.h>
         
-        typedef void*   CEUX;
         typedef int     Int;
         typedef uint8_t U8;
         
@@ -182,7 +184,9 @@ fun coder_main (pre: Boolean): String {
         #define false 0
         
         ${File("src/mar/Prelude.c").readLines().joinToString("\n")}
+        
         ${coder_types_protos(pre)}
+        
         ${coder_types_xcoros(pre)}
         
         int main (void) {
