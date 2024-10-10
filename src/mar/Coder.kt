@@ -77,14 +77,16 @@ fun Stmt.coder (pre: Boolean = false): String {
                     this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro -> {
                     val x = this.tp.coder(pre).coro_to_xcoro()
-                    this.tp_.out.coder(pre) + " " + this.id.str + " ($x* ceu_xco ${this.tp_.inps__.map { "," + it.coder(pre) }.joinToString("")})"
+                    this.tp_.out.coder(pre) + " " + this.id.str + " ($x* ceu_xco ${this.tp_.inps__.map { (_,tp) -> ", " + tp.coder(pre) + " ceu_arg" }.joinToString("")})"
                 }
             } + """
             {
                 ${(this is Stmt.Proto.Coro).cond {
+                    this as Stmt.Proto.Coro
                     """                    
                     switch (ceu_xco->pc) {
                         case 0:
+                            ${this.blk.vs.map { (id,_) -> id.coder(this.blk, pre) + " = ceu_arg;\n" }.joinToString("")}
                 """ }}
                 ${this.blk.ss.map {
                     it.coder(pre) + "\n"
@@ -121,27 +123,29 @@ fun Stmt.coder (pre: Boolean = false): String {
             ${this.dst.cond { it.coder(pre) + " = "}} $xco.proto($args);
             """
         }
-        is Stmt.Yield -> {
-            val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
-            """
-                ceu_xco->pc = ${this.n};
-                return ${this.arg.coder(pre)};
-            case ${this.n}:
-                ${(this.dst).cond { """
-                    {
-                        va_list ceu_args;
-                        va_start(ceu_args, ceu_xco);
-                        ${this.dst!!.coder(pre)} = va_arg(ceu_args, ${tp.out.coder(pre)});
-                        va_end(ceu_args);
-                    }
-                """ }}
-            """
-        }
+        is Stmt.Yield -> """
+            ceu_xco->pc = ${this.n};
+            return ${this.arg.coder(pre)};
+        case ${this.n}:
+            ${(this.dst).cond { """
+                ${it.coder(pre)} = ceu_arg;
+            """ }}
+        """
 
         is Stmt.Nat    -> this.tk.str
         is Stmt.Call   -> this.call.coder(pre) + ";"
     }
 }
+
+fun Tk.Var.coder (fr: Any, pre: Boolean): String {
+    return if (fr.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) {
+        "ceu_xco->mem.${this.str}"
+    } else {
+        this.str
+    }
+
+}
+
 fun Expr.coder (pre: Boolean = false): String {
     fun String.op_ceu_to_c (): String {
         return when (this) {
@@ -155,13 +159,7 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
         is Expr.Nat -> this.tk.str
 
-        is Expr.Acc -> {
-            if (this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) {
-                "ceu_xco->mem.${this.tk.str}"
-            } else {
-                this.tk.str
-            }
-        }
+        is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> ""
         is Expr.Bool, is Expr.Char,
         is Expr.Null, is Expr.Num -> this.to_str(pre)

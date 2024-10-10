@@ -182,7 +182,7 @@ class Exec  {
         val out = test("""
             do [
                 co: coro (Int) -> (),
-                xco: xcoro () -> (),
+                xco: xcoro (Int) -> (),
             ] {
                 coro co (v: Int) -> () {
                     `printf("%d\n", ceu_xco->mem.v);`
@@ -201,12 +201,12 @@ class Exec  {
     fun ff_05_coro () {
         val out = test("""
             do [
-                co: coro (Int) -> (Int) -> Int,
+                co: coro (Int) -> Int,
                 xco: xcoro (Int) -> Int,
                 x1: Int,
                 y1: Int,
             ] {
-                coro co (x2:Int) -> (Int) -> Int {
+                coro co (x2:Int) -> Int {
                     do [y2: Int] {
                         set y2 = yield(x2*2)
                         return(y2 * 2)
