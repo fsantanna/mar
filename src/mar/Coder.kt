@@ -76,15 +76,17 @@ fun Stmt.coder (pre: Boolean = false): String {
                     switch (ceu_xcoro->pc) {
                         case 0:
                             ${(tp.inps__.size > 0).cond { """
-                                va_list ceu_args;
-                                va_start(ceu_args, ceu_xcoro);
-                                ${tp.inps__.map { (id,tp) ->
-                                    val tpx = tp.coder(pre)
-                                    "ceu_xcoro->mem.${id.str} = va_arg(ceu_args, $tpx);"
-                                }.joinToString("")}
-                                va_end(ceu_args);                                
+                                {
+                                    va_list ceu_args;
+                                    va_start(ceu_args, ceu_xcoro);
+                                    ${tp.inps__.map { (id,tp) ->
+                                        val tpx = tp.coder(pre)
+                                        "ceu_xcoro->mem.${id.str} = va_arg(ceu_args, $tpx);"
+                                    }.joinToString("")}
+                                    va_end(ceu_args);
+                                }
                             """ }}
-                            ceu_xcoro->pc++;
+                            ceu_xcoro->pc = 1;
                             return;     // first implicit yield
                         case 1:
                 """ }}
@@ -103,38 +105,38 @@ fun Stmt.coder (pre: Boolean = false): String {
             val tp = this.co.type() as Type.Proto.Coro
             val xtp = this.dst.type() as Type.XCoro
             val x = xtp.out.coder(pre) + "__" + xtp.res.coder(pre)
+            val dst = this.dst.coder(pre)
             """
             {
                 CEU_Coro__$x ceu_coro_$n = (CEU_Coro__$x) ${this.co.coder(pre)};
-                CEU_XCoro__$x ceu_xcoro_$n = { CEU_EXE_STATUS_YIELDED, 0, (CEU_Coro__${tp.out.coder(pre)}__${tp.res.coder(pre)}) ceu_coro_$n };
-                ceu_coro_$n(${(listOf("&ceu_xcoro_$n") + this.args.map { it.coder(pre) }).joinToString(",")});
-                ${this.dst.coder(pre)} = ceu_xcoro_$n;
+                $dst = (CEU_XCoro__$x) { CEU_EXE_STATUS_YIELDED, 0, (CEU_Coro__${tp.out.coder(pre)}__${tp.res.coder(pre)}) ceu_coro_$n };
+                ceu_coro_$n(${(listOf("&$dst") + this.args.map { it.coder(pre) }).joinToString(",")});
             }
             """
         }
         is Stmt.Resume -> {
+            val xco = this.xco.coder(pre)
             val xtp = this.xco.type() as Type.XCoro
             val x = xtp.out.coder(pre) + "__" + xtp.res.coder(pre)
-            val args = "&ceu_xcoro_$n" + if (this.arg.type() is Type.Unit) "" else ","+this.arg.coder(pre)
+            val args = "&$xco" + if (this.arg.type() is Type.Unit) "" else ","+this.arg.coder(pre)
             """
-            {
-                CEU_XCoro__$x ceu_xcoro_$n = ${this.xco.coder(pre)};
-                ${this.dst.cond { it.coder(pre) + " = "}} ceu_xcoro_$n.proto($args);
-            }
-        """
+            ${this.dst.cond { it.coder(pre) + " = "}} $xco.proto($args);
+            """
         }
         is Stmt.Yield -> {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
             """
-            ${(tp.inps__.size > 0).cond { """
-                va_list ceu_args;
-                va_start(ceu_args, ceu_xcoro);
-                ${tp.inps__.map { (id,tp) ->
-                    val tpx = tp.coder(pre)
-                    "ceu_xcoro->mem.${id.str} = va_arg(ceu_args, $tpx);"
-                }.joinToString("")}
-                va_end(ceu_args);                                
-            """ }}
+                ceu_xcoro->pc = ${this.n};
+                return ${this.arg.coder(pre)};
+            case ${this.n}:
+                ${(this.dst).cond { """
+                    {
+                        va_list ceu_args;
+                        va_start(ceu_args, ceu_xcoro);
+                        ceu_xcoro->mem.${this.dst!!.coder(pre)} = va_arg(ceu_args, ${tp.out.coder(pre)});"
+                        va_end(ceu_args);
+                    }
+                """ }}
             """
         }
 
@@ -153,16 +155,18 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Uno -> "(" + this.tk.str.op_ceu_to_c() + this.e.coder(pre) + ")"
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_ceu_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
-        is Expr.Nat -> {
+        is Expr.Nat -> this.tk.str
+
+        is Expr.Acc -> {
             if (this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) {
                 "ceu_xcoro->mem.${this.tk.str}"
             } else {
                 this.tk.str
             }
         }
-
-        is Expr.Acc, is Expr.Bool, is Expr.Char,
-        is Expr.Null, is Expr.Num, is Expr.Unit -> this.to_str(pre)
+        is Expr.Unit -> ""
+        is Expr.Bool, is Expr.Char,
+        is Expr.Null, is Expr.Num -> this.to_str(pre)
     }
 }
 

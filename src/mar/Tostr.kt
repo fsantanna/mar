@@ -54,7 +54,7 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Char   -> this.tk.str
         is Expr.Num    -> this.tk.str
         is Expr.Null   -> this.tk.str
-        is Expr.Unit   -> "()"
+        is Expr.Unit   -> ""
 
         is Expr.Uno    -> "(" + this.tk.str + this.e.to_str(pre) + ")"
         is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk.str + " " + this.e2.to_str(pre) + ")"
@@ -81,8 +81,8 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Block  -> "do [" + (this.vs.map { (id,tp) -> id.str + ": " + tp.to_str(pre) }.joinToString(",")) + "] {\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
         is Stmt.Set    -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
         is Stmt.Spawn  -> this.dst.cond { "set ${it.to_str(pre)} = " } + "spawn " + this.co.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
-        is Stmt.Resume -> this.dst.cond { "set ${it.to_str(pre)} = " } + "resume " + this.xco.to_str(pre) + "(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
-        is Stmt.Yield  -> this.dst.cond { "set ${it.to_str(pre)} = " } + "yield(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
+        is Stmt.Resume -> this.dst.cond { "set ${it.to_str(pre)} = " } + "resume " + this.xco.to_str(pre) + "(" + this.arg.to_str(pre) + ")"
+        is Stmt.Yield  -> this.dst.cond { "set ${it.to_str(pre)} = " } + "yield(" + this.arg.to_str(pre) + ")"
         is Stmt.Call   -> this.call.to_str(pre)
         is Stmt.Nat    -> TODO()
     }.let {
