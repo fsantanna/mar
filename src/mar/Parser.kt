@@ -44,6 +44,7 @@ fun check_enu_err (str: String): Boolean {
         "Type" -> "type"
         "Num"  -> "number"
         "Nat"  -> "native"
+        "Op"   -> "operator"
         else   -> TODO(str)
     }
 
@@ -187,7 +188,15 @@ fun parser_expr_4_prim (): Expr {
 
 fun parser_expr_3_suf (xe: Expr? = null): Expr {
     val e = if (xe !== null) xe else parser_expr_4_prim()
-    val ok = accept_fix("[") || accept_fix(".") || accept_fix("(")
+    val ok = accept_fix("[") || accept_fix(".") || accept_fix("(") ||
+            (check_enu("Op") && G.tk1!!.str.let {
+                if (it in POSS) {
+                    accept_enu_err("Op")
+                    true
+                } else {
+                    false
+                }
+            })
     if (!ok) {
         return e
     }
@@ -198,6 +207,7 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
                 val args = parser_list(",",")") { parser_expr() }
                 Expr.Call(e.tk, e, args)
             }
+            "\\" -> Expr.Uno(Tk.Op("deref", G.tk0!!.pos.copy()), e)
             else -> error("impossible case")
         }
     )
@@ -205,8 +215,13 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
 
 fun parser_expr_2_pre (): Expr {
     return when {
-        accept_enu("Op") -> {
-            val op = G.tk0 as Tk.Op
+        check_enu("Op") && G.tk1!!.str in PRES -> {
+            accept_enu_err("Op")
+            val op = (G.tk0 as Tk.Op).let {
+                if (it.str != "\\") it else {
+                    Tk.Op("ref", it.pos.copy())
+                }
+            }
             val e = parser_expr_2_pre()
             Expr.Uno(op, e)
         }
@@ -216,9 +231,11 @@ fun parser_expr_2_pre (): Expr {
 
 fun parser_expr_1_bin (xop: String? = null, xe1: Expr? = null): Expr {
     val e1 = if (xe1 !== null) xe1 else parser_expr_2_pre()
-    if (!accept_enu("Op")) {
+    val ok = check_enu("Op") && G.tk1!!.str in BINS
+    if (!ok) {
         return e1
     }
+    accept_enu_err("Op")
     val op = G.tk0!! as Tk.Op
     if (xop!==null && xop!=op.str) {
         err(op, "binary operation error : expected surrounding parentheses")

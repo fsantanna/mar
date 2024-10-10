@@ -149,7 +149,8 @@ fun Tk.Var.coder (fr: Any, pre: Boolean): String {
 fun Expr.coder (pre: Boolean = false): String {
     fun String.op_ceu_to_c (): String {
         return when (this) {
-            "\\" -> "&"
+            "ref" -> "&"
+            "deref" -> "*"
             else -> this
         }
     }

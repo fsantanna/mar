@@ -53,7 +53,8 @@ fun Expr.type (): Type {
     return when (this) {
         is Expr.Uno -> when (this.tk_.str) {
             "-" -> Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))
-            "\\" -> Type.Pointer(Tk.Op("\\", this.tk.pos.copy()), this.e.type())
+            "ref" -> Type.Pointer(Tk.Op("\\", this.tk.pos.copy()), this.e.type())
+            "deref" -> (this.e.type() as Type.Pointer).ptr
             else -> error("impossible case")
         }
         is Expr.Bin -> when (this.tk_.str) {

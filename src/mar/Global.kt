@@ -21,6 +21,15 @@ val OPERATORS = Pair (
     )
 )
 
+val PRES = listOf("-", "\\")
+val POSS = listOf("\\")
+val BINS = listOf (
+    "==", "!=",
+    ">", "<", ">=", "<=",
+    "||", "&&",
+    "+", "-", "*", "/", "%",
+)
+
 val KEYWORDS: SortedSet<String> = (
     setOf (
         "do", "coro", "create", "false", "func",

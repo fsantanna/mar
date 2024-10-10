@@ -46,6 +46,14 @@ fun Type.to_str (pre: Boolean = false): String {
     }
 }
 
+fun Tk.Op.to_str (pre: Boolean): String {
+    return when (this.str) {
+        "ref" -> "\\"
+        "deref" -> "\\"
+        else -> this.str
+    }
+}
+
 fun Expr.to_str (pre: Boolean = false): String {
     return when (this) {
         is Expr.Nat    -> "```" + this.tk.str + "```"
@@ -56,8 +64,8 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Null   -> this.tk.str
         is Expr.Unit   -> ""
 
-        is Expr.Uno    -> "(" + this.tk.str + this.e.to_str(pre) + ")"
-        is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk.str + " " + this.e2.to_str(pre) + ")"
+        is Expr.Uno    -> "(" + this.tk_.to_str(pre) + this.e.to_str(pre) + ")"
+        is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk_.to_str(pre) + " " + this.e2.to_str(pre) + ")"
         is Expr.Call   -> this.f.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
     }.let {
         when {
