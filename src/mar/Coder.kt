@@ -31,7 +31,7 @@ fun coder_types_protos (pre: Boolean): String {
             else -> emptyList()
         }
     }
-    val ts = G.outer!!.dn_collect({ emptyList() }, { emptyList() }, ::ft)
+    val ts = G.outer!!.dn_collect({null}, {null}, ::ft)
     return ts.asReversed().map {it + ";\n" }.joinToString("")
 }
 fun coder_types_xcoros (pre: Boolean): String {

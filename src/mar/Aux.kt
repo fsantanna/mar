@@ -48,11 +48,15 @@ fun <V> Type.dn_collect (ft: (Type)->List<V>?): List<V> {
     }
 }
 
-fun Stmt.dn_visit (fs: (Stmt)->Unit, fe: (Expr)->Unit, ft: (Type)->Unit) {
-    this.dn_collect({ fs(it) ; emptyList<Unit>() }, { fe(it) ; emptyList<Unit>() }, { ft(it) ; emptyList<Unit>() })
+fun Stmt.dn_visit (fs: (Stmt)->Unit?, fe: (Expr)->Unit?, ft: (Type)->Unit?) {
+    this.dn_collect (
+        { if (fs(it) == null) null else emptyList<Unit>() },
+        { if (fe(it) == null) null else emptyList() },
+        { if (ft(it) == null) null else emptyList() }
+    )
 }
-fun Expr.dn_visit (f: (Expr)->Unit) {
-    this.dn_collect { f(it) ; emptyList<Unit>() }
+fun Expr.dn_visit (fe: (Expr)->Unit?) {
+    this.dn_collect { if (fe(it) == null) null else emptyList<Unit>() }
 }
 
 fun Stmt.dn_filter (fs: (Stmt)->Boolean?, fe: (Expr)->Boolean?, ft: (Type)->Boolean?): List<Any> {

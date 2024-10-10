@@ -73,5 +73,5 @@ fun cache_ups () {
             is Expr.Null, is Expr.Num, is Expr.Unit -> {}
         }
     }
-    G.outer!!.dn_visit(::fs, ::fe, {})
+    G.outer!!.dn_visit(::fs, ::fe, {null})
 }
