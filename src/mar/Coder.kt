@@ -98,7 +98,15 @@ fun Stmt.coder (pre: Boolean = false): String {
             """
         }
         is Stmt.Return -> "return (" + this.e.coder(pre) + ");"
-        is Stmt.Block  -> "{\n" + this.vs.filter { (_,tp) -> tp !is Type.Proto }.map { (id,tp) -> tp.coder(pre) + " " + id.str + ";\n" }.joinToString("") + this.ss.map { it.coder(pre) + "\n" }.joinToString("") + "}"
+        is Stmt.Block  -> {
+            val in_coro = this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro
+            """
+            {
+                ${(!in_coro).cond { this.vs.filter { (_,tp) -> tp !is Type.Proto }.map { (id,tp) -> tp.coder(pre) + " " + id.str + ";\n" }.joinToString("")} }
+                ${this.ss.map { it.coder(pre) + "\n" }.joinToString("")}
+            }
+        """
+        }
         is Stmt.Set    -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
 
         is Stmt.Spawn -> {
@@ -133,7 +141,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                     {
                         va_list ceu_args;
                         va_start(ceu_args, ceu_xcoro);
-                        ceu_xcoro->mem.${this.dst!!.coder(pre)} = va_arg(ceu_args, ${tp.out.coder(pre)});"
+                        ${this.dst!!.coder(pre)} = va_arg(ceu_args, ${tp.out.coder(pre)});
                         va_end(ceu_args);
                     }
                 """ }}

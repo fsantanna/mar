@@ -197,4 +197,27 @@ class Exec  {
         """)
         assert(out == "10\n20\n") { out }
     }
+    @Test
+    fun ff_05_coro () {
+        val out = test("""
+            do [
+                co: coro (Int,Int) -> (Int) -> Int,
+                xco: xcoro (Int) -> Int,
+                xy: Int,
+                z2: Int,
+            ] {
+                coro co (x:Int, y:Int) -> (Int) -> Int {
+                    do [z: Int] {
+                        set z = yield(x+y)
+                        return(z * 2)
+                    }
+                }
+                set xco = spawn co(10,20)
+                set xy = resume xco(0)
+                set z2 = resume xco(xy)
+                `printf("%d\n", z2);`
+            }
+        """)
+        assert(out == "60\n") { out }
+    }
 }
