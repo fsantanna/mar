@@ -181,23 +181,20 @@ class Exec  {
     fun ff_04_coro () {
         val out = test("""
             do [
-                co: coro (Int) -> () -> ()
+                co: coro (Int) -> () -> (),
                 xco: xcoro () -> (),
             ] {
-                coro co () -> () -> () {
-                    do [v: Int] {
-                        set v = 10
-                        `printf("%d\n", v);`
-                        yield()
-                        set v = v + 10
-                        `printf("%d\n", v);`
-                    }
+                coro co (v: Int) -> () -> () {
+                    `printf("%d\n", ceu_xcoro->mem.v);`
+                    yield()
+                    set v = v + 10
+                    `printf("%d\n", ceu_xcoro->mem.v);`
                 }
-                set xco = spawn co()
-                resume co()
-                resume co()
+                set xco = spawn co(10)
+                resume xco()
+                resume xco()
             }
         """)
-        assert(out == "30\n") { out }
+        assert(out == "10\n20\n") { out }
     }
 }

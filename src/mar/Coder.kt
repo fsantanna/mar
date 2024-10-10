@@ -13,8 +13,8 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Unit -> "void"
         is Type.Pointer -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
-        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${listOf(this.res).pre_ceux(this.res.tk).trim().map { it.coder(pre) }.joinToString("__") }"
-        is Type.XCoro -> "CEU_XCoro__${this.out.coder(pre)}__${listOf(this.res).pre_ceux(this.res.tk).trim().map { it.coder(pre) }.joinToString("__") }"
+        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.res.coder(pre)}"
+        is Type.XCoro -> "CEU_XCoro__${this.out.coder(pre)}__${this.res.coder(pre)}"
     }
 }
 
@@ -27,11 +27,10 @@ fun coder_types_protos (pre: Boolean): String {
             is Type.Proto.Coro -> listOf (
                 "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (CEUX, ...)"
             )
-            is Type.XCoro -> ft(Type.Proto.Func(me.tk_, me.out, listOf(me.res).pre_ceux(me.tk)))
             else -> emptyList()
         }
     }
-    val ts = G.outer!!.dn_collect({null}, {null}, ::ft)
+    val ts = G.outer!!.dn_collect({ emptyList() }, { emptyList() }, ::ft)
     return ts.asReversed().map {it + ";\n" }.joinToString("")
 }
 fun coder_types_xcoros (pre: Boolean): String {
@@ -47,7 +46,7 @@ fun coder_types_xcoros (pre: Boolean): String {
             }, {null}, {null})
             return blks.map { it.vs.map { it.coder(pre) + ";\n" } }.flatten().joinToString("")
         }
-        val x = (listOf(X.tp.out.coder(pre)) + listOf(X.tp_.res).pre_ceux(X.tk).map { it.coder(pre) }).joinToString("__")
+        val x = X.tp.out.coder(pre) + "__" + X.tp_.res.coder(pre)
         """
         typedef struct CEU_XCoro__$x {
             _CEU_Exe_
@@ -66,7 +65,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                 is Stmt.Proto.Func ->
                     this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro -> {
-                    val x = this.tp_.out.coder(pre) + "__" + listOf(this.tp_.res).pre_ceux(this.tp_.res.tk).trim().map { it.coder(pre) }.joinToString("__")
+                    val x = this.tp_.out.coder(pre) + "__" + this.tp_.res.coder(pre)
                     this.tp_.out.coder(pre) + " " + this.id.str + " (CEU_XCoro__$x* ceu_xcoro, ...)"
                 }
             } + """
@@ -103,11 +102,11 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Spawn -> {
             val tp = this.co.type() as Type.Proto.Coro
             val xtp = this.dst.type() as Type.XCoro
-            val x = xtp.out.coder(pre) + "__" + listOf(xtp.res).pre_ceux(xtp.res.tk).trim().map { it.coder(pre) }.joinToString("__")
+            val x = xtp.out.coder(pre) + "__" + xtp.res.coder(pre)
             """
             {
                 CEU_Coro__$x ceu_coro_$n = (CEU_Coro__$x) ${this.co.coder(pre)};
-                CEU_XCoro__$x ceu_xcoro_$n = { CEU_EXE_STATUS_YIELDED, 0, (CEU_Coro__${tp.out.coder(pre)}__${listOf(tp.res).pre_ceux(tp.res.tk).trim().map { it.coder(pre) }.joinToString("__") }) ceu_coro_$n };
+                CEU_XCoro__$x ceu_xcoro_$n = { CEU_EXE_STATUS_YIELDED, 0, (CEU_Coro__${tp.out.coder(pre)}__${tp.res.coder(pre)}) ceu_coro_$n };
                 ceu_coro_$n(${(listOf("&ceu_xcoro_$n") + this.args.map { it.coder(pre) }).joinToString(",")});
                 ${this.dst.coder(pre)} = ceu_xcoro_$n;
             }
@@ -115,7 +114,7 @@ fun Stmt.coder (pre: Boolean = false): String {
         }
         is Stmt.Resume -> {
             val xtp = this.xco.type() as Type.XCoro
-            val x = xtp.out.coder(pre) + "__" + listOf(xtp.res).pre_ceux(xtp.res.tk).trim().map { it.coder(pre) }.joinToString("__")
+            val x = xtp.out.coder(pre) + "__" + xtp.res.coder(pre)
             val args = "&ceu_xcoro_$n" + if (this.arg.type() is Type.Unit) "" else ","+this.arg.coder(pre)
             """
             {
@@ -127,16 +126,15 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Yield -> {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
             """
-                            ${(tp.inps__.size > 0).cond { """
-                                va_list ceu_args;
-                                va_start(ceu_args, ceu_xcoro);
-                                ${tp.inps__.map { (id,tp) ->
-                val tpx = tp.coder(pre)
-                "ceu_xcoro->mem.${id.str} = va_arg(ceu_args, $tpx);"
-            }.joinToString("")}
-                                va_end(ceu_args);                                
-                            """ }}
-                
+            ${(tp.inps__.size > 0).cond { """
+                va_list ceu_args;
+                va_start(ceu_args, ceu_xcoro);
+                ${tp.inps__.map { (id,tp) ->
+                    val tpx = tp.coder(pre)
+                    "ceu_xcoro->mem.${id.str} = va_arg(ceu_args, $tpx);"
+                }.joinToString("")}
+                va_end(ceu_args);                                
+            """ }}
             """
         }
 

@@ -303,4 +303,43 @@ class Static {
         """)
         assert(out == null) { out!! }
     }
+    @Test
+    fun bc_13_exe_yield () {
+        val out = static("""
+            do [] {
+                yield()
+            }
+        """)
+        assert(out == "anon : (lin 3, col 17) : yield error : expected enclosing coro") { out!! }
+    }
+    @Test
+    fun bc_14_exe_yield_err () {
+        val out = static("""
+            do [
+                xco: xcoro () -> (),
+                co:  coro () -> () -> (),
+            ] {
+                coro co () -> () -> () {
+                    do [x: Int] {
+                        set x = yield()
+                    }
+                }
+            }
+        """)
+        assert(out == "anon : (lin 8, col 33) : yield error : types mismatch") { out!! }
+    }
+    @Test
+    fun bc_15_exe_yield_err () {
+        val out = static("""
+            do [
+                xco: xcoro () -> (),
+                co:  coro () -> () -> (),
+            ] {
+                coro co () -> () -> () {
+                    yield(10)
+                }
+            }
+        """)
+        assert(out == "anon : (lin 7, col 21) : yield error : types mismatch") { out!! }
+    }
 }
