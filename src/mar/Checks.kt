@@ -56,24 +56,24 @@ fun check_types () {
         when (me) {
             is Stmt.Proto -> {
                 if (!me.tp.is_same_of(me.id.type(me)!!)) {
-                    err(me.tk, "invalid declaration : types mismatch")
+                    err(me.tk, "declaration error : types mismatch")
                 }
             }
             is Stmt.Set -> {
                 if (!me.dst.type().is_sup_of(me.src.type())) {
-                    err(me.tk, "invalid set : types mismatch")
+                    err(me.tk, "set error : types mismatch")
                 }
             }
             is Stmt.Return -> {
                 val func = me.fupx().up_first { it is Stmt.Proto } as Stmt.Proto
                 if (!func.tp.out.is_sup_of(me.e.type())) {
-                    err(me.tk, "invalid return : types mismatch")
+                    err(me.tk, "return error : types mismatch")
                 }
             }
             is Stmt.Spawn -> {
                 val co = me.co.type()
                 if (co !is Type.Proto.Coro) {
-                    err(me.tk, "invalid spawn : expected coroutine prototype")
+                    err(me.tk, "spawn error : expected coroutine prototype")
                 }
 
                 val tp = me.dst.type()
@@ -87,19 +87,19 @@ fun check_types () {
                     }
                 }
                 if (!ok1 || !ok2) {
-                    err(me.tk, "invalid spawn : types mismatch")
+                    err(me.tk, "spawn error : types mismatch")
                 }
             }
             is Stmt.Resume -> {
                 val xco = me.xco.type()
                 if (xco !is Type.XCoro) {
-                    err(me.tk, "invalid resume : expected active coroutine")
+                    err(me.tk, "resume error : expected active coroutine")
                 }
 
                 val ok1 = (me.dst == null) || me.dst.type().is_sup_of(xco.out)
                 val ok2 = xco.res.is_sup_of(me.arg.type())
                 if (!ok1 || !ok2) {
-                    err(me.tk, "invalid resume : types mismatch")
+                    err(me.tk, "resume error : types mismatch")
                 }
             }
             is Stmt.Yield -> {
@@ -120,7 +120,7 @@ fun check_types () {
     fun fe (me: Expr) {
         when (me) {
             is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {
-                err(me.tk, "invalid operation : types mismatch")
+                err(me.tk, "operation error : types mismatch")
             }
             is Expr.Call -> {
                 val tp = me.f.type()
@@ -133,7 +133,7 @@ fun check_types () {
                     }
                 }
                 if (!ok) {
-                    err(me.tk, "invalid call : types mismatch")
+                    err(me.tk, "call error : types mismatch")
                 }
             }
             else -> {}

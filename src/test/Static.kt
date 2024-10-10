@@ -18,6 +18,7 @@ fun static (me: String): String? {
         check_vars()
         check_types()
     }
+    //return null
 }
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -103,7 +104,7 @@ class Static {
                 set x = true
             }
         """)
-        assert(out == "anon : (lin 3, col 17) : invalid set : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 17) : set error : types mismatch") { out!! }
     }
     @Test
     fun bb_02_func() {
@@ -125,7 +126,7 @@ class Static {
                 }
             }
         """)
-        assert(out == "anon : (lin 3, col 17) : invalid declaration : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 17) : declaration error : types mismatch") { out!! }
     }
     @Test
     fun bb_04_func_err() {
@@ -136,7 +137,7 @@ class Static {
                 }
             }
         """)
-        assert(out == "anon : (lin 4, col 21) : invalid return : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 21) : return error : types mismatch") { out!! }
     }
     @Test
     fun bb_15_func_nested_ok() {
@@ -151,7 +152,7 @@ class Static {
         assert(out == null) { out!! }
     }
 
-    // TYPE / CORO / XCORO / SPAWN / RESUME
+    // TYPE / CORO / XCORO / SPAWN / RESUME / YIELD
 
     @Test
     fun bc_01_coro_err() {
@@ -160,7 +161,7 @@ class Static {
                 set `_` = spawn f()
             }
         """)
-        assert(out == "anon : (lin 3, col 27) : invalid spawn : expected coroutine prototype") { out!! }
+        assert(out == "anon : (lin 3, col 27) : spawn error : expected coroutine prototype") { out!! }
     }
     @Test
     fun bc_02_coro_err() {
@@ -171,7 +172,7 @@ class Static {
                 set `_` = spawn f()
             }
         """)
-        assert(out == "anon : (lin 5, col 27) : invalid spawn : types mismatch") { out!! }
+        assert(out == "anon : (lin 5, col 27) : spawn error : types mismatch") { out!! }
     }
     @Test
     fun bc_03_coro_ok() {
@@ -196,7 +197,7 @@ class Static {
                 set xco = spawn co()
             }
         """)
-        assert(out == "anon : (lin 8, col 27) : invalid spawn : types mismatch") { out!! }
+        assert(out == "anon : (lin 8, col 27) : spawn error : types mismatch") { out!! }
     }
     @Test
     fun bc_05_exe_coro_err () {
@@ -205,7 +206,7 @@ class Static {
                 set `_` = spawn (1)()
             }
         """)
-        assert(out == "anon : (lin 3, col 27) : invalid spawn : expected coroutine prototype") { out!! }
+        assert(out == "anon : (lin 3, col 27) : spawn error : expected coroutine prototype") { out!! }
     }
     @Test
     fun bc_06_exe_coro_ok () {
@@ -241,7 +242,7 @@ class Static {
                 resume 1()
             }
         """)
-        assert(out == "anon : (lin 3, col 17) : invalid resume : expected active coroutine") { out!! }
+        assert(out == "anon : (lin 3, col 17) : resume error : expected active coroutine") { out!! }
     }
     @Test
     fun bc_09_exe_resume_err () {
@@ -255,7 +256,7 @@ class Static {
                 resume xco(1)
             }
         """)
-        assert(out == "anon : (lin 8, col 17) : invalid resume : types mismatch") { out!! }
+        assert(out == "anon : (lin 8, col 17) : resume error : types mismatch") { out!! }
     }
     @Test
     fun bc_10_exe_resume_err () {
@@ -270,7 +271,7 @@ class Static {
                 set v = resume xco(1)
             }
         """)
-        assert(out == "anon : (lin 9, col 25) : invalid resume : types mismatch") { out!! }
+        assert(out == "anon : (lin 9, col 25) : resume error : types mismatch") { out!! }
     }
     @Test
     fun bc_11_exe_resume_err () {
@@ -285,10 +286,10 @@ class Static {
                 set v = resume xco()
             }
         """)
-        assert(out == "anon : (lin 9, col 25) : invalid resume : types mismatch") { out!! }
+        assert(out == "anon : (lin 9, col 25) : resume error : types mismatch") { out!! }
     }
     @Test
-    fun bc_12_exe_resume_err () {
+    fun bc_12_exe_resume () {
         val out = static("""
             do [
                 xco: xcoro () -> (),
