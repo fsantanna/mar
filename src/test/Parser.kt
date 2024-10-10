@@ -390,4 +390,18 @@ class Parser {
         assert(s is Stmt.Yield && s.arg is Expr.Null)
         assert(s.to_str() == "set y = yield(null)") { s.to_str() }
     }
+
+    // IF
+
+    @Test
+    fun ii_01_if() {
+        G.tks = ("if x {`.`} else {}").lexer()
+        parser_lexer()
+        val s = parser_stmt()
+        assert(s is Stmt.If && s.cnd is Expr.Acc && s.t.ss.size==1 && s.f.ss.size==0)
+        assert(s.to_str() == "if x {\n" +
+                "`.`\n" +
+                "} else {\n" +
+                "}") { s.to_str() }
+    }
 }

@@ -81,18 +81,23 @@ fun Var_Type.to_str (pre: Boolean = false): String {
     return id.fpre(pre) + id.str + ": " + tp.to_str(pre)
 }
 
+fun List<Stmt>.to_str (pre: Boolean): String {
+    return this.map { it.to_str(pre) + "\n" }.joinToString("")
+}
+
 fun Stmt.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Stmt.Proto.Func -> "func " + this.id.str + " " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.map { it.to_str(pre) }.joinToString("\n") + "}"
+        is Stmt.Proto.Func -> "func " + this.id.str + " " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Proto.Coro -> TODO()
         is Stmt.Return -> "return(" + this.e.to_str(pre) + ")"
         is Stmt.Block  -> "do [" + (this.vs.map { (id,tp) -> id.str + ": " + tp.to_str(pre) }.joinToString(",")) + "] {\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
         is Stmt.Set    -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
+        is Stmt.If     -> "if " + this.cnd.to_str(pre) + " {\n" + this.t.ss.to_str(pre) + "} else {\n" + this.f.ss.to_str(pre) + "}"
         is Stmt.Create -> this.dst.cond { "set ${it.to_str(pre)} = " } + "create(" + this.co.to_str(pre) + ")"
         is Stmt.Resume -> this.dst.cond { "set ${it.to_str(pre)} = " } + "resume " + this.xco.to_str(pre) + "(" + this.arg.to_str(pre) + ")"
         is Stmt.Yield  -> this.dst.cond { "set ${it.to_str(pre)} = " } + "yield(" + this.arg.to_str(pre) + ")"
         is Stmt.Call   -> this.call.to_str(pre)
-        is Stmt.Nat    -> TODO()
+        is Stmt.Nat    -> this.tk.str.let { if (it.contains("\n")) "```"+it+"```" else "`"+it+"`" }
     }.let {
         when {
             !pre -> it

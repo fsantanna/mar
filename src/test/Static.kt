@@ -94,6 +94,38 @@ class Static {
         assert(out == "anon : (lin 5, col 17) : implementation error : variable \"f\" is not declared") { out!! }
     }
 
+    // FUNC
+
+    @Test
+    fun ab_01_func_rec () {
+        val out = static("""
+            do [
+                f: func () -> (),
+            ] {
+                func f () -> () {
+                    f()
+                }
+            }
+        """)
+        assert(out == null) { out!! }
+    }
+    @Test
+    fun ab_02_func_rec_mutual () {
+        val out = static("""
+            do [
+                f: func () -> (),
+                g: func () -> (),
+            ] {
+                func f () -> () {
+                    g()
+                }
+                func g () -> () {
+                    f()
+                }
+            }
+        """)
+        assert(out == null) { out!! }
+    }
 
     // TYPE
 
@@ -140,7 +172,7 @@ class Static {
         assert(out == "anon : (lin 4, col 21) : return error : types mismatch") { out!! }
     }
     @Test
-    fun bb_15_func_nested_ok() {
+    fun bb_05_func_nested_ok() {
         val out = static("""
             do [] {
                 do [g: func () -> ()] {
@@ -150,6 +182,15 @@ class Static {
             }
         """)
         assert(out == null) { out!! }
+    }
+    @Test
+    fun bb_06_if_err() {
+        val out = static("""
+            do [] {
+                if null {}  ;; cnd bool
+            }
+        """)
+        assert(out == "anon : (lin 3, col 17) : if error : expected boolean condition") { out!! }
     }
 
     // TYPE / CORO / XCORO / SPAWN / RESUME / YIELD

@@ -20,8 +20,8 @@ fun Expr.fupx (): Any {
 
 fun cache_ns () {
     G.outer!!.dn_visit (
-        {G.ns[it.n] = it},
-        {G.ns[it.n] = it},
+        {G.ns[it.n] = it ; Unit},
+        {G.ns[it.n] = it ; Unit},
         {}
     )
 }
@@ -35,6 +35,11 @@ fun cache_ups () {
             is Stmt.Set -> {
                 G.ups[me.dst.n] = me.n
                 G.ups[me.src.n] = me.n
+            }
+            is Stmt.If -> {
+                G.ups[me.cnd.n] = me.n
+                G.ups[me.t.n] = me.n
+                G.ups[me.f.n] = me.n
             }
 
             is Stmt.Create -> {

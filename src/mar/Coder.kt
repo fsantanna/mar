@@ -102,12 +102,26 @@ fun Stmt.coder (pre: Boolean = false): String {
             val in_coro = this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro
             """
             {
-                ${(!in_coro).cond { this.vs.filter { (_,tp) -> tp !is Type.Proto }.map { (id,tp) -> tp.coder(pre) + " " + id.str + ";\n" }.joinToString("")} }
+                ${(!in_coro).cond {
+                    this.vs.map { (id,tp) ->
+                        when (tp) {
+                            is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inps.map { it.coder(pre) }.joinToString(",") + ");\n"
+                            is Type.Proto.Coro -> "auto " + tp.out.coder(pre) + " " + id.str + " (${tp.coder(pre).coro_to_xcoro()}* ceu_xco" + tp.inps.map { ", " + it.coder(pre) }.joinToString("") + ");\n"
+                            else -> tp.coder(pre) + " " + id.str + ";\n"
+                        }
+                    }.joinToString("")} }
                 ${this.ss.map { it.coder(pre) + "\n" }.joinToString("")}
             }
         """
         }
         is Stmt.Set    -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
+        is Stmt.If     -> """
+            if (${this.cnd.coder(pre)}) {
+                ${this.t.coder(pre)}
+            } else {
+                ${this.f.coder(pre)}
+            }
+        """
 
         is Stmt.Create -> {
             val xtp = this.dst.type().coder(pre)
@@ -175,6 +189,7 @@ fun coder_main (pre: Boolean): String {
         #include <stdlib.h>
         #include <stdarg.h>
         
+        typedef int     Bool;
         typedef int     Int;
         typedef uint8_t U8;
         

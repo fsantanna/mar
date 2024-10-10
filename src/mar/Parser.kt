@@ -299,6 +299,23 @@ fun parser_stmt (set: Expr? = null): Stmt {
             val e = parser_expr()
             Stmt.Return(tk0, e)
         }
+        accept_fix("if") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            val cnd = parser_expr()
+            accept_fix_err("{")
+            val t = parser_list(null, "}") {
+                parser_stmt()
+            }
+            val f = if (accept_fix("else")) {
+                accept_fix_err("{")
+                parser_list(null, "}") {
+                    parser_stmt()
+                }
+            } else {
+                emptyList()
+            }
+            Stmt.If(tk0, cnd, Stmt.Block(tk0, emptyList(), t), Stmt.Block(tk0, emptyList(), f))
+        }
 
         (set!=null && accept_fix("create")) -> {
             val tk0 = G.tk0 as Tk.Fix

@@ -47,7 +47,7 @@ class Lexer {
     @Test
     fun bb_01_ids() {
         val tks = ("if xxx Type coro return xcoro create start resume yield").lexer()
-        assert(tks.next().let { it is Tk.Var  && it.str == "if" })
+        assert(tks.next().let { it is Tk.Fix  && it.str == "if" })
         assert(tks.next().let { it is Tk.Var  && it.str == "xxx" })
         assert(tks.next().let { it is Tk.Type && it.str == "Type" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "coro" })

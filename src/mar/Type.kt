@@ -72,7 +72,7 @@ fun Expr.type (): Type {
         is Expr.Bool -> Type.Basic(Tk.Type( "Bool", this.tk.pos.copy()))
         is Expr.Char -> Type.Basic(Tk.Type( "Char", this.tk.pos.copy()))
         is Expr.Nat -> Type.Any(this.tk)
-        is Expr.Null -> TODO()
+        is Expr.Null -> Type.Pointer(Tk.Op("\\", this.tk.pos.copy()), Type.Any(this.tk))
         is Expr.Unit -> Type.Unit(this.tk_)
         is Expr.Num -> Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))
     }

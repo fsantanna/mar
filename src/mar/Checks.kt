@@ -59,15 +59,20 @@ fun check_types () {
                     err(me.tk, "declaration error : types mismatch")
                 }
             }
+            is Stmt.Return -> {
+                val func = me.fupx().up_first { it is Stmt.Proto } as Stmt.Proto
+                if (!func.tp.out.is_sup_of(me.e.type())) {
+                    err(me.tk, "return error : types mismatch")
+                }
+            }
             is Stmt.Set -> {
                 if (!me.dst.type().is_sup_of(me.src.type())) {
                     err(me.tk, "set error : types mismatch")
                 }
             }
-            is Stmt.Return -> {
-                val func = me.fupx().up_first { it is Stmt.Proto } as Stmt.Proto
-                if (!func.tp.out.is_sup_of(me.e.type())) {
-                    err(me.tk, "return error : types mismatch")
+            is Stmt.If -> {
+                if (!me.cnd.type().is_sup_of(Type.Basic(Tk.Type("Bool",me.tk.pos.copy())))) {
+                    err(me.tk, "if error : expected boolean condition")
                 }
             }
             is Stmt.Create -> {

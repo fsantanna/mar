@@ -53,7 +53,7 @@ class Exec  {
         assert(out == "11\n") { out }
     }
 
-    // CALL / PRINT
+    // CALL / PRINT / IF
 
     @Test
     fun cc_01_print() {
@@ -69,6 +69,22 @@ class Exec  {
         """)
         assert(out == "1\n") { out }
     }
+    @Test
+    fun cc_02_if() {
+        val out = test("""
+            do [] {
+                if true {
+                    `puts("1");`
+                }
+                if 2 < 0 {
+                    `puts("err");`
+                } else {
+                    `puts("2");`
+                }
+            }
+        """)
+        assert(out == "1\n2\n") { out }
+    }
 
     // FUNC
 
@@ -83,6 +99,46 @@ class Exec  {
             }
         """)
         assert(out == "10\n") { out }
+    }
+    @Test
+    fun ee_02_func_rec () {
+        val out = test("""
+            do [
+                f: func (Int) -> Int,
+            ] {
+                func f (v: Int) -> Int {
+                    if v == 0 {
+                        return(v)
+                    } else {
+                        return(v + f(v-1))
+                    }
+                }
+                `printf("%d\n", f(5));`
+            }
+        """)
+        assert(out == "15\n") { out }
+    }
+    @Test
+    fun ab_02_func_rec_mutual () {
+        val out = test("""
+            do [
+                f: func (Int) -> Int,
+                g: func (Int) -> Int,
+            ] {
+                func f (v: Int) -> Int {
+                    if v == 0 {
+                        return(v)
+                    } else {
+                        return(v + g(v-1))
+                    }
+                }
+                func g (v: Int) -> Int {
+                    return(f(v))
+                }
+                `printf("%d\n", g(5));`
+            }
+        """)
+        assert(out == "15\n") { out }
     }
 
     // PROTOS / TYPES / NORMAL / NESTED / CLOSURE
