@@ -178,7 +178,7 @@ class Exec  {
         assert(out == "10\n") { out }
     }
     @Test
-    fun ff_0X_coro () {
+    fun ff_04_coro () {
         val out = test("""
             do [
                 co: coro (Int) -> () -> ()

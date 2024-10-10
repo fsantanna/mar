@@ -77,13 +77,13 @@ fun Stmt.coder (pre: Boolean = false): String {
                     switch (ceu_xcoro->pc) {
                         case 0:
                             ${(tp.inps__.size > 0).cond { """
-                            va_list ceu_args;
-                            va_start(ceu_args, ceu_xcoro);
-                            ${tp.inps__.map { (id,tp) ->
-                                val tpx = tp.coder(pre)
-                                "ceu_xcoro->mem.${id.str} = va_arg(ceu_args, $tpx);"
-                            }.joinToString("")}
-                            va_end(ceu_args);                                
+                                va_list ceu_args;
+                                va_start(ceu_args, ceu_xcoro);
+                                ${tp.inps__.map { (id,tp) ->
+                                    val tpx = tp.coder(pre)
+                                    "ceu_xcoro->mem.${id.str} = va_arg(ceu_args, $tpx);"
+                                }.joinToString("")}
+                                va_end(ceu_args);                                
                             """ }}
                             ceu_xcoro->pc++;
                             return;     // first implicit yield
@@ -124,7 +124,21 @@ fun Stmt.coder (pre: Boolean = false): String {
             }
         """
         }
-        is Stmt.Yield -> TODO()
+        is Stmt.Yield -> {
+            val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
+            """
+                            ${(tp.inps__.size > 0).cond { """
+                                va_list ceu_args;
+                                va_start(ceu_args, ceu_xcoro);
+                                ${tp.inps__.map { (id,tp) ->
+                val tpx = tp.coder(pre)
+                "ceu_xcoro->mem.${id.str} = va_arg(ceu_args, $tpx);"
+            }.joinToString("")}
+                                va_end(ceu_args);                                
+                            """ }}
+                
+            """
+        }
 
         is Stmt.Nat    -> this.tk.str
         is Stmt.Call   -> this.call.coder(pre) + ";"

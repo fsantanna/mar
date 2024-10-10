@@ -50,6 +50,9 @@ fun cache_ups () {
                 G.ups[me.arg.n] = me.n
             }
             is Stmt.Yield -> {
+                if (me.dst != null) {
+                    G.ups[me.dst.n] = me.n
+                }
                 G.ups[me.arg.n] = me.n
             }
 

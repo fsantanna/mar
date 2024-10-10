@@ -102,6 +102,18 @@ fun check_types () {
                     err(me.tk, "invalid resume : types mismatch")
                 }
             }
+            is Stmt.Yield -> {
+                val up = me.up_first { it is Stmt.Proto }
+                if (up !is Stmt.Proto.Coro) {
+                    err(me.tk, "yield error : expected enclosing coro")
+                }
+                val xco = up.tp_
+                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(xco.res)
+                val ok2 = xco.out.is_sup_of(me.arg.type())
+                if (!ok1 || !ok2) {
+                    err(me.tk, "yield error : types mismatch")
+                }
+            }
             else -> {}
         }
     }
