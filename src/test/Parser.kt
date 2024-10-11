@@ -143,7 +143,7 @@ class Parser {
         assert(tp.to_str() == "[Int,[Bool],()]") { tp.to_str() }
     }
     @Test
-    fun ak_03_type_tuple () {
+    fun TODO_ak_03_type_tuple () {  // tuple field names
         G.tks = ("[x:Int,y:[Bool],z:()]").lexer()
         parser_lexer()
         val tp = parser_type()
