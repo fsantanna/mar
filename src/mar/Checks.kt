@@ -7,7 +7,18 @@ fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
             (it is Stmt.Proto.Coro) -> it.tp_.inps__.map { Pair(this.n, it) }
             else -> emptyList()
         }
-    } + this.dn_filter({it is Stmt.Dcl || it is Stmt.Proto}, {null}, {null})
+    } + this.dn_filter(
+        {
+            when (it) {
+                is Stmt.Dcl -> true
+                is Stmt.Proto -> true
+                is Stmt.Block -> if (it === this) false else null
+                else -> false
+            }
+        },
+        {null},
+        {null}
+    )
         .let { it as List<Stmt> }
         .map {
             val vt = when (it) {
@@ -26,7 +37,7 @@ fun check_vars () {
                 val ids2 = me.to_dcls()
                 me.ups().filter { it is Stmt.Block }.forEach {
                     it as Stmt.Block
-                    val ids1 = me.to_dcls()
+                    val ids1 = it.to_dcls()
                     val err = ids2.find { (n2,id2) ->
                         ids1.find { (n1,id1) ->
                             (n1 != n2) && (id1.first.str == id2.first.str)

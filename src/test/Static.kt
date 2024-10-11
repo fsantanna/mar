@@ -53,7 +53,7 @@ class Static {
         """
         )
         //assert(out == "10") { out!! }
-        assert(out == "anon : (lin 3, col 21) : declaration error : variable \"x\" is already declared") { out!! }
+        assert(out == "anon : (lin 5, col 25) : declaration error : variable \"x\" is already declared") { out!! }
     }
     @Test
     fun aa_03_var_none() {
@@ -217,36 +217,26 @@ class Static {
     @Test
     fun bc_03_coro_ok() {
         val out = static("""
-            do [
-                f: coro (Int) -> Int,
-                x: xcoro (Int) -> Int,
-            ] {
-                coro f (v: Int) -> Int {
-                }
-                set x = create(f)
-                resume x(10)
+            coro f (v: Int) -> Int {
             }
+            var x: xcoro (Int) -> Int = create(f)
+            resume x(10)
         """)
         assert(out == null) { out!! }
     }
     @Test
     fun bc_04_exe_coro_err () {
         val out = static("""
-            do [
-                xco: xcoro (Int) -> (),
-                co:  coro () -> (),
-            ] {
-                coro co () -> () {
-                }
-                set xco = create(co)
+            coro co () -> () {
             }
+            var xco: xcoro (Int) -> () = create(co)
         """)
-        assert(out == "anon : (lin 8, col 27) : create error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 42) : create error : types mismatch") { out!! }
     }
     @Test
     fun bc_05_exe_coro_err () {
         val out = static("""
-            do [] {
+            do {
                 set `_` = create(1)
             }
         """)
@@ -255,35 +245,27 @@ class Static {
     @Test
     fun bc_06_exe_coro_ok () {
         val out = static("""
-            do [
-                xco: xcoro () -> (),
-                co:  coro () -> (),
-            ] {
-                coro co () -> () {}
-                set xco = create(co)
-                resume xco()
-            }
+            coro co () -> () {}
+            var xco: xcoro () -> ()
+            set xco = create(co)
+            resume xco()
         """)
         assert(out == null) { out!! }
     }
     @Test
     fun bc_07_exe_resume_ok () {
         val out = static("""
-            do [
-                xco: xcoro () -> Int,
-                co:  coro () -> Int,
-            ] {
-                coro co () -> Int {}
-                set xco = create(co)
-                resume xco()
-            }
+            coro co () -> Int {}
+            var xco: xcoro () -> Int
+            set xco = create(co)
+            resume xco()
         """)
         assert(out == null) { out!! }
     }
     @Test
     fun bc_08_exe_resume () {
         val out = static("""
-            do [] {
+            do {
                 resume 1()
             }
         """)
@@ -292,66 +274,48 @@ class Static {
     @Test
     fun bc_09_exe_resume_err () {
         val out = static("""
-            do [
-                xco: xcoro () -> (),
-                co:  coro () -> (),
-            ] {
-                coro co () -> () {}
-                set xco = create(co)
-                resume xco(1)
-            }
+            coro co () -> () {}
+            var xco: xcoro () -> ()
+            set xco = create(co)
+            resume xco(1)
         """)
-        assert(out == "anon : (lin 8, col 17) : resume error : types mismatch") { out!! }
+        assert(out == "anon : (lin 5, col 13) : resume error : types mismatch") { out!! }
     }
     @Test
     fun bc_10_exe_resume_err () {
         val out = static("""
-            do [
-                xco: xcoro () -> (),
-                co:  coro () -> (),
-                v: Int,
-            ] {
-                coro co () -> () {}
-                set xco = create(co)
-                set v = resume xco(1)
-            }
+            coro co () -> () {}
+            var xco: xcoro () -> ()
+            set xco = create(co)
+            var v: Int = resume xco(1)
         """)
-        assert(out == "anon : (lin 9, col 25) : resume error : types mismatch") { out!! }
+        assert(out == "anon : (lin 5, col 26) : resume error : types mismatch") { out!! }
     }
     @Test
     fun bc_11_exe_resume_err () {
         val out = static("""
-            do [
-                xco: xcoro () -> (),
-                co:  coro () -> (),
-                v: Int,
-            ] {
                 coro co () -> () {}
+                var xco: xcoro () -> ()
                 set xco = create(co)
-                set v = resume xco()
-            }
+                var v: Int = resume xco()
         """)
-        assert(out == "anon : (lin 9, col 25) : resume error : types mismatch") { out!! }
+        assert(out == "anon : (lin 5, col 30) : resume error : types mismatch") { out!! }
     }
     @Test
     fun bc_12_exe_resume () {
         val out = static("""
-            do [
-                xco: xcoro () -> (),
-                co:  coro () -> (),
-                v: Int,
-            ] {
-                coro co () -> () {}
-                set xco = create(co)
-                resume xco()
-            }
+            coro co () -> () {}
+            var xco: xcoro () -> ()
+            set xco = create(co)
+            resume xco()
+            var v: Int
         """)
         assert(out == null) { out!! }
     }
     @Test
     fun bc_13_exe_yield () {
         val out = static("""
-            do [] {
+            do {
                 yield()
             }
         """)
@@ -360,31 +324,23 @@ class Static {
     @Test
     fun bc_14_exe_yield_err () {
         val out = static("""
-            do [
-                xco: xcoro () -> (),
-                co:  coro () -> (),
-            ] {
                 coro co () -> () {
-                    do [x: Int] {
-                        set x = yield()
+                    do {
+                        var x: Int = yield()
                     }
                 }
-            }
         """)
-        assert(out == "anon : (lin 8, col 33) : yield error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 38) : yield error : types mismatch") { out!! }
     }
     @Test
     fun bc_15_exe_yield_err () {
         val out = static("""
-            do [
-                xco: xcoro () -> (),
-                co:  coro () -> (),
-            ] {
+            do {
                 coro co () -> () {
                     yield(10)
                 }
             }
         """)
-        assert(out == "anon : (lin 7, col 21) : yield error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 21) : yield error : types mismatch") { out!! }
     }
 }
