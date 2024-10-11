@@ -42,7 +42,6 @@ fun coder_types (pre: Boolean): String {
                 val xco = co.coro_to_xcoro()
                 listOf("""
                     typedef struct $xco {
-                        CEU_EXE_STATUS status;
                         int pc;
                         $co proto;
                         struct {
@@ -153,7 +152,7 @@ fun Stmt.coder (pre: Boolean = false): String {
             val xtp = this.dst.type().coder(pre)
             val dst = this.dst.coder(pre)
             """
-            $dst = ($xtp) { CEU_EXE_STATUS_YIELDED, 0, ${this.co.coder(pre)}, {} };
+            $dst = ($xtp) { 0, ${this.co.coder(pre)}, {} };
             """
         }
         is Stmt.Resume -> {
