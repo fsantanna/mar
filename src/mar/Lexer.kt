@@ -165,10 +165,28 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                     break
                 }
             }
-            (x in listOf('{','}','(',')','[',']',',','\$','.',':')) -> yield(Tk.Fix(x.toString(), pos))
+            (x in listOf('{','}','(',')',']',',','\$','.',':')) -> yield(Tk.Fix(x.toString(), pos))
+            (x == '[') -> {
+                val (n,y) = read2()
+                if (y == '|') {
+                    yield(Tk.Fix("[|", pos))
+                } else {
+                    yield(Tk.Fix("[", pos))
+                    unread2(n)
+                }
+            }
             (x in OPERATORS.first) -> {
                 val op = x + read2While { it in OPERATORS.first }
                 when {
+                    (op == "|") -> {
+                        val (n,y) = read2()
+                        if (y == ']') {
+                            yield(Tk.Fix("|]", pos))
+                        } else {
+                            yield(Tk.Fix(op, pos))
+                            unread2(n)
+                        }
+                    }
                     (op == "=") -> yield(Tk.Fix(op, pos))
                     (op == "->") -> yield(Tk.Fix(op, pos))
                     (op in OPERATORS.second) -> yield(Tk.Op(op, pos))
