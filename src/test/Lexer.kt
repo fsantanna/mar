@@ -46,12 +46,14 @@ class Lexer {
 
     @Test
     fun bb_01_ids() {
-        val tks = ("if xxx Type coro return xcoro create start resume yield").lexer()
+        val tks = ("if xxx Type coro break return loop xcoro create start resume yield").lexer()
         assert(tks.next().let { it is Tk.Fix  && it.str == "if" })
         assert(tks.next().let { it is Tk.Var  && it.str == "xxx" })
         assert(tks.next().let { it is Tk.Type && it.str == "Type" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "coro" })
+        assert(tks.next().let { it is Tk.Fix  && it.str == "break" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "return" })
+        assert(tks.next().let { it is Tk.Fix  && it.str == "loop" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "xcoro" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "create" })
         assert(tks.next().let { it is Tk.Var  && it.str == "start" })

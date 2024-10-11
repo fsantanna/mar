@@ -8,10 +8,14 @@ fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Type)-
     return v + when (this) {
         is Stmt.Proto -> this.blk.dn_collect(fs,fe,ft) + this.tp.dn_collect(ft)
         is Stmt.Return -> this.e.dn_collect(fe)
+
         is Stmt.Block -> this.ss.map { it.dn_collect(fs,fe,ft) }.flatten()
         is Stmt.Dcl -> this.var_type.second.dn_collect(ft)
         is Stmt.Set -> this.dst.dn_collect(fe) + this.src.dn_collect(fe)
-        is Stmt.If -> this.cnd.dn_collect(fe) + this.t.dn_collect(fs,fe,ft) + this.f.dn_collect(fs,fe,ft)
+
+        is Stmt.If    -> this.cnd.dn_collect(fe) + this.t.dn_collect(fs,fe,ft) + this.f.dn_collect(fs,fe,ft)
+        is Stmt.Loop  -> this.blk.dn_collect(fs,fe,ft)
+        is Stmt.Break -> emptyList()
 
         is Stmt.Create -> this.dst.dn_collect(fe) + this.co.dn_collect(fe)
         is Stmt.Resume -> (this.dst?.dn_collect(fe) ?: emptyList()) + this.xco.dn_collect(fe) + this.arg.dn_collect(fe)

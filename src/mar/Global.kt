@@ -32,8 +32,8 @@ val BINS = listOf (
 
 val KEYWORDS: SortedSet<String> = (
     setOf (
-        "do", "coro", "create", "else", "false", "func",
-        "if", "null", "resume", "return", "set",
+        "break", "do", "coro", "create", "else", "false", "func",
+        "if", "loop", "null", "resume", "return", "set",
         "true", "var", "xcoro", "yield",
     ).toSortedSet()
 )
@@ -101,6 +101,8 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     data class Set     (val tk_: Tk.Fix, val dst: Expr, val src: Expr): Stmt(G.N++, tk_)
 
     data class If      (val tk_: Tk.Fix, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, tk_)
+    data class Loop    (val tk_: Tk.Fix, val blk: Stmt.Block): Stmt(G.N++, tk_)
+    data class Break   (val tk_: Tk.Fix): Stmt(G.N++, tk_)
 
     data class Create (val tk_: Tk.Fix, val dst: Expr, val co: Expr): Stmt(G.N++, tk_)
     data class Resume (val tk_: Tk.Fix, val dst: Expr?, val xco: Expr, val arg: Expr): Stmt(G.N++, tk_)

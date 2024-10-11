@@ -49,7 +49,7 @@ class Exec  {
         assert(out == "11\n") { out }
     }
 
-    // CALL / PRINT / IF
+    // CALL / PRINT / IF / LOOP
 
     @Test
     fun cc_01_print() {
@@ -78,6 +78,22 @@ class Exec  {
             }
         """)
         assert(out == "1\n2\n") { out }
+    }
+    @Test
+    fun cc_03_if() {
+        val out = test("""
+            var n: Int = 0
+            var i: Int = 5
+            loop {
+                if i == 0 {
+                    break
+                }
+                set n = n + i
+                set i = i - 1
+            }
+            `printf("%d\n", n);`
+        """)
+        assert(out == "15\n") { out }
     }
 
     // FUNC

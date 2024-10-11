@@ -112,6 +112,7 @@ fun Stmt.coder (pre: Boolean = false): String {
             """
         }
         is Stmt.Return -> "return (" + this.e.coder(pre) + ");"
+
         is Stmt.Block  -> {
             """
             {
@@ -133,6 +134,7 @@ fun Stmt.coder (pre: Boolean = false): String {
             (!in_coro).cond { tp.coder(pre) + " " + id.str + ";" }
         }
         is Stmt.Set    -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
+
         is Stmt.If     -> """
             if (${this.cnd.coder(pre)}) {
                 ${this.t.coder(pre)}
@@ -140,6 +142,12 @@ fun Stmt.coder (pre: Boolean = false): String {
                 ${this.f.coder(pre)}
             }
         """
+        is Stmt.Loop   -> """
+            while (1) {
+                ${this.blk.coder(pre)}
+            }
+        """
+        is Stmt.Break -> "break;"
 
         is Stmt.Create -> {
             val xtp = this.dst.type().coder(pre)
@@ -192,7 +200,7 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
         is Expr.Tuple -> "(${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } }"
-        is Expr.Index -> TODO()
+        is Expr.Index -> "(${this.col.coder(pre)}.${this.idx.str})"
 
         is Expr.Nat -> this.tk.str
         is Expr.Acc -> this.tk_.coder(this, pre)

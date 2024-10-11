@@ -418,7 +418,7 @@ class Parser {
         assert(s.to_str() == "set y = yield(null)") { s.to_str() }
     }
 
-    // IF
+    // IF / LOOP
 
     @Test
     fun ii_01_if() {
@@ -430,6 +430,14 @@ class Parser {
                 "`.`\n" +
                 "} else {\n" +
                 "}") { s.to_str() }
+    }
+    @Test
+    fun ii_02_loop() {
+        G.tks = ("loop { break }").lexer()
+        parser_lexer()
+        val s = parser_stmt().first()
+        assert(s is Stmt.Loop && s.blk.ss.size==1 && s.blk.ss.first() is Stmt.Break)
+        assert(s.to_str() == "loop {\nbreak\n}") { s.to_str() }
     }
 
     // TUPLE

@@ -277,6 +277,30 @@ fun check_stmt_is_expr (): Boolean {
 
 fun parser_stmt (set: Expr? = null): List<Stmt> {
     return when {
+        (accept_fix("func") || accept_fix("coro")) -> {
+            val tk0 = G.tk0 as Tk.Fix
+            accept_enu_err("Var")
+            val id = G.tk0 as Tk.Var
+            val tp = parser_type(true, tk0)
+            accept_fix_err("{")
+            val ss = parser_list(null, "}") {
+                parser_stmt()
+            }.flatten()
+            when (tp) {
+                is Type.Proto.Func.Vars ->
+                    Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk_, ss))
+                is Type.Proto.Coro.Vars ->
+                    Stmt.Proto.Coro(tk0, id, tp, Stmt.Block(tp.tk_, ss))
+                else -> error("impossible case")
+            }.let { listOf(it) }
+        }
+        accept_fix("return") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            check_fix_err("(")
+            val e = parser_expr()
+            listOf(Stmt.Return(tk0, e))
+        }
+
         accept_fix("do") -> {
             val tk0 = G.tk0 as Tk.Fix
             accept_fix_err("{")
@@ -310,29 +334,7 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
                 }
             }
         }
-        (accept_fix("func") || accept_fix("coro")) -> {
-            val tk0 = G.tk0 as Tk.Fix
-            accept_enu_err("Var")
-            val id = G.tk0 as Tk.Var
-            val tp = parser_type(true, tk0)
-            accept_fix_err("{")
-            val ss = parser_list(null, "}") {
-                parser_stmt()
-            }.flatten()
-            when (tp) {
-                is Type.Proto.Func.Vars ->
-                    Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk_, ss))
-                is Type.Proto.Coro.Vars ->
-                    Stmt.Proto.Coro(tk0, id, tp, Stmt.Block(tp.tk_, ss))
-                else -> error("impossible case")
-            }.let { listOf(it) }
-        }
-        accept_fix("return") -> {
-            val tk0 = G.tk0 as Tk.Fix
-            check_fix_err("(")
-            val e = parser_expr()
-            listOf(Stmt.Return(tk0, e))
-        }
+
         accept_fix("if") -> {
             val tk0 = G.tk0 as Tk.Fix
             val cnd = parser_expr()
@@ -350,6 +352,15 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
             }
             listOf(Stmt.If(tk0, cnd, Stmt.Block(tk0, t), Stmt.Block(tk0, f)))
         }
+        accept_fix("loop") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            accept_fix_err("{")
+            val blk = parser_list(null, "}") {
+                parser_stmt()
+            }.flatten()
+            listOf(Stmt.Loop(tk0, Stmt.Block(tk0, blk)))
+        }
+        accept_fix("break") -> listOf(Stmt.Break(G.tk0 as Tk.Fix))
 
         (set!=null && accept_fix("create")) -> {
             val tk0 = G.tk0 as Tk.Fix

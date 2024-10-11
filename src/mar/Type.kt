@@ -70,7 +70,7 @@ fun Expr.type (): Type {
         }
 
         is Expr.Tuple -> Type.Tuple(this.tk_, vs.map { it.type() })
-        is Expr.Index -> TODO()
+        is Expr.Index -> (this.col.type() as Type.Tuple).ts[this.idx.str.drop(1).toInt()-1]
 
         is Expr.Acc -> this.tk_.type(this)!!
         is Expr.Bool -> Type.Basic(Tk.Type( "Bool", this.tk.pos.copy()))
