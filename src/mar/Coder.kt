@@ -116,10 +116,7 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Dcl -> {
             val (id, tp) = this.var_type
             val in_coro = this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro
-            """
-                ${(!in_coro).cond { tp.coder(pre) + " " + id.str + ";" }}
-                ${this.set.cond { id.coder(this,pre) + " = " + it.coder(pre) + ";" }}  
-            """
+            (!in_coro).cond { tp.coder(pre) + " " + id.str + ";" }
         }
         is Stmt.Set    -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
         is Stmt.If     -> """
@@ -180,7 +177,6 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_ceu_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
         is Expr.Nat -> this.tk.str
-
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> ""
         is Expr.Bool, is Expr.Char,

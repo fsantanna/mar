@@ -92,7 +92,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Proto.Coro -> TODO()
         is Stmt.Return -> "return(" + this.e.to_str(pre) + ")"
         is Stmt.Block  -> "do {\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
-        is Stmt.Dcl    -> "var " + this.var_type.to_str(pre) + this.set.cond { " = " + it.to_str(pre) }
+        is Stmt.Dcl    -> "var " + this.var_type.to_str(pre)
         is Stmt.Set    -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
         is Stmt.If     -> "if " + this.cnd.to_str(pre) + " {\n" + this.t.ss.to_str(pre) + "} else {\n" + this.f.ss.to_str(pre) + "}"
         is Stmt.Create -> this.dst.cond { "set ${it.to_str(pre)} = " } + "create(" + this.co.to_str(pre) + ")"

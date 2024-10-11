@@ -94,7 +94,7 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     data class Return  (val tk_: Tk.Fix, val e: Expr) : Stmt(G.N++, tk_)
 
     data class Block   (val tk_: Tk, val ss: List<Stmt>) : Stmt(G.N++, tk_)
-    data class Dcl     (val tk_: Tk.Fix, val var_type: Var_Type, val set: Expr?) : Stmt(G.N++, tk_)
+    data class Dcl     (val tk_: Tk.Fix, val var_type: Var_Type) : Stmt(G.N++, tk_)
     data class Set     (val tk_: Tk.Fix, val dst: Expr, val src: Expr): Stmt(G.N++, tk_)
 
     data class If      (val tk_: Tk.Fix, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, tk_)
