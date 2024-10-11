@@ -76,6 +76,8 @@ fun cache_ups () {
                 G.ups[me.f.n] = me.n
                 me.args.forEach { G.ups[it.n] = me.n }
             }
+            is Expr.Tuple -> me.vs.forEach { G.ups[it.n] = me.n }
+            is Expr.Index -> G.ups[me.col.n] = me.n
 
             is Expr.Acc, is Expr.Bool, is Expr.Char, is Expr.Nat,
             is Expr.Null, is Expr.Num, is Expr.Unit -> {}

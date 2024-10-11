@@ -43,7 +43,7 @@ class Parser {
         assert(e is Expr.Acc && e.tk.str == "err")
     }
 
-    // TYPES
+    // TYPE
 
     @Test
     fun aj_01_type () {
@@ -124,6 +124,33 @@ class Parser {
         assert(trap { parser_type() } == "anon : (lin 1, col 1) : xcoro error : unexpected second argument")
     }
 
+    // TUPLE
+
+    @Test
+    fun ak_01_type_tuple () {
+        G.tks = ("[]").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Tuple && tp.ts.size==0)
+        assert(tp.to_str() == "[]") { tp.to_str() }
+    }
+    @Test
+    fun ak_02_type_tuple () {
+        G.tks = ("[Int,[Bool],()]").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Tuple && tp.ts.size==3)
+        assert(tp.to_str() == "[Int,[Bool],()]") { tp.to_str() }
+    }
+    @Test
+    fun ak_03_type_tuple () {
+        G.tks = ("[x:Int,y:[Bool],z:()]").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Tuple && tp.ts.size==3)
+        assert(tp.to_str() == "[x:Int,[y:Bool],z:()]") { tp.to_str() }
+    }
+
     // PARENS
 
     @Test
@@ -188,8 +215,8 @@ class Parser {
         """.lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Block && s.ss.size==1)
-        assert(s.to_str() == "do {\nvar i: Int = 1\n}") { s.to_str() }
+        assert(s is Stmt.Block && s.ss.size==2)
+        assert(s.to_str() == "do {\nvar i: Int\nset i = 1\n}") { s.to_str() }
     }
     @Test
     fun dd_03_do() {
@@ -403,5 +430,53 @@ class Parser {
                 "`.`\n" +
                 "} else {\n" +
                 "}") { s.to_str() }
+    }
+
+    // TUPLE
+
+    @Test
+    fun jj_01_tuple () {
+        G.tks = ("""
+            do {
+                var v: [Int,Int] = [10,20]
+            }
+        """).lexer()
+        parser_lexer()
+        val s = parser_stmt().first()
+        assert(s.to_str() == "do {\n" +
+                "var v: [Int,Int]\n" +
+                "set v = [10,20]\n" +
+                "}") { s.to_str() }
+    }
+    @Test
+    fun jj_02_tuple () {
+        G.tks = ("""
+            do {
+                var v: [Int,Int] = [10,20]
+                var x: Int = v._1
+            }
+        """).lexer()
+        parser_lexer()
+        val s = parser_stmt().first()
+        assert(s.to_str() == "do {\n" +
+                "var v: [Int,Int]\n" +
+                "set v = [10,20]\n" +
+                "var x: Int\n" +
+                "set x = (v._1)\n" +
+                "}") { s.to_str() }
+    }
+    @Test
+    fun jj_03_expr() {
+        G.tks = ("[10,[1],20]").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e.to_str() == "[10,[1],20]")
+    }
+    @Test
+    fun jj_04_expr() {
+        G.tks = ("x._1._2").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e.to_str() == "((x._1)._2)")
     }
 }

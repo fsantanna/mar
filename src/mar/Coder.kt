@@ -17,6 +17,7 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Basic -> this.tk.str
         is Type.Unit -> "void"
         is Type.Pointer -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
+        is Type.Tuple -> TODO() //"(XXX) { " + this.ts.map { it.coder(pre) }.joinToString(",") + " }"
         is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
         is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
         is Type.XCoro      -> "CEU_XCoro__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
@@ -176,6 +177,10 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Uno -> "(" + this.tk.str.op_ceu_to_c() + this.e.coder(pre) + ")"
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_ceu_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
+
+        is Expr.Tuple -> TODO()
+        is Expr.Index -> TODO()
+
         is Expr.Nat -> this.tk.str
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> ""

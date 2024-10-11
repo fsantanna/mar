@@ -81,6 +81,9 @@ sealed class Expr (var n: Int, val tk: Tk) {
     data class Null (val tk_: Tk.Fix): Expr(G.N++, tk_)
     data class Unit (val tk_: Tk.Fix): Expr(G.N++, tk_)
 
+    data class Tuple (val tk_: Tk.Fix, val vs: List<Expr>): Expr(G.N++, tk_)
+    data class Index (val tk_: Tk.Fix, val col: Expr, val idx: Tk.Var): Expr(G.N++, tk_)
+
     data class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, tk_)
     data class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)
     data class Call (val tk_: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, tk_)

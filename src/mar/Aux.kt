@@ -29,6 +29,8 @@ fun <V> Expr.dn_collect (fe: (Expr)->List<V>?): List<V> {
     return v + when (this) {
         is Expr.Uno -> this.e.dn_collect(fe)
         is Expr.Bin -> this.e1.dn_collect(fe) + this.e2.dn_collect(fe)
+        is Expr.Tuple -> this.vs.map { it.dn_collect(fe) }.flatten()
+        is Expr.Index -> this.col.dn_collect(fe)
         is Expr.Call -> this.f.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
         is Expr.Acc, is Expr.Nat, is Expr.Null, is Expr.Unit,
         is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()

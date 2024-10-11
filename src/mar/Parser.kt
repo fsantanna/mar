@@ -192,6 +192,14 @@ fun parser_expr_4_prim (): Expr {
             }
         }
 
+        accept_fix("[")     -> {
+            val tk0 = G.tk0 as Tk.Fix
+            val vs = parser_list(",", "]") {
+                parser_expr()
+            }
+            Expr.Tuple(tk0, vs)
+        }
+
         else                    -> err_expected(G.tk1!!, "expression")
     }
 }
@@ -218,6 +226,11 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
                 Expr.Call(e.tk, e, args)
             }
             "\\" -> Expr.Uno(Tk.Op("deref", G.tk0!!.pos.copy()), e)
+            "." -> {
+                val dot = G.tk0 as Tk.Fix
+                accept_enu_err("Var")
+                Expr.Index(dot, e, G.tk0 as Tk.Var)
+            }
             else -> error("impossible case")
         }
     )

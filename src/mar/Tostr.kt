@@ -65,6 +65,9 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Null   -> this.tk.str
         is Expr.Unit   -> ""
 
+        is Expr.Tuple  -> "[" + this.vs.map { it.to_str(pre) }.joinToString(",") + "]"
+        is Expr.Index  -> "(" + this.col.to_str(pre) + "." + this.idx.str + ")"
+
         is Expr.Uno    -> "(" + this.tk_.to_str(pre) + this.e.to_str(pre) + ")"
         is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk_.to_str(pre) + " " + this.e2.to_str(pre) + ")"
         is Expr.Call   -> this.f.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"

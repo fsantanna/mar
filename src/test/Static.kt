@@ -343,4 +343,36 @@ class Static {
         """)
         assert(out == "anon : (lin 4, col 21) : yield error : types mismatch") { out!! }
     }
+
+    // TUPLE
+
+    @Test
+    fun cc_01_tuple () {
+        val out = static("""
+            var t: []
+            var x: Int = t
+        """)
+        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun cc_02_tuple () {
+        val out = static("""
+            var x: [Int] = [10]
+        """)
+        assert(out == null) { out!! }
+    }
+    @Test
+    fun cc_03_tuple () {
+        val out = static("""
+            var x: [Int] = [()]
+        """)
+        assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun cc_04_tuple () {
+        val out = static("""
+            var x: [] = [()]
+        """)
+        assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
+    }
 }

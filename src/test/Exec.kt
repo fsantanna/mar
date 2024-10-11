@@ -234,4 +234,15 @@ class Exec  {
         """)
         assert(out == "40\n") { out }
     }
+
+    // TUPLE
+
+    @Test
+    fun gg_01_tuple () {
+        val out = test("""
+            var x: [Int] = [10]
+            `printf("%d\n", x._1);`
+        """)
+        assert(out == "40\n") { out }
+    }
 }
