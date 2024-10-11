@@ -24,25 +24,36 @@ fun Type.coder (pre: Boolean = false): String {
     }
 }
 
-fun coder_types_tuples (pre: Boolean): String {
-    return G.outer!!
-        .dn_filter(null, {null}, {it is Type.Tuple})
-        .let { it as List<Type.Tuple> }
-        .map { tup ->
-            val x = tup.coder(pre)
-            """
-            typedef struct $x {
-                ${tup.ts.mapIndexed { i,tp ->
-                    tp.coder() + " _" + (i+1) + ";\n"
-                }.joinToString("")}
-            } $x;
-            """
+fun coder_types (pre: Boolean): String {
+    fun fs (me: Stmt): List<String> {
+        return when (me) {
+            is Stmt.Proto.Coro -> {
+                fun mem (): String {
+                    val blks = me.dn_collect({
+                        when (it) {
+                            is Stmt.Proto -> if (it == me) emptyList() else null
+                            is Stmt.Block -> listOf(it)
+                            else -> emptyList()
+                        }
+                    }, {null}, {null})
+                    return blks.map { it.to_dcls().map { (_,vt) -> vt.coder(pre) + ";\n" } }.flatten().joinToString("")
+                }
+                val co  = me.tp.coder(pre)
+                val xco = co.coro_to_xcoro()
+                listOf("""
+                    typedef struct $xco {
+                        CEU_EXE_STATUS status;
+                        int pc;
+                        $co proto;
+                        struct {
+                            ${mem()}
+                        } mem;
+                    } $xco;
+                """)
+            }
+            else -> emptyList()
         }
-        .joinToString("")
-}
-
-fun coder_types_protos (pre: Boolean): String {
-    // TODO: dn_filter
+    }
     fun ft (me: Type): List<String> {
         return when (me) {
             is Type.Proto.Func -> listOf (
@@ -55,37 +66,21 @@ fun coder_types_protos (pre: Boolean): String {
                     xco,
                 )
             }
+            is Type.Tuple -> {
+                val x = me.coder(pre)
+                listOf("""
+                    typedef struct $x {
+                        ${me.ts.mapIndexed { i,tp ->
+                            tp.coder() + " _" + (i+1) + ";\n"
+                        }.joinToString("")}
+                    } $x;
+                """)
+            }
             else -> emptyList()
         }
     }
-    val ts = G.outer!!.dn_collect({ emptyList() }, { emptyList() }, ::ft)
+    val ts = G.outer!!.dn_collect(::fs, { emptyList() }, ::ft)
     return ts.asReversed().map {it + ";\n" }.joinToString("")
-}
-fun coder_types_xcoros (pre: Boolean): String {
-    val xs = G.outer!!.dn_filter({it is Stmt.Proto.Coro}, {null}, {null}) as List<Stmt.Proto.Coro>
-    return xs.map { X ->
-        fun mem (): String {
-            val blks = X.dn_collect({
-                when (it) {
-                    is Stmt.Proto -> if (it == X) emptyList() else null
-                    is Stmt.Block -> listOf(it)
-                    else -> emptyList()
-                }
-            }, {null}, {null})
-            return blks.map { it.to_dcls().map { (_,vt) -> vt.coder(pre) + ";\n" } }.flatten().joinToString("")
-        }
-        val co  = X.tp.coder(pre)
-        val xco = co.coro_to_xcoro()
-        """
-        typedef struct $xco {
-            CEU_EXE_STATUS status;
-            int pc;
-            $co proto;
-            struct {
-                ${mem()}
-            } mem;
-        } $xco;
-    """ }.joinToString("")
 }
 
 fun Stmt.coder (pre: Boolean = false): String {
@@ -225,9 +220,7 @@ fun coder_main (pre: Boolean): String {
         
         ${File("src/mar/Prelude.c").readLines().joinToString("\n")}
         
-        ${coder_types_tuples(pre)}
-        ${coder_types_protos(pre)}        
-        ${coder_types_xcoros(pre)}
+        ${coder_types(pre)}
         
         int main (void) {
             ${G.outer!!.coder(pre)}
