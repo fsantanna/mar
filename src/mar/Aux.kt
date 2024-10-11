@@ -9,7 +9,7 @@ fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Type)-
         is Stmt.Proto -> this.blk.dn_collect(fs,fe,ft) + this.tp.dn_collect(ft)
         is Stmt.Return -> this.e.dn_collect(fe)
         is Stmt.Block -> this.ss.map { it.dn_collect(fs,fe,ft) }.flatten()
-        is Stmt.Dcl -> emptyList()
+        is Stmt.Dcl -> this.var_type.second.dn_collect(ft)
         is Stmt.Set -> this.dst.dn_collect(fe) + this.src.dn_collect(fe)
         is Stmt.If -> this.cnd.dn_collect(fe) + this.t.dn_collect(fs,fe,ft) + this.f.dn_collect(fs,fe,ft)
 
@@ -63,13 +63,17 @@ fun Expr.dn_visit (fe: (Expr)->Unit?) {
     this.dn_collect { if (fe(it) == null) null else emptyList<Unit>() }
 }
 
-fun Stmt.dn_filter (fs: (Stmt)->Boolean?, fe: (Expr)->Boolean?, ft: (Type)->Boolean?): List<Any> {
+fun Stmt.dn_filter (fs: ((Stmt)->Boolean?)?, fe: (Expr)->Boolean?, ft: (Type)->Boolean?): List<Any> {
     return this.dn_collect (
         {
-            when (fs(it)) {
-                null -> null
-                false -> emptyList()
-                true -> listOf(it)
+            if (fs == null) {
+                emptyList()
+            } else {
+                when (fs(it)) {
+                    null -> null
+                    false -> emptyList()
+                    true -> listOf(it)
+                }
             }
         },
         {

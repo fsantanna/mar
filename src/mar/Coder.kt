@@ -13,18 +13,36 @@ fun Var_Type.coder (pre: Boolean = false): String {
 }
 fun Type.coder (pre: Boolean = false): String {
     return when (this) {
-        is Type.Any -> TODO()
-        is Type.Basic -> this.tk.str
-        is Type.Unit -> "void"
-        is Type.Pointer -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
-        is Type.Tuple -> TODO() //"(XXX) { " + this.ts.map { it.coder(pre) }.joinToString(",") + " }"
+        is Type.Any        -> TODO()
+        is Type.Basic      -> this.tk.str
+        is Type.Unit       -> "void"
+        is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
+        is Type.Tuple      -> "CEU_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}"
         is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
         is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
         is Type.XCoro      -> "CEU_XCoro__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
     }
 }
 
+fun coder_types_tuples (pre: Boolean): String {
+    return G.outer!!
+        .dn_filter(null, {null}, {it is Type.Tuple})
+        .let { it as List<Type.Tuple> }
+        .map { tup ->
+            val x = tup.coder(pre)
+            """
+            typedef struct $x {
+                ${tup.ts.mapIndexed { i,tp ->
+                    tp.coder() + " _" + (i+1) + ";\n"
+                }.joinToString("")}
+            } $x;
+            """
+        }
+        .joinToString("")
+}
+
 fun coder_types_protos (pre: Boolean): String {
+    // TODO: dn_filter
     fun ft (me: Type): List<String> {
         return when (me) {
             is Type.Proto.Func -> listOf (
@@ -178,7 +196,7 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_ceu_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
-        is Expr.Tuple -> TODO()
+        is Expr.Tuple -> "(${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } }"
         is Expr.Index -> TODO()
 
         is Expr.Nat -> this.tk.str
@@ -207,8 +225,8 @@ fun coder_main (pre: Boolean): String {
         
         ${File("src/mar/Prelude.c").readLines().joinToString("\n")}
         
-        ${coder_types_protos(pre)}
-        
+        ${coder_types_tuples(pre)}
+        ${coder_types_protos(pre)}        
         ${coder_types_xcoros(pre)}
         
         int main (void) {

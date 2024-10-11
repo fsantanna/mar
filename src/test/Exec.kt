@@ -243,6 +243,6 @@ class Exec  {
             var x: [Int] = [10]
             `printf("%d\n", x._1);`
         """)
-        assert(out == "40\n") { out }
+        assert(out == "10\n") { out }
     }
 }
