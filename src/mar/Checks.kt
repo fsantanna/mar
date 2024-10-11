@@ -1,38 +1,42 @@
 package mar
 
+fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
+    return this.fup().let {
+        when {
+            (it is Stmt.Proto.Func) -> it.tp_.inps__.map { Pair(this.n, it) }
+            (it is Stmt.Proto.Coro) -> it.tp_.inps__.map { Pair(this.n, it) }
+            else -> emptyList()
+        }
+    } + this.dn_filter({it is Stmt.Dcl || it is Stmt.Proto}, {null}, {null})
+        .let { it as List<Stmt> }
+        .map {
+            val vt = when (it) {
+                is Stmt.Dcl -> it.var_type
+                is Stmt.Proto -> Pair(it.id, it.tp)
+                else -> error("impossible case")
+            }
+            Pair(it.n, vt)
+        }
+}
+
 fun check_vars () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Block -> {
-                val vs1 = me.vs.map { it.first.str }.toSet()
-                me.fup()?.ups()?.filter { it is Stmt.Block }?.forEach {
+                val ids2 = me.to_dcls()
+                me.ups().filter { it is Stmt.Block }.forEach {
                     it as Stmt.Block
-                    val vs2 = it.vs.map { it.first.str }.toSet()
-                    val vs = vs1.intersect(vs2)
-                    if (vs.size > 0) {
-                        val (id,_) = me.vs.find { it.first.str == vs.first() }!!
+                    val ids1 = me.to_dcls()
+                    val err = ids2.find { (n2,id2) ->
+                        ids1.find { (n1,id1) ->
+                            (n1 != n2) && (id1.first.str == id2.first.str)
+                        } != null
+                    }
+                    if (err != null) {
+                        val (_,vt) = err
+                        val (id,_) = vt
                         err(id, "declaration error : variable \"${id.str}\" is already declared")
                     }
-                }
-                val dcls  = me.vs.filter { it.second is Type.Proto }
-                val impls = me.dn_filter (
-                    {
-                        when (it) {
-                            is Stmt.Block -> if (it == me) false else null
-                            is Stmt.Proto -> true
-                            else -> false
-                        }
-                    },
-                    {false},
-                    {false}
-                ) as List<Stmt.Proto>
-                val dcl_wo_impl = dcls.find { (id,_) -> impls.none { impl -> impl.id.str == id.str } }
-                if (dcl_wo_impl != null) {
-                    err(dcl_wo_impl.first, "declaration error : missing implementation")
-                }
-                val impl_wo_dcl = impls.find { impl -> dcls.none { (id,_) -> impl.id.str == id.str } }
-                if (impl_wo_dcl != null) {
-                    err(impl_wo_dcl.tk, "implementation error : variable \"${impl_wo_dcl.id.str}\" is not declared")
                 }
             }
             else -> {}
@@ -41,7 +45,10 @@ fun check_vars () {
     fun fe (me: Expr) {
         when (me) {
             is Expr.Acc -> {
-                if (me.up_none { it is Stmt.Block && it.vs.any { it.first.str==me.tk.str } }) {
+                val ok = me.up_any {
+                    it is Stmt.Block && it.to_dcls().any { (_,vt) -> vt.first.str == me.tk.str }
+                }
+                if (!ok) {
                     err(me.tk, "access error : variable \"${me.tk.str}\" is not declared")
                 }
             }
@@ -78,7 +85,7 @@ fun check_types () {
             is Stmt.Create -> {
                 val co = me.co.type()
                 if (co !is Type.Proto.Coro) {
-                    err(me.tk, "spawn error : expected coroutine prototype")
+                    err(me.tk, "create error : expected coroutine prototype")
                 }
                 val tp = me.dst.type()
                 val xtp = Type.XCoro(co.tk_, co.out, co.inps)

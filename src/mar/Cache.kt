@@ -32,6 +32,11 @@ fun cache_ups () {
             is Stmt.Proto -> G.ups[me.blk.n] = me.n
             is Stmt.Return -> G.ups[me.e.n] = me.n
             is Stmt.Block -> me.ss.forEach { G.ups[it.n] = me.n }
+            is Stmt.Dcl -> {
+                if (me.set != null) {
+                    G.ups[me.set.n] = me.n
+                }
+            }
             is Stmt.Set -> {
                 G.ups[me.dst.n] = me.n
                 G.ups[me.src.n] = me.n

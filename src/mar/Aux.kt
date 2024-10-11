@@ -8,7 +8,8 @@ fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Type)-
     return v + when (this) {
         is Stmt.Proto -> this.blk.dn_collect(fs,fe,ft) + this.tp.dn_collect(ft)
         is Stmt.Return -> this.e.dn_collect(fe)
-        is Stmt.Block -> this.vs.map { (_,tp) -> tp.dn_collect(ft) }.flatten() + this.ss.map { it.dn_collect(fs,fe,ft) }.flatten()
+        is Stmt.Block -> this.ss.map { it.dn_collect(fs,fe,ft) }.flatten()
+        is Stmt.Dcl -> this.set?.dn_collect(fe) ?: emptyList()
         is Stmt.Set -> this.dst.dn_collect(fe) + this.src.dn_collect(fe)
         is Stmt.If -> this.cnd.dn_collect(fe) + this.t.dn_collect(fs,fe,ft) + this.f.dn_collect(fs,fe,ft)
 

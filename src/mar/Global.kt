@@ -34,7 +34,7 @@ val KEYWORDS: SortedSet<String> = (
     setOf (
         "do", "coro", "create", "else", "false", "func",
         "if", "null", "resume", "return", "set",
-        "true", "xcoro", "yield",
+        "true", "var", "xcoro", "yield",
     ).toSortedSet()
 )
 
@@ -90,8 +90,11 @@ sealed class Stmt (var n: Int, val tk: Tk) {
         data class Coro (val tk__: Tk.Fix, val id_: Tk.Var, val tp_: Type.Proto.Coro.Vars, val blk_: Stmt.Block) : Stmt.Proto(tk__, id_, tp_, blk_)
     }
     data class Return  (val tk_: Tk.Fix, val e: Expr) : Stmt(G.N++, tk_)
-    data class Block   (val tk_: Tk, val vs: List<Var_Type>, val ss: List<Stmt>) : Stmt(G.N++, tk_)
+
+    data class Block   (val tk_: Tk, val ss: List<Stmt>) : Stmt(G.N++, tk_)
+    data class Dcl     (val tk_: Tk.Fix, val var_type: Var_Type, val set: Expr?) : Stmt(G.N++, tk_)
     data class Set     (val tk_: Tk.Fix, val dst: Expr, val src: Expr): Stmt(G.N++, tk_)
+
     data class If      (val tk_: Tk.Fix, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, tk_)
 
     data class Create (val tk_: Tk.Fix, val dst: Expr, val co: Expr): Stmt(G.N++, tk_)
@@ -167,9 +170,11 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String, Int, Int
         System.err.println("... parsing ...")
     }
     try {
-        check_fix("do")
-        G.outer = parser_stmt() as Stmt.Block
-        check_enu_err("Eof")
+        val tk0 = G.tk1!!
+        val ss = parser_list(null, { accept_enu("Eof") }, {
+            parser_stmt()
+        }).flatten()
+        G.outer = Stmt.Block(tk0, ss)
         cache_ns()
         cache_ups()
         check_vars()

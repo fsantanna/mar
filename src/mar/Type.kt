@@ -44,7 +44,7 @@ fun Expr.Bin.args (tp1: Type, tp2: Type): Boolean {
 fun Tk.Var.type (fr: Any): Type? {
     return fr.up_first {
         if (it !is Stmt.Block) false else {
-            it.vs.find { it.first.str == this.str }?.second
+            it.to_dcls().find { (_,vt) -> vt.first.str == this.str }?.second?.second
         }
     } as Type?
 }

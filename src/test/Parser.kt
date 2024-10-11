@@ -174,41 +174,41 @@ class Parser {
 
     @Test
     fun dd_01_do() {
-        G.tks = ("do [] {}").lexer()
+        G.tks = ("do {}").lexer()
         parser_lexer()
-        val s = parser_stmt()
+        val s = parser_stmt().first()
         assert(s is Stmt.Block && s.ss.isEmpty())
     }
     @Test
     fun dd_02_do() {
         G.tks = """
-            do [
-                i: Int
-            ] {
-                set i=1
+            do {
+                var i: Int=1
             }
         """.lexer()
         parser_lexer()
-        val s = parser_stmt()
-        assert(s is Stmt.Block && s.vs.size==1 && s.ss.size==1)
-        assert(s.to_str() == "do [i: Int" + "] {\nset i = 1\n}") { s.to_str() }
+        val s = parser_stmt().first()
+        assert(s is Stmt.Block && s.ss.size==1)
+        assert(s.to_str() == "do {\nvar i: Int = 1\n}") { s.to_str() }
     }
     @Test
     fun dd_03_do() {
-        G.tks = ("do [] ;;;(a);;; { print(a) }").lexer()
+        G.tks = ("do { print(a) }").lexer()
         parser_lexer()
-        val s = parser_stmt()
+        val s = parser_stmt().first()
         assert(s is Stmt.Block)
-        assert(s.to_str() == "do [] {\nprint(a)\n}") { s.to_str() }
+        assert(s.to_str() == "do {\nprint(a)\n}") { s.to_str() }
     }
     @Test
     fun dd_04_do() {
-        G.tks = "do [x:X] { do [y:Y] {  }}".lexer()
+        G.tks = "do { var x:X do { var y:Y }}".lexer()
         parser_lexer()
-        val s = parser_stmt()
+        val s = parser_stmt().first()
         assert(s is Stmt.Block)
-        assert(s.to_str() == "do [x: X] {\n" +
-                "do [y: Y] {\n" +
+        assert(s.to_str() == "do {\n" +
+                "var x: X\n" +
+                "do {\n" +
+                "var y: Y\n" +
                 "}\n" +
                 "}") { s.to_str() }
     }
@@ -217,16 +217,16 @@ class Parser {
 
     @Test
     fun ee_01_dcl () {
-        G.tks = ("do [x: Int] {}").lexer()
+        G.tks = ("do { var x: Int }").lexer()
         parser_lexer()
-        val e = parser_stmt()
-        assert(e.to_str() == "do [x: Int] {\n}") { e.to_str() }
+        val e = parser_stmt().first()
+        assert(e.to_str() == "do {\nvar x: Int\n}") { e.to_str() }
     }
     @Test
     fun ee_02_set () {
         G.tks = ("set x = 10").lexer()
         parser_lexer()
-        val e = parser_stmt()
+        val e = parser_stmt().first()
         assert(e.to_str() == "set x = 10")
     }
     @Test
@@ -241,14 +241,14 @@ class Parser {
     @Test
     fun ee_04_func() {
         G.tks = ("""
-            do [f: func (Int) -> Int] {
+            do {
                 func f (a:Int) -> Int {
                 }
             }
         """).lexer()
         parser_lexer()
-        val e = parser_stmt()
-        assert(e.to_str() == "do [f: func (Int) -> Int] {\n" +
+        val e = parser_stmt().first()
+        assert(e.to_str() == "do {\n" +
                 "func f (a: Int) -> Int {\n" +
                 "}\n" +
                 "}") { e.to_str() }
@@ -257,7 +257,7 @@ class Parser {
     fun ee_05_return() {
         G.tks = ("return(10)").lexer()
         parser_lexer()
-        val e = parser_stmt()
+        val e = parser_stmt().first()
         assert(e.to_str() == "return(10)") { e.to_str() }
     }
     @Test
@@ -354,7 +354,7 @@ class Parser {
     fun hh_02_resume() {
         G.tks = ("resume xf()").lexer()
         parser_lexer()
-        val s = parser_stmt()
+        val s = parser_stmt().first()
         assert(s is Stmt.Resume && s.xco is Expr.Acc && s.arg is Expr.Unit)
         assert(s.to_str() == "resume xf()")
     }
@@ -362,7 +362,7 @@ class Parser {
     fun hh_03_yield() {
         G.tks = ("yield()").lexer()
         parser_lexer()
-        val s = parser_stmt()
+        val s = parser_stmt().first()
         assert(s is Stmt.Yield && s.arg is Expr.Unit)
         assert(s.to_str() == "yield()") { s.to_str() }
     }
@@ -370,7 +370,7 @@ class Parser {
     fun hh_04_spawn() {
         G.tks = ("set x = create(f)").lexer()
         parser_lexer()
-        val s = parser_stmt()
+        val s = parser_stmt().first()
         assert(s is Stmt.Create && s.co is Expr.Acc)
         assert(s.to_str() == "set x = create(f)")
     }
@@ -378,7 +378,7 @@ class Parser {
     fun hh_05_resume() {
         G.tks = ("set x = resume xf(false)").lexer()
         parser_lexer()
-        val s = parser_stmt()
+        val s = parser_stmt().first()
         assert(s is Stmt.Resume && s.xco is Expr.Acc && s.arg is Expr.Bool)
         assert(s.to_str() == "set x = resume xf(false)")
     }
@@ -386,7 +386,7 @@ class Parser {
     fun hh_06_yield() {
         G.tks = ("set y = yield(null)").lexer()
         parser_lexer()
-        val s = parser_stmt()
+        val s = parser_stmt().first()
         assert(s is Stmt.Yield && s.arg is Expr.Null)
         assert(s.to_str() == "set y = yield(null)") { s.to_str() }
     }
@@ -397,7 +397,7 @@ class Parser {
     fun ii_01_if() {
         G.tks = ("if x {`.`} else {}").lexer()
         parser_lexer()
-        val s = parser_stmt()
+        val s = parser_stmt().first()
         assert(s is Stmt.If && s.cnd is Expr.Acc && s.t.ss.size==1 && s.f.ss.size==0)
         assert(s.to_str() == "if x {\n" +
                 "`.`\n" +

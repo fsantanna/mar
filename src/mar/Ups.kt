@@ -24,6 +24,10 @@ fun Any.up_first (cnd: (Any)->Any?): Any? {
     }
 }
 
+fun Any.up_any (cnd: (Any)->Boolean): Boolean {
+    return this.up_first(cnd) !== null
+}
+
 fun Any.up_none (cnd: (Any)->Boolean): Boolean {
     return this.up_first(cnd) === null
 }
