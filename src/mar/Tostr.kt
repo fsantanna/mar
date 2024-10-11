@@ -26,6 +26,7 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Basic -> this.tk.str
         is Type.Unit -> "()"
         is Type.Pointer -> "\\" + this.ptr.to_str(pre)
+        is Type.Tuple -> "[" + this.ts.map { it.to_str(pre) }.joinToString(",") + "]"
         is Type.Proto -> {
             val inps = when (this) {
                 is Type.Proto.Func.Vars -> this.inps__.map { it.to_str(pre) }.joinToString(",")

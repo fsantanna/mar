@@ -163,6 +163,13 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
             val ptr = parser_type(req_vars)
             Type.Pointer(tk0, ptr)
         }
+        accept_fix("[") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            val ts = parser_list(",", "]") {
+                parser_type(req_vars, pre)
+            }
+            Type.Tuple(tk0, ts)
+        }
         else -> err_expected(G.tk1!!, "type")
     }
 }

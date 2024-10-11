@@ -53,10 +53,12 @@ sealed class Tk (val str: String, val pos: Pos) {
 
 sealed class Type (var n: Int, val tk: Tk) {
     //data class Top   (val tk_: Tk): Type(G.N++, tk_)
-    data class Any   (val tk_: Tk): Type(G.N++, tk_)
-    data class Unit  (val tk_: Tk.Fix): Type(G.N++, tk_)
-    data class Basic (val tk_: Tk.Type): Type(G.N++, tk_)
+    data class Any     (val tk_: Tk): Type(G.N++, tk_)
+    data class Unit    (val tk_: Tk.Fix): Type(G.N++, tk_)
+    data class Basic   (val tk_: Tk.Type): Type(G.N++, tk_)
     data class Pointer (val tk_: Tk.Op, val ptr: Type): Type(G.N++, tk_)
+    data class Tuple   (val tk_: Tk.Fix, val ts: List<Type>): Type(G.N++, tk_)
+
     sealed class Proto (val tk_: Tk.Fix, val out: Type, val inps: List<Type>): Type(G.N++, tk_) {
         open class Func (val tk__: Tk.Fix, val out_: Type, val inps_: List<Type>): Proto(tk__, out_, inps_) {
             data class Vars (val tk___: Tk.Fix, val out__: Type, val inps__: List<Var_Type>) :

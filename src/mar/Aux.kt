@@ -44,6 +44,7 @@ fun <V> Type.dn_collect (ft: (Type)->List<V>?): List<V> {
         is Type.Unit -> emptyList()
         is Type.Basic -> emptyList()
         is Type.Pointer -> this.ptr.dn_collect(ft)
+        is Type.Tuple -> this.ts.map { it.dn_collect(ft) }.flatten()
         is Type.Proto -> (this.inps + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
         is Type.XCoro -> (this.inps + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
     }
