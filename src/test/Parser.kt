@@ -151,8 +151,8 @@ class Parser {
         assert(tp.to_str() == "[x:Int,[y:Bool],z:()]") { tp.to_str() }
     }
     @Test
-    fun ak_04_type_union () {
-        G.tks = ("<>").lexer()
+    fun TODO_ak_04_type_union () {
+        G.tks = ("<>").lexer()  // lex sees <> as a single token
         parser_lexer()
         val tp = parser_type()
         assert(tp is Type.Union && tp.ts.size==0)
@@ -163,6 +163,7 @@ class Parser {
         G.tks = ("<Int,<Bool>,()>").lexer()
         parser_lexer()
         val tp = parser_type()
+        //println(tp)
         assert(tp is Type.Union && tp.ts.size==3)
         assert(tp.to_str() == "<Int,<Bool>,()>") { tp.to_str() }
     }
@@ -520,7 +521,8 @@ class Parser {
             var v: <Int,Int> = <_1=20> :<Int,Int>
         """).lexer()
         parser_lexer()
-        val s = parser_stmt().first()
-        assert(s.to_str() == "TODO") { s.to_str() }
+        val ss = parser_stmt()
+        assert(ss.to_str() == "var v: <Int,Int>\n" +
+                "set v = <_1=20>:<Int,Int>\n") { ss.to_str() }
     }
 }

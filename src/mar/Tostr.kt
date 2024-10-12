@@ -68,7 +68,7 @@ fun Expr.to_str (pre: Boolean = false): String {
 
         is Expr.Tuple  -> "[" + this.vs.map { it.to_str(pre) }.joinToString(",") + "]"
         is Expr.Index  -> "(" + this.col.to_str(pre) + "." + this.idx.str + ")"
-        is Expr.Union  -> TODO() //"[|" + this.vs.map { it.to_str(pre) }.joinToString(",") + "|]"
+        is Expr.Union  -> "<" + this.idx.str + "=" + this.v.to_str(pre) + ">:" + this.tp.to_str(pre)
         is Expr.Disc  -> TODO() //"(" + this.col.to_str(pre) + "." + this.idx.str + ")"
         is Expr.Pred  -> TODO() //"(" + this.col.to_str(pre) + "." + this.idx.str + ")"
 
@@ -89,7 +89,7 @@ fun Var_Type.to_str (pre: Boolean = false): String {
     return id.fpre(pre) + id.str + ": " + tp.to_str(pre)
 }
 
-fun List<Stmt>.to_str (pre: Boolean): String {
+fun List<Stmt>.to_str (pre: Boolean = false): String {
     return this.map { it.to_str(pre) + "\n" }.joinToString("")
 }
 

@@ -58,7 +58,7 @@ sealed class Type (var n: Int, val tk: Tk) {
     data class Basic   (val tk_: Tk.Type): Type(G.N++, tk_)
     data class Pointer (val tk_: Tk.Op, val ptr: Type): Type(G.N++, tk_)
     data class Tuple   (val tk_: Tk.Fix, val ts: List<Type>): Type(G.N++, tk_)
-    data class Union   (val tk_: Tk.Fix, val ts: List<Type>): Type(G.N++, tk_)
+    data class Union   (val tk_: Tk.Op, val ts: List<Type>): Type(G.N++, tk_)
 
     sealed class Proto (val tk_: Tk.Fix, val out: Type, val inps: List<Type>): Type(G.N++, tk_) {
         open class Func (val tk__: Tk.Fix, val out_: Type, val inps_: List<Type>): Proto(tk__, out_, inps_) {
@@ -84,7 +84,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
 
     data class Tuple (val tk_: Tk.Fix, val vs: List<Expr>): Expr(G.N++, tk_)
     data class Index (val tk_: Tk.Fix, val col: Expr, val idx: Tk.Var): Expr(G.N++, tk_)
-    data class Union (val tk_: Tk.Fix, val tp: Type.Union, val idx: Tk.Var, val v: Expr): Expr(G.N++, tk_)
+    data class Union (val tk_: Tk.Op, val tp: Type, val idx: Tk.Var, val v: Expr): Expr(G.N++, tk_)
     data class Pred  (val tk_: Tk.Fix, val col: Expr, val idx: Tk.Var): Expr(G.N++, tk_)
     data class Disc  (val tk_: Tk.Fix, val col: Expr, val idx: Tk.Var): Expr(G.N++, tk_)
 

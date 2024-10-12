@@ -66,13 +66,36 @@ fun accept_enu_err (str: String): Boolean {
     return true
 }
 
+fun check_op (str: String): Boolean {
+    return (G.tk1.let { it is Tk.Op && it.str == str })
+}
+fun check_op_err (str: String): Boolean {
+    val ret = check_op(str)
+    if (!ret) {
+        err_expected(G.tk1!!, '"'+str+'"')
+    }
+    return ret
+}
+fun accept_op (str: String): Boolean {
+    val ret = check_op(str)
+    if (ret) {
+        parser_lexer()
+    }
+    return ret
+}
+fun accept_op_err (str: String): Boolean {
+    check_op_err(str)
+    accept_op(str)
+    return true
+}
+
 fun parser_lexer () {
     G.tk0 = G.tk1
     G.tk1 = G.tks!!.next()
 }
 
 fun <T> parser_list (sep: String?, close: String, func: () -> T): List<T> {
-    return parser_list(sep, { accept_fix(close) }, func)
+    return parser_list(sep, { accept_fix(close)||accept_op(close) }, func)
 
 }
 fun <T> parser_list (sep: String?, close: ()->Boolean, func: () -> T): List<T> {
@@ -158,7 +181,7 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
             tp
         }
         accept_enu("Type") -> Type.Basic(G.tk0 as Tk.Type)
-        accept_enu("Op") -> {
+        accept_op("\\") -> {
             val tk0 = G.tk0 as Tk.Op
             val ptr = parser_type(req_vars)
             Type.Pointer(tk0, ptr)
@@ -171,7 +194,7 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
             Type.Tuple(tk0, ts)
         }
         accept_op("<") -> {
-            val tk0 = G.tk0 as Tk.Fix
+            val tk0 = G.tk0 as Tk.Op
             val ts = parser_list(",", ">") {
                 parser_type(req_vars, pre)
             }
@@ -205,6 +228,17 @@ fun parser_expr_4_prim (): Expr {
                 parser_expr()
             }
             Expr.Tuple(tk0, vs)
+        }
+        accept_op("<")     -> {
+            val tk0 = G.tk0 as Tk.Op
+            accept_enu_err("Var")
+            val idx = G.tk0 as Tk.Var
+            accept_fix_err("=")
+            val v = parser_expr_2_pre() // avoid bin `>` (x>10)
+            accept_op_err(">")
+            accept_fix_err(":")
+            val tp = parser_type()
+            Expr.Union(tk0, tp, idx, v)
         }
 
         else                    -> err_expected(G.tk1!!, "expression")
