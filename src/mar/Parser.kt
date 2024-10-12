@@ -231,9 +231,9 @@ fun parser_expr_4_prim (): Expr {
         }
         accept_op("<")     -> {
             val tk0 = G.tk0 as Tk.Op
-            accept_enu_err("Var")
-            val idx = G.tk0 as Tk.Var
-            accept_fix_err("=")
+            accept_fix_err(".")
+            accept_enu_err("Num")
+            val idx = G.tk0!!.str
             val v = parser_expr_2_pre() // avoid bin `>` (x>10)
             accept_op_err(">")
             accept_fix_err(":")
@@ -247,15 +247,8 @@ fun parser_expr_4_prim (): Expr {
 
 fun parser_expr_3_suf (xe: Expr? = null): Expr {
     val e = if (xe !== null) xe else parser_expr_4_prim()
-    val ok = accept_fix("[") || accept_fix(".") || accept_fix("(") ||
-            (check_enu("Op") && G.tk1!!.str.let {
-                if (it in POSS) {
-                    accept_enu_err("Op")
-                    true
-                } else {
-                    false
-                }
-            })
+    val ok = listOf("[",".","(").any { accept_fix(it) } ||
+             listOf("\\","?","!").any { accept_op(it) }
     if (!ok) {
         return e
     }
@@ -269,8 +262,18 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
             "\\" -> Expr.Uno(Tk.Op("deref", G.tk0!!.pos.copy()), e)
             "." -> {
                 val dot = G.tk0 as Tk.Fix
-                accept_enu_err("Var")
-                Expr.Index(dot, e, G.tk0 as Tk.Var)
+                accept_enu_err("Num")
+                Expr.Index(dot, e, G.tk0!!.str)
+            }
+            "!" -> {
+                val dot = G.tk0 as Tk.Op
+                accept_enu_err("Num")
+                Expr.Disc(dot, e, G.tk0!!.str)
+            }
+            "?" -> {
+                val dot = G.tk0 as Tk.Op
+                accept_enu_err("Num")
+                Expr.Pred(dot, e, G.tk0!!.str)
             }
             else -> error("impossible case")
         }
@@ -279,8 +282,7 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
 
 fun parser_expr_2_pre (): Expr {
     return when {
-        check_enu("Op") && G.tk1!!.str in PRES -> {
-            accept_enu_err("Op")
+        accept_op("-") || accept_op("\\") -> {
             val op = (G.tk0 as Tk.Op).let {
                 if (it.str != "\\") it else {
                     Tk.Op("ref", it.pos.copy())

@@ -200,10 +200,10 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
         is Expr.Tuple -> "(${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } }"
-        is Expr.Union -> "(${this.type().coder(pre)}) { .${this.idx.str} = ${this.v.coder(pre) } }"
-        is Expr.Index -> "(${this.col.coder(pre)}.${this.idx.str})"
-        is Expr.Disc  -> TODO() //"(${this.col.coder(pre)}.${this.idx.str})"
-        is Expr.Pred  -> "(${this.col.coder(pre)}.${this.idx.str})"
+        is Expr.Union -> "(${this.type().coder(pre)}) { .${this.idx} ${this.v.coder(pre) } }"
+        is Expr.Index -> "(${this.col.coder(pre)}.${this.idx})"
+        is Expr.Disc  -> "(${this.col.coder(pre)}!${this.idx})"
+        is Expr.Pred  -> "(${this.col.coder(pre)}?${this.idx})"
 
         is Expr.Nat -> this.tk.str
         is Expr.Acc -> this.tk_.coder(this, pre)

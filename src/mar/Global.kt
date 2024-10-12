@@ -11,18 +11,16 @@ val PATH = File(File(System.getProperty("java.class.path")).absolutePath).parent
 val D = "\$"
 
 val OPERATORS = Pair (
-    setOf('+', '-', '*', '/', '%', '>', '<', '=', '|', '&', '\\'),
+    setOf('+', '-', '*', '/', '%', '>', '<', '=', '|', '&', '\\', '?', '!'),
     setOf(
         "==", "!=",
         ">", "<", ">=", "<=",
         "||", "&&",
         "+", "-", "*", "/", "%",
-        "\\",
+        "\\", "?", "!",
     )
 )
 
-val PRES = listOf("-", "\\")
-val POSS = listOf("\\")
 val BINS = listOf (
     "==", "!=",
     ">", "<", ">=", "<=",
@@ -83,10 +81,10 @@ sealed class Expr (var n: Int, val tk: Tk) {
     data class Unit (val tk_: Tk.Fix): Expr(G.N++, tk_)
 
     data class Tuple (val tk_: Tk.Fix, val vs: List<Expr>): Expr(G.N++, tk_)
-    data class Index (val tk_: Tk.Fix, val col: Expr, val idx: Tk.Var): Expr(G.N++, tk_)
-    data class Union (val tk_: Tk.Op, val tp: Type, val idx: Tk.Var, val v: Expr): Expr(G.N++, tk_)
-    data class Pred  (val tk_: Tk.Fix, val col: Expr, val idx: Tk.Var): Expr(G.N++, tk_)
-    data class Disc  (val tk_: Tk.Fix, val col: Expr, val idx: Tk.Var): Expr(G.N++, tk_)
+    data class Index (val tk_: Tk.Fix, val col: Expr, val idx: String): Expr(G.N++, tk_)
+    data class Union (val tk_: Tk.Op, val tp: Type, val idx: String, val v: Expr): Expr(G.N++, tk_)
+    data class Pred  (val tk_: Tk.Op, val col: Expr, val idx: String): Expr(G.N++, tk_)
+    data class Disc  (val tk_: Tk.Op, val col: Expr, val idx: String): Expr(G.N++, tk_)
 
     data class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, tk_)
     data class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)

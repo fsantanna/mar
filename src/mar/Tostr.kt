@@ -67,10 +67,10 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Unit   -> ""
 
         is Expr.Tuple  -> "[" + this.vs.map { it.to_str(pre) }.joinToString(",") + "]"
-        is Expr.Index  -> "(" + this.col.to_str(pre) + "." + this.idx.str + ")"
-        is Expr.Union  -> "<" + this.idx.str + "=" + this.v.to_str(pre) + ">:" + this.tp.to_str(pre)
-        is Expr.Disc  -> TODO() //"(" + this.col.to_str(pre) + "." + this.idx.str + ")"
-        is Expr.Pred  -> TODO() //"(" + this.col.to_str(pre) + "." + this.idx.str + ")"
+        is Expr.Index  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"
+        is Expr.Union  -> "<." + this.idx + " " + this.v.to_str(pre) + ">:" + this.tp.to_str(pre)
+        is Expr.Disc  -> "(${this.col.to_str(pre)}!${this.idx})"
+        is Expr.Pred  -> "(${this.col.to_str(pre)}?${this.idx})"
 
         is Expr.Uno    -> "(" + this.tk_.to_str(pre) + this.e.to_str(pre) + ")"
         is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk_.to_str(pre) + " " + this.e2.to_str(pre) + ")"

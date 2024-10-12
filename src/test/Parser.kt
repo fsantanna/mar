@@ -486,7 +486,7 @@ class Parser {
         G.tks = ("""
             do {
                 var v: [Int,Int] = [10,20]
-                var x: Int = v._1
+                var x: Int = v.1
             }
         """).lexer()
         parser_lexer()
@@ -495,7 +495,7 @@ class Parser {
                 "var v: [Int,Int]\n" +
                 "set v = [10,20]\n" +
                 "var x: Int\n" +
-                "set x = (v._1)\n" +
+                "set x = (v.1)\n" +
                 "}") { s.to_str() }
     }
     @Test
@@ -507,10 +507,10 @@ class Parser {
     }
     @Test
     fun jj_04_expr() {
-        G.tks = ("x._1._2").lexer()
+        G.tks = ("x.1.2").lexer()
         parser_lexer()
         val e = parser_expr()
-        assert(e.to_str() == "((x._1)._2)")
+        assert(e.to_str() == "((x.1).2)") { e.to_str() }
     }
 
     // UNION
@@ -518,11 +518,27 @@ class Parser {
     @Test
     fun jk_01_union_cons () {
         G.tks = ("""
-            var v: <Int,Int> = <_1=20> :<Int,Int>
+            var v: <Int,Int> = <.1 20> :<Int,Int>
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
         assert(ss.to_str() == "var v: <Int,Int>\n" +
-                "set v = <_1=20>:<Int,Int>\n") { ss.to_str() }
+                "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
+    }
+    @Test
+    fun jk_02_union_disc () {
+        G.tks = ("v!1").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e is Expr.Disc && e.col is Expr.Acc && e.idx=="1")
+        assert(e.to_str() == "(v!1)") { e.to_str() }
+    }
+    @Test
+    fun jk_03_union_pred () {
+        G.tks = ("v?1").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e is Expr.Pred && e.col is Expr.Acc && e.idx=="1")
+        assert(e.to_str() == "(v?1)") { e.to_str() }
     }
 }
