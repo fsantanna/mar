@@ -18,6 +18,7 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Unit       -> "void"
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "CEU_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}"
+        is Type.Union      -> "CEU_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}"
         is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
         is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
         is Type.XCoro      -> "CEU_XCoro__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
@@ -199,7 +200,10 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
         is Expr.Tuple -> "(${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } }"
+        is Expr.Union -> "(${this.type().coder(pre)}) { .${this.idx.str} = ${this.v.coder(pre) } }"
         is Expr.Index -> "(${this.col.coder(pre)}.${this.idx.str})"
+        is Expr.Disc  -> TODO() //"(${this.col.coder(pre)}.${this.idx.str})"
+        is Expr.Pred  -> "(${this.col.coder(pre)}.${this.idx.str})"
 
         is Expr.Nat -> this.tk.str
         is Expr.Acc -> this.tk_.coder(this, pre)

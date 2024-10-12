@@ -27,6 +27,7 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Unit -> "()"
         is Type.Pointer -> "\\" + this.ptr.to_str(pre)
         is Type.Tuple -> "[" + this.ts.map { it.to_str(pre) }.joinToString(",") + "]"
+        is Type.Union -> "<" + this.ts.map { it.to_str(pre) }.joinToString(",") + ">"
         is Type.Proto -> {
             val inps = when (this) {
                 is Type.Proto.Func.Vars -> this.inps__.map { it.to_str(pre) }.joinToString(",")
@@ -67,6 +68,9 @@ fun Expr.to_str (pre: Boolean = false): String {
 
         is Expr.Tuple  -> "[" + this.vs.map { it.to_str(pre) }.joinToString(",") + "]"
         is Expr.Index  -> "(" + this.col.to_str(pre) + "." + this.idx.str + ")"
+        is Expr.Union  -> TODO() //"[|" + this.vs.map { it.to_str(pre) }.joinToString(",") + "|]"
+        is Expr.Disc  -> TODO() //"(" + this.col.to_str(pre) + "." + this.idx.str + ")"
+        is Expr.Pred  -> TODO() //"(" + this.col.to_str(pre) + "." + this.idx.str + ")"
 
         is Expr.Uno    -> "(" + this.tk_.to_str(pre) + this.e.to_str(pre) + ")"
         is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk_.to_str(pre) + " " + this.e2.to_str(pre) + ")"

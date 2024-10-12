@@ -124,7 +124,7 @@ class Parser {
         assert(trap { parser_type() } == "anon : (lin 1, col 1) : xcoro error : unexpected second argument")
     }
 
-    // TUPLE
+    // TUPLE / UNION
 
     @Test
     fun ak_01_type_tuple () {
@@ -145,6 +145,30 @@ class Parser {
     @Test
     fun TODO_ak_03_type_tuple () {  // tuple field names
         G.tks = ("[x:Int,y:[Bool],z:()]").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Tuple && tp.ts.size==3)
+        assert(tp.to_str() == "[x:Int,[y:Bool],z:()]") { tp.to_str() }
+    }
+    @Test
+    fun ak_04_type_union () {
+        G.tks = ("<>").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Union && tp.ts.size==0)
+        assert(tp.to_str() == "<>") { tp.to_str() }
+    }
+    @Test
+    fun ak_05_type_union () {
+        G.tks = ("<Int,<Bool>,()>").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Union && tp.ts.size==3)
+        assert(tp.to_str() == "<Int,<Bool>,()>") { tp.to_str() }
+    }
+    @Test
+    fun TODO_ak_06_type_union () {  // tuple field names
+        G.tks = ("<x:Int,y:[Bool],z:()>").lexer()
         parser_lexer()
         val tp = parser_type()
         assert(tp is Type.Tuple && tp.ts.size==3)
@@ -486,5 +510,17 @@ class Parser {
         parser_lexer()
         val e = parser_expr()
         assert(e.to_str() == "((x._1)._2)")
+    }
+
+    // UNION
+
+    @Test
+    fun jk_01_union_cons () {
+        G.tks = ("""
+            var v: <Int,Int> = <_1=20> :<Int,Int>
+        """).lexer()
+        parser_lexer()
+        val s = parser_stmt().first()
+        assert(s.to_str() == "TODO") { s.to_str() }
     }
 }
