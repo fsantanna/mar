@@ -191,6 +191,13 @@ class Static {
         """)
         assert(out == "anon : (lin 3, col 17) : if error : expected boolean condition") { out!! }
     }
+    @Test
+    fun bb_07_call_err() {
+        val out = static("""
+            1()
+        """)
+        assert(out == "anon : (lin 2, col 13) : call error : types mismatch") { out!! }
+    }
 
     // TYPE / CORO / XCORO / SPAWN / RESUME / YIELD
 
@@ -374,5 +381,68 @@ class Static {
             var x: [] = [()]
         """)
         assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun cc_05_disc_err () {
+        val out = static("""
+            var x: Int
+            var y: Int = x.1
+        """)
+        assert(out == "") { out!! }
+    }
+
+    // UNION
+
+    @Test
+    fun cd_01_union () {
+        val out = static("""
+            var t: <>
+            var x: Int = t
+        """)
+        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun cd_02_union () {
+        val out = static("""
+            var x: <Int> = <.1 10>: <Int>
+        """)
+        assert(out == null) { out!! }
+    }
+    @Test
+    fun cd_03_union () {
+        val out = static("""
+            var x: <Int> = <.2 10>: <Int>
+        """)
+        assert(out == "anon : (lin 2, col 28) : union error : types mismatch") { out!! }
+    }
+    @Test
+    fun cd_04_union () {
+        val out = static("""
+            var x: Int = <.1 10>: Int
+        """)
+        assert(out == "anon : (lin 2, col 26) : union error : types mismatch") { out!! }
+    }
+    @Test
+    fun cd_05_union () {
+        val out = static("""
+            var x: <Int> = <.1 ()>: <Int>
+        """)
+        assert(out == "anon : (lin 2, col 28) : union error : types mismatch") { out!! }
+    }
+    @Test
+    fun cd_06_disc () {
+        val out = static("""
+            var x: <Int>
+            var y: Int = x!1
+        """)
+        assert(out == null) { out!! }
+    }
+    @Test
+    fun cd_07_disc () {
+        val out = static("""
+            var x: Int
+            var y: Int = x!1
+        """)
+        assert(out == "") { out!! }
     }
 }

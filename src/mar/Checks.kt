@@ -142,6 +142,31 @@ fun check_types () {
     }
     fun fe (me: Expr) {
         when (me) {
+            is Expr.Union -> {
+                val i = me.idx.toInt()
+                val ok = when {
+                    (me.tp is Type.Any) -> true
+                    (me.tp !is Type.Union) -> false
+                    (i<=0 || i>me.tp.ts.size) -> false
+                    else -> me.tp.ts[i-1].is_sup_of(me.v.type())
+                }
+                if (!ok) {
+                    err(me.tk, "union error : types mismatch")
+                }
+            }
+            is Expr.Disc -> {
+                val tp = me.col.type()
+                val i = me.idx.toInt()
+                val ok = when {
+                    (tp is Type.Any) -> true
+                    (tp !is Type.Union) -> false
+                    (i<=0 || i>tp.ts.size) -> false
+                    else -> true
+                }
+                if (!ok) {
+                    err(me.tk, "operation error : types mismatch")
+                }
+            }
             is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {
                 err(me.tk, "operation error : types mismatch")
             }

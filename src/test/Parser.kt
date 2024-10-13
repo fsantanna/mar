@@ -506,8 +506,8 @@ class Parser {
         assert(e.to_str() == "[10,[1],20]")
     }
     @Test
-    fun jj_04_expr() {
-        G.tks = ("x.1.2").lexer()
+    fun BUG_jj_04_expr() {
+        G.tks = ("x.1.2").lexer()   // BUG: ((x.1).2)
         parser_lexer()
         val e = parser_expr()
         assert(e.to_str() == "((x.1).2)") { e.to_str() }
