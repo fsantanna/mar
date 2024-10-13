@@ -19,8 +19,8 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "CEU_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}"
         is Type.Union      -> "CEU_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}"
-        is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
-        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
+        is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inp.to_void().map { it.coder(pre) }.joinToString("__")}"
+        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inp.to_void().map { it.coder(pre) }.joinToString("__")}"
         is Type.XCoro      -> "CEU_XCoro__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
     }
 }
@@ -57,12 +57,12 @@ fun coder_types (pre: Boolean): String {
     fun ft (me: Type): List<String> {
         return when (me) {
             is Type.Proto.Func -> listOf (
-                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")})"
+                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inp.map { it.coder(pre) }.joinToString(",")})"
             )
             is Type.Proto.Coro -> {
                 val xco = "struct " + me.coder(pre).coro_to_xcoro()
                 listOf (
-                    "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) ($xco* ceu_xco ${me.inps.map { ","+it.coder(pre) }.joinToString("")})",
+                    "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) ($xco* ceu_xco ${me.inp.map { ","+it.coder(pre) }.joinToString("")})",
                     xco,
                 )
             }
@@ -88,10 +88,10 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Proto -> {
             when (this) {
                 is Stmt.Proto.Func ->
-                    this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ")"
+                    this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inp__.map { it.coder(pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro -> {
                     val x = this.tp.coder(pre).coro_to_xcoro()
-                    this.tp_.out.coder(pre) + " " + this.id.str + " ($x* ceu_xco ${this.tp_.inps__.map { (_,tp) -> ", " + tp.coder(pre) + " ceu_arg" }.joinToString("")})"
+                    this.tp_.out.coder(pre) + " " + this.id.str + " ($x* ceu_xco ${this.tp_.inp__.map { (_,tp) -> ", " + tp.coder(pre) + " ceu_arg" }.joinToString("")})"
                 }
             } + """
             {
@@ -100,7 +100,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                     """                    
                     switch (ceu_xco->pc) {
                         case 0:
-                            ${this.tp_.inps__.take(1).map { (id,_) -> id.coder(this.blk, pre) + " = ceu_arg;\n" }.joinToString("")}
+                            ${this.tp_.inp__.take(1).map { (id,_) -> id.coder(this.blk, pre) + " = ceu_arg;\n" }.joinToString("")}
                 """ }}
                 ${this.blk.ss.map {
                     it.coder(pre) + "\n"
@@ -119,8 +119,8 @@ fun Stmt.coder (pre: Boolean = false): String {
                 ${this.to_dcls().map { (_, vt) ->
                     val (id,tp) = vt
                     when (tp) {
-                        is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inps.map { it.coder(pre) }.joinToString(",") + ");\n"
-                        is Type.Proto.Coro -> "auto " + tp.out.coder(pre) + " " + id.str + " (${tp.coder(pre).coro_to_xcoro()}* ceu_xco" + tp.inps.map { ", " + it.coder(pre) }.joinToString("") + ");\n"
+                        is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inp.map { it.coder(pre) }.joinToString(",") + ");\n"
+                        is Type.Proto.Coro -> "auto " + tp.out.coder(pre) + " " + id.str + " (${tp.coder(pre).coro_to_xcoro()}* ceu_xco" + tp.inp.map { ", " + it.coder(pre) }.joinToString("") + ");\n"
                         else -> ""
                     }
                 }.joinToString("")}

@@ -54,7 +54,7 @@ fun <V> Type.dn_collect_pos (ft: ((Type)->List<V>)?): List<V> {
         is Type.Pointer -> this.ptr.dn_collect_pos(ft)
         is Type.Tuple -> this.ts.map { it.dn_collect_pos(ft) }.flatten()
         is Type.Union -> this.ts.map { it.dn_collect_pos(ft) }.flatten()
-        is Type.Proto -> (this.inps + listOf(this.out)).map { it.dn_collect_pos(ft) }.flatten()
+        is Type.Proto -> (this.inp + listOf(this.out)).map { it.dn_collect_pos(ft) }.flatten()
         is Type.XCoro -> (this.inps + listOf(this.out)).map { it.dn_collect_pos(ft) }.flatten()
     } + ft(this)
 }
@@ -138,7 +138,7 @@ fun <V> Type.dn_collect_pre (ft: ((Type)->List<V>?)?): List<V> {
         is Type.Pointer -> this.ptr.dn_collect_pre(ft)
         is Type.Tuple -> this.ts.map { it.dn_collect_pre(ft) }.flatten()
         is Type.Union -> this.ts.map { it.dn_collect_pre(ft) }.flatten()
-        is Type.Proto -> (this.inps + listOf(this.out)).map { it.dn_collect_pre(ft) }.flatten()
+        is Type.Proto -> (this.inp + listOf(this.out)).map { it.dn_collect_pre(ft) }.flatten()
         is Type.XCoro -> (this.inps + listOf(this.out)).map { it.dn_collect_pre(ft) }.flatten()
     }
 }

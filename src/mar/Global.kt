@@ -58,14 +58,14 @@ sealed class Type (var n: Int, val tk: Tk) {
     data class Tuple   (val tk_: Tk.Fix, val ts: List<Type>): Type(G.N++, tk_)
     data class Union   (val tk_: Tk.Op, val ts: List<Type>): Type(G.N++, tk_)
 
-    sealed class Proto (val tk_: Tk.Fix, val out: Type, val inps: List<Type>): Type(G.N++, tk_) {
-        open class Func (val tk__: Tk.Fix, val out_: Type, val inps_: List<Type>): Proto(tk__, out_, inps_) {
-            data class Vars (val tk___: Tk.Fix, val out__: Type, val inps__: List<Var_Type>) :
-                Func(tk___, out__, inps__.map { (_, tp) -> tp })
+    sealed class Proto (val tk_: Tk.Fix, val inp: List<Type>, val out: Type): Type(G.N++, tk_) {
+        open class Func (val tk__: Tk.Fix, val inp_: List<Type>, val out_: Type): Proto(tk__, inp_, out_) {
+            data class Vars (val tk___: Tk.Fix, val inp__: List<Var_Type>, val out__: Type) :
+                Func(tk___, inp__.map { (_, tp) -> tp }, out__)
         }
-        open class Coro (val tk__: Tk.Fix, val out_: Type, val inps_: List<Type>): Proto(tk__, out_, inps_) {
-            data class Vars (val tk___: Tk.Fix, val out__: Type, val inps__: List<Var_Type>) :
-                Coro(tk___, out__, inps__.map { (_, tp) -> tp })
+        open class Coro (val tk__: Tk.Fix, val inp_: List<Type>, val out_: Type): Proto(tk__, inp_, out_) {
+            data class Vars (val tk___: Tk.Fix, val inp__: List<Var_Type>, val out__: Type) :
+                Coro(tk___, inp__.map { (_, tp) -> tp }, out__)
         }
     }
     data class XCoro (val tk_: Tk.Fix, val out: Type, val inps: List<Type>): Type(G.N++, tk_)
