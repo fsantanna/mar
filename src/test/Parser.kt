@@ -57,7 +57,7 @@ class Parser {
         G.tks = ("func (Int,Int) -> ()").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Proto.Func && tp.tk.str=="func" && tp.inp.size==2 && tp.out is Type.Unit)
+        assert(tp is Type.Proto.Func && tp.tk.str=="func" && tp.inp_.size==2 && tp.out is Type.Unit)
     }
     @Test
     fun aj_03_type () {
@@ -100,7 +100,7 @@ class Parser {
         G.tks = ("coro () -> ()").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Proto.Coro && tp.inp.size==0)
+        assert(tp is Type.Proto.Coro && tp.inp_.size==0)
         assert(tp.to_str() == "coro () -> ()")
     }
     @Test

@@ -19,8 +19,8 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "CEU_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}"
         is Type.Union      -> "CEU_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}"
-        is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inp.to_void().map { it.coder(pre) }.joinToString("__")}"
-        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inp.to_void().map { it.coder(pre) }.joinToString("__")}"
+        is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inp_.to_void().map { it.coder(pre) }.joinToString("__")}"
+        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inp_.to_void().map { it.coder(pre) }.joinToString("__")}"
         is Type.XCoro      -> "CEU_XCoro__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
     }
 }
@@ -57,12 +57,12 @@ fun coder_types (pre: Boolean): String {
     fun ft (me: Type): List<String> {
         return when (me) {
             is Type.Proto.Func -> listOf (
-                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inp.map { it.coder(pre) }.joinToString(",")})"
+                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inp_.map { it.coder(pre) }.joinToString(",")})"
             )
             is Type.Proto.Coro -> {
                 val xco = "struct " + me.coder(pre).coro_to_xcoro()
                 listOf (
-                    "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) ($xco* ceu_xco ${me.inp.map { ","+it.coder(pre) }.joinToString("")})",
+                    "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) ($xco* ceu_xco ${me.inp_.map { ","+it.coder(pre) }.joinToString("")})",
                     xco,
                 )
             }
@@ -119,8 +119,8 @@ fun Stmt.coder (pre: Boolean = false): String {
                 ${this.to_dcls().map { (_, vt) ->
                     val (id,tp) = vt
                     when (tp) {
-                        is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inp.map { it.coder(pre) }.joinToString(",") + ");\n"
-                        is Type.Proto.Coro -> "auto " + tp.out.coder(pre) + " " + id.str + " (${tp.coder(pre).coro_to_xcoro()}* ceu_xco" + tp.inp.map { ", " + it.coder(pre) }.joinToString("") + ");\n"
+                        is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inp_.map { it.coder(pre) }.joinToString(",") + ");\n"
+                        is Type.Proto.Coro -> "auto " + tp.out.coder(pre) + " " + id.str + " (${tp.coder(pre).coro_to_xcoro()}* ceu_xco" + tp.inp_.map { ", " + it.coder(pre) }.joinToString("") + ");\n"
                         else -> ""
                     }
                 }.joinToString("")}

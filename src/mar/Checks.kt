@@ -72,10 +72,10 @@ fun check_vars () {
 fun check_types () {
     fun fs (me: Stmt) {
         when (me) {
-            is Stmt.Proto -> {
-                if (!me.tp.is_same_of(me.id.type(me)!!)) {
-                    err(me.tk, "declaration error : types mismatch")
-                }
+            is Stmt.Proto.Coro -> {
+                //if (me.tp.in)) {
+                    //err(me.tk, "declaration error : types mismatch")
+                //}
             }
             is Stmt.Return -> {
                 val func = me.fupx().up_first { it is Stmt.Proto } as Stmt.Proto
@@ -99,7 +99,7 @@ fun check_types () {
                     err(me.tk, "create error : expected coroutine prototype")
                 }
                 val tp = me.dst.type()
-                val xtp = Type.XCoro(co.tk_, co.out, co.inp)
+                val xtp = Type.XCoro(co.tk_, co.out, co.inp_)
                 if (!xtp.is_sup_of(tp)) {
                     err(me.tk, "create error : types mismatch")
                 }
@@ -129,8 +129,8 @@ fun check_types () {
                 val xco = up.tp_
                 val ok1 = when {
                     (me.dst == null) -> true
-                    (xco.inp.size == 0) -> me.dst.type() is Type.Unit
-                    else -> me.dst.type().is_sup_of(xco.inp.first())
+                    (xco.inp_.size == 0) -> me.dst.type() is Type.Unit
+                    else -> me.dst.type().is_sup_of(xco.inp_.first())
                 }
                 val ok2 = xco.out.is_sup_of(me.arg.type())
                 if (!ok1 || !ok2) {
@@ -188,8 +188,8 @@ fun check_types () {
                 val ok = when {
                     (tp is Type.Any) -> true
                     (tp !is Type.Proto.Func) -> false
-                    (tp.inp.size != me.args.size) -> false
-                    else -> tp.inp.zip(me.args).all { (par, arg) ->
+                    (tp.inp_.size != me.args.size) -> false
+                    else -> tp.inp_.zip(me.args).all { (par, arg) ->
                         par.is_sup_of(arg.type())
                     }
                 }
