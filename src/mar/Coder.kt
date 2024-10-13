@@ -20,8 +20,8 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Tuple      -> "CEU_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}"
         is Type.Union      -> "CEU_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}"
         is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inp_.to_void().map { it.coder(pre) }.joinToString("__")}"
-        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inp_.to_void().map { it.coder(pre) }.joinToString("__")}"
-        is Type.XCoro      -> "CEU_XCoro__${this.out.coder(pre)}__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}"
+        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inp_.coder(pre)}"
+        is Type.XCoro      -> "CEU_XCoro__${this.out.coder(pre)}__${this.inp.coder(pre)}"
     }
 }
 
@@ -62,7 +62,7 @@ fun coder_types (pre: Boolean): String {
             is Type.Proto.Coro -> {
                 val xco = "struct " + me.coder(pre).coro_to_xcoro()
                 listOf (
-                    "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) ($xco* ceu_xco ${me.inp_.map { ","+it.coder(pre) }.joinToString("")})",
+                    "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) ($xco* ceu_xco,  ${me.inp_.coder(pre)})",
                     xco,
                 )
             }
@@ -91,7 +91,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                     this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inp__.map { it.coder(pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro -> {
                     val x = this.tp.coder(pre).coro_to_xcoro()
-                    this.tp_.out.coder(pre) + " " + this.id.str + " ($x* ceu_xco ${this.tp_.inp__.map { (_,tp) -> ", " + tp.coder(pre) + " ceu_arg" }.joinToString("")})"
+                    this.tp_.out.coder(pre) + " " + this.id.str + " ($x* ceu_xco, ${this.tp_.inp__.coder(pre) + " ceu_arg" })"
                 }
             } + """
             {
@@ -100,7 +100,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                     """                    
                     switch (ceu_xco->pc) {
                         case 0:
-                            ${this.tp_.inp__.take(1).map { (id,_) -> id.coder(this.blk, pre) + " = ceu_arg;\n" }.joinToString("")}
+                            ${(this.tp_.inp__.second as Type.Union).coder(pre) + " " + this.tp_.inp__.first.coder(this.blk,pre) + " = ceu_arg;\n" }.joinToString("")}
                 """ }}
                 ${this.blk.ss.map {
                     it.coder(pre) + "\n"
@@ -120,7 +120,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                     val (id,tp) = vt
                     when (tp) {
                         is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inp_.map { it.coder(pre) }.joinToString(",") + ");\n"
-                        is Type.Proto.Coro -> "auto " + tp.out.coder(pre) + " " + id.str + " (${tp.coder(pre).coro_to_xcoro()}* ceu_xco" + tp.inp_.map { ", " + it.coder(pre) }.joinToString("") + ");\n"
+                        is Type.Proto.Coro -> "auto " + tp.out.coder(pre) + " " + id.str + " (${tp.coder(pre).coro_to_xcoro()}* ceu_xco " + tp.inp_.coder(pre) + ");\n"
                         else -> ""
                     }
                 }.joinToString("")}

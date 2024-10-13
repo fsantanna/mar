@@ -131,45 +131,57 @@ fun parser_var_type (): Var_Type {
 
 fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
     return when {
-        (pre!=null || accept_fix("func") || accept_fix("coro")) -> {
+        (pre?.str=="func" || accept_fix("func")) -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
-            val isf = (tk0.str == "func")
             accept_fix_err("(")
             val vars = req_vars || check_enu("Var")
-            val inps = parser_list(",", ")") {
+            val inp = parser_list(",", ")") {
                 if (vars) {
                     parser_var_type()
                 } else {
                     parser_type(req_vars)
                 }
             }
-            if (!isf) {
-                if (inps.size >= 2) {
-                    err(tk0, "${tk0.str} error : unexpected second argument")
-                }
-            }
             accept_fix_err("->")
             val out = parser_type(req_vars)
-            when {
-                ( isf &&  vars) -> Type.Proto.Func.Vars(tk0, inps as List<Var_Type>, out)
-                ( isf && !vars) -> Type.Proto.Func(tk0, inps as List<Type>, out)
-                (!isf &&  vars) -> Type.Proto.Coro.Vars(tk0, inps as List<Var_Type>, out)
-                (!isf && !vars) -> Type.Proto.Coro(tk0, inps as List<Type>, out)
-                else -> error("impossible case")
+            if (vars) {
+                Type.Proto.Func.Vars(tk0, inp as List<Var_Type>, out)
+            } else {
+                Type.Proto.Func(tk0, inp as List<Type>, out)
+            }
+        }
+        (pre?.str=="coro" || accept_fix("coro")) -> {
+            val tk0 = pre ?: (G.tk0 as Tk.Fix)
+            accept_fix_err("(")
+            val vars = req_vars || check_enu("Var")
+            check_op_err("<")
+            val inp = if (vars) {
+                val x = parser_var_type()
+                assert(x.second is Type.Union)
+                x
+            } else {
+                parser_type(req_vars) as Type.Union
+            }
+            accept_fix_err(")")
+            accept_fix_err("->")
+            check_op_err("<")
+            val out = parser_type(req_vars) as Type.Union
+            if (vars) {
+                Type.Proto.Coro.Vars(tk0, inp as Var_Type, out)
+            } else {
+                Type.Proto.Coro(tk0, inp as Type.Union, out)
             }
         }
         accept_fix("xcoro") -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
             accept_fix_err("(")
-            val inps = parser_list(",", ")") {
-                parser_type(req_vars)
-            }
-            if (inps.size >= 2) {
-                err(tk0, "xcoro error : unexpected second argument")
-            }
+            check_op_err("<")
+            val inp = parser_type() as Type.Union
+            check_op_err(")")
             accept_fix_err("->")
-            val out = parser_type(req_vars)
-            Type.XCoro(tk0, out, inps)
+            check_op_err("<")
+            val out = parser_type() as Type.Union
+            Type.XCoro(tk0, inp, out)
         }
         accept_fix("(") -> {
             val tp = if (check_fix(")")) {

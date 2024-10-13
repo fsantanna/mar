@@ -17,8 +17,8 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.is_sup_of(oth) }
         (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.is_sup_of(oth) }
         (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inp_.size==other.inp_.size) && this.inp_.zip(other.inp_).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
-        (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inp_.size==other.inp_.size) && this.inp_.zip(other.inp_).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
-        (this is Type.XCoro      && other is Type.XCoro)      -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
+        (this is Type.Proto.Coro && other is Type.Proto.Coro) -> this.inp_.is_sup_of(other) && other.out.is_sup_of(this.out)
+        (this is Type.XCoro      && other is Type.XCoro)      -> this.inp.is_sup_of(other) && other.out.is_sup_of(this.out)
         else -> false
     }
 }

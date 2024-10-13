@@ -4,7 +4,7 @@ fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
     return this.fup().let {
         when {
             (it is Stmt.Proto.Func) -> it.tp_.inp__.map { Pair(this.n, it) }
-            (it is Stmt.Proto.Coro) -> it.tp_.inp__.map { Pair(this.n, it) }
+            (it is Stmt.Proto.Coro) -> listOf(Pair(this.n, it.tp_.inp__))
             else -> emptyList()
         }
     } + this.dn_filter_pre(
@@ -99,7 +99,7 @@ fun check_types () {
                     err(me.tk, "create error : expected coroutine prototype")
                 }
                 val tp = me.dst.type()
-                val xtp = Type.XCoro(co.tk_, co.out, co.inp_)
+                val xtp = Type.XCoro(co.tk_, co.inp_, co.out_)
                 if (!xtp.is_sup_of(tp)) {
                     err(me.tk, "create error : types mismatch")
                 }
@@ -111,12 +111,7 @@ fun check_types () {
                 }
 
                 val ok1 = (me.dst == null) || me.dst.type().is_sup_of(xco.out)
-                val ok2 = me.arg.type().let {
-                    when {
-                        (xco.inps.size == 0) -> it is Type.Unit
-                        else -> xco.inps.first().is_sup_of(it)
-                    }
-                }
+                val ok2 = xco.inp.is_sup_of(me.arg.type())
                 if (!ok1 || !ok2) {
                     err(me.tk, "resume error : types mismatch")
                 }
@@ -127,11 +122,7 @@ fun check_types () {
                     err(me.tk, "yield error : expected enclosing coro")
                 }
                 val xco = up.tp_
-                val ok1 = when {
-                    (me.dst == null) -> true
-                    (xco.inp_.size == 0) -> me.dst.type() is Type.Unit
-                    else -> me.dst.type().is_sup_of(xco.inp_.first())
-                }
+                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(xco.inp_)
                 val ok2 = xco.out.is_sup_of(me.arg.type())
                 if (!ok1 || !ok2) {
                     err(me.tk, "yield error : types mismatch")

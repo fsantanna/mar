@@ -63,12 +63,12 @@ sealed class Type (var n: Int, val tk: Tk) {
             data class Vars (val tk___: Tk.Fix, val inp__: List<Var_Type>, val out__: Type) :
                 Func(tk___, inp__.map { (_, tp) -> tp }, out__)
         }
-        open class Coro (val tk__: Tk.Fix, val inp_: List<Type>, val out_: Type): Proto(tk__, inp_, out_) {
-            data class Vars (val tk___: Tk.Fix, val inp__: List<Var_Type>, val out__: Type) :
-                Coro(tk___, inp__.map { (_, tp) -> tp }, out__)
+        open class Coro (val tk__: Tk.Fix, val inp_: Type.Union, val out_: Type.Union): Proto(tk__, inp_, out_) {
+            data class Vars (val tk___: Tk.Fix, val inp__: Var_Type, val out__: Type.Union) :
+                Coro(tk___, inp__.second as Union, out__)
         }
     }
-    data class XCoro (val tk_: Tk.Fix, val out: Type, val inps: List<Type>): Type(G.N++, tk_)
+    data class XCoro (val tk_: Tk.Fix, val inp: Type.Union, val out: Type.Union): Type(G.N++, tk_)
 }
 
 sealed class Expr (var n: Int, val tk: Tk) {

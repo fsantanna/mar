@@ -29,18 +29,18 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Tuple -> "[" + this.ts.map { it.to_str(pre) }.joinToString(",") + "]"
         is Type.Union -> "<" + this.ts.map { it.to_str(pre) }.joinToString(",") + ">"
         is Type.Proto -> {
-            val inps = when (this) {
+            val inp = when (this) {
                 is Type.Proto.Func.Vars -> this.inp__.map { it.to_str(pre) }.joinToString(",")
-                is Type.Proto.Coro.Vars -> this.inp__.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Coro.Vars -> this.inp__.to_str(pre)
                 is Type.Proto.Func -> this.inp_.map { it.to_str(pre) }.joinToString(",")
-                is Type.Proto.Coro -> this.inp_.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Coro -> this.inp_.to_str(pre)
             }
             when (this) {
-                is Type.Proto.Func -> "func (" + inps + ") -> " + this.out.to_str(pre)
-                is Type.Proto.Coro -> "coro (" + inps + ") -> " + this.out.to_str(pre)
+                is Type.Proto.Func -> "func (" + inp + ") -> " + this.out.to_str(pre)
+                is Type.Proto.Coro -> "coro (" + inp + ") -> " + this.out.to_str(pre)
             }
         }
-        is Type.XCoro -> "xcoro (" + this.inps.map { it.to_str(pre) }.joinToString(",") + ") -> " + this.out.to_str(pre)
+        is Type.XCoro -> "xcoro (" + this.inp.to_str(pre) + ") -> " + this.out.to_str(pre)
     }.let {
         when {
             !pre -> it
