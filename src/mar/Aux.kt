@@ -1,49 +1,118 @@
 package mar
 
-fun <V> Stmt.dn_collect (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V> {
+fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: ((Expr)->List<V>)?, ft: ((Type)->List<V>)?): List<V> {
+    return when (this) {
+        is Stmt.Proto -> this.blk.dn_collect_pos(fs,fe,ft) + this.tp.dn_collect_pos(ft)
+        is Stmt.Return -> this.e.dn_collect_pos(fe)
+
+        is Stmt.Block -> this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
+        is Stmt.Dcl -> this.var_type.second.dn_collect_pos(ft)
+        is Stmt.Set -> this.dst.dn_collect_pos(fe) + this.src.dn_collect_pos(fe)
+
+        is Stmt.If    -> this.cnd.dn_collect_pos(fe) + this.t.dn_collect_pos(fs,fe,ft) + this.f.dn_collect_pos(fs,fe,ft)
+        is Stmt.Loop  -> this.blk.dn_collect_pos(fs,fe,ft)
+        is Stmt.Break -> emptyList()
+
+        is Stmt.Create -> this.dst.dn_collect_pos(fe) + this.co.dn_collect_pos(fe)
+        is Stmt.Resume -> (this.dst?.dn_collect_pos(fe) ?: emptyList()) + this.xco.dn_collect_pos(fe) + this.arg.dn_collect_pos(fe)
+        is Stmt.Yield  -> (this.dst?.dn_collect_pos(fe) ?: emptyList()) + this.arg.dn_collect_pos(fe)
+
+        is Stmt.Call -> this.call.dn_collect_pos(fe)
+        is Stmt.Nat -> emptyList()
+    } + fs(this)
+}
+
+fun <V> Expr.dn_collect_pos (fe: ((Expr)->List<V>)?): List<V> {
+    if (fe == null) {
+        return emptyList()
+    }
+    return when (this) {
+        is Expr.Uno   -> this.e.dn_collect_pos(fe)
+        is Expr.Bin   -> this.e1.dn_collect_pos(fe) + this.e2.dn_collect_pos(fe)
+        is Expr.Tuple -> this.vs.map { it.dn_collect_pos(fe) }.flatten()
+        is Expr.Union -> this.v.dn_collect_pos(fe)
+        is Expr.Index -> this.col.dn_collect_pos(fe)
+        is Expr.Disc  -> this.col.dn_collect_pos(fe)
+        is Expr.Pred  -> this.col.dn_collect_pos(fe)
+        is Expr.Call  -> this.f.dn_collect_pos(fe) + this.args.map { it.dn_collect_pos(fe) }.flatten()
+        is Expr.Acc, is Expr.Nat, is Expr.Null, is Expr.Unit,
+        is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()
+    } + fe(this)
+}
+
+fun <V> Type.dn_collect_pos (ft: ((Type)->List<V>)?): List<V> {
+    if (ft == null) {
+        return emptyList()
+    }
+    return when (this) {
+        is Type.Any -> emptyList()
+        is Type.Unit -> emptyList()
+        is Type.Basic -> emptyList()
+        is Type.Pointer -> this.ptr.dn_collect_pos(ft)
+        is Type.Tuple -> this.ts.map { it.dn_collect_pos(ft) }.flatten()
+        is Type.Union -> this.ts.map { it.dn_collect_pos(ft) }.flatten()
+        is Type.Proto -> (this.inps + listOf(this.out)).map { it.dn_collect_pos(ft) }.flatten()
+        is Type.XCoro -> (this.inps + listOf(this.out)).map { it.dn_collect_pos(ft) }.flatten()
+    } + ft(this)
+}
+
+fun Stmt.dn_visit_pos (fs: (Stmt)->Unit, fe: ((Expr)->Unit)?, ft: ((Type)->Unit)?) {
+    this.dn_collect_pos (
+        { fs(it) ; emptyList<Unit>() },
+        { if (fe!=null) fe(it) ; emptyList() },
+        { if (ft!=null) ft(it) ; emptyList() }
+    )
+}
+fun Expr.dn_visit_pos (fe: (Expr)->Unit) {
+    this.dn_collect_pos { fe(it) ; emptyList<Unit>() }
+}
+
+fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V> {
     val v = fs(this)
     if (v === null) {
         return emptyList()
     }
     return v + when (this) {
-        is Stmt.Proto -> this.blk.dn_collect(fs,fe,ft) + this.tp.dn_collect(ft)
-        is Stmt.Return -> this.e.dn_collect(fe)
+        is Stmt.Proto -> this.blk.dn_collect_pre(fs,fe,ft) + this.tp.dn_collect_pre(ft)
+        is Stmt.Return -> this.e.dn_collect_pre(fe)
 
-        is Stmt.Block -> this.ss.map { it.dn_collect(fs,fe,ft) }.flatten()
-        is Stmt.Dcl -> this.var_type.second.dn_collect(ft)
-        is Stmt.Set -> this.dst.dn_collect(fe) + this.src.dn_collect(fe)
+        is Stmt.Block -> this.ss.map { it.dn_collect_pre(fs,fe,ft) }.flatten()
+        is Stmt.Dcl -> this.var_type.second.dn_collect_pre(ft)
+        is Stmt.Set -> this.dst.dn_collect_pre(fe) + this.src.dn_collect_pre(fe)
 
-        is Stmt.If    -> this.cnd.dn_collect(fe) + this.t.dn_collect(fs,fe,ft) + this.f.dn_collect(fs,fe,ft)
-        is Stmt.Loop  -> this.blk.dn_collect(fs,fe,ft)
+        is Stmt.If    -> this.cnd.dn_collect_pre(fe) + this.t.dn_collect_pre(fs,fe,ft) + this.f.dn_collect_pre(fs,fe,ft)
+        is Stmt.Loop  -> this.blk.dn_collect_pre(fs,fe,ft)
         is Stmt.Break -> emptyList()
 
-        is Stmt.Create -> this.dst.dn_collect(fe) + this.co.dn_collect(fe)
-        is Stmt.Resume -> (this.dst?.dn_collect(fe) ?: emptyList()) + this.xco.dn_collect(fe) + this.arg.dn_collect(fe)
-        is Stmt.Yield  -> (this.dst?.dn_collect(fe) ?: emptyList()) + this.arg.dn_collect(fe)
+        is Stmt.Create -> this.dst.dn_collect_pre(fe) + this.co.dn_collect_pre(fe)
+        is Stmt.Resume -> (this.dst?.dn_collect_pre(fe) ?: emptyList()) + this.xco.dn_collect_pre(fe) + this.arg.dn_collect_pre(fe)
+        is Stmt.Yield  -> (this.dst?.dn_collect_pre(fe) ?: emptyList()) + this.arg.dn_collect_pre(fe)
 
-        is Stmt.Call -> this.call.dn_collect(fe)
+        is Stmt.Call -> this.call.dn_collect_pre(fe)
         is Stmt.Nat -> emptyList()
     }
 }
-fun <V> Expr.dn_collect (fe: (Expr)->List<V>?): List<V> {
+
+fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?): List<V> {
     val v = fe(this)
     if (v === null) {
         return emptyList()
     }
     return v + when (this) {
-        is Expr.Uno   -> this.e.dn_collect(fe)
-        is Expr.Bin   -> this.e1.dn_collect(fe) + this.e2.dn_collect(fe)
-        is Expr.Tuple -> this.vs.map { it.dn_collect(fe) }.flatten()
-        is Expr.Union -> this.v.dn_collect(fe)
-        is Expr.Index -> this.col.dn_collect(fe)
-        is Expr.Disc  -> this.col.dn_collect(fe)
-        is Expr.Pred  -> this.col.dn_collect(fe)
-        is Expr.Call  -> this.f.dn_collect(fe) + this.args.map { it.dn_collect(fe) }.flatten()
+        is Expr.Uno   -> this.e.dn_collect_pre(fe)
+        is Expr.Bin   -> this.e1.dn_collect_pre(fe) + this.e2.dn_collect_pre(fe)
+        is Expr.Tuple -> this.vs.map { it.dn_collect_pre(fe) }.flatten()
+        is Expr.Union -> this.v.dn_collect_pre(fe)
+        is Expr.Index -> this.col.dn_collect_pre(fe)
+        is Expr.Disc  -> this.col.dn_collect_pre(fe)
+        is Expr.Pred  -> this.col.dn_collect_pre(fe)
+        is Expr.Call  -> this.f.dn_collect_pre(fe) + this.args.map { it.dn_collect_pre(fe) }.flatten()
         is Expr.Acc, is Expr.Nat, is Expr.Null, is Expr.Unit,
         is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()
     }
 }
-fun <V> Type.dn_collect (ft: (Type)->List<V>?): List<V> {
+
+fun <V> Type.dn_collect_pre (ft: (Type)->List<V>?): List<V> {
     val v = ft(this)
     if (v === null) {
         return emptyList()
@@ -52,27 +121,27 @@ fun <V> Type.dn_collect (ft: (Type)->List<V>?): List<V> {
         is Type.Any -> emptyList()
         is Type.Unit -> emptyList()
         is Type.Basic -> emptyList()
-        is Type.Pointer -> this.ptr.dn_collect(ft)
-        is Type.Tuple -> this.ts.map { it.dn_collect(ft) }.flatten()
-        is Type.Union -> this.ts.map { it.dn_collect(ft) }.flatten()
-        is Type.Proto -> (this.inps + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
-        is Type.XCoro -> (this.inps + listOf(this.out)).map { it.dn_collect(ft) }.flatten()
+        is Type.Pointer -> this.ptr.dn_collect_pre(ft)
+        is Type.Tuple -> this.ts.map { it.dn_collect_pre(ft) }.flatten()
+        is Type.Union -> this.ts.map { it.dn_collect_pre(ft) }.flatten()
+        is Type.Proto -> (this.inps + listOf(this.out)).map { it.dn_collect_pre(ft) }.flatten()
+        is Type.XCoro -> (this.inps + listOf(this.out)).map { it.dn_collect_pre(ft) }.flatten()
     }
 }
 
-fun Stmt.dn_visit (fs: (Stmt)->Unit?, fe: (Expr)->Unit?, ft: (Type)->Unit?) {
-    this.dn_collect (
+fun Stmt.dn_visit_pre (fs: (Stmt)->Unit?, fe: (Expr)->Unit?, ft: (Type)->Unit?) {
+    this.dn_collect_pre (
         { if (fs(it) == null) null else emptyList<Unit>() },
         { if (fe(it) == null) null else emptyList() },
         { if (ft(it) == null) null else emptyList() }
     )
 }
-fun Expr.dn_visit (fe: (Expr)->Unit?) {
-    this.dn_collect { if (fe(it) == null) null else emptyList<Unit>() }
+fun Expr.dn_visit_pre (fe: (Expr)->Unit?) {
+    this.dn_collect_pre { if (fe(it) == null) null else emptyList<Unit>() }
 }
 
-fun Stmt.dn_filter (fs: ((Stmt)->Boolean?)?, fe: (Expr)->Boolean?, ft: (Type)->Boolean?): List<Any> {
-    return this.dn_collect (
+fun Stmt.dn_filter_pre (fs: ((Stmt)->Boolean?)?, fe: (Expr)->Boolean?, ft: (Type)->Boolean?): List<Any> {
+    return this.dn_collect_pre (
         {
             if (fs == null) {
                 emptyList()

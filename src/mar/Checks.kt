@@ -7,7 +7,7 @@ fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
             (it is Stmt.Proto.Coro) -> it.tp_.inps__.map { Pair(this.n, it) }
             else -> emptyList()
         }
-    } + this.dn_filter(
+    } + this.dn_filter_pre(
         {
             when (it) {
                 is Stmt.Dcl -> true
@@ -66,7 +66,7 @@ fun check_vars () {
             else -> {}
         }
     }
-    G.outer!!.dn_visit(::fs, ::fe, {null})
+    G.outer!!.dn_visit_pre(::fs, ::fe, {null})
 }
 
 fun check_types () {
@@ -142,6 +142,19 @@ fun check_types () {
     }
     fun fe (me: Expr) {
         when (me) {
+            is Expr.Index -> {
+                val tp = me.col.type()
+                val i = me.idx.toInt()
+                val ok = when {
+                    (tp is Type.Any) -> true
+                    (tp !is Type.Tuple) -> false
+                    (i<=0 || i>tp.ts.size) -> false
+                    else -> true
+                }
+                if (!ok) {
+                    err(me.tk, "index error : types mismatch")
+                }
+            }
             is Expr.Union -> {
                 val i = me.idx.toInt()
                 val ok = when {
@@ -164,7 +177,7 @@ fun check_types () {
                     else -> true
                 }
                 if (!ok) {
-                    err(me.tk, "operation error : types mismatch")
+                    err(me.tk, "discriminator error : types mismatch")
                 }
             }
             is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {
@@ -187,5 +200,5 @@ fun check_types () {
             else -> {}
         }
     }
-    G.outer!!.dn_visit(::fs, ::fe, {null})
+    G.outer!!.dn_visit_pos(::fs, ::fe, null)
 }

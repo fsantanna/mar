@@ -30,7 +30,7 @@ fun coder_types (pre: Boolean): String {
         return when (me) {
             is Stmt.Proto.Coro -> {
                 fun mem (): String {
-                    val blks = me.dn_collect({
+                    val blks = me.dn_collect_pre({
                         when (it) {
                             is Stmt.Proto -> if (it == me) emptyList() else null
                             is Stmt.Block -> listOf(it)
@@ -79,7 +79,7 @@ fun coder_types (pre: Boolean): String {
             else -> emptyList()
         }
     }
-    val ts = G.outer!!.dn_collect(::fs, { emptyList() }, ::ft)
+    val ts = G.outer!!.dn_collect_pre(::fs, { emptyList() }, ::ft)
     return ts.asReversed().map {it + ";\n" }.joinToString("")
 }
 
