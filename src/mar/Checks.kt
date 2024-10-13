@@ -16,8 +16,8 @@ fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
                 else -> false
             }
         },
-        {null},
-        {null}
+        null,
+        null
     )
         .let { it as List<Stmt> }
         .map {
@@ -66,7 +66,7 @@ fun check_vars () {
             else -> {}
         }
     }
-    G.outer!!.dn_visit_pre(::fs, ::fe, {null})
+    G.outer!!.dn_visit_pre(::fs, ::fe, null)
 }
 
 fun check_types () {

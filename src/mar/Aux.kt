@@ -1,6 +1,9 @@
 package mar
 
-fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: ((Expr)->List<V>)?, ft: ((Type)->List<V>)?): List<V> {
+fun <V> Stmt.dn_collect_pos (fs: ((Stmt)->List<V>)?, fe: ((Expr)->List<V>)?, ft: ((Type)->List<V>)?): List<V> {
+    if (fs == null) {
+        return emptyList()
+    }
     return when (this) {
         is Stmt.Proto -> this.blk.dn_collect_pos(fs,fe,ft) + this.tp.dn_collect_pos(ft)
         is Stmt.Return -> this.e.dn_collect_pos(fe)
@@ -56,18 +59,23 @@ fun <V> Type.dn_collect_pos (ft: ((Type)->List<V>)?): List<V> {
     } + ft(this)
 }
 
-fun Stmt.dn_visit_pos (fs: (Stmt)->Unit, fe: ((Expr)->Unit)?, ft: ((Type)->Unit)?) {
+fun Stmt.dn_visit_pos (fs: ((Stmt)->Unit)?, fe: ((Expr)->Unit)?, ft: ((Type)->Unit)?) {
     this.dn_collect_pos (
-        { fs(it) ; emptyList<Unit>() },
-        { if (fe!=null) fe(it) ; emptyList() },
-        { if (ft!=null) ft(it) ; emptyList() }
+        if (fs == null) null else ({ fs(it) ; emptyList<Unit>() }),
+        if (fe == null) null else ({ fe(it) ; emptyList() }),
+        if (ft == null) null else ({ ft(it) ; emptyList() })
     )
 }
-fun Expr.dn_visit_pos (fe: (Expr)->Unit) {
-    this.dn_collect_pos { fe(it) ; emptyList<Unit>() }
+fun Expr.dn_visit_pos (fe: ((Expr)->Unit)?) {
+    this.dn_collect_pos (
+        if (fe == null) null else ({ fe(it) ; emptyList<Unit>() })
+    )
 }
 
-fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V> {
+fun <V> Stmt.dn_collect_pre (fs: ((Stmt)->List<V>?)?, fe: ((Expr)->List<V>?)?, ft: ((Type)->List<V>?)?): List<V> {
+    if (fs == null) {
+        return emptyList()
+    }
     val v = fs(this)
     if (v === null) {
         return emptyList()
@@ -93,7 +101,10 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
     }
 }
 
-fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?): List<V> {
+fun <V> Expr.dn_collect_pre (fe: ((Expr)->List<V>?)?): List<V> {
+    if (fe == null) {
+        return emptyList()
+    }
     val v = fe(this)
     if (v === null) {
         return emptyList()
@@ -112,7 +123,10 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?): List<V> {
     }
 }
 
-fun <V> Type.dn_collect_pre (ft: (Type)->List<V>?): List<V> {
+fun <V> Type.dn_collect_pre (ft: ((Type)->List<V>?)?): List<V> {
+    if (ft == null) {
+        return emptyList()
+    }
     val v = ft(this)
     if (v === null) {
         return emptyList()
@@ -129,44 +143,48 @@ fun <V> Type.dn_collect_pre (ft: (Type)->List<V>?): List<V> {
     }
 }
 
-fun Stmt.dn_visit_pre (fs: (Stmt)->Unit?, fe: (Expr)->Unit?, ft: (Type)->Unit?) {
+fun Stmt.dn_visit_pre (fs: ((Stmt)->Unit?)?, fe: ((Expr)->Unit?)?, ft: ((Type)->Unit?)?) {
     this.dn_collect_pre (
-        { if (fs(it) == null) null else emptyList<Unit>() },
-        { if (fe(it) == null) null else emptyList() },
-        { if (ft(it) == null) null else emptyList() }
+        if (fs == null) null else ({ if (fs(it) == null) null else emptyList<Unit>() }),
+        if (fe == null) null else ({ if (fe(it) == null) null else emptyList() }),
+        if (ft == null) null else ({ if (ft(it) == null) null else emptyList() })
     )
 }
-fun Expr.dn_visit_pre (fe: (Expr)->Unit?) {
-    this.dn_collect_pre { if (fe(it) == null) null else emptyList<Unit>() }
+fun Expr.dn_visit_pre (fe: ((Expr)->Unit?)?) {
+    this.dn_collect_pre (
+        if (fe == null) null else ({ if (fe(it) == null) null else emptyList<Unit>() })
+    )
 }
 
-fun Stmt.dn_filter_pre (fs: ((Stmt)->Boolean?)?, fe: (Expr)->Boolean?, ft: (Type)->Boolean?): List<Any> {
+fun Stmt.dn_filter_pre (fs: ((Stmt)->Boolean?)?, fe: ((Expr)->Boolean?)?, ft: ((Type)->Boolean?)?): List<Any> {
     return this.dn_collect_pre (
-        {
-            if (fs == null) {
-                emptyList()
-            } else {
+        if (fs == null) null else (
+            {
                 when (fs(it)) {
                     null -> null
                     false -> emptyList()
                     true -> listOf(it)
                 }
             }
-        },
-        {
-            when (fe(it)) {
-                null -> null
-                false -> emptyList()
-                true -> listOf(it)
+        ),
+        if (fe == null) null else (
+            {
+                when (fe(it)) {
+                    null -> null
+                    false -> emptyList()
+                    true -> listOf(it)
+                }
             }
-        },
-        {
-            when (ft(it)) {
-                null -> null
-                false -> emptyList()
-                true -> listOf(it)
+        ),
+        if (ft == null) null else (
+            {
+                when (ft(it)) {
+                    null -> null
+                    false -> emptyList()
+                    true -> listOf(it)
+                }
             }
-        },
+        ),
     )
 }
 

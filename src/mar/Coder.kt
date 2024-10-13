@@ -36,7 +36,7 @@ fun coder_types (pre: Boolean): String {
                             is Stmt.Block -> listOf(it)
                             else -> emptyList()
                         }
-                    }, {null}, {null})
+                    }, null, null)
                     return blks.map { it.to_dcls().map { (_,vt) -> vt.coder(pre) + ";\n" } }.flatten().joinToString("")
                 }
                 val co  = me.tp.coder(pre)
@@ -79,7 +79,7 @@ fun coder_types (pre: Boolean): String {
             else -> emptyList()
         }
     }
-    val ts = G.outer!!.dn_collect_pre(::fs, { emptyList() }, ::ft)
+    val ts = G.outer!!.dn_collect_pre(::fs, null, ::ft)
     return ts.asReversed().map {it + ";\n" }.joinToString("")
 }
 
