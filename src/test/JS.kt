@@ -64,7 +64,7 @@ class JS {
                 yield()
                 `puts("Second");`
             }
-            var genObj: xcoro () -> () = create(genFunc)
+            var genObj: exec () -> () = create(genFunc)
             resume genObj()     ;; First
             resume genObj()     ;; Second
         """)
@@ -79,15 +79,15 @@ class JS {
             coro gen1 (v: Int) -> () {
                 `printf("%d\n", ceu_xco->mem.v);`
             }
-            var co1: xcoro (Int) -> () = create(gen1)
+            var co1: exec (Int) -> () = create(gen1)
             resume co1(1)
 
             var gen2: \coro (Int) -> () = \gen1
-            var co2:  xcoro (Int) -> () = create(gen2\)
+            var co2:  exec (Int) -> () = create(gen2\)
             resume co2(2)
             
             var obj3: [\coro (Int) -> ()] = [gen2]
-            var co3: xcoro (Int) -> () = create(obj3._1\)
+            var co3: exec (Int) -> () = create(obj3._1\)
             resume co3(3)
             
             ;; no co4
@@ -109,7 +109,7 @@ class JS {
             }
             
             var jane: [Int, Int] = [10, 20]
-            var xco: xcoro (<[Int,Int],()>) -> [Int,Int] = create(objectEntries)
+            var xco: exec (<[Int,Int],()>) -> [Int,Int] = create(objectEntries)
             var iv: [Int,Int] = resume xco(\jane)
             loop {
                 

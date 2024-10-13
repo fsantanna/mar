@@ -32,7 +32,7 @@ val KEYWORDS: SortedSet<String> = (
     setOf (
         "break", "do", "coro", "create", "else", "false", "func",
         "if", "loop", "null", "resume", "return", "set",
-        "true", "var", "xcoro", "yield",
+        "true", "var", "exec", "yield",
     ).toSortedSet()
 )
 

@@ -40,7 +40,7 @@ fun Type.to_str (pre: Boolean = false): String {
                 is Type.Proto.Coro -> "coro (" + inp + ") -> " + this.out.to_str(pre)
             }
         }
-        is Type.XCoro -> "xcoro (" + this.inp.to_str(pre) + ") -> " + this.out.to_str(pre)
+        is Type.XCoro -> "exec (" + this.inp.to_str(pre) + ") -> " + this.out.to_str(pre)
     }.let {
         when {
             !pre -> it

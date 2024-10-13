@@ -216,7 +216,7 @@ class Static {
         val out = static("""
             coro f (x: Int) -> Int {
             }
-            var z: xcoro (Int) -> Int = create(f)
+            var z: exec (Int) -> Int = create(f)
             resume z()  ;; err f(Int)
         """)
         assert(out == "anon : (lin 5, col 13) : resume error : types mismatch") { out!! }
@@ -226,7 +226,7 @@ class Static {
         val out = static("""
             coro f (v: Int) -> Int {
             }
-            var x: xcoro (Int) -> Int = create(f)
+            var x: exec (Int) -> Int = create(f)
             resume x(10)
         """)
         assert(out == null) { out!! }
@@ -236,7 +236,7 @@ class Static {
         val out = static("""
             coro co () -> () {
             }
-            var xco: xcoro (Int) -> () = create(co)
+            var xco: exec (Int) -> () = create(co)
         """)
         assert(out == "anon : (lin 4, col 42) : create error : types mismatch") { out!! }
     }
@@ -253,7 +253,7 @@ class Static {
     fun bc_06_exe_coro_ok () {
         val out = static("""
             coro co () -> () {}
-            var xco: xcoro () -> ()
+            var xco: exec () -> ()
             set xco = create(co)
             resume xco()
         """)
@@ -263,7 +263,7 @@ class Static {
     fun bc_07_exe_resume_ok () {
         val out = static("""
             coro co () -> Int {}
-            var xco: xcoro () -> Int
+            var xco: exec () -> Int
             set xco = create(co)
             resume xco()
         """)
@@ -282,7 +282,7 @@ class Static {
     fun bc_09_exe_resume_err () {
         val out = static("""
             coro co () -> () {}
-            var xco: xcoro () -> ()
+            var xco: exec () -> ()
             set xco = create(co)
             resume xco(1)
         """)
@@ -292,7 +292,7 @@ class Static {
     fun bc_10_exe_resume_err () {
         val out = static("""
             coro co () -> () {}
-            var xco: xcoro () -> ()
+            var xco: exec () -> ()
             set xco = create(co)
             var v: Int = resume xco(1)
         """)
@@ -302,7 +302,7 @@ class Static {
     fun bc_11_exe_resume_err () {
         val out = static("""
                 coro co () -> () {}
-                var xco: xcoro () -> ()
+                var xco: exec () -> ()
                 set xco = create(co)
                 var v: Int = resume xco()
         """)
@@ -312,7 +312,7 @@ class Static {
     fun bc_12_exe_resume () {
         val out = static("""
             coro co () -> () {}
-            var xco: xcoro () -> ()
+            var xco: exec () -> ()
             set xco = create(co)
             resume xco()
             var v: Int

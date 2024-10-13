@@ -104,12 +104,12 @@ class Parser {
         assert(tp.to_str() == "coro () -> ()")
     }
     @Test
-    fun aj_09_type_xcoro () {
-        G.tks = ("xcoro (Int) -> Int").lexer()
+    fun aj_09_type_exec () {
+        G.tks = ("exec (Int) -> Int").lexer()
         parser_lexer()
         val tp = parser_type()
         assert(tp is Type.XCoro && tp.inp.ts[0] is Type.Basic)
-        assert(tp.to_str() == "xcoro (Int) -> Int") { tp.to_str() }
+        assert(tp.to_str() == "exec (Int) -> Int") { tp.to_str() }
     }
     @Test
     fun aj_10_type_coro_err () {
@@ -118,10 +118,10 @@ class Parser {
         assert(trap { parser_type() } == "anon : (lin 1, col 1) : coro error : unexpected second argument")
     }
     @Test
-    fun aj_11_type_xcoro_err () {
-        G.tks = ("xcoro (Int,Int) -> Int").lexer()
+    fun aj_11_type_exec_err () {
+        G.tks = ("exec (Int,Int) -> Int").lexer()
         parser_lexer()
-        assert(trap { parser_type() } == "anon : (lin 1, col 1) : xcoro error : unexpected second argument")
+        assert(trap { parser_type() } == "anon : (lin 1, col 1) : exec error : unexpected second argument")
     }
 
     // TUPLE / UNION

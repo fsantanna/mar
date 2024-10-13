@@ -172,7 +172,7 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
                 Type.Proto.Coro(tk0, inp as Type.Union, out)
             }
         }
-        accept_fix("xcoro") -> {
+        accept_fix("exec") -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
             accept_fix_err("(")
             check_op_err("<")

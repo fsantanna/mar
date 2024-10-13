@@ -2,7 +2,7 @@ package mar
 
 import java.io.File
 
-fun String.coro_to_xcoro (): String {
+fun String.coro_to_exec (): String {
     assert(this.take(8) == "CEU_Coro")
     return "CEU_XCoro" + this.drop(8)
 }
@@ -40,7 +40,7 @@ fun coder_types (pre: Boolean): String {
                     return blks.map { it.to_dcls().map { (_,vt) -> vt.coder(pre) + ";\n" } }.flatten().joinToString("")
                 }
                 val co  = me.tp.coder(pre)
-                val xco = co.coro_to_xcoro()
+                val xco = co.coro_to_exec()
                 listOf("""
                     typedef struct $xco {
                         int pc;
@@ -60,7 +60,7 @@ fun coder_types (pre: Boolean): String {
                 "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inp_.map { it.coder(pre) }.joinToString(",")})"
             )
             is Type.Proto.Coro -> {
-                val xco = "struct " + me.coder(pre).coro_to_xcoro()
+                val xco = "struct " + me.coder(pre).coro_to_exec()
                 listOf (
                     "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) ($xco* ceu_xco,  ${me.inp_.coder(pre)})",
                     xco,
@@ -90,7 +90,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                 is Stmt.Proto.Func ->
                     this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inp__.map { it.coder(pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro -> {
-                    val x = this.tp.coder(pre).coro_to_xcoro()
+                    val x = this.tp.coder(pre).coro_to_exec()
                     this.tp_.out.coder(pre) + " " + this.id.str + " ($x* ceu_xco, ${this.tp_.inp__.coder(pre) + " ceu_arg" })"
                 }
             } + """
@@ -120,7 +120,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                     val (id,tp) = vt
                     when (tp) {
                         is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inp_.map { it.coder(pre) }.joinToString(",") + ");\n"
-                        is Type.Proto.Coro -> "auto " + tp.out.coder(pre) + " " + id.str + " (${tp.coder(pre).coro_to_xcoro()}* ceu_xco " + tp.inp_.coder(pre) + ");\n"
+                        is Type.Proto.Coro -> "auto " + tp.out.coder(pre) + " " + id.str + " (${tp.coder(pre).coro_to_exec()}* ceu_xco " + tp.inp_.coder(pre) + ");\n"
                         else -> ""
                     }
                 }.joinToString("")}

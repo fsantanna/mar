@@ -191,7 +191,7 @@ class Exec  {
                 coro co () -> () {
                     `puts("OK");`
                 }
-                var xco: xcoro () -> () = create(co)
+                var xco: exec () -> () = create(co)
                 `puts("END");`
             }
         """)
@@ -203,7 +203,7 @@ class Exec  {
             coro co () -> () {
                 `puts("OK");`
             }
-            var xco: xcoro () -> () = create(co)
+            var xco: exec () -> () = create(co)
             resume xco()
         """)
         assert(out == "OK\n") { out }
@@ -214,7 +214,7 @@ class Exec  {
             coro co (v: Int) -> () {
                 `printf("%d\n", ceu_xco->mem.v);`
             }
-            var xco: xcoro (Int) -> () = create(co)
+            var xco: exec (Int) -> () = create(co)
             resume xco(10)
         """)
         assert(out == "10\n") { out }
@@ -228,7 +228,7 @@ class Exec  {
                 set v = v + 10
                 `printf("%d\n", ceu_xco->mem.v);`
             }
-            var xco: xcoro (Int) -> () = create(co)
+            var xco: exec (Int) -> () = create(co)
             resume xco(10)
             resume xco(99)
         """)
@@ -242,7 +242,7 @@ class Exec  {
                     var y2:Int = yield(x2*2)
                     return(y2 * 2)
                 }
-                var xco: xcoro (Int) -> Int = create(co)
+                var xco: exec (Int) -> Int = create(co)
                 var x1: Int = resume xco(5)
                 var y1: Int = resume xco(x1 + 10)
                 `printf("%d\n", y1);`
