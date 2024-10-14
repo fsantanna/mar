@@ -68,7 +68,7 @@ sealed class Type (var n: Int, val tk: Tk) {
                 Coro(tk___, inp__.second as Union, out__)
         }
     }
-    data class XCoro (val tk_: Tk.Fix, val inp: Type.Union, val out: Type.Union): Type(G.N++, tk_)
+    data class Exec (val tk_: Tk.Fix, val inp: Type.Union, val out: Type.Union): Type(G.N++, tk_)
 }
 
 sealed class Expr (var n: Int, val tk: Tk) {
@@ -107,7 +107,7 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     data class Break   (val tk_: Tk.Fix): Stmt(G.N++, tk_)
 
     data class Create (val tk_: Tk.Fix, val dst: Expr, val co: Expr): Stmt(G.N++, tk_)
-    data class Resume (val tk_: Tk.Fix, val dst: Expr?, val xco: Expr, val arg: Expr): Stmt(G.N++, tk_)
+    data class Resume (val tk_: Tk.Fix, val dst: Expr?, val exe: Expr, val arg: Expr): Stmt(G.N++, tk_)
     data class Yield  (val tk_: Tk.Fix, val dst: Expr?, val arg: Expr): Stmt(G.N++, tk_)
 
     data class Nat     (val tk_: Tk.Nat): Stmt(G.N++, tk_)

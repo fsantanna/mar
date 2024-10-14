@@ -40,7 +40,7 @@ fun Type.to_str (pre: Boolean = false): String {
                 is Type.Proto.Coro -> "coro (" + inp + ") -> " + this.out.to_str(pre)
             }
         }
-        is Type.XCoro -> "exec (" + this.inp.to_str(pre) + ") -> " + this.out.to_str(pre)
+        is Type.Exec -> "exec (" + this.inp.to_str(pre) + ") -> " + this.out.to_str(pre)
     }.let {
         when {
             !pre -> it
@@ -106,7 +106,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Loop   -> "loop {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Break  -> "break"
         is Stmt.Create -> this.dst.cond { "set ${it.to_str(pre)} = " } + "create(" + this.co.to_str(pre) + ")"
-        is Stmt.Resume -> this.dst.cond { "set ${it.to_str(pre)} = " } + "resume " + this.xco.to_str(pre) + "(" + this.arg.to_str(pre) + ")"
+        is Stmt.Resume -> this.dst.cond { "set ${it.to_str(pre)} = " } + "resume " + this.exe.to_str(pre) + "(" + this.arg.to_str(pre) + ")"
         is Stmt.Yield  -> this.dst.cond { "set ${it.to_str(pre)} = " } + "yield(" + this.arg.to_str(pre) + ")"
         is Stmt.Call   -> this.call.to_str(pre)
         is Stmt.Nat    -> this.tk.str.let { if (it.contains("\n")) "```"+it+"```" else "`"+it+"`" }

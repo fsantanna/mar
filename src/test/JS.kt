@@ -77,7 +77,7 @@ class JS {
     fun x_02() {
         val out = test("""
             coro gen1 (v: Int) -> () {
-                `printf("%d\n", ceu_xco->mem.v);`
+                `printf("%d\n", ceu_exe->mem.v);`
             }
             var co1: exec (Int) -> () = create(gen1)
             resume co1(1)
@@ -109,8 +109,8 @@ class JS {
             }
             
             var jane: [Int, Int] = [10, 20]
-            var xco: exec (<[Int,Int],()>) -> [Int,Int] = create(objectEntries)
-            var iv: [Int,Int] = resume xco(\jane)
+            var exe: exec (<[Int,Int],()>) -> [Int,Int] = create(objectEntries)
+            var iv: [Int,Int] = resume exe(\jane)
             loop {
                 
                 println((to.string(k) ++ ": ") ++ v)

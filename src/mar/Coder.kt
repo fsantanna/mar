@@ -21,7 +21,7 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Union      -> "CEU_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}"
         is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inp_.to_void().map { it.coder(pre) }.joinToString("__")}"
         is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inp_.coder(pre)}"
-        is Type.XCoro      -> "CEU_XCoro__${this.out.coder(pre)}__${this.inp.coder(pre)}"
+        is Type.Exec      -> "CEU_XCoro__${this.out.coder(pre)}__${this.inp.coder(pre)}"
     }
 }
 
@@ -40,15 +40,15 @@ fun coder_types (pre: Boolean): String {
                     return blks.map { it.to_dcls().map { (_,vt) -> vt.coder(pre) + ";\n" } }.flatten().joinToString("")
                 }
                 val co  = me.tp.coder(pre)
-                val xco = co.coro_to_exec()
+                val exe = co.coro_to_exec()
                 listOf("""
-                    typedef struct $xco {
+                    typedef struct $exe {
                         int pc;
                         $co proto;
                         struct {
                             ${mem()}
                         } mem;
-                    } $xco;
+                    } $exe;
                 """)
             }
             else -> emptyList()
@@ -60,10 +60,10 @@ fun coder_types (pre: Boolean): String {
                 "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inp_.map { it.coder(pre) }.joinToString(",")})"
             )
             is Type.Proto.Coro -> {
-                val xco = "struct " + me.coder(pre).coro_to_exec()
+                val exe = "struct " + me.coder(pre).coro_to_exec()
                 listOf (
-                    "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) ($xco* ceu_xco,  ${me.inp_.coder(pre)})",
-                    xco,
+                    "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) ($exe* ceu_exe,  ${me.inp_.coder(pre)})",
+                    exe,
                 )
             }
             is Type.Tuple -> {
@@ -91,14 +91,14 @@ fun Stmt.coder (pre: Boolean = false): String {
                     this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inp__.map { it.coder(pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro -> {
                     val x = this.tp.coder(pre).coro_to_exec()
-                    this.tp_.out.coder(pre) + " " + this.id.str + " ($x* ceu_xco, ${this.tp_.inp__.coder(pre) + " ceu_arg" })"
+                    this.tp_.out.coder(pre) + " " + this.id.str + " ($x* ceu_exe, ${this.tp_.inp__.coder(pre) + " ceu_arg" })"
                 }
             } + """
             {
                 ${(this is Stmt.Proto.Coro).cond {
                     this as Stmt.Proto.Coro
                     """                    
-                    switch (ceu_xco->pc) {
+                    switch (ceu_exe->pc) {
                         case 0:
                             ${(this.tp_.inp__.second as Type.Union).coder(pre) + " " + this.tp_.inp__.first.coder(this.blk,pre) + " = ceu_arg;\n" }.joinToString("")}
                 """ }}
@@ -120,7 +120,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                     val (id,tp) = vt
                     when (tp) {
                         is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inp_.map { it.coder(pre) }.joinToString(",") + ");\n"
-                        is Type.Proto.Coro -> "auto " + tp.out.coder(pre) + " " + id.str + " (${tp.coder(pre).coro_to_exec()}* ceu_xco " + tp.inp_.coder(pre) + ");\n"
+                        is Type.Proto.Coro -> "auto " + tp.out.coder(pre) + " " + id.str + " (${tp.coder(pre).coro_to_exec()}* ceu_exe " + tp.inp_.coder(pre) + ");\n"
                         else -> ""
                     }
                 }.joinToString("")}
@@ -157,14 +157,14 @@ fun Stmt.coder (pre: Boolean = false): String {
             """
         }
         is Stmt.Resume -> {
-            val xco = this.xco.coder(pre)
-            val args = "&$xco" + if (this.arg.type() is Type.Unit) "" else ","+this.arg.coder(pre)
+            val exe = this.exe.coder(pre)
+            val args = "&$exe" + if (this.arg.type() is Type.Unit) "" else ","+this.arg.coder(pre)
             """
-            ${this.dst.cond { it.coder(pre) + " = "}} $xco.proto($args);
+            ${this.dst.cond { it.coder(pre) + " = "}} $exe.proto($args);
             """
         }
         is Stmt.Yield -> """
-            ceu_xco->pc = ${this.n};
+            ceu_exe->pc = ${this.n};
             return ${this.arg.coder(pre)};
         case ${this.n}:
             ${(this.dst).cond { """
@@ -179,7 +179,7 @@ fun Stmt.coder (pre: Boolean = false): String {
 
 fun Tk.Var.coder (fr: Any, pre: Boolean): String {
     return if (fr.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) {
-        "ceu_xco->mem.${this.str}"
+        "ceu_exe->mem.${this.str}"
     } else {
         this.str
     }

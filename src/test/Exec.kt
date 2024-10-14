@@ -191,7 +191,7 @@ class Exec  {
                 coro co () -> () {
                     `puts("OK");`
                 }
-                var xco: exec () -> () = create(co)
+                var exe: exec () -> () = create(co)
                 `puts("END");`
             }
         """)
@@ -203,8 +203,8 @@ class Exec  {
             coro co () -> () {
                 `puts("OK");`
             }
-            var xco: exec () -> () = create(co)
-            resume xco()
+            var exe: exec () -> () = create(co)
+            resume exe()
         """)
         assert(out == "OK\n") { out }
     }
@@ -212,10 +212,10 @@ class Exec  {
     fun ff_03_coro () {
         val out = test("""
             coro co (v: Int) -> () {
-                `printf("%d\n", ceu_xco->mem.v);`
+                `printf("%d\n", ceu_exe->mem.v);`
             }
-            var xco: exec (Int) -> () = create(co)
-            resume xco(10)
+            var exe: exec (Int) -> () = create(co)
+            resume exe(10)
         """)
         assert(out == "10\n") { out }
     }
@@ -223,14 +223,14 @@ class Exec  {
     fun ff_04_coro () {
         val out = test("""
             coro co (v: Int) -> () {
-                `printf("%d\n", ceu_xco->mem.v);`
+                `printf("%d\n", ceu_exe->mem.v);`
                 yield()
                 set v = v + 10
-                `printf("%d\n", ceu_xco->mem.v);`
+                `printf("%d\n", ceu_exe->mem.v);`
             }
-            var xco: exec (Int) -> () = create(co)
-            resume xco(10)
-            resume xco(99)
+            var exe: exec (Int) -> () = create(co)
+            resume exe(10)
+            resume exe(99)
         """)
         assert(out == "10\n20\n") { out }
     }
@@ -242,9 +242,9 @@ class Exec  {
                     var y2:Int = yield(x2*2)
                     return(y2 * 2)
                 }
-                var xco: exec (Int) -> Int = create(co)
-                var x1: Int = resume xco(5)
-                var y1: Int = resume xco(x1 + 10)
+                var exe: exec (Int) -> Int = create(co)
+                var x1: Int = resume exe(5)
+                var y1: Int = resume exe(x1 + 10)
                 `printf("%d\n", y1);`
             }
         """)

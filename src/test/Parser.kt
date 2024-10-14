@@ -97,31 +97,33 @@ class Parser {
     }
     @Test
     fun aj_08_type_coro () {
-        G.tks = ("coro () -> ()").lexer()
+        G.tks = ("coro (<>) -> <>").lexer()
         parser_lexer()
         val tp = parser_type()
         assert(tp is Type.Proto.Coro && tp.inp_.ts.size==0)
-        assert(tp.to_str() == "coro () -> ()")
+        assert(tp.to_str() == "coro (<>) -> <>")
     }
     @Test
     fun aj_09_type_exec () {
-        G.tks = ("exec (Int) -> Int").lexer()
+        G.tks = ("exec (<Int>) -> <Int>").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.XCoro && tp.inp.ts[0] is Type.Basic)
-        assert(tp.to_str() == "exec (Int) -> Int") { tp.to_str() }
+        assert(tp is Type.Exec && tp.inp.ts[0] is Type.Basic)
+        assert(tp.to_str() == "exec (<Int>) -> <Int>") { tp.to_str() }
     }
     @Test
     fun aj_10_type_coro_err () {
         G.tks = ("coro (Int,Int) -> ()").lexer()
         parser_lexer()
-        assert(trap { parser_type() } == "anon : (lin 1, col 1) : coro error : unexpected second argument")
+        //assert(trap { parser_type() } == "anon : (lin 1, col 1) : coro error : unexpected second argument")
+        assert(trap { parser_type() } == "anon : (lin 1, col 7) : expected \"<\" : have \"Int\"")
     }
     @Test
     fun aj_11_type_exec_err () {
         G.tks = ("exec (Int,Int) -> Int").lexer()
         parser_lexer()
-        assert(trap { parser_type() } == "anon : (lin 1, col 1) : exec error : unexpected second argument")
+        assert(trap { parser_type() } == "anon : (lin 1, col 7) : expected \"<\" : have \"Int\"")
+        //assert(trap { parser_type() } == "anon : (lin 1, col 1) : exec error : unexpected second argument")
     }
 
     // TUPLE / UNION
@@ -407,7 +409,7 @@ class Parser {
         G.tks = ("resume xf()").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Resume && s.xco is Expr.Acc && s.arg is Expr.Unit)
+        assert(s is Stmt.Resume && s.exe is Expr.Acc && s.arg is Expr.Unit)
         assert(s.to_str() == "resume xf()")
     }
     @Test
@@ -431,7 +433,7 @@ class Parser {
         G.tks = ("set x = resume xf(false)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Resume && s.xco is Expr.Acc && s.arg is Expr.Bool)
+        assert(s is Stmt.Resume && s.exe is Expr.Acc && s.arg is Expr.Bool)
         assert(s.to_str() == "set x = resume xf(false)")
     }
     @Test

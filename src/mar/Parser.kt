@@ -154,12 +154,15 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
             accept_fix_err("(")
             val vars = req_vars || check_enu("Var")
-            check_op_err("<")
             val inp = if (vars) {
-                val x = parser_var_type()
-                assert(x.second is Type.Union)
-                x
+                accept_enu_err("Var")
+                val id = G.tk0 as Tk.Var
+                accept_fix_err(":")
+                check_op_err("<")
+                val tp = parser_type() as Type.Union
+                Pair(id,tp)
             } else {
+                check_op_err("<")
                 parser_type(req_vars) as Type.Union
             }
             accept_fix_err(")")
@@ -177,11 +180,11 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
             accept_fix_err("(")
             check_op_err("<")
             val inp = parser_type() as Type.Union
-            check_op_err(")")
+            accept_fix_err(")")
             accept_fix_err("->")
             check_op_err("<")
             val out = parser_type() as Type.Union
-            Type.XCoro(tk0, inp, out)
+            Type.Exec(tk0, inp, out)
         }
         accept_fix("(") -> {
             val tp = if (check_fix(")")) {
@@ -426,7 +429,7 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
         }
         accept_fix("resume") -> {
             val tk0 = G.tk0 as Tk.Fix
-            val xco = parser_expr_4_prim()
+            val exe = parser_expr_4_prim()
             accept_fix_err("(")
             val arg = if (check_fix(")")) {
                 Expr.Unit(G.tk0 as Tk.Fix)
@@ -434,7 +437,7 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
                 parser_expr()
             }
             accept_fix_err(")")
-            listOf(Stmt.Resume(tk0, set, xco, arg))
+            listOf(Stmt.Resume(tk0, set, exe, arg))
         }
         accept_fix("yield") -> {
             val tk0 = G.tk0 as Tk.Fix

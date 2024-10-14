@@ -57,7 +57,7 @@ fun cache_ups () {
                 if (me.dst != null) {
                     G.ups[me.dst.n] = me.n
                 }
-                G.ups[me.xco.n] = me.n
+                G.ups[me.exe.n] = me.n
                 G.ups[me.arg.n] = me.n
             }
             is Stmt.Yield -> {
