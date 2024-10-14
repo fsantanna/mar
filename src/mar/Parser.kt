@@ -153,22 +153,32 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
         (pre?.str=="coro" || accept_fix("coro")) -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
             accept_fix_err("(")
-            val vars = req_vars || check_enu("Var")
+            val vars = check_enu("Var")
             val inp = if (vars) {
                 accept_enu_err("Var")
                 val id = G.tk0 as Tk.Var
                 accept_fix_err(":")
                 check_op_err("<")
                 val tp = parser_type() as Type.Union
+                if (tp.ts.size != 2) {
+                    err(tp.tk, "type error : expected two cases")
+                }
                 Pair(id,tp)
             } else {
                 check_op_err("<")
-                parser_type(req_vars) as Type.Union
+                val tp = parser_type(req_vars) as Type.Union
+                if (tp.ts.size != 2) {
+                    err(tp.tk, "type error : expected two cases")
+                }
+                tp
             }
             accept_fix_err(")")
             accept_fix_err("->")
             check_op_err("<")
             val out = parser_type(req_vars) as Type.Union
+            if (out.ts.size != 2) {
+                err(out.tk, "type error : expected two cases")
+            }
             if (vars) {
                 Type.Proto.Coro.Vars(tk0, inp as Var_Type, out)
             } else {
@@ -347,7 +357,7 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
             when (tp) {
                 is Type.Proto.Func.Vars ->
                     Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk_, ss))
-                is Type.Proto.Coro.Vars ->
+                is Type.Proto.Coro ->
                     Stmt.Proto.Coro(tk0, id, tp, Stmt.Block(tp.tk_, ss))
                 else -> error("impossible case")
             }.let { listOf(it) }

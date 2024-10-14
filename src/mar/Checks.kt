@@ -4,7 +4,9 @@ fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
     return this.fup().let {
         when {
             (it is Stmt.Proto.Func) -> it.tp_.inp__.map { Pair(this.n, it) }
-            (it is Stmt.Proto.Coro) -> listOf(Pair(this.n, it.tp_.inp__))
+            (it is Stmt.Proto.Coro) -> if (it.tp_ !is Type.Proto.Coro.Vars) emptyList() else {
+                listOf(Pair(this.n, it.tp_.inp__.let { (id,tp) -> Pair(id, (tp as Type.Union).ts[0]) }))
+            }
             else -> emptyList()
         }
     } + this.dn_filter_pre(
@@ -78,8 +80,14 @@ fun check_types () {
                 //}
             }
             is Stmt.Return -> {
-                val func = me.fupx().up_first { it is Stmt.Proto } as Stmt.Proto
-                if (!func.tp.out.is_sup_of(me.e.type())) {
+                val out = me.up_first { it is Stmt.Proto.Func || it is Stmt.Proto.Coro}.let {
+                    when {
+                        (it is Stmt.Proto.Func) -> it.tp.out
+                        (it is Stmt.Proto.Coro) -> it.tp_.out_.ts[1]
+                        else -> error("impossible case")
+                    }
+                }
+                if (!out.is_sup_of(me.e.type())) {
                     err(me.tk, "return error : types mismatch")
                 }
             }
@@ -122,8 +130,8 @@ fun check_types () {
                     err(me.tk, "yield error : expected enclosing coro")
                 }
                 val exe = up.tp_
-                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(exe.inp_)
-                val ok2 = exe.out.is_sup_of(me.arg.type())
+                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(exe.inp_.ts[1])
+                val ok2 = exe.out_.ts[0].is_sup_of(me.arg.type())
                 if (!ok1 || !ok2) {
                     err(me.tk, "yield error : types mismatch")
                 }

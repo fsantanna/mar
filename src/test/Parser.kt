@@ -97,11 +97,11 @@ class Parser {
     }
     @Test
     fun aj_08_type_coro () {
-        G.tks = ("coro (<>) -> <>").lexer()
+        G.tks = ("coro (<(),()>) -> <(),()>").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Proto.Coro && tp.inp_.ts.size==0)
-        assert(tp.to_str() == "coro (<>) -> <>")
+        assert(tp is Type.Proto.Coro && tp.inp_.ts.size==2 && tp.out_.ts.size==2)
+        assert(tp.to_str() == "coro (<(),()>) -> <(),()>")
     }
     @Test
     fun aj_09_type_exec () {
@@ -396,7 +396,7 @@ class Parser {
         assert(trap { parser_expr_3_suf() } == "anon : (lin 1, col 5) : expected expression : have \"{\"")
     }
 
-    // SPAWN / RESUME / YIELD
+    // SPAWN / RESUME / YIELD / CORO
 
     @Test
     fun hh_01_spawn() {
@@ -443,6 +443,34 @@ class Parser {
         val s = parser_stmt().first()
         assert(s is Stmt.Yield && s.arg is Expr.Null)
         assert(s.to_str() == "set y = yield(null)") { s.to_str() }
+    }
+    @Test
+    fun hh_07_coro() {
+        G.tks = ("coro co (<(),()>) -> <(),()> {}").lexer()
+        parser_lexer()
+        val s = parser_stmt().first()
+        assert(s is Stmt.Proto.Coro && s.tp_.inp_.ts[1] is Type.Unit)
+        assert(s.to_str() == "coro co (<(),()>) -> <(),()> {\n}") { s.to_str() }
+    }
+    @Test
+    fun hh_08_coro() {
+        G.tks = ("coro co (x: <(),()>) -> <(),()> {}").lexer()
+        parser_lexer()
+        val s = parser_stmt().first()
+        assert(s is Stmt.Proto.Coro && s.tp_.out_.ts[1] is Type.Unit)
+        assert(s.to_str() == "coro co (x: <(),()>) -> <(),()> {\n}") { s.to_str() }
+    }
+    @Test
+    fun hh_09_coro() {
+        G.tks = ("coro co (x: <()>) -> <(),()> {}").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 13) : type error : expected two cases")
+    }
+    @Test
+    fun hh_10_coro() {
+        G.tks = ("coro co (x: <(),()>) -> <()> {}").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 25) : type error : expected two cases")
     }
 
     // IF / LOOP
