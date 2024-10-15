@@ -57,7 +57,7 @@ class Lexer {
         assert(tks.next().let { it is Tk.Fix  && it.str == "loop" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "exec" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "create" })
-        assert(tks.next().let { it is Tk.Var  && it.str == "start" })
+        assert(tks.next().let { it is Tk.Fix  && it.str == "start" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "resume" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "yield" })
         assert(tks.next() is Tk.Eof)

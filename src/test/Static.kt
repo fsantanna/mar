@@ -205,38 +205,49 @@ class Static {
     fun bc_01_coro_err() {
         val out = static("""
             do {
-                var f: \coro (<(),()>) -> <(),()>
+                var f: \coro () -> () -> () -> ()
                 set `_` = create(f) ;; err: f \coro
             }
         """)
         assert(out == "anon : (lin 4, col 27) : create error : expected coroutine prototype") { out!! }
     }
     @Test
-    fun bc_02_coro_err() {
+    fun bc_02x_coro_err() {
         val out = static("""
-            coro f (<Int,()>) -> <(),Int> {
+            coro f (x: Int) -> () -> () -> Int {
             }
-            var z: exec (<Int,()>) -> <(),Int> = create(f)
-            resume z()  ;; err f(Int)
+            var z: exec (Int) -> () -> () -> Int = create(f)
+            start z()  ;; err f(Int)
+        """)
+        assert(out == "anon : (lin 5, col 13) : start error : types mismatch") { out!! }
+    }
+    @Test
+    fun bc_02y_coro_err() {
+        val out = static("""
+            coro f (x: Int) -> () -> () -> Int {
+            }
+            var z: exec (Int) -> () -> () -> Int = create(f)
+            resume z(10)  ;; err f(Int)
         """)
         assert(out == "anon : (lin 5, col 13) : resume error : types mismatch") { out!! }
     }
     @Test
     fun bc_03_coro_ok() {
         val out = static("""
-            coro f (v: <Int,()>) -> <(),Int> {
+            coro f (v: Int) -> () -> () -> Int {
             }
-            var x: exec (<Int,()>) -> <(),Int> = create(f)
-            resume x(<.1 10>: <Int,()>)
+            var x: exec (Int) -> () -> () -> Int = create(f)
+            start x(10)
+            resume x()
         """)
         assert(out == null) { out!! }
     }
     @Test
     fun bc_03x_coro_err() {
         val out = static("""
-            coro f (v: <Int,()>) -> <(),Int> {
+            coro f (v: Int) -> () -> () -> Int {
             }
-            var x: exec (<Int,()>) -> <(),Int> = create(f)
+            var x: exec (Int) -> () -> () -> Int = create(f)
             resume x(<.1 10>: <Int>)
         """)
         assert(out == "anon : (lin 5, col 13) : resume error : types mismatch") { out!! }
@@ -244,11 +255,11 @@ class Static {
     @Test
     fun bc_04_exe_coro_err () {
         val out = static("""
-            coro co (<(),()>) -> <(),()> {
+            coro co () -> () -> () -> () {
             }
-            var exe: exec (<Int,()>) -> <(),()> = create(co)
+            var exe: exec (Int) -> () -> () -> () = create(co)
         """)
-        assert(out == "anon : (lin 4, col 51) : create error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 53) : create error : types mismatch") { out!! }
     }
     @Test
     fun bc_05_exe_coro_err () {
@@ -262,20 +273,22 @@ class Static {
     @Test
     fun bc_06_exe_coro_ok () {
         val out = static("""
-            coro co (<(),()>) -> <(),()> {}
-            var exe: exec (<(),()>) -> <(),()>
+            coro co () -> () -> () -> () {}
+            var exe: exec () -> () -> () -> ()
             set exe = create(co)
-            resume exe(<.1 ()>: <(),()>)
+            start exe()
+            resume exe()
         """)
         assert(out == null) { out!! }
     }
     @Test
     fun bc_07_exe_resume_ok () {
         val out = static("""
-            coro co (<(),()>) -> <(),Int> {}
-            var exe: exec (<(),()>) -> <(),Int>
+            coro co () -> () -> () -> Int {}
+            var exe: exec () -> () -> () -> Int
             set exe = create(co)
-            resume exe(<.1 ()>: <(),()>)
+            start exe()
+            resume exe()
         """)
         assert(out == null) { out!! }
     }
@@ -291,8 +304,8 @@ class Static {
     @Test
     fun bc_09_exe_resume_err () {
         val out = static("""
-            coro co (<(),()>) -> <(),()> {}
-            var exe: exec (<(),()>) -> <(),()>
+            coro co () -> () -> () -> () {}
+            var exe: exec () -> () -> () -> ()
             set exe = create(co)
             resume exe(1)
         """)
@@ -301,8 +314,8 @@ class Static {
     @Test
     fun bc_10_exe_resume_err () {
         val out = static("""
-            coro co (<(),()>) -> <(),()> {}
-            var exe: exec (<(),()>) -> <(),()>
+            coro co () -> () -> () -> () {}
+            var exe: exec () -> () -> () -> ()
             set exe = create(co)
             var v: Int = resume exe(<.1 ()>: <(),()>)
         """)
@@ -311,13 +324,15 @@ class Static {
     @Test
     fun bc_11_exe_resume () {
         val out = static("""
-            coro co (x: <(),()>) -> <(),()> {}
-            var exe: exec (<(),()>) -> <(),()>
+            coro co (x:()) -> () -> () -> () {}
+            var exe: exec () -> () -> () -> ()
             set exe = create(co)
-            resume exe(<.1 ()>: <(),()>)
+            start exe()
+            resume exe()
             var v: Int
         """)
-        assert(out == null) { out!! }
+        assert(out == "anon : (lin 4, col 23) : create error : types mismatch") { out!! }
+        //assert(out == null) { out!! }
     }
     @Test
     fun bc_12_exe_yield () {
@@ -331,7 +346,7 @@ class Static {
     @Test
     fun bc_13_exe_yield_err () {
         val out = static("""
-                coro co (<(),()>) -> <(),()> {
+                coro co () -> () -> () -> () {
                     do {
                         var x: Int = yield()
                     }
@@ -343,7 +358,7 @@ class Static {
     fun bc_14_exe_yield_err () {
         val out = static("""
             do {
-                coro co (<(),()>) -> <(),()> {
+                coro co () -> () -> () -> () {
                     yield(<.1 10>: <Int,()>)
                 }
             }

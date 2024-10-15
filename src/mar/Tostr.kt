@@ -106,7 +106,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Loop   -> "loop {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Break  -> "break"
         is Stmt.Create -> this.dst.cond { "set ${it.to_str(pre)} = " } + "create(" + this.co.to_str(pre) + ")"
-        is Stmt.Start  -> "set " + this.dst.to_str(pre) + " = resume " + this.exe.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
+        is Stmt.Start  -> this.dst.cond { "set ${it.to_str(pre)} = " } + "start " + this.exe.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
         is Stmt.Resume -> this.dst.cond { "set ${it.to_str(pre)} = " } + "resume " + this.exe.to_str(pre) + "(" + this.arg.to_str(pre) + ")"
         is Stmt.Yield  -> this.dst.cond { "set ${it.to_str(pre)} = " } + "yield(" + this.arg.to_str(pre) + ")"
         is Stmt.Call   -> this.call.to_str(pre)

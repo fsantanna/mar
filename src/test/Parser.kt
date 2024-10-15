@@ -100,8 +100,8 @@ class Parser {
         G.tks = ("coro () -> () -> () -> ()").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Proto.Coro.Vars && tp.inps.size==0 && tp.res is Type.Unit && tp.yld is Type.Unit && tp.out is Type.Unit)
-        assert(tp.to_str() == "coro coro () -> () -> () -> ()")
+        assert(tp is Type.Proto.Coro && tp.inps.size==0 && tp.res is Type.Unit && tp.yld is Type.Unit && tp.out is Type.Unit)
+        assert(tp.to_str() == "coro () -> () -> () -> ()")
     }
     @Test
     fun aj_09_type_exec () {
@@ -115,14 +115,16 @@ class Parser {
     fun aj_10_type_coro_err () {
         G.tks = ("coro (Int,Int) -> ()").lexer()
         parser_lexer()
+        assert(trap { parser_type() } == "anon : (lin 1, col 21) : expected \"->\" : have end of file")
         //assert(trap { parser_type() } == "anon : (lin 1, col 1) : coro error : unexpected second argument")
-        assert(trap { parser_type() } == "anon : (lin 1, col 7) : expected \"<\" : have \"Int\"")
+        //assert(trap { parser_type() } == "anon : (lin 1, col 7) : expected \"<\" : have \"Int\"")
     }
     @Test
     fun aj_11_type_exec_err () {
         G.tks = ("exec (Int,Int) -> Int").lexer()
         parser_lexer()
-        assert(trap { parser_type() } == "anon : (lin 1, col 7) : expected \"<\" : have \"Int\"")
+        assert(trap { parser_type() } == "anon : (lin 1, col 22) : expected \"->\" : have end of file")
+        //assert(trap { parser_type() } == "anon : (lin 1, col 7) : expected \"<\" : have \"Int\"")
         //assert(trap { parser_type() } == "anon : (lin 1, col 1) : exec error : unexpected second argument")
     }
 
@@ -459,18 +461,6 @@ class Parser {
         val s = parser_stmt().first()
         assert(s is Stmt.Proto.Coro && s.tp.out is Type.Unit)
         assert(s.to_str() == "coro co (x: ()) -> () -> () -> () {\n}") { s.to_str() }
-    }
-    @Test
-    fun hh_09_coro() {
-        G.tks = ("coro co (x: <()>) -> <(),()> {}").lexer()
-        parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 1, col 13) : type error : expected two cases")
-    }
-    @Test
-    fun hh_10_coro() {
-        G.tks = ("coro co (x: <(),()>) -> <()> {}").lexer()
-        parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 1, col 25) : type error : expected two cases")
     }
 
     // IF / LOOP

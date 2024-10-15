@@ -188,10 +188,10 @@ class Exec  {
     fun ff_01_coro () {
         val out = test("""
             do {
-                coro co (<(),()>) -> <(),()> {
+                coro co () -> () -> () -> () {
                     `puts("OK");`
                 }
-                var exe: exec (<(),()>) -> <(),()> = create(co)
+                var exe: exec () -> () -> () -> () = create(co)
                 `puts("END");`
             }
         """)
@@ -200,37 +200,38 @@ class Exec  {
     @Test
     fun ff_02_coro () {
         val out = test("""
-            coro co (<(),()>) -> <(),()> {
+            coro co () -> () -> () -> () {
                 `puts("OK");`
             }
-            var exe: exec (<(),()>) -> <(),()> = create(co)
-            resume exe(<.1 ()>: <(),()>)
+            var exe: exec () -> () -> () -> () = create(co)
+            start exe()
+            ;;resume exe()
         """)
         assert(out == "OK\n") { out }
     }
     @Test
     fun ff_03_coro () {
         val out = test("""
-            coro co (v: <Int,()>) -> <(),()> {
+            coro co (v: Int) -> () -> () -> () {
                 `printf("%d\n", ceu_exe->mem.v);`
             }
-            var exe: exec (<Int,()>) -> <(),()> = create(co)
-            resume exe(<.1 10>: <Int,()>)
+            var exe: exec (Int) -> () -> () -> () = create(co)
+            start exe(10)
         """)
         assert(out == "10\n") { out }
     }
     @Test
     fun ff_04_coro () {
         val out = test("""
-            coro co (v: <Int,Int>) -> <(),()> {
+            coro co (v: Int) -> Int -> () -> () {
                 `printf("%d\n", ceu_exe->mem.v);`
                 yield()
                 set v = v + 10
                 `printf("%d\n", ceu_exe->mem.v);`
             }
-            var exe: exec (<Int,Int>) -> <(),()> = create(co)
-            resume exe(<.1 10>: <Int,Int>)
-            resume exe(<.2 99>: <Int,Int>)
+            var exe: exec (Int) -> Int -> () -> () = create(co)
+            start exe(10)
+            resume exe(99)
         """)
         assert(out == "10\n20\n") { out }
     }
@@ -238,13 +239,13 @@ class Exec  {
     fun ff_05_coro () {
         val out = test("""
             do {
-                coro co (x2: <Int,Int>) -> <Int,Int> {
+                coro co (x2: Int) -> Int -> Int -> Int {
                     var y2:Int = yield(x2*2)
                     return(y2 * 2)
                 }
-                var exe: exec (<Int,Int>) -> <Int,Int> = create(co)
-                var x1: <Int,Int> = resume exe(<.1 5>: <Int,Int>)
-                var y1: <Int,Int> = resume exe(<.2 (x1!1 + 10)>: <Int,Int>)
+                var exe: exec (Int) -> Int -> Int -> Int = create(co)
+                var x1: <Int,Int> = start exe(5)
+                var y1: <Int,Int> = resume exe(x1!1 + 10)
                 `printf("%d\n", y1._2);`
             }
         """)

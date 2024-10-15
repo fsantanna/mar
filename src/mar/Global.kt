@@ -107,7 +107,7 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     data class Break   (val tk_: Tk.Fix): Stmt(G.N++, tk_)
 
     data class Create (val tk_: Tk.Fix, val dst: Expr, val co: Expr): Stmt(G.N++, tk_)
-    data class Start  (val tk_: Tk.Fix, val dst: Expr, val exe: Expr, val args: List<Expr>): Stmt(G.N++, tk_)
+    data class Start  (val tk_: Tk.Fix, val dst: Expr?, val exe: Expr, val args: List<Expr>): Stmt(G.N++, tk_)
     data class Resume (val tk_: Tk.Fix, val dst: Expr?, val exe: Expr, val arg: Expr): Stmt(G.N++, tk_)
     data class Yield  (val tk_: Tk.Fix, val dst: Expr?, val arg: Expr): Stmt(G.N++, tk_)
 
