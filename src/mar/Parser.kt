@@ -131,11 +131,11 @@ fun parser_var_type (): Var_Type {
 
 fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
     return when {
-        (pre?.str=="func" || accept_fix("func")) -> {
+        (pre!=null || accept_fix("func") || accept_fix("coro")) -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
             accept_fix_err("(")
             val vars = req_vars || check_enu("Var")
-            val inp = parser_list(",", ")") {
+            val inps = parser_list(",", ")") {
                 if (vars) {
                     parser_var_type()
                 } else {
@@ -143,58 +143,39 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
                 }
             }
             accept_fix_err("->")
+            val (res,yld) = if (tk0.str != "coro") Pair(null,null) else {
+                val res = parser_type(req_vars)
+                accept_fix_err("->")
+                val yld = parser_type(req_vars)
+                accept_fix_err("->")
+                Pair(res, yld)
+            }
             val out = parser_type(req_vars)
-            if (vars) {
-                Type.Proto.Func.Vars(tk0, inp as List<Var_Type>, out)
-            } else {
-                Type.Proto.Func(tk0, inp as List<Type>, out)
-            }
-        }
-        (pre?.str=="coro" || accept_fix("coro")) -> {
-            val tk0 = pre ?: (G.tk0 as Tk.Fix)
-            accept_fix_err("(")
-            val vars = check_enu("Var")
-            val inp = if (vars) {
-                accept_enu_err("Var")
-                val id = G.tk0 as Tk.Var
-                accept_fix_err(":")
-                check_op_err("<")
-                val tp = parser_type() as Type.Union
-                if (tp.ts.size != 2) {
-                    err(tp.tk, "type error : expected two cases")
-                }
-                Pair(id,tp)
-            } else {
-                check_op_err("<")
-                val tp = parser_type(req_vars) as Type.Union
-                if (tp.ts.size != 2) {
-                    err(tp.tk, "type error : expected two cases")
-                }
-                tp
-            }
-            accept_fix_err(")")
-            accept_fix_err("->")
-            check_op_err("<")
-            val out = parser_type(req_vars) as Type.Union
-            if (out.ts.size != 2) {
-                err(out.tk, "type error : expected two cases")
-            }
-            if (vars) {
-                Type.Proto.Coro.Vars(tk0, inp as Var_Type, out)
-            } else {
-                Type.Proto.Coro(tk0, inp as Type.Union, out)
+            when {
+                (tk0.str=="func" &&  req_vars) ->
+                    Type.Proto.Func.Vars(tk0, inps as List<Var_Type>, out)
+                (tk0.str=="func" && !req_vars) ->
+                    Type.Proto.Func(tk0, inps as List<Type>, out)
+                (tk0.str=="coro" &&  req_vars) ->
+                    Type.Proto.Coro.Vars(tk0, inps as List<Var_Type>, res!!, yld!!, out)
+                (tk0.str=="coro" && !req_vars) ->
+                    Type.Proto.Coro(tk0, inps as List<Type>, res!!, yld!!, out)
+                else -> error("impossible case")
             }
         }
         accept_fix("exec") -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
             accept_fix_err("(")
-            check_op_err("<")
-            val inp = parser_type() as Type.Union
-            accept_fix_err(")")
+            val inps = parser_list(",", ")") {
+                parser_type(req_vars)
+            }
             accept_fix_err("->")
-            check_op_err("<")
-            val out = parser_type() as Type.Union
-            Type.Exec(tk0, inp, out)
+            val res = parser_type(req_vars)
+            accept_fix_err("->")
+            val yld = parser_type(req_vars)
+            accept_fix_err("->")
+            val out = parser_type()
+            Type.Exec(tk0, inps, res, yld, out)
         }
         accept_fix("(") -> {
             val tp = if (check_fix(")")) {
@@ -340,7 +321,7 @@ fun parser_expr (): Expr {
 }
 
 fun check_stmt_is_expr (): Boolean {
-    return (check_fix("create") || check_fix("resume") || check_fix("yield"))
+    return (check_fix("create") || check_fix("start") || check_fix("resume") || check_fix("yield"))
 }
 
 fun parser_stmt (set: Expr? = null): List<Stmt> {
@@ -357,7 +338,7 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
             when (tp) {
                 is Type.Proto.Func.Vars ->
                     Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk_, ss))
-                is Type.Proto.Coro ->
+                is Type.Proto.Coro.Vars ->
                     Stmt.Proto.Coro(tk0, id, tp, Stmt.Block(tp.tk_, ss))
                 else -> error("impossible case")
             }.let { listOf(it) }
@@ -436,6 +417,13 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
             val co = parser_expr()
             accept_fix_err(")")
             listOf(Stmt.Create(tk0, set, co))
+        }
+        (set!=null && accept_fix("start")) -> {
+            val tk0 = G.tk0 as Tk.Fix
+            val exe = parser_expr_4_prim()
+            accept_fix_err("(")
+            val args = parser_list(",",")") { parser_expr() }
+            listOf(Stmt.Start(tk0, set, exe, args))
         }
         accept_fix("resume") -> {
             val tk0 = G.tk0 as Tk.Fix

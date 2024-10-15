@@ -31,7 +31,7 @@ val BINS = listOf (
 val KEYWORDS: SortedSet<String> = (
     setOf (
         "break", "do", "coro", "create", "else", "false", "func",
-        "if", "loop", "null", "resume", "return", "set",
+        "if", "loop", "null", "resume", "return", "set", "start",
         "true", "var", "exec", "yield",
     ).toSortedSet()
 )
@@ -55,20 +55,20 @@ sealed class Type (var n: Int, val tk: Tk) {
     data class Unit    (val tk_: Tk.Fix): Type(G.N++, tk_)
     data class Basic   (val tk_: Tk.Type): Type(G.N++, tk_)
     data class Pointer (val tk_: Tk.Op, val ptr: Type): Type(G.N++, tk_)
-    data class Tuple   (val tk_: Tk.Fix, val ts: List<Type>): Type(G.N++, tk_)
-    data class Union   (val tk_: Tk.Op, val ts: List<Type>): Type(G.N++, tk_)
+    data class Tuple   (val tk_: Tk, val ts: List<Type>): Type(G.N++, tk_)
+    data class Union   (val tk_: Tk, val ts: List<Type>): Type(G.N++, tk_)
 
-    sealed class Proto (val tk_: Tk.Fix, val inp: kotlin.Any, val out: Type): Type(G.N++, tk_) {
-        open class Func (val tk__: Tk.Fix, val inp_: List<Type>, val out_: Type): Proto(tk__, inp_, out_) {
-            data class Vars (val tk___: Tk.Fix, val inp__: List<Var_Type>, val out__: Type) :
-                Func(tk___, inp__.map { (_, tp) -> tp }, out__)
+    sealed class Proto (val tk_: Tk.Fix, val inps: List<Type>, val out: Type): Type(G.N++, tk_) {
+        open class Func (val tk__: Tk.Fix, val inps_: List<Type>, val out_: Type): Proto(tk__, inps_, out_) {
+            data class Vars (val tk___: Tk.Fix, val inps__: List<Var_Type>, val out__: Type) :
+                Func(tk___, inps__.map { (_, tp) -> tp }, out__)
         }
-        open class Coro (val tk__: Tk.Fix, val inp_: Type.Union, val out_: Type.Union): Proto(tk__, inp_, out_) {
-            data class Vars (val tk___: Tk.Fix, val inp__: Var_Type, val out__: Type.Union) :
-                Coro(tk___, inp__.second as Union, out__)
+        open class Coro (val tk__: Tk.Fix, val inps_: List<Type>, val res: Type, val yld: Type, val out_: Type): Proto(tk__, inps_, out_) {
+            data class Vars (val tk___: Tk.Fix, val inps__: List<Var_Type>, val res_: Type, val yld_: Type, val out__: Type) :
+                Coro(tk___, inps__.map { (_, tp) -> tp }, res_, yld_, out__)
         }
     }
-    data class Exec (val tk_: Tk.Fix, val inp: Type.Union, val out: Type.Union): Type(G.N++, tk_)
+    data class Exec (val tk_: Tk.Fix, val inps: List<Type>, val res: Type, val yld: Type, val out: Type): Type(G.N++, tk_)
 }
 
 sealed class Expr (var n: Int, val tk: Tk) {
@@ -94,7 +94,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
 sealed class Stmt (var n: Int, val tk: Tk) {
     sealed class Proto (val tk_: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, tk_) {
         data class Func (val tk__: Tk.Fix, val id_: Tk.Var, val tp_: Type.Proto.Func.Vars, val blk_: Stmt.Block) : Stmt.Proto(tk__, id_, tp_, blk_)
-        data class Coro (val tk__: Tk.Fix, val id_: Tk.Var, val tp_: Type.Proto.Coro, val blk_: Stmt.Block) : Stmt.Proto(tk__, id_, tp_, blk_)
+        data class Coro (val tk__: Tk.Fix, val id_: Tk.Var, val tp_: Type.Proto.Coro.Vars, val blk_: Stmt.Block) : Stmt.Proto(tk__, id_, tp_, blk_)
     }
     data class Return  (val tk_: Tk.Fix, val e: Expr) : Stmt(G.N++, tk_)
 
@@ -107,6 +107,7 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     data class Break   (val tk_: Tk.Fix): Stmt(G.N++, tk_)
 
     data class Create (val tk_: Tk.Fix, val dst: Expr, val co: Expr): Stmt(G.N++, tk_)
+    data class Start  (val tk_: Tk.Fix, val dst: Expr, val exe: Expr, val args: List<Expr>): Stmt(G.N++, tk_)
     data class Resume (val tk_: Tk.Fix, val dst: Expr?, val exe: Expr, val arg: Expr): Stmt(G.N++, tk_)
     data class Yield  (val tk_: Tk.Fix, val dst: Expr?, val arg: Expr): Stmt(G.N++, tk_)
 

@@ -17,6 +17,7 @@ fun <V> Stmt.dn_collect_pos (fs: ((Stmt)->List<V>)?, fe: ((Expr)->List<V>)?, ft:
         is Stmt.Break -> emptyList()
 
         is Stmt.Create -> this.dst.dn_collect_pos(fe) + this.co.dn_collect_pos(fe)
+        is Stmt.Start  -> this.dst.dn_collect_pos(fe) + this.exe.dn_collect_pos(fe) + this.args.map { it.dn_collect_pos(fe) }.flatten()
         is Stmt.Resume -> (this.dst?.dn_collect_pos(fe) ?: emptyList()) + this.exe.dn_collect_pos(fe) + this.arg.dn_collect_pos(fe)
         is Stmt.Yield  -> (this.dst?.dn_collect_pos(fe) ?: emptyList()) + this.arg.dn_collect_pos(fe)
 
@@ -54,9 +55,9 @@ fun <V> Type.dn_collect_pos (ft: ((Type)->List<V>)?): List<V> {
         is Type.Pointer -> this.ptr.dn_collect_pos(ft)
         is Type.Tuple -> this.ts.map { it.dn_collect_pos(ft) }.flatten()
         is Type.Union -> this.ts.map { it.dn_collect_pos(ft) }.flatten()
-        is Type.Proto.Func -> (this.inp_ + listOf(this.out)).map { it.dn_collect_pos(ft) }.flatten()
-        is Type.Proto.Coro -> listOf(this.inp_, this.out).map { it.dn_collect_pos(ft) }.flatten()
-        is Type.Exec -> listOf(this.inp,this.out).map { it.dn_collect_pos(ft) }.flatten()
+        is Type.Proto.Func -> (this.inps + listOf(this.out)).map { it.dn_collect_pos(ft) }.flatten()
+        is Type.Proto.Coro -> (this.inps + listOf(this.res, this.yld, this.out)).map { it.dn_collect_pos(ft) }.flatten()
+        is Type.Exec -> (this.inps + listOf(this.res, this.yld, this.out)).map { it.dn_collect_pos(ft) }.flatten()
     } + ft(this)
 }
 
@@ -94,6 +95,7 @@ fun <V> Stmt.dn_collect_pre (fs: ((Stmt)->List<V>?)?, fe: ((Expr)->List<V>?)?, f
         is Stmt.Break -> emptyList()
 
         is Stmt.Create -> this.dst.dn_collect_pre(fe) + this.co.dn_collect_pre(fe)
+        is Stmt.Start  -> this.dst.dn_collect_pre(fe) + this.exe.dn_collect_pre(fe) + this.args.map { it.dn_collect_pre(fe) }.flatten()
         is Stmt.Resume -> (this.dst?.dn_collect_pre(fe) ?: emptyList()) + this.exe.dn_collect_pre(fe) + this.arg.dn_collect_pre(fe)
         is Stmt.Yield  -> (this.dst?.dn_collect_pre(fe) ?: emptyList()) + this.arg.dn_collect_pre(fe)
 
@@ -139,9 +141,9 @@ fun <V> Type.dn_collect_pre (ft: ((Type)->List<V>?)?): List<V> {
         is Type.Pointer -> this.ptr.dn_collect_pre(ft)
         is Type.Tuple -> this.ts.map { it.dn_collect_pre(ft) }.flatten()
         is Type.Union -> this.ts.map { it.dn_collect_pre(ft) }.flatten()
-        is Type.Proto.Func -> (this.inp_ + listOf(this.out)).map { it.dn_collect_pre(ft) }.flatten()
-        is Type.Proto.Coro -> (listOf(this.inp_,this.out)).map { it.dn_collect_pre(ft) }.flatten()
-        is Type.Exec -> listOf(this.inp,this.out).map { it.dn_collect_pre(ft) }.flatten()
+        is Type.Proto.Func -> (this.inps + listOf(this.out)).map { it.dn_collect_pre(ft) }.flatten()
+        is Type.Proto.Coro -> (this.inps + listOf(this.res,this.yld,this.out)).map { it.dn_collect_pre(ft) }.flatten()
+        is Type.Exec -> (this.inps + listOf(this.res,this.yld,this.out)).map { it.dn_collect_pre(ft) }.flatten()
     }
 }
 

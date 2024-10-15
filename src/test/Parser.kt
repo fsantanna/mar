@@ -57,7 +57,7 @@ class Parser {
         G.tks = ("func (Int,Int) -> ()").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Proto.Func && tp.tk.str=="func" && tp.inp_.size==2 && tp.out is Type.Unit)
+        assert(tp is Type.Proto.Func && tp.tk.str=="func" && tp.inps_.size==2 && tp.out is Type.Unit)
     }
     @Test
     fun aj_03_type () {
@@ -97,19 +97,19 @@ class Parser {
     }
     @Test
     fun aj_08_type_coro () {
-        G.tks = ("coro (<(),()>) -> <(),()>").lexer()
+        G.tks = ("coro () -> () -> () -> ()").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Proto.Coro && tp.inp_.ts.size==2 && tp.out_.ts.size==2)
-        assert(tp.to_str() == "coro (<(),()>) -> <(),()>")
+        assert(tp is Type.Proto.Coro.Vars && tp.inps.size==0 && tp.res is Type.Unit && tp.yld is Type.Unit && tp.out is Type.Unit)
+        assert(tp.to_str() == "coro coro () -> () -> () -> ()")
     }
     @Test
     fun aj_09_type_exec () {
-        G.tks = ("exec (<Int>) -> <Int>").lexer()
+        G.tks = ("exec (Int) -> () -> () -> Int").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Exec && tp.inp.ts[0] is Type.Basic)
-        assert(tp.to_str() == "exec (<Int>) -> <Int>") { tp.to_str() }
+        assert(tp is Type.Exec && tp.inps.size==1 && tp.res is Type.Unit && tp.yld is Type.Unit && tp.out is Type.Basic)
+        assert(tp.to_str() == "exec (Int) -> () -> () -> Int") { tp.to_str() }
     }
     @Test
     fun aj_10_type_coro_err () {
@@ -446,19 +446,19 @@ class Parser {
     }
     @Test
     fun hh_07_coro() {
-        G.tks = ("coro co (<(),()>) -> <(),()> {}").lexer()
+        G.tks = ("coro co () -> () -> () -> () {}").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Proto.Coro && s.tp_.inp_.ts[1] is Type.Unit)
-        assert(s.to_str() == "coro co (<(),()>) -> <(),()> {\n}") { s.to_str() }
+        assert(s is Stmt.Proto.Coro && s.tp.inps.size==0)
+        assert(s.to_str() == "coro co () -> () -> () -> () {\n}") { s.to_str() }
     }
     @Test
     fun hh_08_coro() {
-        G.tks = ("coro co (x: <(),()>) -> <(),()> {}").lexer()
+        G.tks = ("coro co (x: ()) -> () -> () -> () {}").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Proto.Coro && s.tp_.out_.ts[1] is Type.Unit)
-        assert(s.to_str() == "coro co (x: <(),()>) -> <(),()> {\n}") { s.to_str() }
+        assert(s is Stmt.Proto.Coro && s.tp.out is Type.Unit)
+        assert(s.to_str() == "coro co (x: ()) -> () -> () -> () {\n}") { s.to_str() }
     }
     @Test
     fun hh_09_coro() {

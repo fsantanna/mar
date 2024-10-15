@@ -3,9 +3,9 @@ package mar
 fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
     return this.fup().let {
         when {
-            (it is Stmt.Proto.Func) -> it.tp_.inp__.map { Pair(this.n, it) }
+            (it is Stmt.Proto.Func) -> it.tp_.inps__.map { Pair(this.n, it) }
             (it is Stmt.Proto.Coro) -> if (it.tp_ !is Type.Proto.Coro.Vars) emptyList() else {
-                listOf(Pair(this.n, it.tp_.inp__.let { (id,tp) -> Pair(id, (tp as Type.Union).ts[0]) }))
+                it.tp_.inps__.map { Pair(this.n, it) }
             }
             else -> emptyList()
         }
@@ -82,8 +82,7 @@ fun check_types () {
             is Stmt.Return -> {
                 val out = me.up_first { it is Stmt.Proto.Func || it is Stmt.Proto.Coro}.let {
                     when {
-                        (it is Stmt.Proto.Func) -> it.tp.out
-                        (it is Stmt.Proto.Coro) -> it.tp_.out_.ts[1]
+                        (it is Stmt.Proto) -> it.tp.out
                         else -> error("impossible case")
                     }
                 }
@@ -107,9 +106,21 @@ fun check_types () {
                     err(me.tk, "create error : expected coroutine prototype")
                 }
                 val tp = me.dst.type()
-                val xtp = Type.Exec(co.tk_, co.inp_, co.out_)
+                val xtp = Type.Exec(co.tk_, co.inps, co.res, co.yld, co.out)
                 if (!xtp.is_sup_of(tp)) {
                     err(me.tk, "create error : types mismatch")
+                }
+            }
+            is Stmt.Start -> {
+                val exe = me.exe.type()
+                if (exe !is Type.Exec) {
+                    err(me.tk, "start error : expected active coroutine")
+                }
+
+                val ok1 = me.dst.type().is_sup_of(exe.out)
+                val ok2 = (exe.inps.size == me.args.size) && exe.inps.zip(me.args).all { (thi,oth) -> thi.is_sup_of(oth.type()) }
+                if (!ok1 || !ok2) {
+                    err(me.tk, "start error : types mismatch")
                 }
             }
             is Stmt.Resume -> {
@@ -118,8 +129,8 @@ fun check_types () {
                     err(me.tk, "resume error : expected active coroutine")
                 }
 
-                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(exe.out)
-                val ok2 = exe.inp.is_sup_of(me.arg.type())
+                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(Type.Union(exe.tk, listOf(exe.yld,exe.out)))
+                val ok2 = exe.res.is_sup_of(me.arg.type())
                 if (!ok1 || !ok2) {
                     err(me.tk, "resume error : types mismatch")
                 }
@@ -130,8 +141,8 @@ fun check_types () {
                     err(me.tk, "yield error : expected enclosing coro")
                 }
                 val exe = up.tp_
-                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(exe.inp_.ts[1])
-                val ok2 = exe.out_.ts[0].is_sup_of(me.arg.type())
+                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(exe.yld)
+                val ok2 = exe.yld.is_sup_of(me.arg.type())
                 if (!ok1 || !ok2) {
                     err(me.tk, "yield error : types mismatch")
                 }
@@ -187,8 +198,8 @@ fun check_types () {
                 val ok = when {
                     (tp is Type.Any) -> true
                     (tp !is Type.Proto.Func) -> false
-                    (tp.inp_.size != me.args.size) -> false
-                    else -> tp.inp_.zip(me.args).all { (par, arg) ->
+                    (tp.inps_.size != me.args.size) -> false
+                    else -> tp.inps_.zip(me.args).all { (par, arg) ->
                         par.is_sup_of(arg.type())
                     }
                 }

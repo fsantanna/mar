@@ -29,18 +29,18 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Tuple -> "[" + this.ts.map { it.to_str(pre) }.joinToString(",") + "]"
         is Type.Union -> "<" + this.ts.map { it.to_str(pre) }.joinToString(",") + ">"
         is Type.Proto -> {
-            val inp = when (this) {
-                is Type.Proto.Func.Vars -> this.inp__.map { it.to_str(pre) }.joinToString(",")
-                is Type.Proto.Coro.Vars -> this.inp__.to_str(pre)
-                is Type.Proto.Func -> this.inp_.map { it.to_str(pre) }.joinToString(",")
-                is Type.Proto.Coro -> this.inp_.to_str(pre)
+            val inps = when (this) {
+                is Type.Proto.Func.Vars -> this.inps__.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Coro.Vars -> this.inps__.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Func -> this.inps_.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Coro -> this.inps_.map { it.to_str(pre) }.joinToString(",")
             }
             when (this) {
-                is Type.Proto.Func -> "func (" + inp + ") -> " + this.out.to_str(pre)
-                is Type.Proto.Coro -> "coro (" + inp + ") -> " + this.out.to_str(pre)
+                is Type.Proto.Func -> "func ($inps) -> ${this.out.to_str(pre)}"
+                is Type.Proto.Coro -> "coro ($inps) -> ${this.res.to_str(pre)} -> ${this.yld.to_str(pre)} -> ${this.out.to_str(pre)}"
             }
         }
-        is Type.Exec -> "exec (" + this.inp.to_str(pre) + ") -> " + this.out.to_str(pre)
+        is Type.Exec -> "exec (${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.res.to_str(pre)} -> ${this.yld.to_str(pre)} -> ${this.out.to_str(pre)}"
     }.let {
         when {
             !pre -> it
@@ -106,6 +106,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Loop   -> "loop {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Break  -> "break"
         is Stmt.Create -> this.dst.cond { "set ${it.to_str(pre)} = " } + "create(" + this.co.to_str(pre) + ")"
+        is Stmt.Start  -> "set " + this.dst.to_str(pre) + " = resume " + this.exe.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
         is Stmt.Resume -> this.dst.cond { "set ${it.to_str(pre)} = " } + "resume " + this.exe.to_str(pre) + "(" + this.arg.to_str(pre) + ")"
         is Stmt.Yield  -> this.dst.cond { "set ${it.to_str(pre)} = " } + "yield(" + this.arg.to_str(pre) + ")"
         is Stmt.Call   -> this.call.to_str(pre)
