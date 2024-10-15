@@ -270,4 +270,13 @@ class Exec  {
         """)
         assert(out == "10 / 20\n") { out }
     }
+    @Test
+    fun gg_03_tuple () {
+        val out = test("""
+            var x: [Int] = [10]
+            var y: Int = x.1
+            `printf("%d\n", y);`
+        """)
+        assert(out == "10\n") { out }
+    }
 }

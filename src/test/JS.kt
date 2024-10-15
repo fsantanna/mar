@@ -59,14 +59,14 @@ class JS {
     @Test
     fun x_01() {
         val out = test("""
-            coro genFunc () -> () {
+            coro genFunc (<(),()>) -> <(),()> {
                 `puts("First");`
                 yield()
                 `puts("Second");`
             }
-            var genObj: exec () -> () = create(genFunc)
-            resume genObj()     ;; First
-            resume genObj()     ;; Second
+            var genObj: exec (<(),()>) -> <(),()> = create(genFunc)
+            resume genObj(<.1 ()>: <(),()>)     ;; First
+            resume genObj(<.2 ()>: <(),()>)     ;; Second
         """)
         assert(out == "First\nSecond\n") { out }
     }
@@ -76,19 +76,19 @@ class JS {
     @Test
     fun x_02() {
         val out = test("""
-            coro gen1 (v: Int) -> () {
+            coro gen1 (v: <Int,()>) -> <(),()> {
                 `printf("%d\n", ceu_exe->mem.v);`
             }
-            var co1: exec (Int) -> () = create(gen1)
-            resume co1(1)
+            var co1: exec (<Int,()>) -> <(),()> = create(gen1)
+            resume co1(<.1 1>: <Int,()>)
 
-            var gen2: \coro (Int) -> () = \gen1
-            var co2:  exec (Int) -> () = create(gen2\)
-            resume co2(2)
+            var gen2: \coro (<Int,()>) -> <(),()> = \gen1
+            var co2:  exec (<Int,()>) -> <(),()> = create(gen2\)
+            resume co2(<.1 2>: <Int,()>)
             
-            var obj3: [\coro (Int) -> ()] = [gen2]
-            var co3: exec (Int) -> () = create(obj3._1\)
-            resume co3(3)
+            var obj3: [\coro (<Int,()>) -> <(),()>] = [gen2]
+            var co3: exec (<Int,()>) -> <(),()> = create(obj3.1\)
+            resume co3(<.1 3>: <Int,()>)
             
             ;; no co4
         """)
@@ -100,23 +100,29 @@ class JS {
     @Test
     fun x_03() {
         val out = test("""
-            coro objectEntries (obj: <\[Int,Int],()>) -> <(),[Int,Int]> {
-                loop {
-                    yield()
-                loop kv in to-iter(obj) {
-                    yield(drop(kv))
-                }
+            coro objectEntries (obj: <\[Int,Int],()>) -> <[Int,Int],()> {
+                yield([1, obj\.1])
+                yield([2, obj\.2])
+                return()
+                ;;loop kv in to-iter(obj) {
+                ;;    yield(drop(kv))
+                ;;}
             }
             
             var jane: [Int, Int] = [10, 20]
-            var exe: exec (<[Int,Int],()>) -> [Int,Int] = create(objectEntries)
-            var iv: [Int,Int] = resume exe(\jane)
+            var exe: exec (<\[Int,Int],()>) -> <[Int,Int],()> = create(objectEntries)
+            var iv:  <[Int,Int],()> = resume exe(<.1 \jane>: <\[Int,Int],()>)
             loop {
-                
-                println((to.string(k) ++ ": ") ++ v)
+                if iv?2 {
+                    break
+                }
+                var i: Int = iv!1.1
+                var v: Int = iv!1.2
+                `printf("[%d,%d]\n", i, v);`
+                set iv = resume exe(<.2 ()>: <\[Int,Int],()>)
             }
         """)
-        assert(out == ":first: Jane\n:last: Doe\n") { out }
+        assert(out == "[1,10]\n[2,20]\n") { out }
     }
 
     //  22.1.4 Use case: simpler asynchronous code

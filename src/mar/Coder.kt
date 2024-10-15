@@ -12,16 +12,19 @@ fun Var_Type.coder (pre: Boolean = false): String {
     return tp.coder(pre) + " " + id.str
 }
 fun Type.coder (pre: Boolean = false): String {
+    fun String.clean (): String {
+        return this.replace('*','_')
+    }
     return when (this) {
         is Type.Any        -> TODO()
         is Type.Basic      -> this.tk.str
         is Type.Unit       -> "_VOID_"
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
-        is Type.Tuple      -> "CEU_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}"
-        is Type.Union      -> "CEU_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}"
-        is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inp_.to_void().map { it.coder(pre) }.joinToString("__")}"
-        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inp_.coder(pre)}"
-        is Type.Exec       -> "CEU_Exec__${this.out.coder(pre)}__${this.inp.coder(pre)}"
+        is Type.Tuple      -> "CEU_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
+        is Type.Union      -> "CEU_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
+        is Type.Proto.Func -> "CEU_Func__${this.out.coder(pre)}__${this.inps_.to_void().map { it.coder(pre) }.joinToString("__")}".clean()
+        is Type.Proto.Coro -> "CEU_Coro__${this.out.coder(pre)}__${this.inp_.coder(pre)}".clean()
+        is Type.Exec       -> "CEU_Exec__${this.out.coder(pre)}__${this.inp.coder(pre)}".clean()
     }
 }
 
@@ -84,10 +87,13 @@ fun coder_types (pre: Boolean): String {
                 listOf("""
                     #ifndef __${x}__
                     #define __${x}__
-                    typedef union $x {
-                        ${me.ts.mapIndexed { i,tp ->
+                    typedef struct $x {
+                        int tag;
+                        union {
+                            ${me.ts.mapIndexed { i,tp ->
                             tp.coder() + " _" + (i+1) + ";\n"
                         }.joinToString("")}
+                        };
                     } $x;
                     #endif
                 """)
@@ -131,7 +137,7 @@ fun Stmt.coder (pre: Boolean = false): String {
             this.up_first { it is Stmt.Proto.Func || it is Stmt.Proto.Coro}.let {
                 when {
                     (it is Stmt.Proto.Func) -> "return (" + this.e.coder(pre) + ");"
-                    (it is Stmt.Proto.Coro) -> "return (${it.tp_.out_.coder(pre)}) { ._2 = ${this.e.coder(pre)} };"
+                    (it is Stmt.Proto.Coro) -> "return (${it.tp_.out_.coder(pre)}) { .tag=2, ._2=${this.e.coder(pre)} };"
                     else -> error("impossible case")
                 }
             }
@@ -191,7 +197,7 @@ fun Stmt.coder (pre: Boolean = false): String {
             val out = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_.out_
             """
             ceu_exe->pc = ${this.n};
-            return (${out.coder(pre)}) { ._1 = ${this.arg.coder(pre)} };
+            return (${out.coder(pre)}) { .tag=1, ._1=${this.arg.coder(pre)} };
         case ${this.n}:
             ${(this.dst).cond { """
                 ${it.coder(pre)} = ceu_arg._2;
@@ -227,10 +233,10 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
         is Expr.Tuple -> "(${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } }"
-        is Expr.Union -> "(${this.type().coder(pre)}) { ._${this.idx} = ${this.v.coder(pre) } }"
-        is Expr.Index -> "(${this.col.coder(pre)}.${this.idx})"
+        is Expr.Union -> "(${this.type().coder(pre)}) { .tag=${this.idx}, ._${this.idx}=${this.v.coder(pre) } }"
+        is Expr.Index -> "(${this.col.coder(pre)}._${this.idx})"
         is Expr.Disc  -> "(${this.col.coder(pre)}._${this.idx})"
-        is Expr.Pred  -> TODO() //"(${this.col.coder(pre)}?${this.idx})"
+        is Expr.Pred  -> "(${this.col.coder(pre)}.tag == ${this.idx})"
 
         is Expr.Nat -> this.tk.str
         is Expr.Acc -> this.tk_.coder(this, pre)

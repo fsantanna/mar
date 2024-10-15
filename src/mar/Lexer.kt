@@ -154,6 +154,7 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
         }
     }
 
+    var prv: Char? = null
     while (true) {
         val (x,pos) = next()
         when {
@@ -176,7 +177,11 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                         yield(Tk.Op("<", pos))
                         yield(Tk.Op(">", pos.copy(lin=pos.col+1)))
                     }
-                    else -> err(pos, "token error : unexpected $op")
+                    else -> {
+                        for (i in 0..op.length-1) {
+                            yield(Tk.Op(op[i].toString(), pos.copy(lin=pos.col+1+i)))
+                        }
+                    }
                 }
             }
             (x.isLetter() || x=='_') -> {
@@ -188,7 +193,11 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                 }
             }
             x.isDigit() -> {
-                val num = x + read2While { it=='.' || it.isLetterOrDigit() }
+                val num = x + (if (prv in listOf('.','!','?')) {
+                    read2While { it.isDigit() }
+                } else {
+                    read2While { it == '.' || it.isLetterOrDigit() }
+                })
                 yield(Tk.Num(num, pos))
             }
             (x == '`') -> {
@@ -260,5 +269,6 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                 err(pos, "token error : unexpected $x")
             }
         }
+        prv = x
     }
 }.iterator()
