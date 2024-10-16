@@ -6,10 +6,6 @@ fun String.clean (): String {
     return this.replace('*','_')
 }
 
-fun Type.Exec.x_exec_coro (pre: Boolean): Pair<String,String> {
-    val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(pre) }.joinToString("__").clean()
-    return Pair("CEU_Exec__$tps", "CEU_Coro__$tps")
-}
 fun Type.Proto.Coro.x_coro_exec (pre: Boolean): Pair<String,String> {
     val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(pre) }.joinToString("__").clean()
     return Pair("CEU_Coro__$tps", "CEU_Exec__$tps")
@@ -21,12 +17,12 @@ fun Type.Proto.Coro.x_inp_tup (pre: Boolean): Pair<String, Type.Tuple> {
 }
 fun Type.Proto.Coro.x_inp_uni (pre: Boolean): Pair<String, Type.Union> {
     val tup = this.x_inp_tup(pre)
-    val tp = Type.Union(this.tk, listOf(tup.second, this.res))
+    val tp = Type.Union(this.tk, false, listOf(tup.second, this.res))
     val id = tp.coder(pre)
     return Pair(id, tp)
 }
 fun Type.Proto.Coro.x_out_uni (pre: Boolean): Pair<String, Type.Union> {
-    val tp = Type.Union(this.tk, listOf(this.yld, this.out))
+    val tp = Type.Union(this.tk, true, listOf(this.yld, this.out))
     val id = tp.coder(pre)
     return Pair(id, tp)
 }
@@ -35,6 +31,22 @@ fun Type.Proto.Coro.x_sig (pre: Boolean, id: String): String {
     val (xiuni,_) = this.x_inp_uni(pre)
     val (xouni,_) = this.x_out_uni(pre)
     return "$xouni $id ($x* ceu_exe, $xiuni ceu_arg)"
+}
+
+fun Type.Exec.x_exec_coro (pre: Boolean): Pair<String,String> {
+    val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(pre) }.joinToString("__").clean()
+    return Pair("CEU_Exec__$tps", "CEU_Coro__$tps")
+}
+fun Type.Exec.x_inp_tup (pre: Boolean): Pair<String, Type.Tuple> {
+    val tp = Type.Tuple(this.tk, this.inps)
+    val id = tp.coder(pre)
+    return Pair(id, tp)
+}
+fun Type.Exec.x_inp_uni (pre: Boolean): Pair<String, Type.Union> {
+    val tup = this.x_inp_tup(pre)
+    val tp = Type.Union(this.tk, false, listOf(tup.second, this.res))
+    val id = tp.coder(pre)
+    return Pair(id, tp)
 }
 
 fun Var_Type.coder (pre: Boolean = false): String {
@@ -54,6 +66,8 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Exec       -> this.x_exec_coro(pre).first
     }
 }
+
+val cache_types = mutableSetOf<String>()
 
 fun coder_types (pre: Boolean): String {
     fun fs (me: Stmt): List<String> {
@@ -201,8 +215,8 @@ fun Stmt.coder (pre: Boolean = false): String {
                 when {
                     (it is Stmt.Proto.Func) -> "return (" + this.e.coder(pre) + ");"
                     (it is Stmt.Proto.Coro) -> {
-                        val uni = Type.Union(it.tp.tk, listOf(it.tp_.yld, it.tp_.out))
-                        "return (${uni.coder(pre)}) { .tag=2, ._2=${this.e.coder(pre)} };"
+                        val (xuni,_) = it.tp_.x_out_uni(pre)
+                        "return ($xuni) { .tag=2, ._2=${this.e.coder(pre)} };"
                     }
                     else -> error("impossible case")
                 }
@@ -255,8 +269,8 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Start -> {
             val exe = this.exe.coder(pre)
             val tp = this.exe.type() as Type.Exec
-            val uni = Type.Union(tp.tk, listOf(Type.Tuple(tp.tk, tp.inps), tp.res))
-            val args = "&$exe, (${uni.coder(pre)}) { ._1 = {" + this.args.map { it.coder(pre) }.joinToString(",") + "} }"
+            val (xuni,_) = tp.x_inp_uni(pre)
+            val args = "&$exe, ($xuni) { ._1 = {" + this.args.map { it.coder(pre) }.joinToString(",") + "} }"
             """
             ${this.dst.cond { it.coder(pre) + " = "}} $exe.co($args);
             """
@@ -264,18 +278,18 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Resume -> {
             val exe = this.exe.coder(pre)
             val tp = this.exe.type() as Type.Exec
-            val uni = Type.Union(tp.tk, listOf(Type.Tuple(tp.tk, tp.inps), tp.res))
-            val args = "&$exe, (${uni.coder(pre)}) { ._2 = ${this.arg.coder(pre)} }"
+            val (xuni,_) = tp.x_inp_uni(pre)
+            val args = "&$exe, ($xuni) { ._2 = ${this.arg.coder(pre)} }"
             """
             ${this.dst.cond { it.coder(pre) + " = "}} $exe.co($args);
             """
         }
         is Stmt.Yield -> {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
-            val uni = Type.Union(tp.tk, listOf(tp.yld, tp.out))
+            val (xuni,_) = tp.x_out_uni(pre)
             """
             ceu_exe->pc = ${this.n};
-            return (${uni.coder(pre)}) { .tag=1, ._1=${this.arg.coder(pre)} };
+            return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
         case ${this.n}:
             ${(this.dst).cond { """
                 ${it.coder(pre)} = ceu_arg._2;

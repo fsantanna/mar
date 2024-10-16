@@ -204,7 +204,7 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
             val ts = parser_list(",", ">") {
                 parser_type(req_vars, pre)
             }
-            Type.Union(tk0, ts)
+            Type.Union(tk0, true, ts)
         }
         else -> err_expected(G.tk1!!, "type")
     }

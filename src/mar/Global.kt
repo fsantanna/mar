@@ -56,7 +56,7 @@ sealed class Type (var n: Int, val tk: Tk) {
     class Basic   (val tk_: Tk.Type): Type(G.N++, tk_)
     class Pointer (tk: Tk, val ptr: Type): Type(G.N++, tk)
     class Tuple   (tk: Tk, val ts: List<Type>): Type(G.N++, tk)
-    class Union   (tk: Tk, val ts: List<Type>): Type(G.N++, tk)
+    class Union   (tk: Tk, val tagged: Boolean, val ts: List<Type>): Type(G.N++, tk)
 
     sealed class Proto (tk: Tk.Fix, val inps: List<Type>, val out: Type): Type(G.N++, tk) {
         open class Func (tk: Tk.Fix, inps: List<Type>, out: Type): Proto(tk, inps, out) {
