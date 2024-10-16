@@ -482,18 +482,32 @@ class Static {
     @Test
     fun dd_03_data_err () {
         val out = static("""
-            data Pos = [Int, Int]
-            var p: Pos = Pos [10, true]
+            var p: Pos
         """)
-        assert(out == "anon : (lin 3, col 27) : discriminator error : types mismatch") { out!! }
+        assert(out == "anon : (lin 2, col 13) : declaration error : data \"Pos\" is not declared") { out!! }
     }
     @Test
     fun dd_04_data_err () {
         val out = static("""
+            var p: Int = Pos ()
+        """)
+        assert(out == "anon : (lin 2, col 26) : constructor error : data \"Pos\" is not declared") { out!! }
+    }
+    @Test
+    fun dd_05_data_err () {
+        val out = static("""
+            data Pos = [Int, Int]
+            var p: Pos = Pos [10, true]
+        """)
+        assert(out == "anon : (lin 3, col 26) : constructor error : types mismatch") { out!! }
+    }
+    @Test
+    fun dd_06_data_err () {
+        val out = static("""
             data Pos = [Int, Int]
             var p: Pos = Pos null
         """)
-        assert(out == "anon : (lin 3, col 27) : discriminator error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 26) : constructor error : types mismatch") { out!! }
     }
 
 }

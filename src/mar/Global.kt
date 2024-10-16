@@ -37,6 +37,10 @@ val KEYWORDS: SortedSet<String> = (
     ).toSortedSet()
 )
 
+val BASICS = setOf(
+    "Bool", "Char", "Int"
+)
+
 typealias Var_Type = Pair<Tk.Var,Type>
 
 sealed class Tk (var n: Int, val str: String, val pos: Pos) {

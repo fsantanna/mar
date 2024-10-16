@@ -1,5 +1,10 @@
 package mar
 
+fun to_datas (): List<Stmt.Data> {
+    return G.outer!!.dn_filter_pre({ it is Stmt.Data }, null, null)
+        .let { it as List<Stmt.Data> }
+}
+
 fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
     return this.fup().let {
         when {
@@ -88,6 +93,15 @@ fun check_types () {
                 }
                 if (!out.is_sup_of(me.e.type())) {
                     err(me.tk, "return error : types mismatch")
+                }
+            }
+            is Stmt.Dcl -> {
+                val (_,tp) = me.var_type
+                if (tp is Type.Basic && !BASICS.contains(tp.tk_.str)) {
+                    val dat = to_datas().find { it.id.str == tp.tk_.str }
+                    if (dat == null) {
+                        err(me.tk, "declaration error : data \"${tp.tk_.str}\" is not declared")
+                    }
                 }
             }
             is Stmt.Set -> {
@@ -188,6 +202,15 @@ fun check_types () {
                 }
                 if (!ok) {
                     err(me.tk, "discriminator error : types mismatch")
+                }
+            }
+            is Expr.Cons -> {
+                val dat = to_datas().find { it.id.str == me.tk_.str }
+                if (dat == null) {
+                    err(me.tk, "constructor error : data \"${me.tk_.str}\" is not declared")
+                }
+                if (!dat.tp.is_sup_of(me.e.type())) {
+                    err(me.tk, "constructor error : types mismatch")
                 }
             }
             is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {
