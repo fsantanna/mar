@@ -2,7 +2,7 @@ package mar
 
 fun List<Type>.to_void (): List<Type> {
     return when {
-        (this.size == 0) -> listOf(Type.Unit(Tk.Fix("(", G.tk0!!.pos.copy())))
+        (this.size == 0) -> listOf(Type.Unit(G.tk0!!))
         else -> this
     }
 }
@@ -55,7 +55,7 @@ fun Expr.type (): Type {
     return when (this) {
         is Expr.Uno -> when (this.tk_.str) {
             "-" -> Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))
-            "ref" -> Type.Pointer(Tk.Op("\\", this.tk.pos.copy()), this.e.type())
+            "ref" -> Type.Pointer(this.tk, this.e.type())
             "deref" -> (this.e.type() as Type.Pointer).ptr
             else -> error("impossible case")
         }
@@ -80,7 +80,7 @@ fun Expr.type (): Type {
         is Expr.Bool -> Type.Basic(Tk.Type( "Bool", this.tk.pos.copy()))
         is Expr.Char -> Type.Basic(Tk.Type( "Char", this.tk.pos.copy()))
         is Expr.Nat -> Type.Any(this.tk)
-        is Expr.Null -> Type.Pointer(Tk.Op("\\", this.tk.pos.copy()), Type.Any(this.tk))
+        is Expr.Null -> Type.Pointer(this.tk, Type.Any(this.tk))
         is Expr.Unit -> Type.Unit(this.tk_)
         is Expr.Num -> Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))
     }

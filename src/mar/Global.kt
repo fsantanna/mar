@@ -52,9 +52,9 @@ sealed class Tk (var n: Int, val str: String, val pos: Pos) {
 sealed class Type (var n: Int, val tk: Tk) {
     //data class Top   (val tk_: Tk): Type(G.N++, tk_)
     class Any     (tk: Tk): Type(G.N++, tk)
-    class Unit    (tk: Tk.Fix): Type(G.N++, tk)
+    class Unit    (tk: Tk): Type(G.N++, tk)
     class Basic   (val tk_: Tk.Type): Type(G.N++, tk_)
-    class Pointer (tk: Tk.Op, val ptr: Type): Type(G.N++, tk)
+    class Pointer (tk: Tk, val ptr: Type): Type(G.N++, tk)
     class Tuple   (tk: Tk, val ts: List<Type>): Type(G.N++, tk)
     class Union   (tk: Tk, val ts: List<Type>): Type(G.N++, tk)
 
