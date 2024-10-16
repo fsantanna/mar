@@ -2,9 +2,32 @@ package mar
 
 import java.io.File
 
-fun String.coro_to_exec (): String {
-    assert(this.take(8) == "CEU_Coro")
-    return "CEU_Exec" + this.drop(8)
+fun String.clean (): String {
+    return this.replace('*','_')
+}
+
+fun Type.Proto.Coro.x_coro_exec (pre: Boolean): Pair<String,String> {
+    val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(pre) }.joinToString("__").clean()
+    return Pair("CEU_Coro__$tps", "CEU_Exec__$tps")
+}
+
+fun Type.Proto.Coro.x_inp_tup (pre: Boolean): Pair<String, Type.Tuple> {
+    val tp = Type.Tuple(this.tk, this.inps)
+    val id = tp.coder(pre)
+    return Pair(id, tp)
+}
+
+fun Type.Proto.Coro.x_inp_uni (pre: Boolean): Pair<String, Type.Union> {
+    val tup = this.x_inp_tup(pre)
+    val tp = Type.Union(this.tk, listOf(tup.second, this.res))
+    val id = tp.coder(pre)
+    return Pair(id, tp)
+}
+
+fun Type.Proto.Coro.x_out_uni (pre: Boolean): Pair<String, Type.Union> {
+    val tp = Type.Union(this.tk, listOf(this.yld, this.out))
+    val id = tp.coder(pre)
+    return Pair(id, tp)
 }
 
 fun Var_Type.coder (pre: Boolean = false): String {
@@ -12,9 +35,6 @@ fun Var_Type.coder (pre: Boolean = false): String {
     return tp.coder(pre) + " " + id.str
 }
 fun Type.coder (pre: Boolean = false): String {
-    fun String.clean (): String {
-        return this.replace('*','_')
-    }
     return when (this) {
         is Type.Any        -> TODO()
         is Type.Basic      -> this.tk.str
@@ -23,10 +43,7 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Tuple      -> "CEU_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
         is Type.Union      -> "CEU_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
         is Type.Proto.Func -> "CEU_Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
-        is Type.Proto.Coro -> {
-            val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(pre) }.joinToString("__")
-            "CEU_Coro__$tps".clean()
-        }
+        is Type.Proto.Coro -> this.x_coro_exec(pre).first
         is Type.Exec       -> {
             val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(pre) }.joinToString("__")
             "CEU_Exec__$tps".clean()
@@ -48,14 +65,10 @@ fun coder_types (pre: Boolean): String {
                     }, null, null)
                     return blks.map { it.to_dcls().map { (_,vt) -> vt.coder(pre) + ";\n" } }.flatten().joinToString("")
                 }
-                val co  = me.tp.coder(pre)
-                val exe = co.coro_to_exec()
-                val itup = Type.Tuple(me.tp.tk,me.tp.inps)
-                val itupx = itup.coder(pre)
-                val iuni = Type.Union(me.tp.tk, listOf(itup, me.tp_.res))
-                val iunix = iuni.coder(pre)
-                val ouni = Type.Union(me.tp.tk, listOf(me.tp_.yld, me.tp_.out))
-                val ounix = ouni.coder(pre)
+                val (co,exe) = me.tp_.x_coro_exec(pre)
+                val (itupx,itup) = me.tp_.x_inp_tup(pre)
+                val (iunix,iuni) = me.tp_.x_inp_uni(pre)
+                val (ounix,ouni) = me.tp_.x_out_uni(pre)
                 listOf("""
                     #ifndef __${itupx}__
                     typedef struct $itupx {
@@ -68,6 +81,7 @@ fun coder_types (pre: Boolean): String {
 
                     #ifndef __${iunix}__
                     typedef union $iunix {
+                        //int tag;  // not needed - start/resume makes different
                         ${iuni.ts.mapIndexed { i, tp ->
                             tp.coder(pre) + " _" + (i+1) + ";\n"
                         }.joinToString("")}
@@ -105,13 +119,14 @@ fun coder_types (pre: Boolean): String {
                 "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")})"
             )
             is Type.Proto.Coro -> {
-                val x = "struct " + me.coder(pre).coro_to_exec()
-                val itup = Type.Tuple(me.tk,me.inps)
-                val iuni = Type.Union(me.tk, listOf(itup, me.res))
-                val ouni = Type.Union(me.tk, listOf(me.yld, me.out))
+                val (co,exe) = me.x_coro_exec(pre)
+                val (_,itup) = me.x_inp_tup(pre)
+                val (xiuni,iuni) = me.x_inp_uni(pre)
+                val (xouni,ouni) = me.x_out_uni(pre)
+                val x = "struct " + exe
                 ft(itup) + ft(iuni) + ft(ouni) + listOf (
                     x,
-                    "typedef ${ouni.coder(pre)} (*${me.coder(pre)}) ($x*, ${iuni.coder(pre)})",
+                    "typedef $xouni (*$co) ($x*, $xiuni)",
                 )
             }
             is Type.Tuple -> {
@@ -157,10 +172,10 @@ fun Stmt.coder (pre: Boolean = false): String {
                 is Stmt.Proto.Func ->
                     this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inps_.map { it.coder(pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro -> {
-                    val x = this.tp.coder(pre).coro_to_exec()
-                    val iuni = Type.Union(this.tk, listOf(Type.Tuple(this.tk,this.tp.inps), this.tp_.res))
-                    val ouni = Type.Union(this.tk, listOf(this.tp_.yld, this.tp_.out))
-                    ouni.coder(pre) + " " + this.id.str + " ($x* ceu_exe, ${iuni.coder(pre)} ceu_arg)"
+                    val x = this.tp_.x_coro_exec(pre).second
+                    val (xiuni,_) = this.tp_.x_inp_uni(pre)
+                    val (xouni,_) = this.tp_.x_out_uni(pre)
+                    xouni + " " + this.id.str + " ($x* ceu_exe, $xiuni ceu_arg)"
                 }
             } + """
             {
@@ -203,11 +218,10 @@ fun Stmt.coder (pre: Boolean = false): String {
                     when (tp) {
                         is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inps.map { it.coder(pre) }.joinToString(",") + ");\n"
                         is Type.Proto.Coro -> {
-                            val iuni = Type.Union(tp.tk, listOf(Type.Tuple(tp.tk,tp.inps), tp.res))
-                            val ouni = Type.Union(tp.tk, listOf(tp.yld, tp.out))
-                            "auto " + ouni.coder(pre) + " " + id.str + " (${
-                                tp.coder(pre).coro_to_exec()
-                            }*, " + iuni.coder(pre) + ");\n"
+                            val (_,x) = tp.x_coro_exec(pre)
+                            val (xiuni,_) = tp.x_inp_uni(pre)
+                            val (xouni,_) = tp.x_out_uni(pre)
+                            "auto $xouni ${id.str} ($x*, $xiuni);\n"
                         }    
                         else -> ""
                     }
