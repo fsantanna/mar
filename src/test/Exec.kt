@@ -213,7 +213,7 @@ class Exec  {
     fun ff_03_coro () {
         val out = test("""
             coro co (v: Int) -> () -> () -> () {
-                `printf("%d\n", ceu_exe->mem.v);`
+                `printf("%d\n", mar_exe->mem.v);`
             }
             var exe: exec (Int) -> () -> () -> () = create(co)
             start exe(10)
@@ -224,10 +224,10 @@ class Exec  {
     fun ff_04_coro () {
         val out = test("""
             coro co (v: Int) -> Int -> () -> () {
-                `printf("%d\n", ceu_exe->mem.v);`
+                `printf("%d\n", mar_exe->mem.v);`
                 yield()
                 set v = v + 10
-                `printf("%d\n", ceu_exe->mem.v);`
+                `printf("%d\n", mar_exe->mem.v);`
             }
             var exe: exec (Int) -> Int -> () -> () = create(co)
             start exe(10)

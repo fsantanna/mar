@@ -8,7 +8,7 @@ fun String.clean (): String {
 
 fun Type.Proto.Coro.x_coro_exec (pre: Boolean): Pair<String,String> {
     val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(pre) }.joinToString("__").clean()
-    return Pair("CEU_Coro__$tps", "CEU_Exec__$tps")
+    return Pair("MAR_Coro__$tps", "MAR_Exec__$tps")
 }
 fun Type.Proto.Coro.x_inp_tup (pre: Boolean): Pair<String, Type.Tuple> {
     val tp = Type.Tuple(this.tk, this.inps)
@@ -30,12 +30,12 @@ fun Type.Proto.Coro.x_sig (pre: Boolean, id: String): String {
     val x = this.x_coro_exec(pre).second
     val (xiuni,_) = this.x_inp_uni(pre)
     val (xouni,_) = this.x_out_uni(pre)
-    return "$xouni $id ($x* ceu_exe, $xiuni ceu_arg)"
+    return "$xouni $id ($x* mar_exe, $xiuni mar_arg)"
 }
 
 fun Type.Exec.x_exec_coro (pre: Boolean): Pair<String,String> {
     val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(pre) }.joinToString("__").clean()
-    return Pair("CEU_Exec__$tps", "CEU_Coro__$tps")
+    return Pair("MAR_Exec__$tps", "MAR_Coro__$tps")
 }
 fun Type.Exec.x_inp_tup (pre: Boolean): Pair<String, Type.Tuple> {
     val tp = Type.Tuple(this.tk, this.inps)
@@ -60,9 +60,9 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Data      -> this.tk.str
         is Type.Unit       -> "_VOID_"
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
-        is Type.Tuple      -> "CEU_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
-        is Type.Union      -> "CEU_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
-        is Type.Proto.Func -> "CEU_Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
+        is Type.Tuple      -> "MAR_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
+        is Type.Union      -> "MAR_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
+        is Type.Proto.Func -> "MAR_Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(pre).first
         is Type.Exec       -> this.x_exec_coro(pre).first
     }
@@ -161,10 +161,10 @@ fun Stmt.coder (pre: Boolean = false): String {
                 ${(this is Stmt.Proto.Coro).cond {
                     this as Stmt.Proto.Coro
                     """                    
-                    switch (ceu_exe->pc) {
+                    switch (mar_exe->pc) {
                         case 0:
                             ${this.tp_.inps_.mapIndexed { i,vtp ->
-                                vtp.first.coder(this.blk,pre) + " = ceu_arg._1._${i+1};\n"
+                                vtp.first.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n"
                             }.joinToString("")}
                 """ }}
                 ${this.blk.ss.map {
@@ -254,11 +254,11 @@ fun Stmt.coder (pre: Boolean = false): String {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
             val (xuni,_) = tp.x_out_uni(pre)
             """
-            ceu_exe->pc = ${this.n};
+            mar_exe->pc = ${this.n};
             return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
         case ${this.n}:
             ${(this.dst).cond { """
-                ${it.coder(pre)} = ceu_arg._2;
+                ${it.coder(pre)} = mar_arg._2;
             """ }}
         """
         }
@@ -270,7 +270,7 @@ fun Stmt.coder (pre: Boolean = false): String {
 
 fun Tk.Var.coder (fr: Any, pre: Boolean): String {
     return if (fr.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) {
-        "ceu_exe->mem.${this.str}"
+        "mar_exe->mem.${this.str}"
     } else {
         this.str
     }
@@ -278,7 +278,7 @@ fun Tk.Var.coder (fr: Any, pre: Boolean): String {
 }
 
 fun Expr.coder (pre: Boolean = false): String {
-    fun String.op_ceu_to_c (): String {
+    fun String.op_mar_to_c (): String {
         return when (this) {
             "ref" -> "&"
             "deref" -> "*"
@@ -286,8 +286,8 @@ fun Expr.coder (pre: Boolean = false): String {
         }
     }
     return when (this) {
-        is Expr.Uno -> "(" + this.tk.str.op_ceu_to_c() + this.e.coder(pre) + ")"
-        is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_ceu_to_c() + " " + this.e2.coder(pre) + ")"
+        is Expr.Uno -> "(" + this.tk.str.op_mar_to_c() + this.e.coder(pre) + ")"
+        is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_mar_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
         is Expr.Tuple -> "(${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } }"

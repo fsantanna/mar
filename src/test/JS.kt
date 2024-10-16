@@ -77,7 +77,7 @@ class JS {
     fun x_02() {
         val out = test("""
             coro gen1 (v: <Int,()>) -> <(),()> {
-                `printf("%d\n", ceu_exe->mem.v);`
+                `printf("%d\n", mar_exe->mem.v);`
             }
             var co1: exec (<Int,()>) -> <(),()> = create(gen1)
             resume co1(<.1 1>: <Int,()>)
@@ -162,8 +162,8 @@ class JS {
         """, true)
         assert(out.contains("json :good\n" +
                 " |  anon : (lin 33, col 14) : (spawn (task' :fake () { group { (val co1 ...\n" +
-                " |  anon : (lin 32, col 47) : (resume (ceu_co)(ceu_arg))\n" +
-                " |  anon : (lin 22, col 47) : (resume (ceu_co)(ceu_arg))\n" +
+                " |  anon : (lin 32, col 47) : (resume (mar_co)(mar_arg))\n" +
+                " |  anon : (lin 22, col 47) : (resume (mar_co)(mar_arg))\n" +
                 " |  anon : (lin 5, col 25) : error(:error)\n" +
                 " v  error : :error\n")) { out }
     }
