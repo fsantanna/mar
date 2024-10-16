@@ -22,7 +22,7 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "CEU_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
         is Type.Union      -> "CEU_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
-        is Type.Proto.Func -> "CEU_Func__${this.inps_.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
+        is Type.Proto.Func -> "CEU_Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
         is Type.Proto.Coro -> {
             val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(pre) }.joinToString("__")
             "CEU_Coro__$tps".clean()
@@ -102,7 +102,7 @@ fun coder_types (pre: Boolean): String {
     fun ft (me: Type): List<String> {
         return when (me) {
             is Type.Proto.Func -> listOf (
-                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps_.map { it.coder(pre) }.joinToString(",")})"
+                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")})"
             )
             is Type.Proto.Coro -> {
                 val x = "struct " + me.coder(pre).coro_to_exec()
@@ -155,7 +155,7 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Proto -> {
             when (this) {
                 is Stmt.Proto.Func ->
-                    this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inps__.map { it.coder(pre) }.joinToString(",") + ")"
+                    this.tp_.out.coder(pre) + " " + this.id.str + " (" + this.tp_.inps_.map { it.coder(pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro -> {
                     val x = this.tp.coder(pre).coro_to_exec()
                     val iuni = Type.Union(this.tk, listOf(Type.Tuple(this.tk,this.tp.inps), this.tp_.res))
@@ -169,7 +169,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                     """                    
                     switch (ceu_exe->pc) {
                         case 0:
-                            ${this.tp_.inps__.mapIndexed { i,vtp ->
+                            ${this.tp_.inps_.mapIndexed { i,vtp ->
                                 vtp.first.coder(this.blk,pre) + " = ceu_arg._1._${i+1};\n"
                             }.joinToString("")}
                 """ }}
@@ -201,7 +201,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                 ${this.to_dcls().map { (_, vt) ->
                     val (id,tp) = vt
                     when (tp) {
-                        is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inps_.map { it.coder(pre) }.joinToString(",") + ");\n"
+                        is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inps.map { it.coder(pre) }.joinToString(",") + ");\n"
                         is Type.Proto.Coro -> {
                             val iuni = Type.Union(tp.tk, listOf(Type.Tuple(tp.tk,tp.inps), tp.res))
                             val ouni = Type.Union(tp.tk, listOf(tp.yld, tp.out))

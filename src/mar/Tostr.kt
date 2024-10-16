@@ -30,10 +30,10 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Union -> "<" + this.ts.map { it.to_str(pre) }.joinToString(",") + ">"
         is Type.Proto -> {
             val inps = when (this) {
-                is Type.Proto.Func.Vars -> this.inps__.map { it.to_str(pre) }.joinToString(",")
-                is Type.Proto.Coro.Vars -> this.inps__.map { it.to_str(pre) }.joinToString(",")
-                is Type.Proto.Func -> this.inps_.map { it.to_str(pre) }.joinToString(",")
-                is Type.Proto.Coro -> this.inps_.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Func.Vars -> this.inps_.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Coro.Vars -> this.inps_.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Func -> this.inps.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Coro -> this.inps.map { it.to_str(pre) }.joinToString(",")
             }
             when (this) {
                 is Type.Proto.Func -> "func ($inps) -> ${this.out.to_str(pre)}"

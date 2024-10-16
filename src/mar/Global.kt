@@ -38,81 +38,81 @@ val KEYWORDS: SortedSet<String> = (
 
 typealias Var_Type = Pair<Tk.Var,Type>
 
-sealed class Tk (val str: String, val pos: Pos) {
-    data class Eof  (val pos_: Pos, val n_: Int=G.N++): Tk("", pos_)
-    data class Fix  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
-    data class Type (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
-    data class Op   (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
-    data class Var  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)  // up: 0=var, 1=upvar, 2=upref
-    data class Num  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
-    data class Chr  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
-    data class Nat  (val str_: String, val pos_: Pos, val n_: Int=G.N++): Tk(str_, pos_)
+sealed class Tk (var n: Int, val str: String, val pos: Pos) {
+    class Eof  (pos: Pos): Tk(G.N++, "", pos)
+    class Fix  (str: String, pos: Pos): Tk(G.N++, str, pos)
+    class Type (str: String, pos: Pos): Tk(G.N++, str, pos)
+    class Op   (str: String, pos: Pos): Tk(G.N++, str, pos)
+    class Var  (str: String, pos: Pos): Tk(G.N++, str, pos)  // up: 0=var, 1=upvar, 2=upref
+    class Num  (str: String, pos: Pos): Tk(G.N++, str, pos)
+    class Chr  (str: String, pos: Pos): Tk(G.N++, str, pos)
+    class Nat  (str: String, pos: Pos): Tk(G.N++, str, pos)
 }
 
 sealed class Type (var n: Int, val tk: Tk) {
     //data class Top   (val tk_: Tk): Type(G.N++, tk_)
-    data class Any     (val tk_: Tk): Type(G.N++, tk_)
-    data class Unit    (val tk_: Tk.Fix): Type(G.N++, tk_)
-    data class Basic   (val tk_: Tk.Type): Type(G.N++, tk_)
-    data class Pointer (val tk_: Tk.Op, val ptr: Type): Type(G.N++, tk_)
-    data class Tuple   (val tk_: Tk, val ts: List<Type>): Type(G.N++, tk_)
-    data class Union   (val tk_: Tk, val ts: List<Type>): Type(G.N++, tk_)
+    class Any     (tk: Tk): Type(G.N++, tk)
+    class Unit    (tk: Tk.Fix): Type(G.N++, tk)
+    class Basic   (val tk_: Tk.Type): Type(G.N++, tk_)
+    class Pointer (tk: Tk.Op, val ptr: Type): Type(G.N++, tk)
+    class Tuple   (tk: Tk, val ts: List<Type>): Type(G.N++, tk)
+    class Union   (tk: Tk, val ts: List<Type>): Type(G.N++, tk)
 
-    sealed class Proto (val tk_: Tk.Fix, val inps: List<Type>, val out: Type): Type(G.N++, tk_) {
-        open class Func (val tk__: Tk.Fix, val inps_: List<Type>, val out_: Type): Proto(tk__, inps_, out_) {
-            data class Vars (val tk___: Tk.Fix, val inps__: List<Var_Type>, val out__: Type) :
-                Func(tk___, inps__.map { (_, tp) -> tp }, out__)
+    sealed class Proto (tk: Tk.Fix, val inps: List<Type>, val out: Type): Type(G.N++, tk) {
+        open class Func (tk: Tk.Fix, inps: List<Type>, out: Type): Proto(tk, inps, out) {
+            class Vars (tk: Tk.Fix, val inps_: List<Var_Type>, out: Type) :
+                Func(tk, inps_.map { (_, tp) -> tp }, out)
         }
-        open class Coro (val tk__: Tk.Fix, val inps_: List<Type>, val res: Type, val yld: Type, val out_: Type): Proto(tk__, inps_, out_) {
-            data class Vars (val tk___: Tk.Fix, val inps__: List<Var_Type>, val res_: Type, val yld_: Type, val out__: Type) :
-                Coro(tk___, inps__.map { (_, tp) -> tp }, res_, yld_, out__)
+        open class Coro (tk: Tk.Fix, inps: List<Type>, val res: Type, val yld: Type, out: Type): Proto(tk, inps, out) {
+            class Vars (tk: Tk.Fix, val inps_: List<Var_Type>, res: Type, yld: Type, out: Type):
+                Coro(tk, inps_.map { (_, tp) -> tp }, res, yld, out)
         }
     }
-    data class Exec (val tk_: Tk.Fix, val inps: List<Type>, val res: Type, val yld: Type, val out: Type): Type(G.N++, tk_)
+    class Exec (tk: Tk, val inps: List<Type>, val res: Type, val yld: Type, val out: Type): Type(G.N++, tk)
 }
 
 sealed class Expr (var n: Int, val tk: Tk) {
-    data class Nat  (val tk_: Tk.Nat): Expr(G.N++, tk_)
-    data class Acc  (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, tk_)
-    data class Bool (val tk_: Tk.Fix): Expr(G.N++, tk_)
-    data class Char (val tk_: Tk.Chr): Expr(G.N++, tk_)
-    data class Num  (val tk_: Tk.Num): Expr(G.N++, tk_)
-    data class Null (val tk_: Tk.Fix): Expr(G.N++, tk_)
-    data class Unit (val tk_: Tk.Fix): Expr(G.N++, tk_)
+    class Nat  (val tk_: Tk.Nat): Expr(G.N++, tk_)
+    class Acc  (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, tk_)
+    class Bool (val tk_: Tk.Fix): Expr(G.N++, tk_)
+    class Char (val tk_: Tk.Chr): Expr(G.N++, tk_)
+    class Num  (val tk_: Tk.Num): Expr(G.N++, tk_)
+    class Null (val tk_: Tk.Fix): Expr(G.N++, tk_)
+    class Unit (val tk_: Tk.Fix): Expr(G.N++, tk_)
 
-    data class Tuple (val tk_: Tk.Fix, val vs: List<Expr>): Expr(G.N++, tk_)
-    data class Index (val tk_: Tk.Fix, val col: Expr, val idx: String): Expr(G.N++, tk_)
-    data class Union (val tk_: Tk.Op, val tp: Type, val idx: String, val v: Expr): Expr(G.N++, tk_)
-    data class Pred  (val tk_: Tk.Op, val col: Expr, val idx: String): Expr(G.N++, tk_)
-    data class Disc  (val tk_: Tk.Op, val col: Expr, val idx: String): Expr(G.N++, tk_)
+    class Tuple (tk: Tk, val vs: List<Expr>): Expr(G.N++, tk)
+    class Index (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
+    class Union (tk: Tk, val tp: Type, val idx: String, val v: Expr): Expr(G.N++, tk)
+    class Pred  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
+    class Disc  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
 
-    data class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, tk_)
-    data class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)
-    data class Call (val tk_: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, tk_)
+    class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, tk_)
+    class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)
+    class Call (tk: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, tk)
 }
 
 sealed class Stmt (var n: Int, val tk: Tk) {
-    sealed class Proto (val tk_: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, tk_) {
-        data class Func (val tk__: Tk.Fix, val id_: Tk.Var, val tp_: Type.Proto.Func.Vars, val blk_: Stmt.Block) : Stmt.Proto(tk__, id_, tp_, blk_)
-        data class Coro (val tk__: Tk.Fix, val id_: Tk.Var, val tp_: Type.Proto.Coro.Vars, val blk_: Stmt.Block) : Stmt.Proto(tk__, id_, tp_, blk_)
+    sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, tk) {
+        class Func (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
+        class Coro (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Coro.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
     }
-    data class Return  (val tk_: Tk.Fix, val e: Expr) : Stmt(G.N++, tk_)
+    class Return  (tk: Tk, val e: Expr) : Stmt(G.N++, tk)
 
-    data class Block   (val tk_: Tk, val ss: List<Stmt>) : Stmt(G.N++, tk_)
-    data class Dcl     (val tk_: Tk.Fix, val var_type: Var_Type) : Stmt(G.N++, tk_)
-    data class Set     (val tk_: Tk.Fix, val dst: Expr, val src: Expr): Stmt(G.N++, tk_)
+    class Block   (tk: Tk, val ss: List<Stmt>) : Stmt(G.N++, tk)
+    class Dcl     (tk: Tk, val var_type: Var_Type) : Stmt(G.N++, tk)
+    class Set     (tk: Tk, val dst: Expr, val src: Expr): Stmt(G.N++, tk)
 
-    data class If      (val tk_: Tk.Fix, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, tk_)
-    data class Loop    (val tk_: Tk.Fix, val blk: Stmt.Block): Stmt(G.N++, tk_)
-    data class Break   (val tk_: Tk.Fix): Stmt(G.N++, tk_)
+    class If      (tk: Tk, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, tk)
+    class Loop    (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, tk)
+    class Break   (tk: Tk): Stmt(G.N++, tk)
 
-    data class Create (val tk_: Tk.Fix, val dst: Expr, val co: Expr): Stmt(G.N++, tk_)
-    data class Start  (val tk_: Tk.Fix, val dst: Expr?, val exe: Expr, val args: List<Expr>): Stmt(G.N++, tk_)
-    data class Resume (val tk_: Tk.Fix, val dst: Expr?, val exe: Expr, val arg: Expr): Stmt(G.N++, tk_)
-    data class Yield  (val tk_: Tk.Fix, val dst: Expr?, val arg: Expr): Stmt(G.N++, tk_)
+    class Create  (tk: Tk, val dst: Expr, val co: Expr): Stmt(G.N++, tk)
+    class Start   (tk: Tk, val dst: Expr?, val exe: Expr, val args: List<Expr>): Stmt(G.N++, tk)
+    class Resume  (tk: Tk, val dst: Expr?, val exe: Expr, val arg: Expr): Stmt(G.N++, tk)
+    class Yield   (tk: Tk, val dst: Expr?, val arg: Expr): Stmt(G.N++, tk)
 
-    data class Nat     (val tk_: Tk.Nat): Stmt(G.N++, tk_)
-    data class Call    (val tk_: Tk, val call: Expr.Call): Stmt(G.N++, tk_)
+    class Nat     (tk: Tk.Nat): Stmt(G.N++, tk)
+    class Call    (tk: Tk, val call: Expr.Call): Stmt(G.N++, tk)
 }
 
 typealias Node = Int

@@ -337,9 +337,9 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
             }.flatten()
             when (tp) {
                 is Type.Proto.Func.Vars ->
-                    Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk_, ss))
+                    Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk, ss))
                 is Type.Proto.Coro.Vars ->
-                    Stmt.Proto.Coro(tk0, id, tp, Stmt.Block(tp.tk_, ss))
+                    Stmt.Proto.Coro(tk0, id, tp, Stmt.Block(tp.tk, ss))
                 else -> error("impossible case")
             }.let { listOf(it) }
         }

@@ -3,9 +3,9 @@ package mar
 fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
     return this.fup().let {
         when {
-            (it is Stmt.Proto.Func) -> it.tp_.inps__.map { Pair(this.n, it) }
+            (it is Stmt.Proto.Func) -> it.tp_.inps_.map { Pair(this.n, it) }
             (it is Stmt.Proto.Coro) -> if (it.tp_ !is Type.Proto.Coro.Vars) emptyList() else {
-                it.tp_.inps__.map { Pair(this.n, it) }
+                it.tp_.inps_.map { Pair(this.n, it) }
             }
             else -> emptyList()
         }
@@ -106,7 +106,7 @@ fun check_types () {
                     err(me.tk, "create error : expected coroutine prototype")
                 }
                 val tp = me.dst.type()
-                val xtp = Type.Exec(co.tk_, co.inps, co.res, co.yld, co.out)
+                val xtp = Type.Exec(co.tk, co.inps, co.res, co.yld, co.out)
                 if (!xtp.is_sup_of(tp)) {
                     err(me.tk, "create error : types mismatch")
                 }
@@ -198,8 +198,8 @@ fun check_types () {
                 val ok = when {
                     (tp is Type.Any) -> true
                     (tp !is Type.Proto.Func) -> false
-                    (tp.inps_.size != me.args.size) -> false
-                    else -> tp.inps_.zip(me.args).all { (par, arg) ->
+                    (tp.inps.size != me.args.size) -> false
+                    else -> tp.inps.zip(me.args).all { (par, arg) ->
                         par.is_sup_of(arg.type())
                     }
                 }
