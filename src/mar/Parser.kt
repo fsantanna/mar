@@ -235,7 +235,7 @@ fun parser_expr_4_prim (): Expr {
             }
             Expr.Tuple(tk0, vs)
         }
-        accept_op("<")     -> {
+        accept_op("<")      -> {
             val tk0 = G.tk0 as Tk.Op
             accept_fix_err(".")
             accept_enu_err("Num")
@@ -296,6 +296,11 @@ fun parser_expr_2_pre (): Expr {
             }
             val e = parser_expr_2_pre()
             Expr.Uno(op, e)
+        }
+        accept_enu("Type") -> {
+            val tp = G.tk0 as Tk.Type
+            val e = parser_expr_2_pre()
+            Expr.Cons(tp, e)
         }
         else -> parser_expr_3_suf()
     }
@@ -447,6 +452,15 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
             }
             accept_fix_err(")")
             listOf(Stmt.Yield(tk0, set, arg))
+        }
+
+        accept_fix("data") -> {
+            val tk0 = G.tk0!!
+            accept_enu_err("Type")
+            val id = G.tk0 as Tk.Type
+            accept_fix_err("=")
+            val tp = parser_type()
+            listOf(Stmt.Data(tk0, id, tp))
         }
 
         accept_enu("Nat") -> listOf(Stmt.Nat(G.tk0 as Tk.Nat))

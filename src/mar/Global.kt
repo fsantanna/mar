@@ -30,9 +30,10 @@ val BINS = listOf (
 
 val KEYWORDS: SortedSet<String> = (
     setOf (
-        "break", "do", "coro", "create", "else", "false", "func",
-        "if", "loop", "null", "resume", "return", "set", "start",
-        "true", "var", "exec", "yield",
+        "break", "do", "coro", "create", "data", "else",
+        "false", "func", "if", "loop", "null", "resume",
+        "return", "set", "start", "true", "var", "exec",
+        "yield",
     ).toSortedSet()
 )
 
@@ -85,6 +86,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
     class Union (tk: Tk, val tp: Type, val idx: String, val v: Expr): Expr(G.N++, tk)
     class Pred  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
     class Disc  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
+    class Cons  (val tk_: Tk.Type, val e: Expr): Expr(G.N++, tk_)
 
     class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, tk_)
     class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)
@@ -92,6 +94,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
 }
 
 sealed class Stmt (var n: Int, val tk: Tk) {
+    class Data     (tk: Tk, val id: Tk.Type, val tp: Type): Stmt(G.N++, tk)
     sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, tk) {
         class Func (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
         class Coro (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Coro.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)

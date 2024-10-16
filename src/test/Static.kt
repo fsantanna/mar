@@ -460,4 +460,40 @@ class Static {
         """)
         assert(out == "anon : (lin 3, col 27) : discriminator error : types mismatch") { out!! }
     }
+
+    // DATA
+
+    @Test
+    fun dd_01_data () {
+        val out = static("""
+            data Pos = [Int, Int]
+            var p: Pos = Pos [10, 10]
+        """)
+        assert(out == null) { out!! }
+    }
+    @Test
+    fun dd_02_data_err () {
+        val out = static("""
+            data Pos = [Int, Int]
+            var p: Pos = [10, 10]
+        """)
+        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun dd_03_data_err () {
+        val out = static("""
+            data Pos = [Int, Int]
+            var p: Pos = Pos [10, true]
+        """)
+        assert(out == "anon : (lin 3, col 27) : discriminator error : types mismatch") { out!! }
+    }
+    @Test
+    fun dd_04_data_err () {
+        val out = static("""
+            data Pos = [Int, Int]
+            var p: Pos = Pos null
+        """)
+        assert(out == "anon : (lin 3, col 27) : discriminator error : types mismatch") { out!! }
+    }
+
 }

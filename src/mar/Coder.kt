@@ -149,6 +149,7 @@ fun coder_types (pre: Boolean): String {
 
 fun Stmt.coder (pre: Boolean = false): String {
     return when (this) {
+        is Stmt.Data  -> TODO()
         is Stmt.Proto -> {
             when (this) {
                 is Stmt.Proto.Func ->
@@ -293,6 +294,7 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Index -> "(${this.col.coder(pre)}._${this.idx})"
         is Expr.Disc  -> "(${this.col.coder(pre)}._${this.idx})"
         is Expr.Pred  -> "(${this.col.coder(pre)}.tag == ${this.idx})"
+        is Expr.Cons  -> TODO()
 
         is Expr.Nat -> this.tk.str
         is Expr.Acc -> this.tk_.coder(this, pre)
@@ -312,6 +314,7 @@ fun coder_main (pre: Boolean): String {
         
         typedef int     _VOID_;
         typedef int     Bool;
+        typedef char    Char;
         typedef int     Int;
         typedef uint8_t U8;
         

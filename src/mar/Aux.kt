@@ -5,7 +5,8 @@ fun <V> Stmt.dn_collect_pos (fs: ((Stmt)->List<V>)?, fe: ((Expr)->List<V>)?, ft:
         return emptyList()
     }
     return when (this) {
-        is Stmt.Proto -> this.blk.dn_collect_pos(fs,fe,ft) + this.tp.dn_collect_pos(ft)
+        is Stmt.Data   -> this.tp.dn_collect_pos(ft)
+        is Stmt.Proto  -> this.blk.dn_collect_pos(fs,fe,ft) + this.tp.dn_collect_pos(ft)
         is Stmt.Return -> this.e.dn_collect_pos(fe)
 
         is Stmt.Block -> this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
@@ -38,6 +39,7 @@ fun <V> Expr.dn_collect_pos (fe: ((Expr)->List<V>)?): List<V> {
         is Expr.Index -> this.col.dn_collect_pos(fe)
         is Expr.Disc  -> this.col.dn_collect_pos(fe)
         is Expr.Pred  -> this.col.dn_collect_pos(fe)
+        is Expr.Cons  -> this.e.dn_collect_pos(fe)
         is Expr.Call  -> this.f.dn_collect_pos(fe) + this.args.map { it.dn_collect_pos(fe) }.flatten()
         is Expr.Acc, is Expr.Nat, is Expr.Null, is Expr.Unit,
         is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()
@@ -83,7 +85,8 @@ fun <V> Stmt.dn_collect_pre (fs: ((Stmt)->List<V>?)?, fe: ((Expr)->List<V>?)?, f
         return emptyList()
     }
     return v + when (this) {
-        is Stmt.Proto -> this.blk.dn_collect_pre(fs,fe,ft) + this.tp.dn_collect_pre(ft)
+        is Stmt.Data   -> this.tp.dn_collect_pre(ft)
+        is Stmt.Proto  -> this.blk.dn_collect_pre(fs,fe,ft) + this.tp.dn_collect_pre(ft)
         is Stmt.Return -> this.e.dn_collect_pre(fe)
 
         is Stmt.Block -> this.ss.map { it.dn_collect_pre(fs,fe,ft) }.flatten()
@@ -120,6 +123,7 @@ fun <V> Expr.dn_collect_pre (fe: ((Expr)->List<V>?)?): List<V> {
         is Expr.Index -> this.col.dn_collect_pre(fe)
         is Expr.Disc  -> this.col.dn_collect_pre(fe)
         is Expr.Pred  -> this.col.dn_collect_pre(fe)
+        is Expr.Cons  -> this.e.dn_collect_pre(fe)
         is Expr.Call  -> this.f.dn_collect_pre(fe) + this.args.map { it.dn_collect_pre(fe) }.flatten()
         is Expr.Acc, is Expr.Nat, is Expr.Null, is Expr.Unit,
         is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()

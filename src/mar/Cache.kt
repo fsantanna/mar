@@ -29,7 +29,8 @@ fun cache_ns () {
 fun cache_ups () {
     fun fs (me: Stmt) {
         when (me) {
-            is Stmt.Proto -> G.ups[me.blk.n] = me.n
+            is Stmt.Data   -> {}
+            is Stmt.Proto  -> G.ups[me.blk.n] = me.n
             is Stmt.Return -> G.ups[me.e.n] = me.n
 
             is Stmt.Block -> me.ss.forEach { G.ups[it.n] = me.n }
@@ -97,6 +98,7 @@ fun cache_ups () {
             is Expr.Index -> G.ups[me.col.n] = me.n
             is Expr.Disc  -> G.ups[me.col.n] = me.n
             is Expr.Pred  -> G.ups[me.col.n] = me.n
+            is Expr.Cons  -> G.ups[me.e.n] = me.n
 
             is Expr.Acc, is Expr.Bool, is Expr.Char, is Expr.Nat,
             is Expr.Null, is Expr.Num, is Expr.Unit -> {}

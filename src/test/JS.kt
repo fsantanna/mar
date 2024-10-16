@@ -104,9 +104,6 @@ class JS {
                 yield([1, obj\.1])
                 yield([2, obj\.2])
                 return()
-                ;;loop kv in to-iter(obj) {
-                ;;    yield(drop(kv))
-                ;;}
             }
             
             var jane: [Int, Int] = [10, 20]
@@ -176,16 +173,21 @@ class JS {
     @Test
     fun x_05() {
         val out = test("""
-            coro genFunc() {
+            coro genFunc () -> () -> Char -> () {
                 yield('a')
                 yield('b')
+                return()
             }
-            val genObj = coroutine(genFunc)
-            println(resume genObj())
-            println(resume genObj())
-            println(resume genObj())
-        """, true)
-        assert(out == "a\nb\nnil\n") { out }
+            var genObj: exec () -> () -> Char -> () = create(genFunc)
+            var x: <Char,()> = start  genObj()
+            var y: <Char,()> = resume genObj()
+            var z: <Char,()> = resume genObj()
+            var cx: Char = x!1
+            var cy: Char = y!1
+            var zz: Bool = z?2
+            `printf("%c %c %d\n", cx, cy, zz);`
+        """)
+        assert(out == "a b 1\n") { out }
     }
 
     // 22.3.1 Ways of iterating over a generator
@@ -193,15 +195,16 @@ class JS {
     @Test
     fun x_06() {
         val out = test("""
-            coro genFunc() {
+            coro genFunc () -> () -> Char -> () {
                 yield('a')
                 yield('b')
+                return()
             }
             val arr = to.vector(coroutine(genFunc))
             println(arr)
             
             ;; val [x,y] = ...  ;; TODO: destructor
-        """, true)
+        """)
         assert(out == "ab\n") { out }
     }
 

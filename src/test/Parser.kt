@@ -561,4 +561,47 @@ class Parser {
         assert(e is Expr.Pred && e.col is Expr.Acc && e.idx=="1")
         assert(e.to_str() == "(v?1)") { e.to_str() }
     }
+
+    // DATA
+
+    @Test
+    fun kk_01_data () {
+        G.tks = ("""
+            data Pos = [Int, Int]
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "data Pos = [Int,Int]\n") { ss.to_str() }
+    }
+    @Test
+    fun kk_02_data () {
+        G.tks = ("""
+            var p: Pos = Pos [10, 10]
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "var p: Pos\nset p = (Pos [10,10])\n") { ss.to_str() }
+    }
+    @Test
+    fun kk_XX_data () {
+        G.tks = ("""
+            data Pos = [Int,Int]
+            data Event = ()
+            data Event.Keys
+            var p: Pos = [10,10]
+            
+            data Mouse_Button = <
+                Left   = (),
+                Middle = (),
+                Right  = (),
+            >
+            
+            data Error.* = [msg: String]
+            data Error.Runtime = []
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "var v: <Int,Int>\n" +
+                "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
+    }
 }
