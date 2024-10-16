@@ -269,7 +269,7 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
             "." -> {
                 val dot = G.tk0 as Tk.Fix
                 accept_enu_err("Num")
-                Expr.Index(dot, e, G.tk0!!.str)
+                Expr.Field(dot, e, G.tk0!!.str)
             }
             "!" -> {
                 val dot = G.tk0 as Tk.Op

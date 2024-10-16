@@ -291,7 +291,7 @@ fun Expr.coder (pre: Boolean = false): String {
 
         is Expr.Tuple -> "(${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } }"
         is Expr.Union -> "(${this.type().coder(pre)}) { .tag=${this.idx}, ._${this.idx}=${this.v.coder(pre) } }"
-        is Expr.Index -> "(${this.col.coder(pre)}._${this.idx})"
+        is Expr.Field -> "(${this.col.coder(pre)}._${this.idx})"
         is Expr.Disc  -> "(${this.col.coder(pre)}._${this.idx})"
         is Expr.Pred  -> "(${this.col.coder(pre)}.tag == ${this.idx})"
         is Expr.Cons  -> TODO()

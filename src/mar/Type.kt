@@ -72,7 +72,7 @@ fun Expr.type (): Type {
 
         is Expr.Tuple -> Type.Tuple(this.tk, vs.map { it.type() })
         is Expr.Union -> this.tp
-        is Expr.Index -> (this.col.type() as Type.Tuple).ts[this.idx.toInt()-1]
+        is Expr.Field -> (this.col.type() as Type.Tuple).ts[this.idx.toInt()-1]
         is Expr.Disc  -> (this.col.type() as Type.Union).ts[this.idx.toInt()-1]
         is Expr.Pred  -> Type.Basic(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> Type.Basic(this.tk_)

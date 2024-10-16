@@ -166,7 +166,7 @@ fun check_types () {
     }
     fun fe (me: Expr) {
         when (me) {
-            is Expr.Index -> {
+            is Expr.Field -> {
                 val tp = me.col.type()
                 val i = me.idx.toInt()
                 val ok = when {

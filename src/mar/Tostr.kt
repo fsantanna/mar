@@ -68,7 +68,7 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Unit   -> ""
 
         is Expr.Tuple  -> "[" + this.vs.map { it.to_str(pre) }.joinToString(",") + "]"
-        is Expr.Index  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"
+        is Expr.Field  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"
         is Expr.Union  -> "<." + this.idx + " " + this.v.to_str(pre) + ">:" + this.tp.to_str(pre)
         is Expr.Disc  -> "(${this.col.to_str(pre)}!${this.idx})"
         is Expr.Pred  -> "(${this.col.to_str(pre)}?${this.idx})"
