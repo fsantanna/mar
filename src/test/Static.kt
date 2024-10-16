@@ -403,7 +403,15 @@ class Static {
             var x: Int
             var y: Int = x.1
         """)
-        assert(out == "anon : (lin 3, col 27) : index error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 27) : field error : types mismatch") { out!! }
+    }
+    @Test
+    fun cc_06_disc_err () {
+        val out = static("""
+            var x: [Int]
+            var y: Int = x.2
+        """)
+        assert(out == "anon : (lin 3, col 27) : field error : types mismatch") { out!! }
     }
 
     // UNION
@@ -460,6 +468,22 @@ class Static {
         """)
         assert(out == "anon : (lin 3, col 27) : discriminator error : types mismatch") { out!! }
     }
+    @Test
+    fun cd_08_disc_err () {
+        val out = static("""
+            var x: <Int>
+            var y: Int = x!2
+        """)
+        assert(out == "anon : (lin 3, col 27) : discriminator error : types mismatch") { out!! }
+    }
+    @Test
+    fun cd_09_pred_err () {
+        val out = static("""
+            var x: <Int>
+            var y: Int = x?2
+        """)
+        assert(out == "anon : (lin 3, col 27) : predicate error : types mismatch") { out!! }
+    }
 
     // DATA
 
@@ -509,5 +533,31 @@ class Static {
         """)
         assert(out == "anon : (lin 3, col 26) : constructor error : types mismatch") { out!! }
     }
-
+    @Test
+    fun dd_07_data_err () {
+        val out = static("""
+            data Pos = [Int, Int]
+            var p: Pos = [10, 20]
+            var x: Bool = p.1
+        """)
+        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun dd_08_data () {
+        val out = static("""
+            data Pos = [Int, Int]
+            var p: Pos = [10, 20]
+            var x: Int = p.1
+        """)
+        assert(out == "TODO") { out!! }
+    }
+    @Test
+    fun dd_09_data_err () {
+        val out = static("""
+            data Pos = [Int, Int]
+            var p: Pos = [10, 20]
+            var x: Int = p.3
+        """)
+        assert(out == "TODO") { out!! }
+    }
 }

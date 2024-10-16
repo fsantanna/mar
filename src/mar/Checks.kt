@@ -1,8 +1,9 @@
 package mar
 
-fun to_datas (): List<Stmt.Data> {
+fun type_to_data (tk: Tk.Type): Stmt.Data? {
     return G.outer!!.dn_filter_pre({ it is Stmt.Data }, null, null)
         .let { it as List<Stmt.Data> }
+        .find { it.id.str == tk.str }
 }
 
 fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
@@ -98,8 +99,7 @@ fun check_types () {
             is Stmt.Dcl -> {
                 val (_,tp) = me.var_type
                 if (tp is Type.Basic && !BASICS.contains(tp.tk_.str)) {
-                    val dat = to_datas().find { it.id.str == tp.tk_.str }
-                    if (dat == null) {
+                    if (type_to_data(tp.tk_) == null) {
                         err(me.tk, "declaration error : data \"${tp.tk_.str}\" is not declared")
                     }
                 }
@@ -167,7 +167,11 @@ fun check_types () {
     fun fe (me: Expr) {
         when (me) {
             is Expr.Field -> {
-                val tp = me.col.type()
+                val tp = me.col.type().let {
+                    if (it !is Type.Basic) it else {
+                        type_to_data(it.tk_)!!.tp
+                    }
+                }
                 val i = me.idx.toInt()
                 val ok = when {
                     (tp is Type.Any) -> true
@@ -176,7 +180,7 @@ fun check_types () {
                     else -> true
                 }
                 if (!ok) {
-                    err(me.tk, "index error : types mismatch")
+                    err(me.tk, "field error : types mismatch")
                 }
             }
             is Expr.Union -> {
@@ -192,7 +196,11 @@ fun check_types () {
                 }
             }
             is Expr.Disc -> {
-                val tp = me.col.type()
+                val tp = me.col.type().let {
+                    if (it !is Type.Basic) it else {
+                        type_to_data(it.tk_)!!.tp
+                    }
+                }
                 val i = me.idx.toInt()
                 val ok = when {
                     (tp is Type.Any) -> true
@@ -204,8 +212,25 @@ fun check_types () {
                     err(me.tk, "discriminator error : types mismatch")
                 }
             }
+            is Expr.Pred -> {
+                val tp = me.col.type().let {
+                    if (it !is Type.Basic) it else {
+                        type_to_data(it.tk_)!!.tp
+                    }
+                }
+                val i = me.idx.toInt()
+                val ok = when {
+                    (tp is Type.Any) -> true
+                    (tp !is Type.Union) -> false
+                    (i<=0 || i>tp.ts.size) -> false
+                    else -> true
+                }
+                if (!ok) {
+                    err(me.tk, "predicate error : types mismatch")
+                }
+            }
             is Expr.Cons -> {
-                val dat = to_datas().find { it.id.str == me.tk_.str }
+                val dat = type_to_data(me.tk_)
                 if (dat == null) {
                     err(me.tk, "constructor error : data \"${me.tk_.str}\" is not declared")
                 }
