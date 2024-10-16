@@ -50,7 +50,7 @@ class Parser {
         G.tks = ("Int").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Basic && tp.tk.str=="Int")
+        assert(tp is Type.Prim && tp.tk.str=="Int")
     }
     @Test
     fun aj_02_type () {
@@ -64,7 +64,7 @@ class Parser {
         G.tks = ("func () -> Int").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Proto.Func && (tp.out as Type.Basic).tk.str=="Int")
+        assert(tp is Type.Proto.Func && (tp.out as Type.Prim).tk.str=="Int")
         assert(tp.to_str() == "func () -> Int")
     }
     @Test
@@ -72,7 +72,7 @@ class Parser {
         G.tks = ("func (x: Int) -> Int").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Proto.Func && (tp.out as Type.Basic).tk.str=="Int")
+        assert(tp is Type.Proto.Func && (tp.out as Type.Prim).tk.str=="Int")
         assert(tp.to_str() == "func (x: Int) -> Int")
     }
     @Test
@@ -92,7 +92,7 @@ class Parser {
         G.tks = ("\\Int").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Pointer && tp.ptr is Type.Basic)
+        assert(tp is Type.Pointer && tp.ptr is Type.Prim)
         assert(tp.to_str() == "\\Int")
     }
     @Test
@@ -108,7 +108,7 @@ class Parser {
         G.tks = ("exec (Int) -> () -> () -> Int").lexer()
         parser_lexer()
         val tp = parser_type()
-        assert(tp is Type.Exec && tp.inps.size==1 && tp.res is Type.Unit && tp.yld is Type.Unit && tp.out is Type.Basic)
+        assert(tp is Type.Exec && tp.inps.size==1 && tp.res is Type.Unit && tp.yld is Type.Unit && tp.out is Type.Prim)
         assert(tp.to_str() == "exec (Int) -> () -> () -> Int") { tp.to_str() }
     }
     @Test

@@ -56,7 +56,8 @@ fun Var_Type.coder (pre: Boolean = false): String {
 fun Type.coder (pre: Boolean = false): String {
     return when (this) {
         is Type.Any        -> TODO()
-        is Type.Basic      -> this.tk.str
+        is Type.Prim      -> this.tk.str
+        is Type.Data      -> this.tk.str
         is Type.Unit       -> "_VOID_"
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "CEU_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()

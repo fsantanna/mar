@@ -186,7 +186,7 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
             accept_fix_err(")")
             tp
         }
-        accept_enu("Type") -> Type.Basic(G.tk0 as Tk.Type)
+        accept_enu("Type") -> Type.Prim(G.tk0 as Tk.Type)
         accept_op("\\") -> {
             val tk0 = G.tk0 as Tk.Op
             val ptr = parser_type(req_vars)

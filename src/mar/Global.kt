@@ -37,9 +37,11 @@ val KEYWORDS: SortedSet<String> = (
     ).toSortedSet()
 )
 
+/*
 val BASICS = setOf(
     "Bool", "Char", "Int"
 )
+ */
 
 typealias Var_Type = Pair<Tk.Var,Type>
 
@@ -58,7 +60,8 @@ sealed class Type (var n: Int, val tk: Tk) {
     //data class Top   (val tk_: Tk): Type(G.N++, tk_)
     class Any     (tk: Tk): Type(G.N++, tk)
     class Unit    (tk: Tk): Type(G.N++, tk)
-    class Basic   (val tk_: Tk.Type): Type(G.N++, tk_)
+    class Prim    (val tk_: Tk.Type): Type(G.N++, tk_)
+    class Data    (val tk_: Tk.Type): Type(G.N++, tk_)
     class Pointer (tk: Tk, val ptr: Type): Type(G.N++, tk)
     class Tuple   (tk: Tk, val ts: List<Type>): Type(G.N++, tk)
     class Union   (tk: Tk, val tagged: Boolean, val ts: List<Type>): Type(G.N++, tk)

@@ -12,7 +12,7 @@ fun Type.is_sup_of (other: Type): Boolean {
         //(this is Type.Top) -> true
         (this is Type.Any || other is Type.Any) -> true
         (this is Type.Unit       && other is Type.Unit)       -> true
-        (this is Type.Basic      && other is Type.Basic)      -> (this.tk.str == other.tk.str)
+        (this is Type.Prim      && other is Type.Prim)      -> (this.tk.str == other.tk.str)
         (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
         (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.is_sup_of(oth) }
         (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.is_sup_of(oth) }
@@ -32,12 +32,12 @@ fun Expr.Bin.args (tp1: Type, tp2: Type): Boolean {
         "==", "!=" -> tp1.is_same_of(tp2)
         ">", "<", ">=", "<=",
         "+", "-", "*", "/", "%" -> {
-            tp1.is_sup_of(Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))) &&
-            tp2.is_sup_of(Type.Basic(Tk.Type( "Int", this.tk.pos.copy())))
+            tp1.is_sup_of(Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))) &&
+            tp2.is_sup_of(Type.Prim(Tk.Type( "Int", this.tk.pos.copy())))
         }
         "||", "&&" -> {
-            tp1.is_sup_of(Type.Basic(Tk.Type( "Bool", this.tk.pos.copy()))) &&
-            tp2.is_sup_of(Type.Basic(Tk.Type( "Bool", this.tk.pos.copy())))
+            tp1.is_sup_of(Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))) &&
+            tp2.is_sup_of(Type.Prim(Tk.Type( "Bool", this.tk.pos.copy())))
         }
         else -> error("impossible case")
     }
@@ -54,7 +54,7 @@ fun Tk.Var.type (fr: Any): Type? {
 fun Expr.type (): Type {
     return when (this) {
         is Expr.Uno -> when (this.tk_.str) {
-            "-" -> Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))
+            "-" -> Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))
             "ref" -> Type.Pointer(this.tk, this.e.type())
             "deref" -> (this.e.type() as Type.Pointer).ptr
             else -> error("impossible case")
@@ -62,8 +62,8 @@ fun Expr.type (): Type {
         is Expr.Bin -> when (this.tk_.str) {
             "==", "!=",
             ">", "<", ">=", "<=",
-            "||", "&&" -> Type.Basic(Tk.Type( "Bool", this.tk.pos.copy()))
-            "+", "-", "*", "/", "%" -> Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))
+            "||", "&&" -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
+            "+", "-", "*", "/", "%" -> Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))
             else -> error("impossible case")
         }
         is Expr.Call -> this.f.type().let {
@@ -74,15 +74,15 @@ fun Expr.type (): Type {
         is Expr.Union -> this.tp
         is Expr.Field -> (this.col.type() as Type.Tuple).ts[this.idx.toInt()-1]
         is Expr.Disc  -> (this.col.type() as Type.Union).ts[this.idx.toInt()-1]
-        is Expr.Pred  -> Type.Basic(Tk.Type("Bool", this.tk.pos.copy()))
-        is Expr.Cons  -> Type.Basic(this.tk_)
+        is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
+        is Expr.Cons  -> Type.Prim(this.tk_)
 
         is Expr.Acc -> this.tk_.type(this)!!
-        is Expr.Bool -> Type.Basic(Tk.Type( "Bool", this.tk.pos.copy()))
-        is Expr.Char -> Type.Basic(Tk.Type( "Char", this.tk.pos.copy()))
+        is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
+        is Expr.Char -> Type.Prim(Tk.Type( "Char", this.tk.pos.copy()))
         is Expr.Nat -> Type.Any(this.tk)
         is Expr.Null -> Type.Pointer(this.tk, Type.Any(this.tk))
         is Expr.Unit -> Type.Unit(this.tk_)
-        is Expr.Num -> Type.Basic(Tk.Type( "Int", this.tk.pos.copy()))
+        is Expr.Num -> Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))
     }
 }

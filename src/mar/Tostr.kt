@@ -23,7 +23,8 @@ fun Tk.fpre (pre: Boolean): String {
 fun Type.to_str (pre: Boolean = false): String {
     return when (this) {
         is Type.Any -> TODO()
-        is Type.Basic -> this.tk.str
+        is Type.Prim -> this.tk.str
+        is Type.Data -> this.tk.str
         is Type.Unit -> "()"
         is Type.Pointer -> "\\" + this.ptr.to_str(pre)
         is Type.Tuple -> "[" + this.ts.map { it.to_str(pre) }.joinToString(",") + "]"

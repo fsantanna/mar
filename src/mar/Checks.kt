@@ -98,7 +98,7 @@ fun check_types () {
             }
             is Stmt.Dcl -> {
                 val (_,tp) = me.var_type
-                if (tp is Type.Basic && !BASICS.contains(tp.tk_.str)) {
+                if (tp is Type.Data) {
                     if (type_to_data(tp.tk_) == null) {
                         err(me.tk, "declaration error : data \"${tp.tk_.str}\" is not declared")
                     }
@@ -110,7 +110,7 @@ fun check_types () {
                 }
             }
             is Stmt.If -> {
-                if (!me.cnd.type().is_sup_of(Type.Basic(Tk.Type("Bool",me.tk.pos.copy())))) {
+                if (!me.cnd.type().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos.copy())))) {
                     err(me.tk, "if error : expected boolean condition")
                 }
             }
@@ -168,7 +168,7 @@ fun check_types () {
         when (me) {
             is Expr.Field -> {
                 val tp = me.col.type().let {
-                    if (it !is Type.Basic) it else {
+                    if (it !is Type.Prim) it else {
                         type_to_data(it.tk_)!!.tp
                     }
                 }
@@ -197,7 +197,7 @@ fun check_types () {
             }
             is Expr.Disc -> {
                 val tp = me.col.type().let {
-                    if (it !is Type.Basic) it else {
+                    if (it !is Type.Prim) it else {
                         type_to_data(it.tk_)!!.tp
                     }
                 }
@@ -214,7 +214,7 @@ fun check_types () {
             }
             is Expr.Pred -> {
                 val tp = me.col.type().let {
-                    if (it !is Type.Basic) it else {
+                    if (it !is Type.Prim) it else {
                         type_to_data(it.tk_)!!.tp
                     }
                 }
