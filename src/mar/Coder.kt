@@ -67,71 +67,14 @@ fun Type.coder (pre: Boolean = false): String {
     }
 }
 
-val cache_types = mutableSetOf<String>()
-
 fun coder_types (pre: Boolean): String {
-    fun fs (me: Stmt): List<String> {
-        return when (me) {
-            is Stmt.Proto.Coro -> {
-                fun mem (): String {
-                    val blks = me.dn_collect_pre({
-                        when (it) {
-                            is Stmt.Proto -> if (it == me) emptyList() else null
-                            is Stmt.Block -> listOf(it)
-                            else -> emptyList()
-                        }
-                    }, null, null)
-                    return blks.map { it.to_dcls().map { (_,vt) -> vt.coder(pre) + ";\n" } }.flatten().joinToString("")
-                }
-                val (co,exe) = me.tp_.x_coro_exec(pre)
-                val (itupx,itup) = me.tp_.x_inp_tup(pre)
-                val (iunix,iuni) = me.tp_.x_inp_uni(pre)
-                val (ounix,ouni) = me.tp_.x_out_uni(pre)
-                listOf("""
-                    #ifndef __${itupx}__
-                    typedef struct $itupx {
-                        ${itup.ts.mapIndexed { i, tp ->
-                            tp.coder(pre) + " _" + (i+1) + ";\n"
-                        }.joinToString("")}
-                    } $itupx;
-                    #define __${itupx}__
-                    #endif
-
-                    #ifndef __${iunix}__
-                    typedef union $iunix {
-                        //int tag;  // not needed - start/resume makes different
-                        ${iuni.ts.mapIndexed { i, tp ->
-                            tp.coder(pre) + " _" + (i+1) + ";\n"
-                        }.joinToString("")}
-                    } $iunix;
-                    #define __${iunix}__
-                    #endif
- 
-                    #ifndef __${ounix}__
-                    typedef struct $ounix {
-                        int tag;
-                        union {
-                            ${ouni.ts.mapIndexed { i, tp ->
-                                tp.coder(pre) + " _" + (i+1) + ";\n"
-                            }.joinToString("")}
-                        };
-                    } $ounix;
-                    #define __${ounix}__
-                    #endif
- 
-                    typedef struct $exe {
-                        int pc;
-                        $co co;
-                        struct {
-                            ${mem()}
-                        } mem;
-                    } $exe;
-                """)
-            }
-            else -> emptyList()
-        }
-    }
     fun ft (me: Type): List<String> {
+        val x = me.coder()
+        if (G.types.contains(x)) {
+            return emptyList()
+        } else {
+            G.types.add(x)
+        }
         return when (me) {
             is Type.Proto.Func -> listOf (
                 "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")})"
@@ -150,30 +93,57 @@ fun coder_types (pre: Boolean): String {
             is Type.Tuple -> {
                 val x = me.coder(pre)
                 listOf("""
-                    #ifndef __${x}__
-                    #define __${x}__
                     typedef struct $x {
                         ${me.ts.mapIndexed { i,tp ->
-                            tp.coder() + " _" + (i+1) + ";\n"
-                        }.joinToString("")}
+                    tp.coder() + " _" + (i+1) + ";\n"
+                }.joinToString("")}
                     } $x;
-                    #endif
                 """)
             }
             is Type.Union -> {
                 val x = me.coder(pre)
                 listOf("""
-                    #ifndef __${x}__
-                    #define __${x}__
                     typedef struct $x {
-                        int tag;
+                        ${me.tagged.cond { "int tag;" }}
                         union {
                             ${me.ts.mapIndexed { i,tp ->
-                            tp.coder() + " _" + (i+1) + ";\n"
-                        }.joinToString("")}
+                    tp.coder() + " _" + (i+1) + ";\n"
+                }.joinToString("")}
                         };
                     } $x;
-                    #endif
+                """)
+            }
+            else -> emptyList()
+        }
+    }
+    fun fs (me: Stmt): List<String> {
+        return when (me) {
+            is Stmt.Proto.Coro -> {
+                fun mem (): String {
+                    val blks = me.dn_collect_pre({
+                        when (it) {
+                            is Stmt.Proto -> if (it == me) emptyList() else null
+                            is Stmt.Block -> listOf(it)
+                            else -> emptyList()
+                        }
+                    }, null, null)
+                    return blks.map { it.to_dcls().map { (_,vt) -> vt.coder(pre) + ";\n" } }.flatten().joinToString("")
+                }
+                val (co,exe) = me.tp_.x_coro_exec(pre)
+                val (_,itup) = me.tp_.x_inp_tup(pre)
+                val (_,iuni) = me.tp_.x_inp_uni(pre)
+                val (_,ouni) = me.tp_.x_out_uni(pre)
+                ft(itup)
+                ft(iuni)
+                ft(ouni)
+                listOf("""
+                    typedef struct $exe {
+                        int pc;
+                        $co co;
+                        struct {
+                            ${mem()}
+                        } mem;
+                    } $exe;
                 """)
             }
             else -> emptyList()

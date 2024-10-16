@@ -127,11 +127,16 @@ object G {
     var outer: Stmt? = null
     var ns: MutableMap<Node,Any> = mutableMapOf()
     var ups: MutableMap<Node,Node> = mutableMapOf()
+
+    val types = mutableSetOf<String>()
+
+    /*
     var tags: MutableMap<String,Tk.Type> = mutableMapOf()
     val datas = mutableMapOf<String,List<Var_Type>>()
     val nats: MutableMap<Node,Pair<List<Node>,String>> = mutableMapOf()
     var nonlocs: MutableMap<Node,List<Node>> = mutableMapOf()
     val mems: MutableSet<Stmt>  = mutableSetOf()
+     */
 
     fun reset () {
         N = 1
@@ -143,11 +148,16 @@ object G {
         outer = null
         ns.clear()
         ups.clear()
+
+        types.clear()
+
+        /*
         tags.clear()
         datas.clear()
         nats.clear()
         nonlocs.clear()
         mems.clear()
+         */
     }
 }
 
