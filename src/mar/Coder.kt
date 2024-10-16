@@ -130,12 +130,6 @@ fun coder_types (pre: Boolean): String {
                     return blks.map { it.to_dcls().map { (_,vt) -> vt.coder(pre) + ";\n" } }.flatten().joinToString("")
                 }
                 val (co,exe) = me.tp_.x_coro_exec(pre)
-                val (_,itup) = me.tp_.x_inp_tup(pre)
-                val (_,iuni) = me.tp_.x_inp_uni(pre)
-                val (_,ouni) = me.tp_.x_out_uni(pre)
-                ft(itup)
-                ft(iuni)
-                ft(ouni)
                 listOf("""
                     typedef struct $exe {
                         int pc;
