@@ -367,4 +367,15 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+
+    // INFER
+
+    @Test
+    fun ii_01_infer () {
+        val out = test("""
+            var n = 10
+            `printf("%d\n", n);`
+        """)
+        assert(out == "10\n") { out }
+    }
 }

@@ -206,6 +206,7 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String, Int, Int
         cache_ns()
         cache_ups()
         check_vars()
+        infer_types()
         check_types()
     } catch (e: Throwable) {
         if (THROW) {

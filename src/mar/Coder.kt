@@ -155,7 +155,7 @@ fun coder_types (pre: Boolean): String {
                             else -> emptyList()
                         }
                     }, null, null)
-                    return blks.map { it.to_dcls().map { (_,vt) -> vt.coder(pre) + ";\n" } }.flatten().joinToString("")
+                    return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(pre) + ";\n" } }.flatten().joinToString("")
                 }
                 val (co,exe) = me.tp_.x_coro_exec(pre)
                 listOf("""
@@ -219,8 +219,7 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Block  -> {
             """
             {
-                ${this.to_dcls().map { (_, vt) ->
-                    val (id,tp) = vt
+                ${this.to_dcls().map { (_,id,tp) ->
                     when (tp) {
                         is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inps.map { it.coder(pre) }.joinToString(",") + ");\n"
                         is Type.Proto.Coro -> "auto ${tp.x_sig(pre, id.str)};\n"

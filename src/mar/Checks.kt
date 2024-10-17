@@ -10,13 +10,11 @@ fun Type.Data.to_data (): Stmt.Data? {
     return this.tk_.to_data()
 }
 
-fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
+fun Stmt.Block.to_dcls (): List<Triple<Node,Tk.Var,Type?>> {
     return this.fup().let {
         when {
-            (it is Stmt.Proto.Func) -> it.tp_.inps_.map { Pair(this.n, it) }
-            (it is Stmt.Proto.Coro) -> if (it.tp_ !is Type.Proto.Coro.Vars) emptyList() else {
-                it.tp_.inps_.map { Pair(this.n, it) }
-            }
+            (it is Stmt.Proto.Func) -> it.tp_.inps_.map { Triple(this.n, it.first, it.second) }
+            (it is Stmt.Proto.Coro) -> it.tp_.inps_.map { Triple(this.n, it.first, it.second) }
             else -> emptyList()
         }
     } + this.dn_filter_pre(
@@ -33,12 +31,11 @@ fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
     )
         .let { it as List<Stmt> }
         .map {
-            val vt = when (it) {
-                is Stmt.Dcl -> Pair(it.id, it.tp!!)
-                is Stmt.Proto -> Pair(it.id, it.tp)
+            when (it) {
+                is Stmt.Dcl -> Triple(it.n, it.id, it.tp)
+                is Stmt.Proto -> Triple(it.n, it.id, it.tp)
                 else -> error("impossible case")
             }
-            Pair(it.n, vt)
         }
 }
 
@@ -50,14 +47,13 @@ fun check_vars () {
                 me.ups().filter { it is Stmt.Block }.forEach {
                     it as Stmt.Block
                     val ids1 = it.to_dcls()
-                    val err = ids2.find { (n2,id2) ->
-                        ids1.find { (n1,id1) ->
-                            (n1 != n2) && (id1.first.str == id2.first.str)
+                    val err = ids2.find { (n2,id2,_) ->
+                        ids1.find { (n1,id1,_) ->
+                            (n1 != n2) && (id1.str == id2.str)
                         } != null
                     }
                     if (err != null) {
-                        val (_,vt) = err
-                        val (id,_) = vt
+                        val (_,id,_) = err
                         err(id, "declaration error : variable \"${id.str}\" is already declared")
                     }
                 }
@@ -69,7 +65,7 @@ fun check_vars () {
         when (me) {
             is Expr.Acc -> {
                 val ok = me.up_any {
-                    it is Stmt.Block && it.to_dcls().any { (_,vt) -> vt.first.str == me.tk.str }
+                    it is Stmt.Block && it.to_dcls().any { (_,id,_) -> id.str == me.tk.str }
                 }
                 if (!ok) {
                     err(me.tk, "access error : variable \"${me.tk.str}\" is not declared")

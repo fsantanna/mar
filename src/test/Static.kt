@@ -18,6 +18,7 @@ fun static (me: String): String? {
         cache_ns()
         cache_ups()
         check_vars()
+        infer_types()
         check_types()
     }
     //return null
