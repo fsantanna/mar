@@ -96,9 +96,21 @@ fun coder_types (pre: Boolean): String {
                 val x = me.coder(pre)
                 listOf("""
                     typedef struct $x {
-                        ${me.ts.mapIndexed { i,tp ->
-                    tp.coder() + " _" + (i+1) + ";\n"
-                }.joinToString("")}
+                        ${if (me.ids == null) {
+                            me.ts.mapIndexed { i,tp ->
+                                "${tp.coder()} _${i+1};\n"
+                            }
+                        } else {
+                            me.ts.zip(me.ids).mapIndexed { i,tp_id ->
+                                val (tp,id) = tp_id
+                                """
+                                union {
+                                    ${tp.coder()} _${i+1};
+                                    ${tp.coder()} ${id.str};
+                                };                                    
+                                """
+                            }
+                        }.joinToString("")}
                     } $x;
                 """)
             }
@@ -298,7 +310,12 @@ fun Expr.coder (pre: Boolean = false): String {
 
         is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } })"
         is Expr.Union -> "((${this.type().coder(pre)}) { .tag=${this.idx}, ._${this.idx}=${this.v.coder(pre) } })"
-        is Expr.Field -> "(${this.col.coder(pre)}._${this.idx})"
+        is Expr.Field -> {
+            val idx = this.idx.toIntOrNull().let {
+                if (it == null) this.idx else "_"+it
+            }
+            "(${this.col.coder(pre)}.$idx)"
+        }
         is Expr.Disc  -> "(${this.col.coder(pre)}._${this.idx})"
         is Expr.Pred  -> "(${this.col.coder(pre)}.tag == ${this.idx})"
         is Expr.Cons  -> "((${this.tk_.str}) ${this.e.coder(pre)})"

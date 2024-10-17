@@ -172,11 +172,12 @@ fun check_types () {
         when (me) {
             is Expr.Field -> {
                 val tp = me.col.type().no_data()
-                val i = me.idx.toInt()
+                val i = me.idx.toIntOrNull()
                 val ok = when {
                     (tp is Type.Any) -> true
                     (tp !is Type.Tuple) -> false
-                    (i<=0 || i>tp.ts.size) -> false
+                    (i!=null && (i<=0 || i>tp.ts.size)) -> false
+                    (i==null && (tp.ids==null || tp.ids.find { it.str==me.idx } == null) -> false
                     else -> true
                 }
                 if (!ok) {

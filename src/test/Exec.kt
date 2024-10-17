@@ -283,11 +283,22 @@ class Exec  {
     @Test
     fun gg_04_tuple () {
         val out = test("""
-            var x: [Int,Int] = [.x=99, .y=10]: [x:Int,y:Int]
-            var y: Int = x.2
+            var pos: [x:Int,y:Int] = [10,20]
+            var y: Int = pos.y
             `printf("%d\n", y);`
         """)
-        assert(out == "10\n") { out }
+        assert(out == "20\n") { out }
+    }
+    @Test
+    fun gg_05_tuple () {
+        val out = test("""
+            var dim: [w:Int,h:Int] = [10,20]
+            var pos: [x:Int,y:Int] = [10,20]
+            var y: Int = pos.y
+            var w: Int = dim.w
+            `printf("%d %d\n", y, w);`
+        """)
+        assert(out == "20 10\n") { out }
     }
 
     // DATA

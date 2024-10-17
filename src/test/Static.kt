@@ -416,9 +416,17 @@ class Static {
     @Test
     fun cc_07_tuple_err () {
         val out = static("""
-            set `x` = [.y=10,.x=20]: [x:Int,y:Int]
+            var pos: [x:Int,y:Int] = [.y=10,.x=20]  ;; x/y inverted
         """)
-        assert(out == "TODO") { out!! }
+        assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun cc_08_disc_err () {
+        val out = static("""
+            var v: [v:Int]
+            set `x` = v.x
+        """)
+        assert(out == "anon : (lin 3, col 24) : field error : types mismatch") { out!! }
     }
 
     // UNION

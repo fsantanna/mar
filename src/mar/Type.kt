@@ -15,7 +15,7 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str)
         (this is Type.Data       && other is Type.Data)       -> (this.tk.str == other.tk.str)
         (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
-        (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.is_sup_of(oth) }
+        (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.is_sup_of(oth) } && (this.ids==null || other.ids==null || this.ids.zip(other.ids).all { (thi,oth) -> thi.str==oth.str })
         (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.is_sup_of(oth) }
         (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
         (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
@@ -77,9 +77,13 @@ fun Expr.type (): Type {
             if (it is Type.Any) it else (it as Type.Proto.Func).out
         }
 
-        is Expr.Tuple -> Type.Tuple(this.tk, vs.map { it.type() }, null)
+        is Expr.Tuple -> Type.Tuple(this.tk, vs.map { it.type() }, ids)
         is Expr.Union -> this.tp
-        is Expr.Field -> (this.col.type().no_data() as Type.Tuple).ts[this.idx.toInt()-1]
+        is Expr.Field -> {
+            val tp = this.col.type().no_data() as Type.Tuple
+            val idx = (this.idx.toIntOrNull() ?: tp.ids!!.indexOfFirst { it.str==this.idx }) - 1
+            tp.ts[idx]
+        }
         is Expr.Disc  -> (this.col.type().no_data() as Type.Union).ts[this.idx.toInt()-1]
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> Type.Data(this.tk_)
