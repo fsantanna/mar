@@ -328,6 +328,16 @@ class Parser {
         parser_lexer()
         assert(trap { parser_stmt() } == "anon : (lin 1, col 8) : expected \"(\" : have \"10\"")
     }
+    @Test
+    fun ee_07_dcl_infer () {
+        G.tks = ("do { var x = 10 }").lexer()
+        parser_lexer()
+        val e = parser_stmt().first()
+        assert(e.to_str() == "do {\n" +
+                "var x\n" +
+                "set x = 10\n" +
+                "}") { e.to_str() }
+    }
 
     // NUM / NIL / BOOL
 

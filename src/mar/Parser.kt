@@ -118,10 +118,13 @@ fun <T> parser_list (sep: String?, close: ()->Boolean, func: () -> T): List<T> {
     return l
 }
 
-fun parser_var_type (): Var_Type {
-    accept_enu_err("Var")
-    val id = G.tk0 as Tk.Var
-    accept_fix_err(":")
+fun parser_var_type (pre: Tk.Var?): Var_Type {
+    val id = if (pre != null) pre else {
+        accept_enu_err("Var")
+        val x = G.tk0 as Tk.Var
+        accept_fix_err(":")
+        x
+    }
     if (check_fix("func") || check_fix("coro")) {
         err(G.tk1!!, "type error : unexpected \"${G.tk1!!.str}\"")
     }
@@ -137,7 +140,7 @@ fun parser_type (req_vars: Boolean = false, pre: Tk? = null): Type {
             val vars = req_vars || check_enu("Var")
             val inps = parser_list(",", ")") {
                 if (vars) {
-                    parser_var_type()
+                    parser_var_type(null)
                 } else {
                     parser_type(req_vars)
                 }
@@ -449,7 +452,11 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
         }
         accept_fix("var") -> {
             val tk0 = G.tk0 as Tk.Fix
-            val (id,tp) = parser_var_type()
+            accept_enu_err("Var")
+            val id = G.tk0 as Tk.Var
+            val (_,tp) = if (accept_fix(":")) parser_var_type(id) else {
+                Pair(id, null)
+            }
             when {
                 !accept_fix("=") -> listOf(Stmt.Dcl(tk0, id, tp))
                 !check_stmt_is_expr() -> listOf(Stmt.Dcl(tk0, id, tp), Stmt.Set(tk0, Expr.Acc(id), parser_expr()))
