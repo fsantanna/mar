@@ -60,7 +60,13 @@ fun Type.coder (pre: Boolean = false): String {
         is Type.Data      -> this.tk.str
         is Type.Unit       -> "_VOID_"
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
-        is Type.Tuple      -> "MAR_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
+        is Type.Tuple      -> {
+            if (this.ids == null) {
+                "MAR_Tuple__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
+            } else {
+                "MAR_Tuple__${this.ts.zip(this.ids).map { (tp,id) -> tp.coder(pre)+"_"+id.str }.joinToString("__")}".clean()
+            }
+        }
         is Type.Union      -> "MAR_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
         is Type.Proto.Func -> "MAR_Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(pre).first
@@ -94,7 +100,10 @@ fun coder_types (pre: Boolean): String {
             }
             is Type.Tuple -> {
                 val x = me.coder(pre)
-                listOf("""
+                /*val ids = if (me.ids == null) emptyList() else {
+                    ft(Type.Tuple(me.tk, me.ts, null))
+                }
+                ids +*/ listOf("""
                     typedef struct $x {
                         ${if (me.ids == null) {
                             me.ts.mapIndexed { i,tp ->

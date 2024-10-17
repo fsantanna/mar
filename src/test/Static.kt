@@ -379,21 +379,28 @@ class Static {
     @Test
     fun cc_02_tuple () {
         val out = static("""
-            var x: [Int] = [10]
+            var x: [Int] = [10]: [Int]
         """)
         assert(out == null) { out!! }
     }
     @Test
-    fun cc_03_tuple () {
+    fun cc_03x_tuple () {
         val out = static("""
-            var x: [Int] = [()]
+            var x: [Int] = [()]: [Int]
+        """)
+        assert(out == "anon : (lin 2, col 28) : tuple error : types mismatch") { out!! }
+    }
+    @Test
+    fun cc_03y_tuple () {
+        val out = static("""
+            var x: [Int] = [()]: [()]
         """)
         assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
     }
     @Test
     fun cc_04_tuple () {
         val out = static("""
-            var x: [] = [()]
+            var x: [] = [()]: [()]
         """)
         assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
     }
@@ -414,9 +421,16 @@ class Static {
         assert(out == "anon : (lin 3, col 27) : field error : types mismatch") { out!! }
     }
     @Test
-    fun cc_07_tuple_err () {
+    fun cc_07x_tuple_err () {
         val out = static("""
-            var pos: [x:Int,y:Int] = [.y=10,.x=20]  ;; x/y inverted
+            var pos: [x:Int,y:Int] = [.y=10,.x=20]: [x:Int,y:Int]  ;; x/y inverted
+        """)
+        assert(out == "anon : (lin 2, col 38) : tuple error : types mismatch") { out!! }
+    }
+    @Test
+    fun cc_07y_tuple_err () {
+        val out = static("""
+            var pos: [x:Int,y:Int] = [.y=10,.x=20]: [y:Int,x:Int]  ;; x/y inverted
         """)
         assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
     }
@@ -427,6 +441,27 @@ class Static {
             set `x` = v.x
         """)
         assert(out == "anon : (lin 3, col 24) : field error : types mismatch") { out!! }
+    }
+    @Test
+    fun cc_09_tuple_err () {
+        val out = static("""
+            set `x` = []:[()]
+        """)
+        assert(out == "anon : (lin 2, col 23) : tuple error : types mismatch") { out!! }
+    }
+    @Test
+    fun cc_10_tuple_err () {
+        val out = static("""
+            set `x` = [()]:[]
+        """)
+        assert(out == "anon : (lin 2, col 23) : tuple error : types mismatch") { out!! }
+    }
+    @Test
+    fun cc_11_tuple_err () {
+        val out = static("""
+            set `x` = [()]:[Int]
+        """)
+        assert(out == "anon : (lin 2, col 23) : tuple error : types mismatch") { out!! }
     }
 
     // UNION
@@ -452,13 +487,6 @@ class Static {
             var x: <Int> = <.2=10>: <Int>
         """)
         assert(out == "anon : (lin 2, col 28) : union error : types mismatch") { out!! }
-    }
-    @Test
-    fun cd_04_union () {
-        val out = static("""
-            var x: Int = <.1=10>: Int
-        """)
-        assert(out == "anon : (lin 2, col 26) : union error : types mismatch") { out!! }
     }
     @Test
     fun cd_05_union () {
@@ -506,7 +534,7 @@ class Static {
     fun dd_01_data () {
         val out = static("""
             data Pos: [Int, Int]
-            var p: Pos = Pos [10, 10]
+            var p: Pos = Pos [10, 10]: [Int, Int]
         """)
         assert(out == null) { out!! }
     }
@@ -514,7 +542,7 @@ class Static {
     fun dd_02_data_err () {
         val out = static("""
             data Pos: [Int, Int]
-            var p: Pos = [10, 10]
+            var p: Pos = [10, 10]: [Int, Int]
         """)
         assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
     }
@@ -536,7 +564,7 @@ class Static {
     fun dd_05_data_err () {
         val out = static("""
             data Pos: [Int, Int]
-            var p: Pos = Pos [10, true]
+            var p: Pos = Pos [10, true]: [Int, Bool]
         """)
         assert(out == "anon : (lin 3, col 26) : constructor error : types mismatch") { out!! }
     }
@@ -552,7 +580,7 @@ class Static {
     fun dd_07_data_err () {
         val out = static("""
             data Pos: [Int, Int]
-            var p: Pos = [10, 20]
+            var p: Pos = [10, 20]: [Int, Int]
             var x: Bool = p.1
         """)
         assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
@@ -561,7 +589,7 @@ class Static {
     fun dd_08_data () {
         val out = static("""
             data Pos: [Int, Int]
-            var p: Pos = Pos [10, 20]
+            var p: Pos = Pos [10, 20]: [Int, Int]
             var x: Int = p.1
         """)
         assert(out == null) { out!! }
@@ -570,7 +598,7 @@ class Static {
     fun dd_09_data_err () {
         val out = static("""
             data Pos: [Int, Int]
-            var p: Pos = Pos [10, 20]
+            var p: Pos = Pos [10, 20]: [Int, Int]
             var x: Int = p.3
         """)
         assert(out == "anon : (lin 4, col 27) : field error : types mismatch") { out!! }

@@ -170,6 +170,12 @@ fun check_types () {
     }
     fun fe (me: Expr) {
         when (me) {
+            is Expr.Tuple -> {
+                val tp = Type.Tuple(me.tk, me.vs.map { it.type() }, me.ids)
+                if (!me.tp.is_sup_of(tp)) {
+                    err(me.tk, "tuple error : types mismatch")
+                }
+            }
             is Expr.Field -> {
                 val tp = me.col.type().no_data()
                 val i = me.idx.toIntOrNull()
@@ -177,7 +183,7 @@ fun check_types () {
                     (tp is Type.Any) -> true
                     (tp !is Type.Tuple) -> false
                     (i!=null && (i<=0 || i>tp.ts.size)) -> false
-                    (i==null && (tp.ids==null || tp.ids.find { it.str==me.idx } == null) -> false
+                    (i==null && (tp.ids==null || tp.ids.find { it.str==me.idx } == null)) -> false
                     else -> true
                 }
                 if (!ok) {
@@ -187,8 +193,6 @@ fun check_types () {
             is Expr.Union -> {
                 val i = me.idx.toInt()
                 val ok = when {
-                    (me.tp is Type.Any) -> true
-                    (me.tp !is Type.Union) -> false
                     (i<=0 || i>me.tp.ts.size) -> false
                     else -> me.tp.ts[i-1].is_sup_of(me.v.type())
                 }

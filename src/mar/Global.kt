@@ -86,9 +86,9 @@ sealed class Expr (var n: Int, val tk: Tk) {
     class Null (val tk_: Tk.Fix): Expr(G.N++, tk_)
     class Unit (val tk_: Tk.Fix): Expr(G.N++, tk_)
 
-    class Tuple (tk: Tk, val vs: List<Expr>, val ids: List<Tk.Var>?): Expr(G.N++, tk)
+    class Tuple (tk: Tk, val tp: Type.Tuple, val vs: List<Expr>, val ids: List<Tk.Var>?): Expr(G.N++, tk)
     class Field (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
-    class Union (tk: Tk, val tp: Type, val idx: String, val v: Expr): Expr(G.N++, tk)
+    class Union (tk: Tk, val tp: Type.Union, val idx: String, val v: Expr): Expr(G.N++, tk)
     class Pred  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
     class Disc  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
     class Cons  (val tk_: Tk.Type, val e: Expr): Expr(G.N++, tk_)

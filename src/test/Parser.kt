@@ -179,6 +179,12 @@ class Parser {
         assert(tp is Type.Tuple && tp.ts.size==3)
         assert(tp.to_str() == "[X:Int,Y:[Bool],Z:()]") { tp.to_str() }
     }
+    @Test
+    fun ak_07_type_union_err () {
+        G.tks = ("var x: Int = <.1=10>: Int").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 23) : expected \"<\" : have \"Int\"")
+    }
 
     // PARENS
 
@@ -488,24 +494,30 @@ class Parser {
     // TUPLE
 
     @Test
+    fun jj_00_tuple_err () {
+        G.tks = ("[10,20]").lexer()
+        parser_lexer()
+        assert(trap { parser_expr() } == "anon : (lin 1, col 8) : expected \":\" : have end of file")
+    }
+    @Test
     fun jj_01_tuple () {
         G.tks = ("""
             do {
-                var v: [Int,Int] = [10,20]
+                var v: [Int,Int] = [10,20]: [Int,Int]
             }
         """).lexer()
         parser_lexer()
         val s = parser_stmt().first()
         assert(s.to_str() == "do {\n" +
                 "var v: [Int,Int]\n" +
-                "set v = [10,20]\n" +
+                "set v = ([10,20]:[Int,Int])\n" +
                 "}") { s.to_str() }
     }
     @Test
     fun jj_02_tuple () {
         G.tks = ("""
             do {
-                var v: [Int,Int] = [10,20]
+                var v: [Int,Int] = [10,20]:[Int,Int]
                 var x: Int = v.1
             }
         """).lexer()
@@ -513,17 +525,17 @@ class Parser {
         val s = parser_stmt().first()
         assert(s.to_str() == "do {\n" +
                 "var v: [Int,Int]\n" +
-                "set v = [10,20]\n" +
+                "set v = ([10,20]:[Int,Int])\n" +
                 "var x: Int\n" +
                 "set x = (v.1)\n" +
                 "}") { s.to_str() }
     }
     @Test
     fun jj_03_expr() {
-        G.tks = ("[10,[1],20]").lexer()
+        G.tks = ("[10,[1]:[Int],20]: [Int,[Int],Int]").lexer()
         parser_lexer()
         val e = parser_expr()
-        assert(e.to_str() == "[10,[1],20]")
+        assert(e.to_str() == "([10,([1]:[Int]),20]:[Int,[Int],Int])") { e.to_str() }
     }
     @Test
     fun jj_04_expr() {
@@ -544,7 +556,7 @@ class Parser {
     fun jj_06_tuple_id () {
         G.tks = ("""
             do {
-                var pos: [x:Int, y:Int] = [.x=10,.y=20]
+                var pos: [x:Int, y:Int] = [.x=10,.y=20]: [x:Int, y:Int]
                 var x: Int = v.x
             }
         """).lexer()
@@ -552,7 +564,7 @@ class Parser {
         val s = parser_stmt().first()
         assert(s.to_str() == "do {\n" +
                 "var pos: [x:Int,y:Int]\n" +
-                "set pos = [.x=10,.y=20]\n" +
+                "set pos = ([.x=10,.y=20]:[x:Int,y:Int])\n" +
                 "var x: Int\n" +
                 "set x = (v.x)\n" +
                 "}") { s.to_str() }
@@ -619,11 +631,11 @@ class Parser {
     @Test
     fun kk_02_data () {
         G.tks = ("""
-            var p: Pos = Pos [10, 10]
+            var p: Pos = Pos [10, 10]:[]
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "var p: Pos\nset p = (Pos [10,10])\n") { ss.to_str() }
+        assert(ss.to_str() == "var p: Pos\nset p = (Pos ([10,10]:[]))\n") { ss.to_str() }
     }
     @Test
     fun kk_03_data () {

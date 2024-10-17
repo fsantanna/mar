@@ -257,7 +257,7 @@ class Exec  {
     @Test
     fun gg_01_tuple () {
         val out = test("""
-            var x: [Int] = [10]
+            var x: [Int] = [10]: [Int]
             `printf("%d\n", x._1);`
         """)
         assert(out == "10\n") { out }
@@ -265,8 +265,8 @@ class Exec  {
     @Test
     fun gg_02_tuple () {
         val out = test("""
-            var x: [Int] = [10]
-            var y: [Int] = [20]
+            var x: [Int] = [10]: [Int]
+            var y: [Int] = [20]: [Int]
             `printf("%d / %d\n", x._1, y._1);`
         """)
         assert(out == "10 / 20\n") { out }
@@ -274,7 +274,7 @@ class Exec  {
     @Test
     fun gg_03_tuple () {
         val out = test("""
-            var x: [Int] = [10]
+            var x: [Int] = [10]: [Int]
             var y: Int = x.1
             `printf("%d\n", y);`
         """)
@@ -283,7 +283,7 @@ class Exec  {
     @Test
     fun gg_04_tuple () {
         val out = test("""
-            var pos: [x:Int,y:Int] = [10,20]
+            var pos: [x:Int,y:Int] = [10,20]: [x:Int,y:Int]
             var y: Int = pos.y
             `printf("%d\n", y);`
         """)
@@ -292,8 +292,8 @@ class Exec  {
     @Test
     fun gg_05_tuple () {
         val out = test("""
-            var dim: [w:Int,h:Int] = [10,20]
-            var pos: [x:Int,y:Int] = [10,20]
+            var dim: [w:Int,h:Int] = [10,20]: [w:Int,h:Int]
+            var pos: [x:Int,y:Int] = [10,20]: [x:Int,y:Int]
             var y: Int = pos.y
             var w: Int = dim.w
             `printf("%d %d\n", y, w);`
@@ -307,7 +307,7 @@ class Exec  {
     fun hh_01_data () {
         val out = test("""
             data Pos: [Int, Int]
-            var p: Pos = Pos [10, 20]
+            var p: Pos = Pos [10, 20]:[Int,Int]
             var x: Int = p.1
             `printf("%d\n", x);`
         """)
@@ -319,7 +319,7 @@ class Exec  {
             data Pos: [Int, Int]
             data Dim: [Int, Int]
             data Obj: [Pos, Dim]
-            var o: Obj = Obj [Pos [3,5], Dim [20,30]]
+            var o: Obj = Obj [Pos [3,5]:[Int,Int], Dim [20,30]:[Int,Int]]: [Pos, Dim]
             var w: Int = o.2.1
             `printf("%d\n", w);`
         """)

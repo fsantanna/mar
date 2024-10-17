@@ -267,7 +267,10 @@ fun parser_expr_4_prim (): Expr {
                     else -> it as List<Tk.Var>
                 }
             }
-            Expr.Tuple(tk0, vs, xids)
+            accept_fix_err(":")
+            check_fix_err("[")
+            val tp = parser_type() as Type.Tuple
+            Expr.Tuple(tk0, tp, vs, xids)
         }
         accept_op("<")      -> {
             val tk0 = G.tk0 as Tk.Op
@@ -278,7 +281,8 @@ fun parser_expr_4_prim (): Expr {
             val v = parser_expr_2_pre() // avoid bin `>` (x>10)
             accept_op_err(">")
             accept_fix_err(":")
-            val tp = parser_type()
+            check_op_err("<")
+            val tp = parser_type() as Type.Union
             Expr.Union(tk0, tp, idx, v)
         }
 

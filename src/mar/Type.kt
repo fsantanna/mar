@@ -77,7 +77,7 @@ fun Expr.type (): Type {
             if (it is Type.Any) it else (it as Type.Proto.Func).out
         }
 
-        is Expr.Tuple -> Type.Tuple(this.tk, vs.map { it.type() }, ids)
+        is Expr.Tuple -> this.tp
         is Expr.Union -> this.tp
         is Expr.Field -> {
             val tp = this.col.type().no_data() as Type.Tuple
