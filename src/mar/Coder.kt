@@ -11,7 +11,7 @@ fun Type.Proto.Coro.x_coro_exec (pre: Boolean): Pair<String,String> {
     return Pair("MAR_Coro__$tps", "MAR_Exec__$tps")
 }
 fun Type.Proto.Coro.x_inp_tup (pre: Boolean): Pair<String, Type.Tuple> {
-    val tp = Type.Tuple(this.tk, this.inps)
+    val tp = Type.Tuple(this.tk, this.inps, null)
     val id = tp.coder(pre)
     return Pair(id, tp)
 }
@@ -38,7 +38,7 @@ fun Type.Exec.x_exec_coro (pre: Boolean): Pair<String,String> {
     return Pair("MAR_Exec__$tps", "MAR_Coro__$tps")
 }
 fun Type.Exec.x_inp_tup (pre: Boolean): Pair<String, Type.Tuple> {
-    val tp = Type.Tuple(this.tk, this.inps)
+    val tp = Type.Tuple(this.tk, this.inps, null)
     val id = tp.coder(pre)
     return Pair(id, tp)
 }

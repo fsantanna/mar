@@ -532,13 +532,46 @@ class Parser {
         val e = parser_expr()
         assert(e.to_str() == "((x.1).2)") { e.to_str() }
     }
+    @Test
+    fun jj_05_tuple_id_err () {
+        G.tks = ("""
+            var pos: [x:Int, Int]
+        """).lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 2, col 22) : tuple error : missing field identifier")
+    }
+    @Test
+    fun jj_06_tuple_id () {
+        G.tks = ("""
+            do {
+                var pos: [x:Int, y:Int] = [.x=10,.y=20]
+                var x: Int = v.x
+            }
+        """).lexer()
+        parser_lexer()
+        val s = parser_stmt().first()
+        assert(s.to_str() == "do {\n" +
+                "var pos: [x:Int,y:Int]\n" +
+                "set pos = [.x=10,.y=20]\n" +
+                "var x: Int\n" +
+                "set x = (v.x)\n" +
+                "}") { s.to_str() }
+    }
+    @Test
+    fun jj_07_tuple_id_err () {
+        G.tks = ("""
+            set `x` = [.x=10,20]
+        """).lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 2, col 23) : tuple error : missing field identifier")
+    }
 
     // UNION
 
     @Test
     fun jk_01_union_cons () {
         G.tks = ("""
-            var v: <Int,Int> = <.1 20> :<Int,Int>
+            var v: <Int,Int> = <.1=20> :<Int,Int>
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
@@ -561,17 +594,27 @@ class Parser {
         assert(e is Expr.Pred && e.col is Expr.Acc && e.idx=="1")
         assert(e.to_str() == "(v?1)") { e.to_str() }
     }
+    @Test
+    fun jk_04_union_cons_id () {
+        G.tks = ("""
+            var v: <Err:(), Ok:Int> = <.Ok=20>: <Err:(),Ok:Int>
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "var v: <Int,Int>\n" +
+                "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
+    }
 
     // DATA
 
     @Test
     fun kk_01_data () {
         G.tks = ("""
-            data Pos = [Int, Int]
+            data Pos: [Int, Int]
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "data Pos = [Int,Int]\n") { ss.to_str() }
+        assert(ss.to_str() == "data Pos: [Int,Int]\n") { ss.to_str() }
     }
     @Test
     fun kk_02_data () {
@@ -583,21 +626,34 @@ class Parser {
         assert(ss.to_str() == "var p: Pos\nset p = (Pos [10,10])\n") { ss.to_str() }
     }
     @Test
+    fun kk_03_data () {
+        G.tks = ("""
+            data Result: <Error: (), Success: Int>
+            var r: Result = Result <.Success=10>: <Error:(),Success:Int>
+            ;;var r: Result = Result.Success 10
+            var i: Int = r!Success
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "var v: <Int,Int>\n" +
+                "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
+    }
+    @Test
     fun kk_XX_data () {
         G.tks = ("""
-            data Pos = [Int,Int]
-            data Event = ()
+            data Pos: [Int,Int]
+            data Event: ()
             data Event.Keys
             var p: Pos = [10,10]
             
-            data Mouse_Button = <
+            data Mouse_Button: <
                 Left   = (),
                 Middle = (),
                 Right  = (),
             >
             
-            data Error.* = [msg: String]
-            data Error.Runtime = []
+            data Error.*: [msg: String]
+            data Error.Runtime: []
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()

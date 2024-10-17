@@ -280,13 +280,22 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun gg_04_tuple () {
+        val out = test("""
+            var x: [Int,Int] = [.x=99, .y=10]: [x:Int,y:Int]
+            var y: Int = x.2
+            `printf("%d\n", y);`
+        """)
+        assert(out == "10\n") { out }
+    }
 
     // DATA
 
     @Test
     fun hh_01_data () {
         val out = test("""
-            data Pos = [Int, Int]
+            data Pos: [Int, Int]
             var p: Pos = Pos [10, 20]
             var x: Int = p.1
             `printf("%d\n", x);`
@@ -296,9 +305,9 @@ class Exec  {
     @Test
     fun hh_02_data () {
         val out = test("""
-            data Pos = [Int, Int]
-            data Dim = [Int, Int]
-            data Obj = [Pos, Dim]
+            data Pos: [Int, Int]
+            data Dim: [Int, Int]
+            data Obj: [Pos, Dim]
             var o: Obj = Obj [Pos [3,5], Dim [20,30]]
             var w: Int = o.2.1
             `printf("%d\n", w);`
@@ -308,7 +317,7 @@ class Exec  {
     @Test
     fun hh_03_data () {
         val out = test("""
-            data Km = Int
+            data Km: Int
             var km: Km = Km 10
             `printf("%d\n", km);`
         """)
@@ -317,10 +326,33 @@ class Exec  {
     @Test
     fun hh_04_data () {
         val out = test("""
-            data Result = <(),Int>
-            var r: Result = Result <.2 10>: <(),Int>
+            data Result: <(),Int>
+            var r: Result = Result <.2=10>: <(),Int>
             var i: Int = r!2
             `printf("%d\n", i);`
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun hh_05_data () {
+        val out = test("""
+            data Res: <Err:(),Ok:Int>
+            var r1: Res  = Res <Ok 10>: <(),Int>
+            var r2: Res  = Res <Err=()>: <(),Int>
+            var i1: Int  = r!Ok
+            var e2: Bool = r?Err
+            `printf("%d / %d\n", i1, e2);`
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun hh_06_data () {
+        val out = test("""
+            data Res: <Err:(),Ok:Int>
+            var r1: Res.Ok = Res.Ok 10
+            var r2: Res = r1
+            var ok: Bool = r2?Ok
+            `printf("%d\n", ok);`
         """)
         assert(out == "10\n") { out }
     }

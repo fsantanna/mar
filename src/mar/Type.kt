@@ -77,7 +77,7 @@ fun Expr.type (): Type {
             if (it is Type.Any) it else (it as Type.Proto.Func).out
         }
 
-        is Expr.Tuple -> Type.Tuple(this.tk, vs.map { it.type() })
+        is Expr.Tuple -> Type.Tuple(this.tk, vs.map { it.type() }, null)
         is Expr.Union -> this.tp
         is Expr.Field -> (this.col.type().no_data() as Type.Tuple).ts[this.idx.toInt()-1]
         is Expr.Disc  -> (this.col.type().no_data() as Type.Union).ts[this.idx.toInt()-1]

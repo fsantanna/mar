@@ -201,10 +201,22 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
         }
         accept_fix("[") -> {
             val tk0 = G.tk0 as Tk.Fix
+            val ids = mutableListOf<Tk.Var>()
             val ts = parser_list(",", "]") {
+                if (accept_enu("Var")) {
+                    ids.add(G.tk0 as Tk.Var)
+                    accept_fix_err(":")
+                }
                 parser_type(req_vars, pre)
             }
-            Type.Tuple(tk0, ts)
+            if (ids.isEmpty()) {
+                Type.Tuple(tk0, ts, null)
+            } else {
+                if (ts.size != ids.size) {
+                    err(tk0, "tuple error : missing field identifier")
+                }
+                Type.Tuple(tk0, ts, ids)
+            }
         }
         accept_op("<") -> {
             val tk0 = G.tk0 as Tk.Op
@@ -237,16 +249,32 @@ fun parser_expr_4_prim (): Expr {
 
         accept_fix("[")     -> {
             val tk0 = G.tk0 as Tk.Fix
-            val vs = parser_list(",", "]") {
-                parser_expr()
+            val l = parser_list(",", "]") {
+                val x = if (!accept_fix(".")) null else {
+                    (accept_enu("Var") || accept_enu_err("Num"))
+                    val idx = G.tk0!! as Tk.Var
+                    accept_fix_err("=")
+                    idx
+                }
+                val e = parser_expr()
+                Pair(x, e)
             }
-            Expr.Tuple(tk0, vs)
+            val (ids,vs) = l.unzip()
+            val xids = ids.filter { it!=null }.let {
+                when {
+                    (it.size == 0) -> null
+                    (it.size != vs.size) -> err(tk0, "tuple error : missing field identifier")
+                    else -> it as List<Tk.Var>
+                }
+            }
+            Expr.Tuple(tk0, vs, xids)
         }
         accept_op("<")      -> {
             val tk0 = G.tk0 as Tk.Op
             accept_fix_err(".")
-            accept_enu_err("Num")
+            (accept_enu("Var") || accept_enu_err("Num"))
             val idx = G.tk0!!.str
+            accept_fix_err("=")
             val v = parser_expr_2_pre() // avoid bin `>` (x>10)
             accept_op_err(">")
             accept_fix_err(":")
@@ -275,17 +303,17 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
             "\\" -> Expr.Uno(Tk.Op("deref", G.tk0!!.pos.copy()), e)
             "." -> {
                 val dot = G.tk0 as Tk.Fix
-                accept_enu_err("Num")
+                (accept_enu("Var") || accept_enu_err("Num"))
                 Expr.Field(dot, e, G.tk0!!.str)
             }
             "!" -> {
                 val dot = G.tk0 as Tk.Op
-                accept_enu_err("Num")
+                (accept_enu("Var") || accept_enu_err("Num"))
                 Expr.Disc(dot, e, G.tk0!!.str)
             }
             "?" -> {
                 val dot = G.tk0 as Tk.Op
-                accept_enu_err("Num")
+                (accept_enu("Var") || accept_enu_err("Num"))
                 Expr.Pred(dot, e, G.tk0!!.str)
             }
             else -> error("impossible case")

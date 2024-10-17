@@ -248,7 +248,7 @@ class Static {
             coro f (v: Int) -> () -> () -> Int {
             }
             var x: exec (Int) -> () -> () -> Int = create(f)
-            resume x(<.1 10>: <Int>)
+            resume x(<.1=10>: <Int>)
         """)
         assert(out == "anon : (lin 5, col 13) : resume error : types mismatch") { out!! }
     }
@@ -317,7 +317,7 @@ class Static {
             coro co () -> () -> () -> () {}
             var exe: exec () -> () -> () -> ()
             set exe = create(co)
-            var v: Int = resume exe(<.1 ()>: <(),()>)
+            var v: Int = resume exe(<.1=()>: <(),()>)
         """)
         assert(out == "anon : (lin 5, col 26) : resume error : types mismatch") { out!! }
     }
@@ -359,7 +359,7 @@ class Static {
         val out = static("""
             do {
                 coro co () -> () -> () -> () {
-                    yield(<.1 10>: <Int,()>)
+                    yield(<.1=10>: <Int,()>)
                 }
             }
         """)
@@ -413,6 +413,13 @@ class Static {
         """)
         assert(out == "anon : (lin 3, col 27) : field error : types mismatch") { out!! }
     }
+    @Test
+    fun cc_07_tuple_err () {
+        val out = static("""
+            set `x` = [.y=10,.x=20]: [x:Int,y:Int]
+        """)
+        assert(out == "TODO") { out!! }
+    }
 
     // UNION
 
@@ -427,28 +434,28 @@ class Static {
     @Test
     fun cd_02_union () {
         val out = static("""
-            var x: <Int> = <.1 10>: <Int>
+            var x: <Int> = <.1=10>: <Int>
         """)
         assert(out == null) { out!! }
     }
     @Test
     fun cd_03_union () {
         val out = static("""
-            var x: <Int> = <.2 10>: <Int>
+            var x: <Int> = <.2=10>: <Int>
         """)
         assert(out == "anon : (lin 2, col 28) : union error : types mismatch") { out!! }
     }
     @Test
     fun cd_04_union () {
         val out = static("""
-            var x: Int = <.1 10>: Int
+            var x: Int = <.1=10>: Int
         """)
         assert(out == "anon : (lin 2, col 26) : union error : types mismatch") { out!! }
     }
     @Test
     fun cd_05_union () {
         val out = static("""
-            var x: <Int> = <.1 ()>: <Int>
+            var x: <Int> = <.1=()>: <Int>
         """)
         assert(out == "anon : (lin 2, col 28) : union error : types mismatch") { out!! }
     }
@@ -490,7 +497,7 @@ class Static {
     @Test
     fun dd_01_data () {
         val out = static("""
-            data Pos = [Int, Int]
+            data Pos: [Int, Int]
             var p: Pos = Pos [10, 10]
         """)
         assert(out == null) { out!! }
@@ -498,7 +505,7 @@ class Static {
     @Test
     fun dd_02_data_err () {
         val out = static("""
-            data Pos = [Int, Int]
+            data Pos: [Int, Int]
             var p: Pos = [10, 10]
         """)
         assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
@@ -520,7 +527,7 @@ class Static {
     @Test
     fun dd_05_data_err () {
         val out = static("""
-            data Pos = [Int, Int]
+            data Pos: [Int, Int]
             var p: Pos = Pos [10, true]
         """)
         assert(out == "anon : (lin 3, col 26) : constructor error : types mismatch") { out!! }
@@ -528,7 +535,7 @@ class Static {
     @Test
     fun dd_06_data_err () {
         val out = static("""
-            data Pos = [Int, Int]
+            data Pos: [Int, Int]
             var p: Pos = Pos null
         """)
         assert(out == "anon : (lin 3, col 26) : constructor error : types mismatch") { out!! }
@@ -536,7 +543,7 @@ class Static {
     @Test
     fun dd_07_data_err () {
         val out = static("""
-            data Pos = [Int, Int]
+            data Pos: [Int, Int]
             var p: Pos = [10, 20]
             var x: Bool = p.1
         """)
@@ -545,7 +552,7 @@ class Static {
     @Test
     fun dd_08_data () {
         val out = static("""
-            data Pos = [Int, Int]
+            data Pos: [Int, Int]
             var p: Pos = Pos [10, 20]
             var x: Int = p.1
         """)
@@ -554,7 +561,7 @@ class Static {
     @Test
     fun dd_09_data_err () {
         val out = static("""
-            data Pos = [Int, Int]
+            data Pos: [Int, Int]
             var p: Pos = Pos [10, 20]
             var x: Int = p.3
         """)

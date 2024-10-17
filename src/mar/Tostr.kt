@@ -27,7 +27,13 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Data -> this.tk.str
         is Type.Unit -> "()"
         is Type.Pointer -> "\\" + this.ptr.to_str(pre)
-        is Type.Tuple -> "[" + this.ts.map { it.to_str(pre) }.joinToString(",") + "]"
+        is Type.Tuple -> {
+            if (this.ids == null) {
+                "[" + this.ts.map { it.to_str(pre) }.joinToString(",") + "]"
+            } else {
+                "[" + this.ids.zip(this.ts).map { (id,tp) -> id.str + ":" + tp.to_str(pre) }.joinToString(",") + "]"
+            }
+        }
         is Type.Union -> "<" + this.ts.map { it.to_str(pre) }.joinToString(",") + ">"
         is Type.Proto -> {
             val inps = when (this) {
