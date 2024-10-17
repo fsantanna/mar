@@ -34,7 +34,13 @@ fun Type.to_str (pre: Boolean = false): String {
                 "[" + this.ids.zip(this.ts).map { (id,tp) -> id.str + ":" + tp.to_str(pre) }.joinToString(",") + "]"
             }
         }
-        is Type.Union -> "<" + this.ts.map { it.to_str(pre) }.joinToString(",") + ">"
+        is Type.Union -> {
+            if (this.ids == null) {
+                "<" + this.ts.map { it.to_str(pre) }.joinToString(",") + ">"
+            } else {
+                "<" + this.ids.zip(this.ts).map { (id,tp) -> id.str + ":" + tp.to_str(pre) }.joinToString(",") + ">"
+            }
+        }
         is Type.Proto -> {
             val inps = when (this) {
                 is Type.Proto.Func.Vars -> this.inps_.map { it.to_str(pre) }.joinToString(",")
@@ -83,7 +89,7 @@ fun Expr.to_str (pre: Boolean = false): String {
             } + ":" + this.tp.to_str(pre) + ")"
         }
         is Expr.Field  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"
-        is Expr.Union  -> "<." + this.idx + " " + this.v.to_str(pre) + ">:" + this.tp.to_str(pre)
+        is Expr.Union  -> "<." + this.idx + "=" + this.v.to_str(pre) + ">:" + this.tp.to_str(pre)
         is Expr.Disc  -> "(${this.col.to_str(pre)}!${this.idx})"
         is Expr.Pred  -> "(${this.col.to_str(pre)}?${this.idx})"
         is Expr.Cons  -> "(${this.tk.str} ${this.e.to_str(pre)})"

@@ -58,6 +58,16 @@ fun Type.no_data (): Type {
     }
 }
 
+fun Type.Union.disc_to_i (dsc: String): Int? {
+    val i = dsc.toIntOrNull()
+    return when {
+        (i!=null && (i<=0 || i>this.ts.size)) -> null
+        (i==null && this.ids==null) -> null
+        (i==null) -> this.ids!!.indexOfFirst { it.str==dsc }
+        else -> i-1
+    }
+}
+
 fun Expr.type (): Type {
     return when (this) {
         is Expr.Uno -> when (this.tk_.str) {
@@ -90,7 +100,10 @@ fun Expr.type (): Type {
             }
             tp.ts[idx]
         }
-        is Expr.Disc  -> (this.col.type().no_data() as Type.Union).ts[this.idx.toInt()-1]
+        is Expr.Disc  -> (this.col.type().no_data() as Type.Union).let {
+            val n = it.disc_to_i(this.idx)
+            it.ts[n!!]
+        }
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> Type.Data(this.tk_)
 

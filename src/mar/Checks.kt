@@ -191,38 +191,24 @@ fun check_types () {
                 }
             }
             is Expr.Union -> {
-                val i = me.idx.toInt()
-                val ok = when {
-                    (i<=0 || i>me.tp.ts.size) -> false
-                    else -> me.tp.ts[i-1].is_sup_of(me.v.type())
-                }
-                if (!ok) {
+                val n = me.tp.disc_to_i(me.idx)
+                if (n==null || !me.tp.ts[n].is_sup_of(me.v.type())) {
                     err(me.tk, "union error : types mismatch")
                 }
             }
             is Expr.Disc -> {
-                val tp = me.col.type().no_data()
-                val i = me.idx.toInt()
-                val ok = when {
-                    (tp is Type.Any) -> true
-                    (tp !is Type.Union) -> false
-                    (i<=0 || i>tp.ts.size) -> false
-                    else -> true
+                val n = me.col.type().no_data().let {
+                    if (it !is Type.Union) null else it.disc_to_i(me.idx)
                 }
-                if (!ok) {
+                if (n == null) {
                     err(me.tk, "discriminator error : types mismatch")
                 }
             }
             is Expr.Pred -> {
-                val tp = me.col.type().no_data()
-                val i = me.idx.toInt()
-                val ok = when {
-                    (tp is Type.Any) -> true
-                    (tp !is Type.Union) -> false
-                    (i<=0 || i>tp.ts.size) -> false
-                    else -> true
+                val n = me.col.type().no_data().let {
+                    if (it !is Type.Union) null else it.disc_to_i(me.idx)
                 }
-                if (!ok) {
+                if (n == null) {
                     err(me.tk, "predicate error : types mismatch")
                 }
             }

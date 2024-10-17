@@ -348,10 +348,10 @@ class Exec  {
     fun hh_05_data () {
         val out = test("""
             data Res: <Err:(),Ok:Int>
-            var r1: Res  = Res <Ok 10>: <(),Int>
-            var r2: Res  = Res <Err=()>: <(),Int>
-            var i1: Int  = r!Ok
-            var e2: Bool = r?Err
+            var r1: Res  = Res <.Ok=10>:  <Err:(),Ok:Int>
+            var r2: Res  = Res <.Err=()>: <Err:(),Ok:Int>
+            var i1: Int  = r1!Ok
+            var e2: Bool = r2?Err
             `printf("%d / %d\n", i1, e2);`
         """)
         assert(out == "10\n") { out }

@@ -233,7 +233,14 @@ fun parser_type (req_vars: Boolean = false, pre: Tk? = null): Type {
                     else -> parser_type(req_vars, null)
                 }
             }
-            Type.Union(tk0, true, ts, ids)
+            if (ids.isEmpty()) {
+                Type.Union(tk0, true, ts, null)
+            } else {
+                if (ts.size != ids.size) {
+                    err(tk0, "union error : missing type identifier")
+                }
+                Type.Union(tk0, true, ts, ids)
+            }
         }
         else -> err_expected(G.tk1!!, "type")
     }
@@ -285,7 +292,7 @@ fun parser_expr_4_prim (): Expr {
         accept_op("<")      -> {
             val tk0 = G.tk0 as Tk.Op
             accept_fix_err(".")
-            (accept_enu("Var") || accept_enu_err("Num"))
+            (accept_enu("Type") || accept_enu_err("Num"))
             val idx = G.tk0!!.str
             accept_fix_err("=")
             val v = parser_expr_2_pre() // avoid bin `>` (x>10)
@@ -322,12 +329,12 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
             }
             "!" -> {
                 val dot = G.tk0 as Tk.Op
-                (accept_enu("Var") || accept_enu_err("Num"))
+                (accept_enu("Type") || accept_enu_err("Num"))
                 Expr.Disc(dot, e, G.tk0!!.str)
             }
             "?" -> {
                 val dot = G.tk0 as Tk.Op
-                (accept_enu("Var") || accept_enu_err("Num"))
+                (accept_enu("Type") || accept_enu_err("Num"))
                 Expr.Pred(dot, e, G.tk0!!.str)
             }
             else -> error("impossible case")

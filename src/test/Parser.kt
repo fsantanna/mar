@@ -588,7 +588,7 @@ class Parser {
         parser_lexer()
         val ss = parser_stmt()
         assert(ss.to_str() == "var v: <Int,Int>\n" +
-                "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
+                "set v = <.1=20>:<Int,Int>\n") { ss.to_str() }
     }
     @Test
     fun jk_02_union_disc () {
@@ -613,8 +613,8 @@ class Parser {
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "var v: <Int,Int>\n" +
-                "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
+        assert(ss.to_str() == "var v: <Err:(),Ok:Int>\n" +
+                "set v = <.Ok=20>:<Err:(),Ok:Int>\n") { ss.to_str() }
     }
 
     // DATA
