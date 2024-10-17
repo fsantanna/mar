@@ -465,7 +465,7 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
             val tk0 = G.tk0!!
             accept_enu_err("Type")
             val id = G.tk0 as Tk.Type
-            accept_fix_err("=")
+            accept_fix_err(":")
             val tp = parser_type()
             listOf(Stmt.Data(tk0, id, tp))
         }
