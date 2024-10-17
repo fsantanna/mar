@@ -546,18 +546,18 @@ class Static {
     fun dd_08_data () {
         val out = static("""
             data Pos = [Int, Int]
-            var p: Pos = [10, 20]
+            var p: Pos = Pos [10, 20]
             var x: Int = p.1
         """)
-        assert(out == "TODO") { out!! }
+        assert(out == null) { out!! }
     }
     @Test
     fun dd_09_data_err () {
         val out = static("""
             data Pos = [Int, Int]
-            var p: Pos = [10, 20]
+            var p: Pos = Pos [10, 20]
             var x: Int = p.3
         """)
-        assert(out == "TODO") { out!! }
+        assert(out == "anon : (lin 4, col 27) : field error : types mismatch") { out!! }
     }
 }

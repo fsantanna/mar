@@ -1,9 +1,13 @@
 package mar
 
-fun type_to_data (tk: Tk.Type): Stmt.Data? {
+fun Tk.Type.to_data (): Stmt.Data? {
     return G.outer!!.dn_filter_pre({ it is Stmt.Data }, null, null)
         .let { it as List<Stmt.Data> }
-        .find { it.id.str == tk.str }
+        .find { it.id.str == this.str }
+}
+
+fun Type.Data.to_data (): Stmt.Data? {
+    return this.tk_.to_data()
 }
 
 fun Stmt.Block.to_dcls (): List<Pair<Node,Var_Type>> {
@@ -99,7 +103,7 @@ fun check_types () {
             is Stmt.Dcl -> {
                 val (_,tp) = me.var_type
                 if (tp is Type.Data) {
-                    if (type_to_data(tp.tk_) == null) {
+                    if (tp.to_data() == null) {
                         err(me.tk, "declaration error : data \"${tp.tk_.str}\" is not declared")
                     }
                 }
@@ -167,11 +171,7 @@ fun check_types () {
     fun fe (me: Expr) {
         when (me) {
             is Expr.Field -> {
-                val tp = me.col.type().let {
-                    if (it !is Type.Prim) it else {
-                        type_to_data(it.tk_)!!.tp
-                    }
-                }
+                val tp = me.col.type().no_data()
                 val i = me.idx.toInt()
                 val ok = when {
                     (tp is Type.Any) -> true
@@ -196,11 +196,7 @@ fun check_types () {
                 }
             }
             is Expr.Disc -> {
-                val tp = me.col.type().let {
-                    if (it !is Type.Prim) it else {
-                        type_to_data(it.tk_)!!.tp
-                    }
-                }
+                val tp = me.col.type().no_data()
                 val i = me.idx.toInt()
                 val ok = when {
                     (tp is Type.Any) -> true
@@ -213,11 +209,7 @@ fun check_types () {
                 }
             }
             is Expr.Pred -> {
-                val tp = me.col.type().let {
-                    if (it !is Type.Prim) it else {
-                        type_to_data(it.tk_)!!.tp
-                    }
-                }
+                val tp = me.col.type().no_data()
                 val i = me.idx.toInt()
                 val ok = when {
                     (tp is Type.Any) -> true
@@ -230,7 +222,7 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val dat = type_to_data(me.tk_)
+                val dat = me.tk_.to_data()
                 if (dat == null) {
                     err(me.tk, "constructor error : data \"${me.tk_.str}\" is not declared")
                 }

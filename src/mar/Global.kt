@@ -37,11 +37,9 @@ val KEYWORDS: SortedSet<String> = (
     ).toSortedSet()
 )
 
-/*
-val BASICS = setOf(
+val PRIMS = setOf(
     "Bool", "Char", "Int"
 )
- */
 
 typealias Var_Type = Pair<Tk.Var,Type>
 

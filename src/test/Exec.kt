@@ -287,7 +287,7 @@ class Exec  {
     fun hh_01_data () {
         val out = test("""
             data Pos = [Int, Int]
-            var p: Pos = [10, 20]
+            var p: Pos = Pos [10, 20]
             var x: Int = p.1
             `printf("%d\n", x);`
         """)

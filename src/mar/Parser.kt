@@ -186,7 +186,14 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
             accept_fix_err(")")
             tp
         }
-        accept_enu("Type") -> Type.Prim(G.tk0 as Tk.Type)
+        accept_enu("Type") -> {
+            val tp = G.tk0 as Tk.Type
+            if (PRIMS.contains(tp.str)) {
+                Type.Prim(tp)
+            } else {
+                Type.Data(tp)
+            }
+        }
         accept_op("\\") -> {
             val tk0 = G.tk0 as Tk.Op
             val ptr = parser_type(req_vars)
