@@ -293,4 +293,16 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun hh_02_data () {
+        val out = test("""
+            data Pos = [Int, Int]
+            data Dim = [Int, Int]
+            data Obj = [Pos, Dim]
+            var o: Obj = Obj [Pos [3,5], Dim [20,30]]
+            var w: Int = o.2.1
+            `printf("%d\n", w);`
+        """)
+        assert(out == "20\n") { out }
+    }
 }

@@ -78,7 +78,7 @@ fun coder_types (pre: Boolean): String {
         }
         return when (me) {
             is Type.Proto.Func -> listOf (
-                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")})"
+                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")});"
             )
             is Type.Proto.Coro -> {
                 val (co,exe) = me.x_coro_exec(pre)
@@ -87,8 +87,8 @@ fun coder_types (pre: Boolean): String {
                 val (xouni,ouni) = me.x_out_uni(pre)
                 val x = "struct " + exe
                 ft(itup) + ft(iuni) + ft(ouni) + listOf (
-                    x,
-                    "typedef $xouni (*$co) ($x*, $xiuni)",
+                    x + ";\n",
+                    "typedef $xouni (*$co) ($x*, $xiuni);\n",
                 )
             }
             is Type.Tuple -> {
@@ -119,6 +119,11 @@ fun coder_types (pre: Boolean): String {
     }
     fun fs (me: Stmt): List<String> {
         return when (me) {
+            is Stmt.Data -> {
+                listOf("""
+                    typedef ${me.tp.coder(pre)} ${me.id.str};
+                """)
+            }
             is Stmt.Proto.Coro -> {
                 fun mem (): String {
                     val blks = me.dn_collect_pre({
@@ -145,12 +150,12 @@ fun coder_types (pre: Boolean): String {
         }
     }
     val ts = G.outer!!.dn_collect_pos(::fs, null, ::ft)
-    return ts.map {it + ";\n" }.joinToString("")
+    return ts.joinToString("")
 }
 
 fun Stmt.coder (pre: Boolean = false): String {
     return when (this) {
-        is Stmt.Data  -> TODO()
+        is Stmt.Data  -> ""
         is Stmt.Proto -> {
             when (this) {
                 is Stmt.Proto.Func ->
@@ -290,12 +295,12 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_mar_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
-        is Expr.Tuple -> "(${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } }"
-        is Expr.Union -> "(${this.type().coder(pre)}) { .tag=${this.idx}, ._${this.idx}=${this.v.coder(pre) } }"
+        is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } })"
+        is Expr.Union -> "((${this.type().coder(pre)}) { .tag=${this.idx}, ._${this.idx}=${this.v.coder(pre) } })"
         is Expr.Field -> "(${this.col.coder(pre)}._${this.idx})"
         is Expr.Disc  -> "(${this.col.coder(pre)}._${this.idx})"
         is Expr.Pred  -> "(${this.col.coder(pre)}.tag == ${this.idx})"
-        is Expr.Cons  -> TODO()
+        is Expr.Cons  -> "((${this.tk_.str}) ${this.e.coder(pre)})"
 
         is Expr.Nat -> this.tk.str
         is Expr.Acc -> this.tk_.coder(this, pre)
