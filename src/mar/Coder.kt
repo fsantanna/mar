@@ -318,15 +318,24 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
         is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } })"
-        is Expr.Union -> "((${this.type().coder(pre)}) { .tag=${this.idx}, ._${this.idx}=${this.v.coder(pre) } })"
+        is Expr.Union -> {
+            val i = this.tp.disc_to_i(this.idx)!!
+            "((${this.type().coder(pre)}) { .tag=$i, ._$i=${this.v.coder(pre) } })"
+        }
         is Expr.Field -> {
             val idx = this.idx.toIntOrNull().let {
                 if (it == null) this.idx else "_"+it
             }
             "(${this.col.coder(pre)}.$idx)"
         }
-        is Expr.Disc  -> "(${this.col.coder(pre)}._${this.idx})"
-        is Expr.Pred  -> "(${this.col.coder(pre)}.tag == ${this.idx})"
+        is Expr.Disc  -> {
+            val i = (this.col.type().no_data() as Type.Union).disc_to_i(this.idx)!!
+            "(${this.col.coder(pre)}._$i)"
+        }
+        is Expr.Pred  -> {
+            val i = (this.col.type().no_data() as Type.Union).disc_to_i(this.idx)!!
+            "(${this.col.coder(pre)}.tag == $i)"
+        }
         is Expr.Cons  -> "((${this.tk_.str}) ${this.e.coder(pre)})"
 
         is Expr.Nat -> this.tk.str

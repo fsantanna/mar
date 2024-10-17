@@ -572,7 +572,7 @@ class Static {
     fun dd_06_data_err () {
         val out = static("""
             data Pos: [Int, Int]
-            var p: Pos = Pos null
+            var p: Pos = Pos(null)
         """)
         assert(out == "anon : (lin 3, col 26) : constructor error : types mismatch") { out!! }
     }
@@ -602,5 +602,21 @@ class Static {
             var x: Int = p.3
         """)
         assert(out == "anon : (lin 4, col 27) : field error : types mismatch") { out!! }
+    }
+    @Test
+    fun dd_10_data_cons () {
+        val out = static("""
+            data Res: <Err:(),Ok:Int>
+            var r = Res.Ok(10)
+        """)
+        assert(out == null) { out!! }
+    }
+    @Test
+    fun dd_11_data_cons_err () {
+        val out = static("""
+            data Res: <Err:(),Ok:Int>
+            var r = Res.XXX(10)
+        """)
+        assert(out == "TODO") { out!! }
     }
 }

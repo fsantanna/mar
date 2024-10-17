@@ -192,7 +192,7 @@ fun check_types () {
             }
             is Expr.Union -> {
                 val n = me.tp.disc_to_i(me.idx)
-                if (n==null || !me.tp.ts[n].is_sup_of(me.v.type())) {
+                if (n==null || !me.tp.ts[n-1].is_sup_of(me.v.type())) {
                     err(me.tk, "union error : types mismatch")
                 }
             }

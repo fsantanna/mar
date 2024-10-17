@@ -92,11 +92,11 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Union  -> "<." + this.idx + "=" + this.v.to_str(pre) + ">:" + this.tp.to_str(pre)
         is Expr.Disc  -> "(${this.col.to_str(pre)}!${this.idx})"
         is Expr.Pred  -> "(${this.col.to_str(pre)}?${this.idx})"
-        is Expr.Cons  -> "(${this.tk.str} ${this.e.to_str(pre)})"
+        is Expr.Cons  -> "(${this.tk.str}(${this.e.to_str(pre)}))"
 
         is Expr.Uno    -> "(" + this.tk_.to_str(pre) + this.e.to_str(pre) + ")"
         is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk_.to_str(pre) + " " + this.e2.to_str(pre) + ")"
-        is Expr.Call   -> this.f.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
+        is Expr.Call   -> "(" + this.f.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + "))"
     }.let {
         when {
             !pre -> it

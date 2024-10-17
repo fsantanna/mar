@@ -329,7 +329,7 @@ class Exec  {
     fun hh_03_data () {
         val out = test("""
             data Km: Int
-            var km: Km = Km 10
+            var km: Km = Km(10)
             `printf("%d\n", km);`
         """)
         assert(out == "10\n") { out }
@@ -354,13 +354,13 @@ class Exec  {
             var e2: Bool = r2?Err
             `printf("%d / %d\n", i1, e2);`
         """)
-        assert(out == "10\n") { out }
+        assert(out == "10 / 1\n") { out }
     }
     @Test
     fun hh_06_data () {
         val out = test("""
             data Res: <Err:(),Ok:Int>
-            var r1: Res.Ok = Res.Ok 10
+            var r1: Res.Ok = Res.Ok(10)
             var r2: Res = r1
             var ok: Bool = r2?Ok
             `printf("%d\n", ok);`

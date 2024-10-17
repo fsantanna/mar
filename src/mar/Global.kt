@@ -83,8 +83,8 @@ sealed class Expr (var n: Int, val tk: Tk) {
     class Bool (val tk_: Tk.Fix): Expr(G.N++, tk_)
     class Char (val tk_: Tk.Chr): Expr(G.N++, tk_)
     class Num  (val tk_: Tk.Num): Expr(G.N++, tk_)
-    class Null (val tk_: Tk.Fix): Expr(G.N++, tk_)
-    class Unit (val tk_: Tk.Fix): Expr(G.N++, tk_)
+    class Null (tk_: Tk): Expr(G.N++, tk_)
+    class Unit (tk_: Tk): Expr(G.N++, tk_)
 
     class Tuple (tk: Tk, val tp: Type.Tuple, val vs: List<Expr>, val ids: List<Tk.Var>?): Expr(G.N++, tk)
     class Field (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)

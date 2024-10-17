@@ -303,6 +303,16 @@ fun parser_expr_4_prim (): Expr {
             Expr.Union(tk0, tp, idx, v)
         }
 
+        accept_enu("Type") -> {
+            val tp = G.tk0 as Tk.Type
+            val par = if (check_fix("[") || check_op("<")) false else accept_fix_err("(")
+            val e = if (par && check_fix(")")) Expr.Unit(G.tk0!!) else parser_expr()
+            if (par) {
+                accept_fix_err(")")
+            }
+            Expr.Cons(tp, e)
+        }
+
         else                    -> err_expected(G.tk1!!, "expression")
     }
 }
@@ -352,11 +362,6 @@ fun parser_expr_2_pre (): Expr {
             }
             val e = parser_expr_2_pre()
             Expr.Uno(op, e)
-        }
-        accept_enu("Type") -> {
-            val tp = G.tk0 as Tk.Type
-            val e = parser_expr_2_pre()
-            Expr.Cons(tp, e)
         }
         else -> parser_expr_3_suf()
     }

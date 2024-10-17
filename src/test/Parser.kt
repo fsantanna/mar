@@ -212,7 +212,7 @@ class Parser {
         G.tks = ("println(2 * (3 - 1))").lexer()
         parser_lexer()
         val e = parser_expr()
-        assert(e.to_str() == "println((2 * (3 - 1)))") { e.to_str() }
+        assert(e.to_str() == "(println((2 * (3 - 1))))") { e.to_str() }
     }
 
     // BINARY
@@ -259,7 +259,7 @@ class Parser {
         parser_lexer()
         val s = parser_stmt().first()
         assert(s is Stmt.Block)
-        assert(s.to_str() == "do {\nprint(a)\n}") { s.to_str() }
+        assert(s.to_str() == "do {\n(print(a))\n}") { s.to_str() }
     }
     @Test
     fun dd_04_do() {
@@ -389,7 +389,7 @@ class Parser {
         parser_lexer()
         val e = parser_expr_3_suf()
         assert(e is Expr.Call && e.f is Expr.Call && e.args.size==0)
-        assert(e.to_str() == "f(x,8)()")
+        assert(e.to_str() == "((f(x,8))())") { e.to_str() }
     }
     @Test
     fun gg_04_call_err() {
@@ -635,20 +635,42 @@ class Parser {
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "var p: Pos\nset p = (Pos ([10,10]:[]))\n") { ss.to_str() }
+        assert(ss.to_str() == "var p: Pos\nset p = (Pos(([10,10]:[])))\n") { ss.to_str() }
     }
     @Test
     fun kk_03_data () {
         G.tks = ("""
-            data Result: <Error: (), Success: Int>
-            var r: Result = Result <.Success=10>: <Error:(),Success:Int>
-            ;;var r: Result = Result.Success 10
-            var i: Int = r!Success
+            do {
+                data Result: <Error: (), Success: Int>
+                var r: Result = Result <.Success=10>: <Error:(),Success:Int>
+                var i: Int = r!Success
+            }
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "var v: <Int,Int>\n" +
-                "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
+        assert(ss.to_str() == "do {\n" +
+                "data Result: <Error:(),Success:Int>\n" +
+                "var r: Result\n" +
+                "set r = (Result(<.Success=10>:<Error:(),Success:Int>))\n" +
+                "var i: Int\n" +
+                "set i = (r!Success)\n" +
+                "}\n") { ss.to_str() }
+    }
+    @Test
+    fun kk_04_data () {
+        G.tks = ("""
+            do {
+                data Result: <Error: (), Success: Int>
+                var r: Result = Result.Success(10)
+            }
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "do {\n" +
+                "data Result: <Error:(),Success:Int>\n" +
+                "var r: Result\n" +
+                "set r = (Result <.Success=10>:<Error:(),Success:Int>)\n" +
+                "}\n") { ss.to_str() }
     }
     @Test
     fun kk_XX_data () {
