@@ -305,12 +305,21 @@ fun parser_expr_4_prim (): Expr {
 
         accept_enu("Type") -> {
             val tp = G.tk0 as Tk.Type
+            val sub = if (!accept_fix(".")) null else {
+                accept_enu_err("Type")
+                G.tk0 as Tk.Type
+            }
             val par = if (check_fix("[") || check_op("<")) false else accept_fix_err("(")
             val e = if (par && check_fix(")")) Expr.Unit(G.tk0!!) else parser_expr()
             if (par) {
                 accept_fix_err(")")
             }
-            Expr.Cons(tp, e)
+            if (sub == null) {
+                Expr.Cons(tp, e)
+            } else {
+                //Expr.Cons(tp, Expr.Union(tk, tp, sub.str, e))
+                TODO()
+            }
         }
 
         else                    -> err_expected(G.tk1!!, "expression")
