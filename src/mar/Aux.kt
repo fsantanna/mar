@@ -10,7 +10,7 @@ fun <V> Stmt.dn_collect_pos (fs: ((Stmt)->List<V>)?, fe: ((Expr)->List<V>)?, ft:
         is Stmt.Return -> this.e.dn_collect_pos(fe)
 
         is Stmt.Block -> this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
-        is Stmt.Dcl -> this.var_type.second.dn_collect_pos(ft)
+        is Stmt.Dcl -> this.tp!!.dn_collect_pos(ft)
         is Stmt.Set -> this.dst.dn_collect_pos(fe) + this.src.dn_collect_pos(fe)
 
         is Stmt.If    -> this.cnd.dn_collect_pos(fe) + this.t.dn_collect_pos(fs,fe,ft) + this.f.dn_collect_pos(fs,fe,ft)
@@ -91,7 +91,7 @@ fun <V> Stmt.dn_collect_pre (fs: ((Stmt)->List<V>?)?, fe: ((Expr)->List<V>?)?, f
         is Stmt.Return -> this.e.dn_collect_pre(fe)
 
         is Stmt.Block -> this.ss.map { it.dn_collect_pre(fs,fe,ft) }.flatten()
-        is Stmt.Dcl -> this.var_type.second.dn_collect_pre(ft)
+        is Stmt.Dcl -> this.tp!!.dn_collect_pre(ft)
         is Stmt.Set -> this.dst.dn_collect_pre(fe) + this.src.dn_collect_pre(fe)
 
         is Stmt.If    -> this.cnd.dn_collect_pre(fe) + this.t.dn_collect_pre(fs,fe,ft) + this.f.dn_collect_pre(fs,fe,ft)

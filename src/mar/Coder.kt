@@ -232,9 +232,8 @@ fun Stmt.coder (pre: Boolean = false): String {
         """
         }
         is Stmt.Dcl -> {
-            val (id, tp) = this.var_type
             val in_coro = this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro
-            (!in_coro).cond { tp.coder(pre) + " " + id.str + ";" }
+            (!in_coro).cond { this.tp!!.coder(pre) + " " + this.id.str + ";" }
         }
         is Stmt.Set    -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
 
@@ -319,7 +318,7 @@ fun Expr.coder (pre: Boolean = false): String {
 
         is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } })"
         is Expr.Union -> {
-            val i = this.tp.disc_to_i(this.idx)!!
+            val i = this.tp!!.disc_to_i(this.idx)!!
             "((${this.type().coder(pre)}) { .tag=$i, ._$i=${this.v.coder(pre) } })"
         }
         is Expr.Field -> {

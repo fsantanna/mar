@@ -449,12 +449,12 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
         }
         accept_fix("var") -> {
             val tk0 = G.tk0 as Tk.Fix
-            val vt = parser_var_type()
+            val (id,tp) = parser_var_type()
             when {
-                !accept_fix("=") -> listOf(Stmt.Dcl(tk0, vt))
-                !check_stmt_is_expr() -> listOf(Stmt.Dcl(tk0, vt), Stmt.Set(tk0, Expr.Acc(vt.first), parser_expr()))
+                !accept_fix("=") -> listOf(Stmt.Dcl(tk0, id, tp))
+                !check_stmt_is_expr() -> listOf(Stmt.Dcl(tk0, id, tp), Stmt.Set(tk0, Expr.Acc(id), parser_expr()))
                 else -> {
-                    listOf(Stmt.Dcl(tk0, vt)) + parser_stmt(Expr.Acc(vt.first))
+                    listOf(Stmt.Dcl(tk0,id,tp)) + parser_stmt(Expr.Acc(id))
                 }
             }
         }
