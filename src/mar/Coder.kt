@@ -70,11 +70,12 @@ fun Type.coder (pre: Boolean = false): String {
 
 fun coder_types (pre: Boolean): String {
     fun ft (me: Type): List<String> {
-        val x = me.coder()
-        if (G.types.contains(x)) {
-            return emptyList()
-        } else {
-            G.types.add(x)
+        me.coder().let {
+            if (G.types.contains(it)) {
+                return emptyList()
+            } else {
+                G.types.add(it)
+            }
         }
         return when (me) {
             is Type.Proto.Func -> listOf (

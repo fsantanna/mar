@@ -305,4 +305,23 @@ class Exec  {
         """)
         assert(out == "20\n") { out }
     }
+    @Test
+    fun hh_03_data () {
+        val out = test("""
+            data Km = Int
+            var km: Km = Km 10
+            `printf("%d\n", km);`
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun hh_04_data () {
+        val out = test("""
+            data Result = <(),Int>
+            var r: Result = Result <.2 10>: <(),Int>
+            var i: Int = r!2
+            `printf("%d\n", i);`
+        """)
+        assert(out == "10\n") { out }
+    }
 }
