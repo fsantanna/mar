@@ -135,7 +135,7 @@ fun check_types () {
                     err(me.tk, "start error : expected active coroutine")
                 }
 
-                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(Type.Union(exe.tk, false, listOf(exe.yld,exe.out)))
+                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(Type.Union(exe.tk, false, listOf(exe.yld,exe.out), null))
                 val ok2 = (exe.inps.size == me.args.size) && exe.inps.zip(me.args).all { (thi,oth) -> thi.is_sup_of(oth.type()) }
                 if (!ok1 || !ok2) {
                     err(me.tk, "start error : types mismatch")
@@ -147,7 +147,7 @@ fun check_types () {
                     err(me.tk, "resume error : expected active coroutine")
                 }
 
-                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(Type.Union(exe.tk, false, listOf(exe.yld,exe.out)))
+                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(Type.Union(exe.tk, false, listOf(exe.yld,exe.out), null))
                 val ok2 = exe.res.is_sup_of(me.arg.type())
                 if (!ok1 || !ok2) {
                     err(me.tk, "resume error : types mismatch")

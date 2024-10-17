@@ -129,9 +129,9 @@ fun parser_var_type (): Var_Type {
     return Pair(id, tp)
 }
 
-fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
+fun parser_type (req_vars: Boolean = false, pre: Tk? = null): Type {
     return when {
-        (pre!=null || accept_fix("func") || accept_fix("coro")) -> {
+        (pre is Tk.Fix || accept_fix("func") || accept_fix("coro")) -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
             accept_fix_err("(")
             val vars = req_vars || check_enu("Var")
@@ -186,8 +186,8 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
             accept_fix_err(")")
             tp
         }
-        accept_enu("Type") -> {
-            val tp = G.tk0 as Tk.Type
+        (pre is Tk.Type) || accept_enu("Type") -> {
+            val tp = if (pre is Tk.Type) pre else G.tk0 as Tk.Type
             if (PRIMS.contains(tp.str)) {
                 Type.Prim(tp)
             } else {
@@ -207,7 +207,7 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
                     ids.add(G.tk0 as Tk.Var)
                     accept_fix_err(":")
                 }
-                parser_type(req_vars, pre)
+                parser_type(req_vars, null)
             }
             if (ids.isEmpty()) {
                 Type.Tuple(tk0, ts, null)
@@ -220,10 +220,20 @@ fun parser_type (req_vars: Boolean = false, pre: Tk.Fix? = null): Type {
         }
         accept_op("<") -> {
             val tk0 = G.tk0 as Tk.Op
+            val ids = mutableListOf<Tk.Type>()
             val ts = parser_list(",", ">") {
-                parser_type(req_vars, pre)
+                val tk1 = G.tk1
+                val has_id = (accept_enu("Type") && accept_fix(":"))
+                when {
+                    has_id -> {
+                        ids.add(tk1 as Tk.Type)
+                        parser_type(req_vars, null)
+                    }
+                    (tk1 is Tk.Type) -> parser_type(req_vars, tk1)
+                    else -> parser_type(req_vars, null)
+                }
             }
-            Type.Union(tk0, true, ts)
+            Type.Union(tk0, true, ts, ids)
         }
         else -> err_expected(G.tk1!!, "type")
     }

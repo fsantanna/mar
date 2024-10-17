@@ -62,15 +62,15 @@ sealed class Type (var n: Int, val tk: Tk) {
     class Data    (val tk_: Tk.Type): Type(G.N++, tk_)
     class Pointer (tk: Tk, val ptr: Type): Type(G.N++, tk)
     class Tuple   (tk: Tk, val ts: List<Type>, val ids: List<Tk.Var>?): Type(G.N++, tk)
-    class Union   (tk: Tk, val tagged: Boolean, val ts: List<Type>): Type(G.N++, tk)
+    class Union   (tk: Tk, val tagged: Boolean, val ts: List<Type>, val ids: List<Tk.Type>?): Type(G.N++, tk)
 
-    sealed class Proto (tk: Tk.Fix, val inps: List<Type>, val out: Type): Type(G.N++, tk) {
-        open class Func (tk: Tk.Fix, inps: List<Type>, out: Type): Proto(tk, inps, out) {
-            class Vars (tk: Tk.Fix, val inps_: List<Var_Type>, out: Type) :
+    sealed class Proto (tk: Tk, val inps: List<Type>, val out: Type): Type(G.N++, tk) {
+        open class Func (tk: Tk, inps: List<Type>, out: Type): Proto(tk, inps, out) {
+            class Vars (tk: Tk, val inps_: List<Var_Type>, out: Type) :
                 Func(tk, inps_.map { (_, tp) -> tp }, out)
         }
-        open class Coro (tk: Tk.Fix, inps: List<Type>, val res: Type, val yld: Type, out: Type): Proto(tk, inps, out) {
-            class Vars (tk: Tk.Fix, val inps_: List<Var_Type>, res: Type, yld: Type, out: Type):
+        open class Coro (tk: Tk, inps: List<Type>, val res: Type, val yld: Type, out: Type): Proto(tk, inps, out) {
+            class Vars (tk: Tk, val inps_: List<Var_Type>, res: Type, yld: Type, out: Type):
                 Coro(tk, inps_.map { (_, tp) -> tp }, res, yld, out)
         }
     }
