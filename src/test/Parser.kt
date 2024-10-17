@@ -147,15 +147,15 @@ class Parser {
         assert(tp.to_str() == "[Int,[Bool],()]") { tp.to_str() }
     }
     @Test
-    fun TODO_ak_03_type_tuple () {  // tuple field names
+    fun ak_03_type_tuple () {  // tuple field names
         G.tks = ("[x:Int,y:[Bool],z:()]").lexer()
         parser_lexer()
         val tp = parser_type()
         assert(tp is Type.Tuple && tp.ts.size==3)
-        assert(tp.to_str() == "[x:Int,[y:Bool],z:()]") { tp.to_str() }
+        assert(tp.to_str() == "[x:Int,y:[Bool],z:()]") { tp.to_str() }
     }
     @Test
-    fun TODO_ak_04_type_union () {
+    fun ak_04_type_union () {
         G.tks = ("<>").lexer()  // lex sees <> as a single token
         parser_lexer()
         val tp = parser_type()
@@ -173,11 +173,11 @@ class Parser {
     }
     @Test
     fun TODO_ak_06_type_union () {  // tuple field names
-        G.tks = ("<x:Int,y:[Bool],z:()>").lexer()
+        G.tks = ("<X:Int,Y:[Bool],Z:()>").lexer()
         parser_lexer()
         val tp = parser_type()
         assert(tp is Type.Tuple && tp.ts.size==3)
-        assert(tp.to_str() == "[x:Int,[y:Bool],z:()]") { tp.to_str() }
+        assert(tp.to_str() == "[X:Int,Y:[Bool],Z:()]") { tp.to_str() }
     }
 
     // PARENS

@@ -81,7 +81,13 @@ fun Expr.type (): Type {
         is Expr.Union -> this.tp
         is Expr.Field -> {
             val tp = this.col.type().no_data() as Type.Tuple
-            val idx = (this.idx.toIntOrNull() ?: tp.ids!!.indexOfFirst { it.str==this.idx }) - 1
+            val idx = this.idx.toIntOrNull().let {
+                if (it == null) {
+                    tp.ids!!.indexOfFirst { it.str==this.idx }
+                } else {
+                    it - 1
+                }
+            }
             tp.ts[idx]
         }
         is Expr.Disc  -> (this.col.type().no_data() as Type.Union).ts[this.idx.toInt()-1]
