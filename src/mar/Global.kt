@@ -86,9 +86,9 @@ sealed class Expr (var n: Int, val tk: Tk) {
     class Null (tk_: Tk): Expr(G.N++, tk_)
     class Unit (tk_: Tk): Expr(G.N++, tk_)
 
-    class Tuple (tk: Tk, val tp: Type.Tuple?, val vs: List<Expr>, val ids: List<Tk.Var>?): Expr(G.N++, tk)
+    class Tuple (tk: Tk, var xtp: Type.Tuple?, val vs: List<Expr>, val ids: List<Tk.Var>?): Expr(G.N++, tk)
     class Field (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
-    class Union (tk: Tk, val tp: Type.Union?, val idx: String, val v: Expr): Expr(G.N++, tk)
+    class Union (tk: Tk, var xtp: Type.Union?, val idx: String, val v: Expr): Expr(G.N++, tk)
     class Pred  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
     class Disc  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
     class Cons  (val tk_: Tk.Type, val e: Expr): Expr(G.N++, tk_)
@@ -107,7 +107,7 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     class Return  (tk: Tk, val e: Expr) : Stmt(G.N++, tk)
 
     class Block   (tk: Tk, val ss: List<Stmt>) : Stmt(G.N++, tk)
-    class Dcl     (tk: Tk, val id: Tk.Var, val tp: Type?) : Stmt(G.N++, tk)
+    class Dcl     (tk: Tk, val id: Tk.Var, var xtp: Type?) : Stmt(G.N++, tk)
     class Set     (tk: Tk, val dst: Expr, val src: Expr): Stmt(G.N++, tk)
 
     class If      (tk: Tk, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, tk)

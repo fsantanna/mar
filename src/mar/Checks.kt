@@ -32,7 +32,7 @@ fun Stmt.Block.to_dcls (): List<Triple<Node,Tk.Var,Type?>> {
         .let { it as List<Stmt> }
         .map {
             when (it) {
-                is Stmt.Dcl -> Triple(it.n, it.id, it.tp)
+                is Stmt.Dcl -> Triple(it.n, it.id, it.xtp)
                 is Stmt.Proto -> Triple(it.n, it.id, it.tp)
                 else -> error("impossible case")
             }
@@ -96,10 +96,10 @@ fun check_types () {
                     err(me.tk, "return error : types mismatch")
                 }
             }
-            is Stmt.Dcl -> {
-                if (me.tp is Type.Data) {
-                    if (me.tp.to_data() == null) {
-                        err(me.tk, "declaration error : data \"${me.tp.tk_.str}\" is not declared")
+            is Stmt.Dcl -> me.xtp.let { xtp ->
+                if (xtp is Type.Data) {
+                    if (xtp.to_data() == null) {
+                        err(me.tk, "declaration error : data \"${xtp.tk_.str}\" is not declared")
                     }
                 }
             }
@@ -167,7 +167,7 @@ fun check_types () {
         when (me) {
             is Expr.Tuple -> {
                 val tp = Type.Tuple(me.tk, me.vs.map { it.type() }, me.ids)
-                if (!me.tp!!.is_sup_of(tp)) {
+                if (!me.xtp!!.is_sup_of(tp)) {
                     err(me.tk, "tuple error : types mismatch")
                 }
             }
@@ -186,8 +186,8 @@ fun check_types () {
                 }
             }
             is Expr.Union -> {
-                val n = me.tp!!.disc_to_i(me.idx)
-                if (n==null || !me.tp!!.ts[n-1].is_sup_of(me.v.type())) {
+                val n = me.xtp!!.disc_to_i(me.idx)
+                if (n==null || !me.xtp!!.ts[n-1].is_sup_of(me.v.type())) {
                     err(me.tk, "union error : types mismatch")
                 }
             }

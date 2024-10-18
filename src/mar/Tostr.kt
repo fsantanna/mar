@@ -86,10 +86,10 @@ fun Expr.to_str (pre: Boolean = false): String {
             } else {
                 "[" + this.ids.zip(this.vs).map { (id,v) -> "."+id.str+"="+v.to_str(pre) }.joinToString(",") + "]"
 
-            } + ":" + this.tp!!.to_str(pre) + ")"
+            } + ":" + this.xtp!!.to_str(pre) + ")"
         }
         is Expr.Field  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"
-        is Expr.Union  -> "<." + this.idx + "=" + this.v.to_str(pre) + ">:" + this.tp!!.to_str(pre)
+        is Expr.Union  -> "<." + this.idx + "=" + this.v.to_str(pre) + ">:" + this.xtp!!.to_str(pre)
         is Expr.Disc  -> "(${this.col.to_str(pre)}!${this.idx})"
         is Expr.Pred  -> "(${this.col.to_str(pre)}?${this.idx})"
         is Expr.Cons  -> "(${this.tk.str}(${this.e.to_str(pre)}))"
@@ -122,7 +122,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Proto.Coro -> "coro " + this.id.str + " " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Return -> "return(" + this.e.to_str(pre) + ")"
         is Stmt.Block  -> "do {\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
-        is Stmt.Dcl    -> "var ${this.id.str}" + this.tp.cond { ": ${it.to_str()}" }
+        is Stmt.Dcl    -> "var ${this.id.str}" + this.xtp.cond { ": ${it.to_str()}" }
         is Stmt.Set    -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
         is Stmt.If     -> "if " + this.cnd.to_str(pre) + " {\n" + this.t.ss.to_str(pre) + "} else {\n" + this.f.ss.to_str(pre) + "}"
         is Stmt.Loop   -> "loop {\n" + this.blk.ss.to_str(pre) + "}"
