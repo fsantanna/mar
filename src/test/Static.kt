@@ -629,5 +629,27 @@ class Static {
             var r = 10
         """)
         assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "var r: Int\n" +
+                "set r = 10\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ee_02_infer_dcl () {
+        val out = static("""
+            var x
+        """)
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+    }
+    @Test
+    fun ee_03_infer_dcl () {
+        val out = static("""
+            var x = [10, 10]
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "var x: [Int,Int]\n" +
+                "set x = ([10,10]:[Int,Int])\n" +
+                "}") { G.outer!!.to_str() }
     }
 }

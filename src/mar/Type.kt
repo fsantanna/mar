@@ -87,8 +87,8 @@ fun Expr.type (): Type {
             if (it is Type.Any) it else (it as Type.Proto.Func).out
         }
 
-        is Expr.Tuple -> this.xtp
-        is Expr.Union -> this.xtp
+        is Expr.Tuple -> this.xtp!!
+        is Expr.Union -> this.xtp!!
         is Expr.Field -> {
             val tp = this.col.type().no_data() as Type.Tuple
             val idx = this.idx.toIntOrNull().let {

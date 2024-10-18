@@ -507,7 +507,9 @@ class Parser {
     fun jj_00_tuple_err () {
         G.tks = ("[10,20]").lexer()
         parser_lexer()
-        assert(trap { parser_expr() } == "anon : (lin 1, col 8) : expected \":\" : have end of file")
+        val e = parser_expr()
+        assert(e.to_str() == "([10,20])") { e.to_str() }
+        //assert(trap { parser_expr() } == "anon : (lin 1, col 8) : expected \":\" : have end of file")
     }
     @Test
     fun jj_01_tuple () {
@@ -679,7 +681,7 @@ class Parser {
         assert(ss.to_str() == "do {\n" +
                 "data Result: <Error:(),Success:Int>\n" +
                 "var r: Result\n" +
-                "set r = (Result <.Success=10>:<Error:(),Success:Int>)\n" +
+                "set r = (Result(<.Success=10>:<Error:(),Success:Int>))\n" +
                 "}\n") { ss.to_str() }
     }
     @Test
