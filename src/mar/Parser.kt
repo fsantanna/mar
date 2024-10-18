@@ -320,8 +320,7 @@ fun parser_expr_4_prim (): Expr {
             if (sub == null) {
                 Expr.Cons(tp, e)
             } else {
-                //Expr.Cons(tp, Expr.Union(tk, tp, sub.str, e))
-                TODO()
+                Expr.Cons(tp, Expr.Union(tp, null, sub.str, e))
             }
         }
 

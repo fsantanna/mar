@@ -620,4 +620,14 @@ class Static {
         """)
         assert(out == "TODO") { out!! }
     }
+
+    // INFER
+
+    @Test
+    fun ee_01_infer_dcl () {
+        val out = static("""
+            var r = 10
+        """)
+        assert(out == null) { out!! }
+    }
 }
