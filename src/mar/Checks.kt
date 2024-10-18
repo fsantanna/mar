@@ -10,7 +10,22 @@ fun Type.Data.to_data (): Stmt.Data? {
     return this.tk_.to_data()
 }
 
-fun Stmt.Block.to_dcls (): List<Triple<Node,Tk.Var,Type?>> {
+fun Expr.Acc.to_xdcl (): XDcl? {
+    return this.up_first {
+        if (it !is Stmt.Block) null else {
+            it.to_dcls().find { (_,id,_) -> id.str == this.tk.str }
+        }
+    } as XDcl?
+}
+
+fun XDcl.to_dcl (): Stmt.Dcl? {
+    val (n,_,_) = this
+    return G.ns[n]!!.let {
+        if (it is Stmt.Dcl) it else null
+    }
+}
+
+fun Stmt.Block.to_dcls (): List<XDcl> {
     return this.fup().let {
         when {
             (it is Stmt.Proto.Func) -> it.tp_.inps_.map { Triple(this.n, it.first, it.second) }
@@ -64,10 +79,7 @@ fun check_vars () {
     fun fe (me: Expr) {
         when (me) {
             is Expr.Acc -> {
-                val ok = me.up_any {
-                    it is Stmt.Block && it.to_dcls().any { (_,id,_) -> id.str == me.tk.str }
-                }
-                if (!ok) {
+                if (me.to_xdcl() == null) {
                     err(me.tk, "access error : variable \"${me.tk.str}\" is not declared")
                 }
             }

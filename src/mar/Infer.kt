@@ -26,7 +26,11 @@ fun infer_types () {
             }
             is Expr.Union -> {
                 if (me.xtp == null) {
-
+                    val up = me.fupx()
+                    if (up is Stmt.Set) {
+                        assert(up.src.n == me.n)
+                        me.xtp = up.dst.typex() as Type.Union?
+                    }
                 }
             }
             else -> {}
@@ -36,14 +40,14 @@ fun infer_types () {
         when (me) {
             is Stmt.Dcl -> {
                 if (me.xtp == null) {
-                    val set = me.fupx().dn_first_pre({
-                        it is Stmt.Set && it.dst is Expr.Acc && it.dst.tk_.str==me.id.str
-                    }, null, null) as Stmt.Set?
-                    if (set != null) {
-                        set.dn_visit_pos(::fs,::fe,null) // because set is collected after dcl
-                        me.xtp = set.src.type()
-                    } else {
-                        err(me.tk, "inference error : unknown type")
+                    err(me.tk, "inference error : unknown type")
+                }
+            }
+            is Stmt.Set -> {
+                if (me.dst is Expr.Acc) {
+                    val dcl = me.dst.to_xdcl()!!.to_dcl()!!
+                    if (dcl.xtp == null) {
+                        dcl.xtp = me.src.type()
                     }
                 }
             }

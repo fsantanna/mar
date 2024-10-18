@@ -378,4 +378,22 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun ii_02_infer () {
+        val out = test("""
+            var t = [10,20]
+            var n = t.2
+            `printf("%d\n", n);`
+        """)
+        assert(out == "20\n") { out }
+    }
+    @Test
+    fun ii_03_infer () {
+        val out = test("""
+            var t: <(),Int> = <.2=10>
+            var n = t!2
+            `printf("%d\n", n);`
+        """)
+        assert(out == "10\n") { out }
+    }
 }

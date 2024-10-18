@@ -652,4 +652,15 @@ class Static {
                 "set x = ([10,10]:[Int,Int])\n" +
                 "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun ee_04_infer_dcl () {
+        val out = static("""
+            var x: <Int,()> = <.1=10>
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "var x: <Int,()>\n" +
+                "set x = <.1=10>:<Int,()>\n" +
+                "}") { G.outer!!.to_str() }
+    }
 }

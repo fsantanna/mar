@@ -59,14 +59,14 @@ class JS {
     @Test
     fun x_01() {
         val out = test("""
-            coro genFunc (<(),()>) -> <(),()> {
+            coro genFunc () -> () -> () -> () {
                 `puts("First");`
                 yield()
                 `puts("Second");`
             }
-            var genObj: exec (<(),()>) -> <(),()> = create(genFunc)
-            resume genObj(<.1 ()>: <(),()>)     ;; First
-            resume genObj(<.2 ()>: <(),()>)     ;; Second
+            var genObj = create(genFunc)
+            start genObj()
+            resume genObj()
         """)
         assert(out == "First\nSecond\n") { out }
     }
