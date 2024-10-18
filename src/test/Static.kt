@@ -663,4 +663,16 @@ class Static {
                 "set x = <.1=10>:<Int,()>\n" +
                 "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun ee_05_infer_exec () {
+        val out = static("""
+            coro genFunc () -> () -> () -> () {}
+            var genObj = create(genFunc)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "var x: <Int,()>\n" +
+                "set x = <.1=10>:<Int,()>\n" +
+                "}") { G.outer!!.to_str() }
+    }
 }

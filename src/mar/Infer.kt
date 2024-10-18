@@ -38,11 +38,6 @@ fun infer_types () {
     }
     fun fs (me: Stmt) {
         when (me) {
-            is Stmt.Dcl -> {
-                if (me.xtp == null) {
-                    err(me.tk, "inference error : unknown type")
-                }
-            }
             is Stmt.Set -> {
                 if (me.dst is Expr.Acc) {
                     val dcl = me.dst.to_xdcl()!!.to_dcl()!!
@@ -55,4 +50,11 @@ fun infer_types () {
         }
     }
     G.outer!!.dn_visit_pos(::fs, ::fe, null)
+    G.outer!!.dn_visit_pre({
+        if (it is Stmt.Dcl) {
+            if (it.xtp == null) {
+                err(it.tk, "inference error : unknown type")
+            }
+        }
+    }, null, null)
 }
