@@ -11,16 +11,16 @@ fun <V> Stmt.dn_collect_pos (fs: ((Stmt)->List<V>)?, fe: ((Expr)->List<V>)?, ft:
 
         is Stmt.Block -> this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
         is Stmt.Dcl -> this.xtp?.dn_collect_pos(ft) ?: emptyList()
-        is Stmt.Set -> this.dst.dn_collect_pos(fe) + this.src.dn_collect_pos(fe)
+        is Stmt.Set -> this.src.dn_collect_pos(fe) + this.dst.dn_collect_pos(fe)
 
         is Stmt.If    -> this.cnd.dn_collect_pos(fe) + this.t.dn_collect_pos(fs,fe,ft) + this.f.dn_collect_pos(fs,fe,ft)
         is Stmt.Loop  -> this.blk.dn_collect_pos(fs,fe,ft)
         is Stmt.Break -> emptyList()
 
-        is Stmt.Create -> this.dst.dn_collect_pos(fe) + this.co.dn_collect_pos(fe)
-        is Stmt.Start  -> (this.dst?.dn_collect_pos(fe) ?: emptyList()) + this.exe.dn_collect_pos(fe) + this.args.map { it.dn_collect_pos(fe) }.flatten()
-        is Stmt.Resume -> (this.dst?.dn_collect_pos(fe) ?: emptyList()) + this.exe.dn_collect_pos(fe) + this.arg.dn_collect_pos(fe)
-        is Stmt.Yield  -> (this.dst?.dn_collect_pos(fe) ?: emptyList()) + this.arg.dn_collect_pos(fe)
+        is Stmt.Create -> this.co.dn_collect_pos(fe) + this.dst.dn_collect_pos(fe)
+        is Stmt.Start  -> this.args.map { it.dn_collect_pos(fe) }.flatten() + this.exe.dn_collect_pos(fe) + (this.dst?.dn_collect_pos(fe) ?: emptyList())
+        is Stmt.Resume -> this.arg.dn_collect_pos(fe) + this.exe.dn_collect_pos(fe) + (this.dst?.dn_collect_pos(fe) ?: emptyList())
+        is Stmt.Yield  -> this.arg.dn_collect_pos(fe) + (this.dst?.dn_collect_pos(fe) ?: emptyList())
 
         is Stmt.Call -> this.call.dn_collect_pos(fe)
         is Stmt.Nat -> emptyList()
