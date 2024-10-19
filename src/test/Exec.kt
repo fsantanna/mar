@@ -356,6 +356,23 @@ class Exec  {
         """)
         assert(out == "10 / 1\n") { out }
     }
+    @Test
+    fun hh_06_data () {
+        val out = test("""
+            data Event: <
+                Quit:  [ts:Int],
+                Frame: [ts:Int, ms:Int],
+                Key: <
+                    Dn: [ts:Int, key:Int],
+                    Up: [ts:Int, key:Int],
+                >,
+            >
+            var x = Event.Quit [10]
+            var ts = x!Quit.ts
+            `printf("%d\n", ts);`
+        """)
+        assert(out == "10 / 1\n") { out }
+    }
 
     // INFER
 

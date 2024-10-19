@@ -869,4 +869,12 @@ class Static {
                 "set r = (Pos(([10,20]:[x:Int,y:Int])))\n" +
                 "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun ee_17_infer_err () {
+        val out = static("""
+            var x: Int
+            var ts = x.ts
+        """)
+        assert(out == "anon : (lin 3, col 13) : inference error : unknown type") { out!! }
+    }
 }

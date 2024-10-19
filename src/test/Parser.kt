@@ -685,9 +685,76 @@ class Parser {
                 "}\n") { ss.to_str() }
     }
     @Test
+    fun kk_05_sub_sub () {     // Event.*
+        G.tks = ("""
+            struct Event {
+                int tag;
+                int ts;
+                union {
+                    struct {
+                        int ms;
+                    } Frame;
+                    struct {
+                        in tag;
+                        int key;
+                        union {
+                            struct {
+                            } Dn;
+                            struct {
+                            } Up;
+                        }
+                    } Key;
+                }
+            }
+            struct Frame {
+                
+            data Event: [
+                ts: Int,
+                subs: <
+                    Quit:   (),
+                    Frame:  Int,
+                    Key:    [
+                        key: Int,
+                        <Dn:(), Up:()>
+                    ],
+                >,
+            ]
+            
+            data Event: <
+                Quit:  [ts:Int],
+                Frame: [ts:Int, ms:Int],
+                Key: <
+                    Dn: [ts:Int, key:Int],
+                    Up: [ts:Int, key:Int],
+                >
+            >
+                
+            
+            data Event: [ts:Int] {
+                Quit:   []
+                Frame:  [ms:Int]
+                Key:    [key:Int] {
+                    Dn: []
+                    Up: []
+                }
+            }
+            data Mouse: <
+                Left:   (),
+                Middle: (),
+                Right:  (),
+            >
+            
+            data Error.*: [msg: String]
+            data Error.Runtime: []
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "var v: <Int,Int>\n" +
+                "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
+    }
+    @Test
     fun NEW_kk_XX_data () {     // Event.*
         G.tks = ("""
-            data Pos: [Int,Int]
             data Event: ()
             data Event.Keys
             var p: Pos = [10,10]

@@ -77,7 +77,7 @@ fun infer_types () {
                 if (me.dst is Expr.Acc) {
                     val dcl = me.dst.to_xdcl()!!.to_dcl()
                     if (dcl!=null && dcl.xtp==null) {
-                        dcl.xtp = me.src.type()
+                        dcl.xtp = me.src.typex()
                     }
                 }
             }
