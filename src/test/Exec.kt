@@ -356,17 +356,6 @@ class Exec  {
         """)
         assert(out == "10 / 1\n") { out }
     }
-    @Test
-    fun NEW_hh_06_data () {     // Res.Ok
-        val out = test("""
-            data Res: <Err:(),Ok:Int>
-            var r1: Res.Ok = Res.Ok(10)
-            var r2: Res = r1
-            var ok: Bool = r2?Ok
-            `printf("%d\n", ok);`
-        """)
-        assert(out == "10\n") { out }
-    }
 
     // INFER
 
@@ -395,5 +384,16 @@ class Exec  {
             `printf("%d\n", n);`
         """)
         assert(out == "10\n") { out }
+    }
+    @Test
+    fun ii_04_infer () {
+        val out = test("""
+            data Res: <Err:(),Ok:Int>
+            var r1 = Res.Ok(10)
+            var r2 = r1
+            var ok = r2?Ok
+            `printf("%d\n", ok);`
+        """)
+        assert(out == "1\n") { out }
     }
 }

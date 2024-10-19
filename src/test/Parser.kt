@@ -682,10 +682,10 @@ class Parser {
                 "data Result: <Error:(),Success:Int>\n" +
                 "var r: Result\n" +
                 "set r = (Result(<.Success=10>))\n" +
-                "}") { ss.to_str() }
+                "}\n") { ss.to_str() }
     }
     @Test
-    fun NEW_kk_XX_data () {
+    fun NEW_kk_XX_data () {     // Event.*
         G.tks = ("""
             data Pos: [Int,Int]
             data Event: ()
@@ -710,7 +710,7 @@ class Parser {
     // TEMPLATE
 
     @Test
-    fun tt_01_data () {
+    fun NEW_tt_01_data () {     // template
         G.tks = ("""
             data Exec {a,b}: <Yield: a, Return: b>
             var x: Exec {(),Int} = Exec.Return(10)
