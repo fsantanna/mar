@@ -242,11 +242,12 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String, Int, Int
     return out3
 }
 
-fun test (inp: String, pre: Boolean=false): String {
+fun test (inp: String): String {
     //println(inp)
     val prelude = "build/prelude.mar"
-    val inps = listOf(Pair(Triple("anon",1,1), inp.reader())) + if (!pre) emptyList() else {
-        listOf(Pair(Triple(prelude,1,1), File(prelude).reader()))
-    }
+    val inps = listOf (
+        Pair(Triple("anon",1,1), inp.reader()),
+        Pair(Triple(prelude,1,1), File(prelude).reader()),
+    )
     return all(true, false, inps, "out", emptyList())
 }

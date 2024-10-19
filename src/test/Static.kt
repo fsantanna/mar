@@ -671,8 +671,97 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "var x: <Int,()>\n" +
-                "set x = <.1=10>:<Int,()>\n" +
+                "coro genFunc () -> () -> () -> () {\n" +
+                "}\n" +
+                "var genObj: exec () -> () -> () -> ()\n" +
+                "set genObj = create(genFunc)\n" +
                 "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ee_06_infer_call () {
+        val out = static("""
+            func f (v: [Int,Int]) -> Int {
+                return(v.1 + v.2)
+            }
+            var x = f([10,20])
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "func f (v: [Int,Int]) -> Int {\n" +
+                "return(((v.1) + (v.2)))\n" +
+                "}\n" +
+                "var x: Int\n" +
+                "set x = (f(([10,20]:[Int,Int])))\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ee_07_infer_call () {
+        val out = static("""
+            func f (v: <(),Int>) -> () {
+            }
+            var x = f(<.1=()>)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ee_08_infer_return () {
+        val out = static("""
+            func f () -> <(),Int> {
+                return(<.1=()>)
+            }
+            var x = f()
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ee_08_infer_start () {
+        val out = static("""
+            coro co (v: <(),Int>) -> () -> () -> () {
+            }
+            var exe = create(co)
+            start exe(<.1=()>)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ee_09_infer_resume () {
+        val out = static("""
+            coro co () -> <(),Int> -> () -> () {
+            }
+            var exe = create(co)
+            start exe()
+            resume exe(<.1=()>)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ee_10_infer_yield () {
+        val out = static("""
+            coro co () -> Int -> <(),Int> -> () {
+                var x = yield(<.1=()>)
+            }
+            var exe = create(co)
+            start exe()
+            resume exe(10)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ee_11_infer_start_resume () {
+        val out = static("""
+            coro co () -> () -> () -> Int {
+                var x = yield(<.1=()>)
+            }
+            var exe = create(co)
+            var x = start exe()
+            var y = resume exe(10)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
     }
 }

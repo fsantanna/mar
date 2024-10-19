@@ -76,19 +76,19 @@ class JS {
     @Test
     fun x_02() {
         val out = test("""
-            coro gen1 (v: <Int,()>) -> <(),()> {
+            coro gen1 (v: Int) -> () -> () -> () {
                 `printf("%d\n", mar_exe->mem.v);`
             }
-            var co1: exec (<Int,()>) -> <(),()> = create(gen1)
-            resume co1(<.1 1>: <Int,()>)
+            var co1 = create(gen1)
+            resume co1(<.1=1>)
 
-            var gen2: \coro (<Int,()>) -> <(),()> = \gen1
-            var co2:  exec (<Int,()>) -> <(),()> = create(gen2\)
-            resume co2(<.1 2>: <Int,()>)
+            var gen2 = \gen1
+            var co2 = create(gen2\)
+            resume co2(<.1=2>)
             
-            var obj3: [\coro (<Int,()>) -> <(),()>] = [gen2]
-            var co3: exec (<Int,()>) -> <(),()> = create(obj3.1\)
-            resume co3(<.1 3>: <Int,()>)
+            var obj3 = [gen2]
+            var co3 = create(obj3.1\)
+            resume co3(<.1=3>)
             
             ;; no co4
         """)
@@ -159,7 +159,7 @@ class JS {
                     println(it)   ;; never printed
                 }
             }
-        """, true)
+        """)
         assert(out.contains("json :good\n" +
                 " |  anon : (lin 33, col 14) : (spawn (task' :fake () { group { (val co1 ...\n" +
                 " |  anon : (lin 32, col 47) : (resume (mar_co)(mar_arg))\n" +
@@ -222,7 +222,7 @@ class JS {
             resume genObj()
                 ;; anon : (lin 3, col 17) : throw error : uncaught exception
                 ;; :problem
-        """, true)
+        """)
         assert(out == " |  anon : (lin 6, col 13) : (resume (genObj)())\n" +
                 " |  anon : (lin 3, col 17) : error(:problem)\n" +
                 " v  error : :problem\n") { out }
@@ -241,7 +241,7 @@ class JS {
                     yield() ;; anon : (lin 4, col 21) : yield error : unexpected enclosing func
                 }()
             }
-        """, true)
+        """)
         assert(out == "anon : (lin 4, col 21) : yield error : unexpected enclosing func\n") { out }
     }
     @Test
@@ -254,7 +254,7 @@ class JS {
             }
             val arr = to.vector(coroutine(genFunc))
             println(arr)
-        """, true)
+        """)
         assert(out == "#[[0,a],[1,b]]\n") { out }
     }
 
@@ -276,7 +276,7 @@ class JS {
             }
             val arr = to.vector(coroutine(bar))
             println(arr)
-        """, true)
+        """)
         assert(out == "xaby\n") { out }
     }
 
@@ -294,7 +294,7 @@ class JS {
             }
             val arr = to.vector(coroutine(bar))
             println(arr)
-        """, true)
+        """)
         assert(out == "xaby\n") { out }
     }
 
@@ -319,7 +319,7 @@ class JS {
                 resume-yield-all genObj ()
             }
             println(to.vector(create-resume(logReturned, coroutine(genFuncWithReturn))))
-        """, true)
+        """)
         assert(out == "abc\n") { out }
     }
     @Test
@@ -337,7 +337,7 @@ class JS {
             }
             val co1 = coroutine(genFuncWithReturn)
             println(to.vector(create-resume(logReturned, co1)))
-        """, true)
+        """)
         assert(out == "abc\n") { out }
     }
 
@@ -366,7 +366,7 @@ class JS {
                 }
             }
             println(to.vector(create-resume(T, TREE)))
-        """, true)
+        """)
         assert(out == "abcde\n") { out }
     }
 
@@ -388,7 +388,7 @@ class JS {
             println(resume genObj())
             println(resume genObj('a'))
             println(resume genObj('b'))
-        """, true)
+        """)
         assert(out == ":started\nnil\n1\ta\nnil\n2\tb\n:result\n") { out }
     }
 
@@ -408,7 +408,7 @@ class JS {
             val obj = coroutine(gen);
             resume obj('a');
             resume obj('b');
-        """, true)
+        """)
         assert(out == "a\nb\n") { out }
     }
 
@@ -433,7 +433,7 @@ class JS {
             resume genObj1()
             kill genObj1()
             println(:end)
-        """, true)
+        """)
         assert(out == ":exiting\n:end\n") { out }
     }
 
@@ -451,7 +451,7 @@ class JS {
                 resume genObj1()
             }
             println(:end)
-        """, true)
+        """)
         assert(out == ":exiting\n:end\n") { out }
     }
 
@@ -467,7 +467,7 @@ class JS {
             val genObj = coroutine(genFunc)
             kill genObj(:yes)
             println(genObj.pub)
-        """, true)
+        """)
         assert(out == ":yes") { out }
     }
 
@@ -526,7 +526,7 @@ class JS {
             val co_nums  = create-resume(numberLines, co_print)
             val co_split = create-resume(splitLines, co_nums)
             readFile(nil, co_split) 
-        """, true)
+        """)
         assert(out == "1: ab\n2: c\n3: defg\n") { out }
     }
 
@@ -588,7 +588,7 @@ class JS {
                     }
                 }
             }
-        """, true)
+        """)
         assert(out == "1: ab\n2: c\n3: defg\n") { out }
     }
 
@@ -597,7 +597,7 @@ class JS {
         val out = test("""
             ;; f >|>> co   co >>|>> co
             ((readFile >|>> splitLines) >>|>> numLines) >>|>> printLines
-        """, true)
+        """)
         assert(out == ":yes") { out }
     }
 
@@ -619,7 +619,7 @@ class JS {
             val co_caller = create-resume(caller)
             println(:resume, resume co_caller('a'))
             println(:resume, resume co_caller('b'))
-        """, true)
+        """)
         assert(out == ":callee\ta\n:resume\tnil\n:callee\tb\n:resume\tnil\n") { out }
     }
 
@@ -730,7 +730,7 @@ class JS {
             create-resume(Send, take2, create-resume(Show))
             nil
         }
-        """, true)
+        """)
         assert(out == "1: ;; is', is-not'\n" +
                 "2: \n" +
                 "3: val not = func' (v) {\n" +
