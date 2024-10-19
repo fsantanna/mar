@@ -877,4 +877,20 @@ class Static {
         """)
         assert(out == "anon : (lin 3, col 13) : inference error : unknown type") { out!! }
     }
+    @Test
+    fun ee_18_infer () {
+        val out = static("""
+            data X: <A:[a:Int]>
+            var x = X.A [10]
+            var a = x!A.a
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: <A:[a:Int]>\n" +
+                "var x: X\n" +
+                "set x = (X(<.A=([10]:[a:Int])>:<A:[a:Int]>))\n" +
+                "var a: Int\n" +
+                "set a = ((x!A).a)\n" +
+                "}") { G.outer!!.to_str() }
+    }
 }

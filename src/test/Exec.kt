@@ -359,6 +359,16 @@ class Exec  {
     @Test
     fun hh_06_data () {
         val out = test("""
+            data X: <A:[a:Int]>
+            var x = X.A [10]
+            var a = x!A.a
+            `printf("%d\n", a);`
+        """)
+        assert(out == "10 / 1\n") { out }
+    }
+    @Test
+    fun hh_07_data () {
+        val out = test("""
             data Event: <
                 Quit:  [ts:Int],
                 Frame: [ts:Int, ms:Int],
