@@ -814,4 +814,33 @@ class Static {
                 "set z = resume exe(```x```)\n" +
                 "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun ee_12_infer_err () {
+        val out = static("""
+            coro gen1 (v: Int) -> () -> () -> () {
+                `printf("%d\n", mar_exe->mem.v);`
+            }
+            var co1 = create(gen1)
+            start co1(<.1=1>)
+        """)
+        assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
+    }
+    @Test
+    fun ee_13_infer_err () {
+        val out = static("""
+            coro gen1 (v: Int) -> () -> () -> () {
+                `printf("%d\n", mar_exe->mem.v);`
+            }
+            var co1 = create(gen1)
+            start co1([])
+        """)
+        assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
+    }
+    @Test
+    fun ee_14_infer_err () {
+        val out = static("""
+            var x = <.1=()>
+        """)
+        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+    }
 }

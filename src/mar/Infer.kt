@@ -43,7 +43,13 @@ fun infer_types () {
         when (me) {
             is Expr.Tuple -> {
                 if (me.xtp == null) {
-                    me.xtp = infer() as Type.Tuple?
+                    me.xtp = infer().let {
+                        when (it) {
+                            null -> null
+                            is Type.Tuple -> it
+                            else -> err(me.tk, "inference error : incompatible types")
+                        }
+                    }
                     if (me.xtp == null) {
                         val tps = me.vs.map { it.type() }
                         me.xtp = Type.Tuple(me.tk, tps, me.ids)
@@ -52,7 +58,13 @@ fun infer_types () {
             }
             is Expr.Union -> {
                 if (me.xtp == null) {
-                    me.xtp = infer() as Type.Union
+                    me.xtp = infer().let {
+                        when (it) {
+                            null -> err(me.tk, "inference error : unknown type")
+                            !is Type.Union -> err(me.tk, "inference error : incompatible types")
+                            else -> it
+                        }
+                    }
                 }
             }
             else -> {}

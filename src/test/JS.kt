@@ -80,15 +80,15 @@ class JS {
                 `printf("%d\n", mar_exe->mem.v);`
             }
             var co1 = create(gen1)
-            resume co1(<.1=1>)
+            start co1(<.1=1>)
 
             var gen2 = \gen1
             var co2 = create(gen2\)
-            resume co2(<.1=2>)
+            start co2(<.1=2>)
             
             var obj3 = [gen2]
             var co3 = create(obj3.1\)
-            resume co3(<.1=3>)
+            start co3(<.1=3>)
             
             ;; no co4
         """)

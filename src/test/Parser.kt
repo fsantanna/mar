@@ -428,7 +428,7 @@ class Parser {
         parser_lexer()
         val s = parser_stmt().first()
         assert(s is Stmt.XExpr && s.e is Expr.Resume && s.e.exe is Expr.Acc && s.e.arg is Expr.Unit)
-        assert(s.to_str() == "resume xf()")
+        assert(s.to_str() == "resume xf()") { s.to_str() }
     }
     @Test
     fun hh_03_yield() {
