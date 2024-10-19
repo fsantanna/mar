@@ -80,15 +80,15 @@ class JS {
                 `printf("%d\n", mar_exe->mem.v);`
             }
             var co1 = create(gen1)
-            start co1(<.1=1>)
+            start co1(1)
 
             var gen2 = \gen1
             var co2 = create(gen2\)
-            start co2(<.1=2>)
+            start co2(2)
             
             var obj3 = [gen2]
             var co3 = create(obj3.1\)
-            start co3(<.1=3>)
+            start co3(3)
             
             ;; no co4
         """)
@@ -100,23 +100,23 @@ class JS {
     @Test
     fun x_03() {
         val out = test("""
-            coro objectEntries (obj: <\[Int,Int],()>) -> <[Int,Int],()> {
+            coro objectEntries (obj: \[Int,Int]) -> () -> [Int,Int] -> () {
                 yield([1, obj\.1])
                 yield([2, obj\.2])
                 return()
             }
             
-            var jane: [Int, Int] = [10, 20]
-            var exe: exec (<\[Int,Int],()>) -> <[Int,Int],()> = create(objectEntries)
-            var iv:  <[Int,Int],()> = resume exe(<.1 \jane>: <\[Int,Int],()>)
+            var jane = [10, 20]
+            var exe = create(objectEntries)
+            var iv = start exe(\jane)
             loop {
                 if iv?2 {
                     break
                 }
-                var i: Int = iv!1.1
-                var v: Int = iv!1.2
+                var i = iv!1.1
+                var v = iv!1.2
                 `printf("[%d,%d]\n", i, v);`
-                set iv = resume exe(<.2 ()>: <\[Int,Int],()>)
+                set iv = resume exe()
             }
         """)
         assert(out == "[1,10]\n[2,20]\n") { out }
@@ -178,13 +178,13 @@ class JS {
                 yield('b')
                 return()
             }
-            var genObj: exec () -> () -> Char -> () = create(genFunc)
-            var x: <Char,()> = start  genObj()
-            var y: <Char,()> = resume genObj()
-            var z: <Char,()> = resume genObj()
-            var cx: Char = x!1
-            var cy: Char = y!1
-            var zz: Bool = z?2
+            var genObj = create(genFunc)
+            var x = start  genObj()
+            var y = resume genObj()
+            var z = resume genObj()
+            var cx = x!1
+            var cy = y!1
+            var zz = z?2
             `printf("%c %c %d\n", cx, cy, zz);`
         """)
         assert(out == "a b 1\n") { out }
