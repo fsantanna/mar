@@ -427,7 +427,7 @@ class Parser {
         G.tks = ("resume xf()").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Resume && s.exe is Expr.Acc && s.arg is Expr.Unit)
+        assert(s is Stmt.XExpr && s.e is Expr.Resume && s.e.exe is Expr.Acc && s.e.arg is Expr.Unit)
         assert(s.to_str() == "resume xf()")
     }
     @Test
@@ -435,7 +435,7 @@ class Parser {
         G.tks = ("yield()").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Yield && s.arg is Expr.Unit)
+        assert(s is Stmt.XExpr && s.e is Expr.Yield && s.e.arg is Expr.Unit)
         assert(s.to_str() == "yield()") { s.to_str() }
     }
     @Test
@@ -443,7 +443,7 @@ class Parser {
         G.tks = ("set x = create(f)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Create && s.co is Expr.Acc)
+        assert(s is Stmt.Set && s.src is Expr.Create && s.src.co is Expr.Acc)
         assert(s.to_str() == "set x = create(f)")
     }
     @Test
@@ -451,7 +451,7 @@ class Parser {
         G.tks = ("set x = resume xf(false)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Resume && s.exe is Expr.Acc && s.arg is Expr.Bool)
+        assert(s is Stmt.Set && s.src is Expr.Resume && s.src.exe is Expr.Acc && s.src.arg is Expr.Bool)
         assert(s.to_str() == "set x = resume xf(false)")
     }
     @Test
@@ -459,7 +459,7 @@ class Parser {
         G.tks = ("set y = yield(null)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Yield && s.arg is Expr.Null)
+        assert(s is Stmt.Set && s.src is Expr.Yield && s.src.arg is Expr.Null)
         assert(s.to_str() == "set y = yield(null)") { s.to_str() }
     }
     @Test

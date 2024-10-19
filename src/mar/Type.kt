@@ -114,5 +114,17 @@ fun Expr.type (): Type {
         is Expr.Null -> Type.Pointer(this.tk, Type.Any(this.tk))
         is Expr.Unit -> Type.Unit(this.tk)
         is Expr.Num -> Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))
+
+        is Expr.Create -> {
+            val co = this.co.type() as Type.Proto.Coro
+            Type.Exec(co.tk, co.inps, co.res, co.yld, co.out)
+        }
+        is Expr.Start -> (this.exe.type() as Type.Exec).let {
+            Type.Union(this.tk, true, listOf(it.yld, it.out), null)
+        }
+        is Expr.Resume -> (this.exe.type() as Type.Exec).let {
+            Type.Union(this.tk, true, listOf(it.yld, it.out), null)
+        }
+        is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
     }
 }

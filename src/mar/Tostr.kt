@@ -97,6 +97,11 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Uno    -> "(" + this.tk_.to_str(pre) + this.e.to_str(pre) + ")"
         is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk_.to_str(pre) + " " + this.e2.to_str(pre) + ")"
         is Expr.Call   -> "(" + this.f.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + "))"
+
+        is Expr.Create -> "create(" + this.co.to_str(pre) + ")"
+        is Expr.Start  -> "start " + this.exe.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
+        is Expr.Resume -> "resume " + this.exe.to_str(pre) + "(" + this.arg.to_str(pre) + ")"
+        is Expr.Yield  -> "yield(" + this.arg.to_str(pre) + ")"
     }.let {
         when {
             !pre -> it
@@ -127,11 +132,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.If     -> "if " + this.cnd.to_str(pre) + " {\n" + this.t.ss.to_str(pre) + "} else {\n" + this.f.ss.to_str(pre) + "}"
         is Stmt.Loop   -> "loop {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Break  -> "break"
-        is Stmt.Create -> this.dst.cond { "set ${it.to_str(pre)} = " } + "create(" + this.co.to_str(pre) + ")"
-        is Stmt.Start  -> this.dst.cond { "set ${it.to_str(pre)} = " } + "start " + this.exe.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
-        is Stmt.Resume -> this.dst.cond { "set ${it.to_str(pre)} = " } + "resume " + this.exe.to_str(pre) + "(" + this.arg.to_str(pre) + ")"
-        is Stmt.Yield  -> this.dst.cond { "set ${it.to_str(pre)} = " } + "yield(" + this.arg.to_str(pre) + ")"
-        is Stmt.Call   -> this.call.to_str(pre)
+        is Stmt.XExpr   -> this.e.to_str(pre)
         is Stmt.Nat    -> this.tk.str.let { if (it.contains("\n")) "```"+it+"```" else "`"+it+"`" }
     }.let {
         when {

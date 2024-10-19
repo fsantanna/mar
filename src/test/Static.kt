@@ -135,7 +135,7 @@ class Static {
                 set x = true
             ;;}
         """)
-        assert(out == "anon : (lin 4, col 17) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 23) : set error : types mismatch") { out!! }
     }
     @Test
     fun bb_02_func() {
@@ -260,7 +260,7 @@ class Static {
             }
             var exe: exec (Int) -> () -> () -> () = create(co)
         """)
-        assert(out == "anon : (lin 4, col 53) : create error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 51) : set error : types mismatch") { out!! }
     }
     @Test
     fun bc_05_exe_coro_err () {
@@ -332,7 +332,7 @@ class Static {
             resume exe()
             var v: Int
         """)
-        assert(out == "anon : (lin 4, col 23) : create error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 21) : set error : types mismatch") { out!! }
         //assert(out == null) { out!! }
     }
     @Test
@@ -353,7 +353,7 @@ class Static {
                     }
                 }
         """)
-        assert(out == "anon : (lin 4, col 38) : yield error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 36) : set error : types mismatch") { out!! }
     }
     @Test
     fun bc_14_exe_yield_err () {

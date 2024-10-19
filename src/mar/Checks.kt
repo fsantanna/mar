@@ -125,53 +125,6 @@ fun check_types () {
                     err(me.tk, "if error : expected boolean condition")
                 }
             }
-            is Stmt.Create -> {
-                val co = me.co.type()
-                if (co !is Type.Proto.Coro) {
-                    err(me.tk, "create error : expected coroutine prototype")
-                }
-                val tp = me.dst.type()
-                val xtp = Type.Exec(co.tk, co.inps, co.res, co.yld, co.out)
-                if (!xtp.is_sup_of(tp)) {
-                    err(me.tk, "create error : types mismatch")
-                }
-            }
-            is Stmt.Start -> {
-                val exe = me.exe.type()
-                if (exe !is Type.Exec) {
-                    err(me.tk, "start error : expected active coroutine")
-                }
-
-                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(Type.Union(exe.tk, false, listOf(exe.yld,exe.out), null))
-                val ok2 = (exe.inps.size == me.args.size) && exe.inps.zip(me.args).all { (thi,oth) -> thi.is_sup_of(oth.type()) }
-                if (!ok1 || !ok2) {
-                    err(me.tk, "start error : types mismatch")
-                }
-            }
-            is Stmt.Resume -> {
-                val exe = me.exe.type()
-                if (exe !is Type.Exec) {
-                    err(me.tk, "resume error : expected active coroutine")
-                }
-
-                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(Type.Union(exe.tk, false, listOf(exe.yld,exe.out), null))
-                val ok2 = exe.res.is_sup_of(me.arg.type())
-                if (!ok1 || !ok2) {
-                    err(me.tk, "resume error : types mismatch")
-                }
-            }
-            is Stmt.Yield -> {
-                val up = me.up_first { it is Stmt.Proto }
-                if (up !is Stmt.Proto.Coro) {
-                    err(me.tk, "yield error : expected enclosing coro")
-                }
-                val exe = up.tp_
-                val ok1 = (me.dst == null) || me.dst.type().is_sup_of(exe.yld)
-                val ok2 = exe.yld.is_sup_of(me.arg.type())
-                if (!ok1 || !ok2) {
-                    err(me.tk, "yield error : types mismatch")
-                }
-            }
             else -> {}
         }
     }
@@ -243,6 +196,41 @@ fun check_types () {
                 }
                 if (!ok) {
                     err(me.tk, "call error : types mismatch")
+                }
+            }
+            is Expr.Create -> {
+                val co = me.co.type()
+                if (co !is Type.Proto.Coro) {
+                    err(me.tk, "create error : expected coroutine prototype")
+                }
+            }
+            is Expr.Start -> {
+                val exe = me.exe.type()
+                if (exe !is Type.Exec) {
+                    err(me.tk, "start error : expected active coroutine")
+                }
+                val ok = (exe.inps.size == me.args.size) && exe.inps.zip(me.args).all { (thi,oth) -> thi.is_sup_of(oth.type()) }
+                if (!ok) {
+                    err(me.tk, "start error : types mismatch")
+                }
+            }
+            is Expr.Resume -> {
+                val exe = me.exe.type()
+                if (exe !is Type.Exec) {
+                    err(me.tk, "resume error : expected active coroutine")
+                }
+                if (!exe.res.is_sup_of(me.arg.type())) {
+                    err(me.tk, "resume error : types mismatch")
+                }
+            }
+            is Expr.Yield -> {
+                val up = me.up_first { it is Stmt.Proto }
+                if (up !is Stmt.Proto.Coro) {
+                    err(me.tk, "yield error : expected enclosing coro")
+                }
+                val exe = up.tp_
+                if (!exe.yld.is_sup_of(me.arg.type())) {
+                    err(me.tk, "yield error : types mismatch")
                 }
             }
             else -> {}

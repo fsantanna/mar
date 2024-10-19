@@ -17,12 +17,7 @@ fun <V> Stmt.dn_collect_pos (fs: ((Stmt)->List<V>)?, fe: ((Expr)->List<V>)?, ft:
         is Stmt.Loop  -> this.blk.dn_collect_pos(fs,fe,ft)
         is Stmt.Break -> emptyList()
 
-        is Stmt.Create -> this.co.dn_collect_pos(fe) + this.dst.dn_collect_pos(fe)
-        is Stmt.Start  -> this.args.map { it.dn_collect_pos(fe) }.flatten() + this.exe.dn_collect_pos(fe) + (this.dst?.dn_collect_pos(fe) ?: emptyList())
-        is Stmt.Resume -> this.arg.dn_collect_pos(fe) + this.exe.dn_collect_pos(fe) + (this.dst?.dn_collect_pos(fe) ?: emptyList())
-        is Stmt.Yield  -> this.arg.dn_collect_pos(fe) + (this.dst?.dn_collect_pos(fe) ?: emptyList())
-
-        is Stmt.Call -> this.call.dn_collect_pos(fe)
+        is Stmt.XExpr -> this.e.dn_collect_pos(fe)
         is Stmt.Nat -> emptyList()
     } + fs(this)
 }
@@ -42,6 +37,11 @@ fun <V> Expr.dn_collect_pos (fe: ((Expr)->List<V>)?): List<V> {
         is Expr.Call  -> this.f.dn_collect_pos(fe) + this.args.map { it.dn_collect_pos(fe) }.flatten()
         is Expr.Acc, is Expr.Nat, is Expr.Null, is Expr.Unit,
         is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()
+        is Expr.Create -> this.co.dn_collect_pos(fe)
+        is Expr.Start  -> this.args.map { it.dn_collect_pos(fe) }.flatten() + this.exe.dn_collect_pos(fe)
+        is Expr.Resume -> this.arg.dn_collect_pos(fe) + this.exe.dn_collect_pos(fe)
+        is Expr.Yield  -> this.arg.dn_collect_pos(fe)
+
     } + fe(this)
 }
 fun <V> Type.dn_collect_pos (ft: ((Type)->List<V>)?): List<V> {
@@ -96,12 +96,7 @@ fun <V> Stmt.dn_collect_pre (fs: ((Stmt)->List<V>?)?, fe: ((Expr)->List<V>?)?, f
         is Stmt.Loop  -> this.blk.dn_collect_pre(fs,fe,ft)
         is Stmt.Break -> emptyList()
 
-        is Stmt.Create -> this.dst.dn_collect_pre(fe) + this.co.dn_collect_pre(fe)
-        is Stmt.Start  -> (this.dst?.dn_collect_pre(fe) ?: emptyList()) + this.exe.dn_collect_pre(fe) + this.args.map { it.dn_collect_pre(fe) }.flatten()
-        is Stmt.Resume -> (this.dst?.dn_collect_pre(fe) ?: emptyList()) + this.exe.dn_collect_pre(fe) + this.arg.dn_collect_pre(fe)
-        is Stmt.Yield  -> (this.dst?.dn_collect_pre(fe) ?: emptyList()) + this.arg.dn_collect_pre(fe)
-
-        is Stmt.Call -> this.call.dn_collect_pre(fe)
+        is Stmt.XExpr -> this.e.dn_collect_pre(fe)
         is Stmt.Nat -> emptyList()
     }
 }
@@ -125,6 +120,10 @@ fun <V> Expr.dn_collect_pre (fe: ((Expr)->List<V>?)?): List<V> {
         is Expr.Call  -> this.f.dn_collect_pre(fe) + this.args.map { it.dn_collect_pre(fe) }.flatten()
         is Expr.Acc, is Expr.Nat, is Expr.Null, is Expr.Unit,
         is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()
+        is Expr.Create -> this.co.dn_collect_pre(fe)
+        is Expr.Start  -> this.exe.dn_collect_pre(fe) + this.args.map { it.dn_collect_pre(fe) }.flatten()
+        is Expr.Resume -> this.exe.dn_collect_pre(fe) + this.arg.dn_collect_pre(fe)
+        is Expr.Yield  -> this.arg.dn_collect_pre(fe)
     }
 }
 fun <V> Type.dn_collect_pre (ft: ((Type)->List<V>?)?): List<V> {

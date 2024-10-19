@@ -50,34 +50,7 @@ fun cache_ups () {
             }
             is Stmt.Break -> {}
 
-            is Stmt.Create -> {
-                G.ups[me.dst.n] = me.n
-                G.ups[me.co.n] = me.n
-            }
-            is Stmt.Start -> {
-                if (me.dst != null) {
-                    G.ups[me.dst.n] = me.n
-                }
-                G.ups[me.exe.n] = me.n
-                me.args.forEach {
-                    G.ups[it.n] = me.n
-                }
-            }
-            is Stmt.Resume -> {
-                if (me.dst != null) {
-                    G.ups[me.dst.n] = me.n
-                }
-                G.ups[me.exe.n] = me.n
-                G.ups[me.arg.n] = me.n
-            }
-            is Stmt.Yield -> {
-                if (me.dst != null) {
-                    G.ups[me.dst.n] = me.n
-                }
-                G.ups[me.arg.n] = me.n
-            }
-
-            is Stmt.Call -> G.ups[me.call.n] = me.n
+            is Stmt.XExpr -> G.ups[me.e.n] = me.n
             is Stmt.Nat -> {}
         }
     }
@@ -102,6 +75,22 @@ fun cache_ups () {
 
             is Expr.Acc, is Expr.Bool, is Expr.Char, is Expr.Nat,
             is Expr.Null, is Expr.Num, is Expr.Unit -> {}
+
+            is Expr.Create -> G.ups[me.co.n] = me.n
+            is Expr.Start -> {
+                G.ups[me.exe.n] = me.n
+                me.args.forEach {
+                    G.ups[it.n] = me.n
+                }
+            }
+            is Expr.Resume -> {
+                G.ups[me.exe.n] = me.n
+                G.ups[me.arg.n] = me.n
+            }
+            is Expr.Yield -> {
+                G.ups[me.arg.n] = me.n
+            }
+
         }
     }
     G.outer!!.dn_visit_pre(::fs, ::fe, null)

@@ -40,8 +40,8 @@ fun infer_types () {
         when (me) {
             is Stmt.Set -> {
                 if (me.dst is Expr.Acc) {
-                    val dcl = me.dst.to_xdcl()!!.to_dcl()!!
-                    if (dcl.xtp == null) {
+                    val dcl = me.dst.to_xdcl()!!.to_dcl()
+                    if (dcl!=null && dcl.xtp==null) {
                         dcl.xtp = me.src.type()
                     }
                 }

@@ -234,7 +234,13 @@ fun Stmt.coder (pre: Boolean = false): String {
             val in_coro = this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro
             (!in_coro).cond { this.xtp!!.coder(pre) + " " + this.id.str + ";" }
         }
-        is Stmt.Set    -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
+        is Stmt.Set    -> {
+            if (this.src is Expr.Yield) {
+                this.src.coder(pre)
+            } else {
+                this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
+            }
+        }
 
         is Stmt.If     -> """
             if (${this.cnd.coder(pre)}) {
@@ -250,46 +256,8 @@ fun Stmt.coder (pre: Boolean = false): String {
         """
         is Stmt.Break -> "break;"
 
-        is Stmt.Create -> {
-            val xtp = this.dst.type().coder(pre)
-            val dst = this.dst.coder(pre)
-            """
-            $dst = ($xtp) { 0, ${this.co.coder(pre)}, {} };
-            """
-        }
-        is Stmt.Start -> {
-            val exe = this.exe.coder(pre)
-            val tp = this.exe.type() as Type.Exec
-            val (xuni,_) = tp.x_inp_uni(pre)
-            val args = "&$exe, ($xuni) { ._1 = {" + this.args.map { it.coder(pre) }.joinToString(",") + "} }"
-            """
-            ${this.dst.cond { it.coder(pre) + " = "}} $exe.co($args);
-            """
-        }
-        is Stmt.Resume -> {
-            val exe = this.exe.coder(pre)
-            val tp = this.exe.type() as Type.Exec
-            val (xuni,_) = tp.x_inp_uni(pre)
-            val args = "&$exe, ($xuni) { ._2 = ${this.arg.coder(pre)} }"
-            """
-            ${this.dst.cond { it.coder(pre) + " = "}} $exe.co($args);
-            """
-        }
-        is Stmt.Yield -> {
-            val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
-            val (xuni,_) = tp.x_out_uni(pre)
-            """
-            mar_exe->pc = ${this.n};
-            return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
-        case ${this.n}:
-            ${(this.dst).cond { """
-                ${it.coder(pre)} = mar_arg._2;
-            """ }}
-        """
-        }
-
         is Stmt.Nat    -> this.tk.str
-        is Stmt.Call   -> this.call.coder(pre) + ";"
+        is Stmt.XExpr   -> this.e.coder(pre) + ";"
     }
 }
 
@@ -341,6 +309,47 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Unit -> "_void_"
         is Expr.Bool, is Expr.Char,
         is Expr.Null, is Expr.Num -> this.to_str(pre)
+
+        is Expr.Create -> {
+            val xtp = (this.fupx() as Stmt.Set).dst.type().coder(pre)
+            """
+            ($xtp) { 0, ${this.co.coder(pre)}, {} };
+            """
+        }
+        is Expr.Start -> {
+            val exe = this.exe.coder(pre)
+            val tp = this.exe.type() as Type.Exec
+            val (xuni,_) = tp.x_inp_uni(pre)
+            """
+            $exe.co (
+                &$exe, ($xuni) { ._1 = {
+                    ${this.args.map { it.coder(pre) }.joinToString(",")}
+                } }
+            );
+            """
+        }
+        is Expr.Resume -> {
+            val exe = this.exe.coder(pre)
+            val tp = this.exe.type() as Type.Exec
+            val (xuni,_) = tp.x_inp_uni(pre)
+            """
+            $exe.co (
+                &$exe, ($xuni) { ._2 = ${this.arg.coder(pre)} }
+            );
+            """
+        }
+        is Expr.Yield -> {
+            val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
+            val (xuni,_) = tp.x_out_uni(pre)
+            """
+            mar_exe->pc = ${this.n};
+            return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
+        case ${this.n}:
+            ${(this.fupx().let { if (it is Stmt.Set) it.dst else null }).cond { """
+                ${it.coder(pre)} = mar_arg._2;
+            """ }}
+        """
+        }
     }
 }
 

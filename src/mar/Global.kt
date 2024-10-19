@@ -97,6 +97,11 @@ sealed class Expr (var n: Int, val tk: Tk) {
     class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, tk_)
     class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)
     class Call (tk: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, tk)
+
+    class Create  (tk: Tk, val co: Expr): Expr(G.N++, tk)
+    class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Expr(G.N++, tk)
+    class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Expr(G.N++, tk)
+    class Yield   (tk: Tk, val arg: Expr): Expr(G.N++, tk)
 }
 
 sealed class Stmt (var n: Int, val tk: Tk) {
@@ -115,13 +120,8 @@ sealed class Stmt (var n: Int, val tk: Tk) {
     class Loop    (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, tk)
     class Break   (tk: Tk): Stmt(G.N++, tk)
 
-    class Create  (tk: Tk, val dst: Expr, val co: Expr): Stmt(G.N++, tk)
-    class Start   (tk: Tk, val dst: Expr?, val exe: Expr, val args: List<Expr>): Stmt(G.N++, tk)
-    class Resume  (tk: Tk, val dst: Expr?, val exe: Expr, val arg: Expr): Stmt(G.N++, tk)
-    class Yield   (tk: Tk, val dst: Expr?, val arg: Expr): Stmt(G.N++, tk)
-
     class Nat     (tk: Tk.Nat): Stmt(G.N++, tk)
-    class Call    (tk: Tk, val call: Expr.Call): Stmt(G.N++, tk)
+    class XExpr   (tk: Tk, val e: Expr): Stmt(G.N++, tk)
 }
 
 typealias Node = Int

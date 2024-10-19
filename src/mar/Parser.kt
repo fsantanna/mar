@@ -403,7 +403,7 @@ fun check_stmt_is_expr (): Boolean {
     return (check_fix("create") || check_fix("start") || check_fix("resume") || check_fix("yield"))
 }
 
-fun parser_stmt (set: Expr? = null): List<Stmt> {
+fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
     return when {
         (accept_fix("func") || accept_fix("coro")) -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -438,14 +438,14 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
             listOf(Stmt.Block(tk0, ss))
         }
         accept_fix("set") -> {
-            val tk0 = G.tk0 as Tk.Fix
             val dst = parser_expr()
             if (!dst.is_lval()) {
-                err(tk0, "set error : expected assignable destination")
+                err(dst.tk, "set error : expected assignable destination")
             }
             accept_fix_err("=")
+            val tk0 = G.tk0 as Tk.Fix
             if (check_stmt_is_expr()) {
-                parser_stmt(dst)
+                parser_stmt(Pair(tk0,dst))
             } else {
                 val src = parser_expr()
                 listOf(Stmt.Set(tk0, dst, src))
@@ -462,7 +462,7 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
                 !accept_fix("=") -> listOf(Stmt.Dcl(tk0, id, tp))
                 !check_stmt_is_expr() -> listOf(Stmt.Dcl(tk0, id, tp), Stmt.Set(tk0, Expr.Acc(id), parser_expr()))
                 else -> {
-                    listOf(Stmt.Dcl(tk0,id,tp)) + parser_stmt(Expr.Acc(id))
+                    listOf(Stmt.Dcl(tk0,id,tp)) + parser_stmt(Pair(G.tk0!!,Expr.Acc(id)))
                 }
             }
         }
@@ -499,14 +499,19 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
             accept_fix_err("(")
             val co = parser_expr()
             accept_fix_err(")")
-            listOf(Stmt.Create(tk0, set, co))
+            listOf(Stmt.Set(set.first, set.second, Expr.Create(tk0, co)))
         }
         accept_fix("start") -> {
             val tk0 = G.tk0 as Tk.Fix
             val exe = parser_expr_4_prim()
             accept_fix_err("(")
             val args = parser_list(",",")") { parser_expr() }
-            listOf(Stmt.Start(tk0, set, exe, args))
+            if (set == null) {
+                listOf(Stmt.XExpr(tk0, Expr.Start(tk0, exe, args)))
+            } else {
+                listOf(Stmt.Set(set.first, set.second, Expr.Start(tk0, exe, args)))
+
+            }
         }
         accept_fix("resume") -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -518,7 +523,12 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
                 parser_expr()
             }
             accept_fix_err(")")
-            listOf(Stmt.Resume(tk0, set, exe, arg))
+            if (set == null) {
+                listOf(Stmt.XExpr(tk0, Expr.Resume(tk0, exe, arg)))
+            } else {
+                listOf(Stmt.Set(set.first, set.second, Expr.Resume(tk0, exe, arg)))
+
+            }
         }
         accept_fix("yield") -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -529,7 +539,12 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
                 parser_expr()
             }
             accept_fix_err(")")
-            listOf(Stmt.Yield(tk0, set, arg))
+            if (set == null) {
+                listOf(Stmt.XExpr(tk0, Expr.Yield(tk0, arg)))
+            } else {
+                listOf(Stmt.Set(set.first, set.second, Expr.Yield(tk0, arg)))
+
+            }
         }
 
         accept_fix("data") -> {
@@ -546,7 +561,7 @@ fun parser_stmt (set: Expr? = null): List<Stmt> {
             val tk1 = G.tk1!!
             val call = parser_expr_3_suf()
             if (call is Expr.Call) {
-                listOf(Stmt.Call(call.tk, call))
+                listOf(Stmt.XExpr(call.tk, call))
             } else {
                 err_expected(tk1, "statement")
             }
