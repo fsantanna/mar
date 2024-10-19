@@ -702,7 +702,12 @@ class Static {
             var x = f(<.1=()>)
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "func f (v: <(),Int>) -> () {\n" +
+                "}\n" +
+                "var x: ()\n" +
+                "set x = (f(<.1=()>:<(),Int>))\n" +
+                "}") { G.outer!!.to_str() }
     }
     @Test
     fun ee_08_infer_return () {
@@ -713,7 +718,13 @@ class Static {
             var x = f()
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "func f () -> <(),Int> {\n" +
+                "return(<.1=()>:<(),Int>)\n" +
+                "}\n" +
+                "var x: <(),Int>\n" +
+                "set x = (f())\n" +
+                "}") { G.outer!!.to_str() }
     }
     @Test
     fun ee_08_infer_start () {
@@ -724,7 +735,13 @@ class Static {
             start exe(<.1=()>)
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "coro co (v: <(),Int>) -> () -> () -> () {\n" +
+                "}\n" +
+                "var exe: exec (<(),Int>) -> () -> () -> ()\n" +
+                "set exe = create(co)\n" +
+                "start exe(<.1=()>:<(),Int>)\n" +
+                "}") { G.outer!!.to_str() }
     }
     @Test
     fun ee_09_infer_resume () {
@@ -736,32 +753,65 @@ class Static {
             resume exe(<.1=()>)
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "coro co () -> <(),Int> -> () -> () {\n" +
+                "}\n" +
+                "var exe: exec () -> <(),Int> -> () -> ()\n" +
+                "set exe = create(co)\n" +
+                "start exe()\n" +
+                "resume exe(<.1=()>:<(),Int>)\n" +
+                "}") { G.outer!!.to_str() }
     }
     @Test
     fun ee_10_infer_yield () {
         val out = static("""
-            coro co () -> Int -> <(),Int> -> () {
+            coro co () -> () -> <(),Int> -> () {
                 var x = yield(<.1=()>)
             }
             var exe = create(co)
             start exe()
-            resume exe(10)
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "coro co () -> () -> <(),Int> -> () {\n" +
+                "var x: ()\n" +
+                "set x = yield(<.1=()>:<(),Int>)\n" +
+                "}\n" +
+                "var exe: exec () -> () -> <(),Int> -> ()\n" +
+                "set exe = create(co)\n" +
+                "start exe()\n" +
+                "}") { G.outer!!.to_str() }
     }
     @Test
     fun ee_11_infer_start_resume () {
         val out = static("""
-            coro co () -> () -> () -> Int {
-                var x = yield(<.1=()>)
+            data A: Int
+            data B: Int
+            data C: Int
+            data D: Int
+            coro co (a:A) -> B -> C -> D {
+                var x = yield(`x`)
             }
             var exe = create(co)
-            var x = start exe()
-            var y = resume exe(10)
+            var y = start exe(`x`)
+            var z = resume exe(`x`)
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data A: Int\n" +
+                "data B: Int\n" +
+                "data C: Int\n" +
+                "data D: Int\n" +
+                "coro co (a: A) -> B -> C -> D {\n" +
+                "var x: B\n" +
+                "set x = yield(```x```)\n" +
+                "}\n" +
+                "var exe: exec (A) -> B -> C -> D\n" +
+                "set exe = create(co)\n" +
+                "var y: <C,D>\n" +
+                "set y = start exe(```x```)\n" +
+                "var z: <C,D>\n" +
+                "set z = resume exe(```x```)\n" +
+                "}") { G.outer!!.to_str() }
     }
 }

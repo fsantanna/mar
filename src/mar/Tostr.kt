@@ -78,7 +78,7 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Char   -> this.tk.str
         is Expr.Num    -> this.tk.str
         is Expr.Null   -> this.tk.str
-        is Expr.Unit   -> ""
+        is Expr.Unit   -> "()"
 
         is Expr.Tuple  -> {
             "(" + if (this.ids == null) {
