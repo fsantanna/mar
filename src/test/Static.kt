@@ -843,4 +843,30 @@ class Static {
         """)
         assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
     }
+    @Test
+    fun ee_15_infer_data_union () {
+        val out = static("""
+            data Res: <Err:(),Ok:Int>
+            var r = Res <.Ok=10>
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Res: <Err:(),Ok:Int>\n" +
+                "var r: Res\n" +
+                "set r = (Res(<.Ok=10>:<Err:(),Ok:Int>))\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ee_16_infer_data_tuple () {
+        val out = static("""
+            data Pos: [x:Int,y:Int]
+            var r = Pos [10,20]
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Pos: [x:Int,y:Int]\n" +
+                "var r: Pos\n" +
+                "set r = (Pos(([10,20]:[x:Int,y:Int])))\n" +
+                "}") { G.outer!!.to_str() }
+    }
 }

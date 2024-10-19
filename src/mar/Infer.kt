@@ -17,6 +17,7 @@ fun infer_types () {
                     assert(up.src.n == me.n)
                     up.dst.typex()
                 }
+                is Expr.Cons -> up.tk_.to_data()!!.tp
                 is Expr.Call -> {
                     val i = up.args.indexOfFirst { it.n == me.n }
                     (up.f.type() as Type.Proto.Func).inps[i]

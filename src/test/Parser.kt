@@ -669,7 +669,7 @@ class Parser {
                 "}\n") { ss.to_str() }
     }
     @Test
-    fun NEW_kk_04_data () {     // Result.Success
+    fun kk_04_data () {
         G.tks = ("""
             do {
                 data Result: <Error: (), Success: Int>
@@ -681,8 +681,8 @@ class Parser {
         assert(ss.to_str() == "do {\n" +
                 "data Result: <Error:(),Success:Int>\n" +
                 "var r: Result\n" +
-                "set r = (Result(<.Success=10>:<Error:(),Success:Int>))\n" +
-                "}\n") { ss.to_str() }
+                "set r = (Result(<.Success=10>))\n" +
+                "}") { ss.to_str() }
     }
     @Test
     fun NEW_kk_XX_data () {
