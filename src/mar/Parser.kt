@@ -409,6 +409,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val tk0 = G.tk0 as Tk.Fix
             accept_enu_err("Var")
             val id = G.tk0 as Tk.Var
+            accept_fix_err(":")
             val tp = parser_type(true, tk0)
             accept_fix_err("{")
             val ss = parser_list(null, "}") {

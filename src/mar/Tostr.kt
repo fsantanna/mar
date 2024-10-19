@@ -123,8 +123,8 @@ fun List<Stmt>.to_str (pre: Boolean = false): String {
 fun Stmt.to_str (pre: Boolean = false): String {
     return when (this) {
         is Stmt.Data   -> "data " + this.id.str + ": " + this.tp.to_str(pre)
-        is Stmt.Proto.Func -> "func " + this.id.str + " " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
-        is Stmt.Proto.Coro -> "coro " + this.id.str + " " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
+        is Stmt.Proto.Func -> "func " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
+        is Stmt.Proto.Coro -> "coro " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Return -> "return(" + this.e.to_str(pre) + ")"
         is Stmt.Block  -> "do {\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
         is Stmt.Dcl    -> "var ${this.id.str}" + this.xtp.cond { ": ${it.to_str()}" }

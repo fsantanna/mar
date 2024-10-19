@@ -294,24 +294,24 @@ class Parser {
     @Test
     fun ee_03_func() {
         G.tks = ("""
-            func f (Int) -> Int {
+            func f: (Int) -> Int {
             }
         """).lexer()
         parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 2, col 21) : expected variable : have \"Int\"")
+        assert(trap { parser_stmt() } == "anon : (lin 2, col 22) : expected variable : have \"Int\"")
     }
     @Test
     fun ee_04_func() {
         G.tks = ("""
             do {
-                func f (a:Int) -> Int {
+                func f: (a:Int) -> Int {
                 }
             }
         """).lexer()
         parser_lexer()
         val e = parser_stmt().first()
         assert(e.to_str() == "do {\n" +
-                "func f (a: Int) -> Int {\n" +
+                "func f: (a: Int) -> Int {\n" +
                 "}\n" +
                 "}") { e.to_str() }
     }
@@ -464,19 +464,19 @@ class Parser {
     }
     @Test
     fun hh_07_coro() {
-        G.tks = ("coro co () -> () -> () -> () {}").lexer()
+        G.tks = ("coro co: () -> () -> () -> () {}").lexer()
         parser_lexer()
         val s = parser_stmt().first()
         assert(s is Stmt.Proto.Coro && s.tp.inps.size==0)
-        assert(s.to_str() == "coro co () -> () -> () -> () {\n}") { s.to_str() }
+        assert(s.to_str() == "coro co: () -> () -> () -> () {\n}") { s.to_str() }
     }
     @Test
     fun hh_08_coro() {
-        G.tks = ("coro co (x: ()) -> () -> () -> () {}").lexer()
+        G.tks = ("coro co: (x: ()) -> () -> () -> () {}").lexer()
         parser_lexer()
         val s = parser_stmt().first()
         assert(s is Stmt.Proto.Coro && s.tp.out is Type.Unit)
-        assert(s.to_str() == "coro co (x: ()) -> () -> () -> () {\n}") { s.to_str() }
+        assert(s.to_str() == "coro co: (x: ()) -> () -> () -> () {\n}") { s.to_str() }
     }
 
     // IF / LOOP
@@ -669,7 +669,7 @@ class Parser {
                 "}\n") { ss.to_str() }
     }
     @Test
-    fun kk_04_data () {
+    fun NEW_kk_04_data () {     // Result.Success
         G.tks = ("""
             do {
                 data Result: <Error: (), Success: Int>
@@ -685,7 +685,7 @@ class Parser {
                 "}\n") { ss.to_str() }
     }
     @Test
-    fun kk_XX_data () {
+    fun NEW_kk_XX_data () {
         G.tks = ("""
             data Pos: [Int,Int]
             data Event: ()
@@ -705,5 +705,21 @@ class Parser {
         val ss = parser_stmt()
         assert(ss.to_str() == "var v: <Int,Int>\n" +
                 "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
+    }
+
+    // TEMPLATE
+
+    @Test
+    fun tt_01_data () {
+        G.tks = ("""
+            data Exec {a,b}: <Yield: a, Return: b>
+            var x: Exec {(),Int} = Exec.Return(10)
+            var i = x!Return
+            var y = x?Yield
+            `printf("%d %d\n", i, y);`
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "data Pos: [Int,Int]\n") { ss.to_str() }
     }
 }

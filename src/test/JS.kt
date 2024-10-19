@@ -59,7 +59,7 @@ class JS {
     @Test
     fun x_01() {
         val out = test("""
-            coro genFunc () -> () -> () -> () {
+            coro genFunc: () -> () -> () -> () {
                 `puts("First");`
                 yield()
                 `puts("Second");`
@@ -76,7 +76,7 @@ class JS {
     @Test
     fun x_02() {
         val out = test("""
-            coro gen1 (v: Int) -> () -> () -> () {
+            coro gen1: (v: Int) -> () -> () -> () {
                 `printf("%d\n", mar_exe->mem.v);`
             }
             var co1 = create(gen1)
@@ -100,7 +100,7 @@ class JS {
     @Test
     fun x_03() {
         val out = test("""
-            coro objectEntries (obj: \[Int,Int]) -> () -> [Int,Int] -> () {
+            coro objectEntries: (obj: \[Int,Int]) -> () -> [Int,Int] -> () {
                 yield([1, obj\.1])
                 yield([2, obj\.2])
                 return()
@@ -128,20 +128,20 @@ class JS {
     fun x_04() {
         val out = test("""
             ;;export [fetch, text, json] { ;; mock functions
-                coro fetch (url) {
+                coro fetch: (url) {
                     if url == :error {
                         error(:error)
                     }
                     url
                 }
-                coro text (url) {
+                coro text: (url) {
                     to.string(url)
                 }
-                coro json (txt) {
+                coro json: (txt) {
                     "json " ++ txt
                 }
             ;;}
-            coro fetchJson (url) {
+            coro fetchJson: (url) {
                 val co_fetch = coroutine(fetch)
                 val co_text  = coroutine(text)
                 val co_json  = coroutine(json)

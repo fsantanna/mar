@@ -89,7 +89,7 @@ class Static {
     fun aa_06_coro_decl_err () {
         val out = static("""
             ;;do {
-                func f () -> () {
+                func f: () -> () {
                 }
             ;;}
         """)
@@ -103,7 +103,7 @@ class Static {
     fun ab_01_func_rec () {
         val out = static("""
             do {
-                func f () -> () {
+                func f: () -> () {
                     f()
                 }
             }
@@ -114,10 +114,10 @@ class Static {
     fun ab_02_func_rec_mutual () {
         val out = static("""
             ;;do {
-                func f () -> () {
+                func f: () -> () {
                     g()
                 }
-                func g () -> () {
+                func g: () -> () {
                     f()
                 }
             ;;}
@@ -141,7 +141,7 @@ class Static {
     fun bb_02_func() {
         val out = static("""
             do {
-                func f (v: Int) -> Int {
+                func f: (v: Int) -> Int {
                     return(v)
                 }
                 `printf("%d", f(10));`
@@ -153,7 +153,7 @@ class Static {
     fun bb_03_func_err() {
         val out = static("""
             do ;;;[f: func () -> ()];;; {
-                func f () -> Int {
+                func f: () -> Int {
                 }
             }
         """)
@@ -164,7 +164,7 @@ class Static {
     fun bb_04_func_err() {
         val out = static("""
             ;;do {
-                func f () -> Int {
+                func f: () -> Int {
                     return ()
                 }
             ;;}
@@ -176,7 +176,7 @@ class Static {
         val out = static("""
             do {
                 do {
-                    func g () -> () {
+                    func g: () -> () {
                     }
                 }
             }
@@ -215,7 +215,7 @@ class Static {
     @Test
     fun bc_02x_coro_err() {
         val out = static("""
-            coro f (x: Int) -> () -> () -> Int {
+            coro f: (x: Int) -> () -> () -> Int {
             }
             var z: exec (Int) -> () -> () -> Int = create(f)
             start z()  ;; err f(Int)
@@ -225,7 +225,7 @@ class Static {
     @Test
     fun bc_02y_coro_err() {
         val out = static("""
-            coro f (x: Int) -> () -> () -> Int {
+            coro f: (x: Int) -> () -> () -> Int {
             }
             var z: exec (Int) -> () -> () -> Int = create(f)
             resume z(10)  ;; err f(Int)
@@ -235,7 +235,7 @@ class Static {
     @Test
     fun bc_03_coro_ok() {
         val out = static("""
-            coro f (v: Int) -> () -> () -> Int {
+            coro f: (v: Int) -> () -> () -> Int {
             }
             var x: exec (Int) -> () -> () -> Int = create(f)
             start x(10)
@@ -246,7 +246,7 @@ class Static {
     @Test
     fun bc_03x_coro_err() {
         val out = static("""
-            coro f (v: Int) -> () -> () -> Int {
+            coro f: (v: Int) -> () -> () -> Int {
             }
             var x: exec (Int) -> () -> () -> Int = create(f)
             resume x(<.1=10>: <Int>)
@@ -256,7 +256,7 @@ class Static {
     @Test
     fun bc_04_exe_coro_err () {
         val out = static("""
-            coro co () -> () -> () -> () {
+            coro co: () -> () -> () -> () {
             }
             var exe: exec (Int) -> () -> () -> () = create(co)
         """)
@@ -274,7 +274,7 @@ class Static {
     @Test
     fun bc_06_exe_coro_ok () {
         val out = static("""
-            coro co () -> () -> () -> () {}
+            coro co: () -> () -> () -> () {}
             var exe: exec () -> () -> () -> ()
             set exe = create(co)
             start exe()
@@ -285,7 +285,7 @@ class Static {
     @Test
     fun bc_07_exe_resume_ok () {
         val out = static("""
-            coro co () -> () -> () -> Int {}
+            coro co: () -> () -> () -> Int {}
             var exe: exec () -> () -> () -> Int
             set exe = create(co)
             start exe()
@@ -305,7 +305,7 @@ class Static {
     @Test
     fun bc_09_exe_resume_err () {
         val out = static("""
-            coro co () -> () -> () -> () {}
+            coro co: () -> () -> () -> () {}
             var exe: exec () -> () -> () -> ()
             set exe = create(co)
             resume exe(1)
@@ -315,7 +315,7 @@ class Static {
     @Test
     fun bc_10_exe_resume_err () {
         val out = static("""
-            coro co () -> () -> () -> () {}
+            coro co: () -> () -> () -> () {}
             var exe: exec () -> () -> () -> ()
             set exe = create(co)
             var v: Int = resume exe(<.1=()>: <(),()>)
@@ -325,7 +325,7 @@ class Static {
     @Test
     fun bc_11_exe_resume () {
         val out = static("""
-            coro co (x:()) -> () -> () -> () {}
+            coro co: (x:()) -> () -> () -> () {}
             var exe: exec () -> () -> () -> ()
             set exe = create(co)
             start exe()
@@ -347,7 +347,7 @@ class Static {
     @Test
     fun bc_13_exe_yield_err () {
         val out = static("""
-                coro co () -> () -> () -> () {
+                coro co: () -> () -> () -> () {
                     do {
                         var x: Int = yield()
                     }
@@ -359,7 +359,7 @@ class Static {
     fun bc_14_exe_yield_err () {
         val out = static("""
             do {
-                coro co () -> () -> () -> () {
+                coro co: () -> () -> () -> () {
                     yield(<.1=10>: <Int,()>)
                 }
             }
@@ -605,7 +605,7 @@ class Static {
         assert(out == "anon : (lin 4, col 27) : field error : types mismatch") { out!! }
     }
     @Test
-    fun dd_10_data_cons () {
+    fun NEW_dd_10_data_cons () {        // Res.Ok
         val out = static("""
             data Res: <Err:(),Ok:Int>
             var r = Res.Ok(10)
@@ -613,7 +613,7 @@ class Static {
         assert(out == null) { out!! }
     }
     @Test
-    fun dd_11_data_cons_err () {
+    fun NEW_dd_11_data_cons_err () {    // Res.XXX
         val out = static("""
             data Res: <Err:(),Ok:Int>
             var r = Res.XXX(10)
@@ -666,12 +666,12 @@ class Static {
     @Test
     fun ee_05_infer_exec () {
         val out = static("""
-            coro genFunc () -> () -> () -> () {}
+            coro genFunc: () -> () -> () -> () {}
             var genObj = create(genFunc)
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "coro genFunc () -> () -> () -> () {\n" +
+                "coro genFunc: () -> () -> () -> () {\n" +
                 "}\n" +
                 "var genObj: exec () -> () -> () -> ()\n" +
                 "set genObj = create(genFunc)\n" +
@@ -680,14 +680,14 @@ class Static {
     @Test
     fun ee_06_infer_call () {
         val out = static("""
-            func f (v: [Int,Int]) -> Int {
+            func f: (v: [Int,Int]) -> Int {
                 return(v.1 + v.2)
             }
             var x = f([10,20])
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "func f (v: [Int,Int]) -> Int {\n" +
+                "func f: (v: [Int,Int]) -> Int {\n" +
                 "return(((v.1) + (v.2)))\n" +
                 "}\n" +
                 "var x: Int\n" +
@@ -697,13 +697,13 @@ class Static {
     @Test
     fun ee_07_infer_call () {
         val out = static("""
-            func f (v: <(),Int>) -> () {
+            func f: (v: <(),Int>) -> () {
             }
             var x = f(<.1=()>)
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "func f (v: <(),Int>) -> () {\n" +
+                "func f: (v: <(),Int>) -> () {\n" +
                 "}\n" +
                 "var x: ()\n" +
                 "set x = (f(<.1=()>:<(),Int>))\n" +
@@ -712,14 +712,14 @@ class Static {
     @Test
     fun ee_08_infer_return () {
         val out = static("""
-            func f () -> <(),Int> {
+            func f: () -> <(),Int> {
                 return(<.1=()>)
             }
             var x = f()
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "func f () -> <(),Int> {\n" +
+                "func f: () -> <(),Int> {\n" +
                 "return(<.1=()>:<(),Int>)\n" +
                 "}\n" +
                 "var x: <(),Int>\n" +
@@ -729,14 +729,14 @@ class Static {
     @Test
     fun ee_08_infer_start () {
         val out = static("""
-            coro co (v: <(),Int>) -> () -> () -> () {
+            coro co: (v: <(),Int>) -> () -> () -> () {
             }
             var exe = create(co)
             start exe(<.1=()>)
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "coro co (v: <(),Int>) -> () -> () -> () {\n" +
+                "coro co: (v: <(),Int>) -> () -> () -> () {\n" +
                 "}\n" +
                 "var exe: exec (<(),Int>) -> () -> () -> ()\n" +
                 "set exe = create(co)\n" +
@@ -746,7 +746,7 @@ class Static {
     @Test
     fun ee_09_infer_resume () {
         val out = static("""
-            coro co () -> <(),Int> -> () -> () {
+            coro co: () -> <(),Int> -> () -> () {
             }
             var exe = create(co)
             start exe()
@@ -754,7 +754,7 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "coro co () -> <(),Int> -> () -> () {\n" +
+                "coro co: () -> <(),Int> -> () -> () {\n" +
                 "}\n" +
                 "var exe: exec () -> <(),Int> -> () -> ()\n" +
                 "set exe = create(co)\n" +
@@ -765,7 +765,7 @@ class Static {
     @Test
     fun ee_10_infer_yield () {
         val out = static("""
-            coro co () -> () -> <(),Int> -> () {
+            coro co: () -> () -> <(),Int> -> () {
                 var x = yield(<.1=()>)
             }
             var exe = create(co)
@@ -773,7 +773,7 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "coro co () -> () -> <(),Int> -> () {\n" +
+                "coro co: () -> () -> <(),Int> -> () {\n" +
                 "var x: ()\n" +
                 "set x = yield(<.1=()>:<(),Int>)\n" +
                 "}\n" +
@@ -789,7 +789,7 @@ class Static {
             data B: Int
             data C: Int
             data D: Int
-            coro co (a:A) -> B -> C -> D {
+            coro co: (a:A) -> B -> C -> D {
                 var x = yield(`x`)
             }
             var exe = create(co)
@@ -802,7 +802,7 @@ class Static {
                 "data B: Int\n" +
                 "data C: Int\n" +
                 "data D: Int\n" +
-                "coro co (a: A) -> B -> C -> D {\n" +
+                "coro co: (a: A) -> B -> C -> D {\n" +
                 "var x: B\n" +
                 "set x = yield(```x```)\n" +
                 "}\n" +
@@ -817,7 +817,7 @@ class Static {
     @Test
     fun ee_12_infer_err () {
         val out = static("""
-            coro gen1 (v: Int) -> () -> () -> () {
+            coro gen1: (v: Int) -> () -> () -> () {
                 `printf("%d\n", mar_exe->mem.v);`
             }
             var co1 = create(gen1)
@@ -828,7 +828,7 @@ class Static {
     @Test
     fun ee_13_infer_err () {
         val out = static("""
-            coro gen1 (v: Int) -> () -> () -> () {
+            coro gen1: (v: Int) -> () -> () -> () {
                 `printf("%d\n", mar_exe->mem.v);`
             }
             var co1 = create(gen1)

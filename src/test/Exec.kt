@@ -102,7 +102,7 @@ class Exec  {
     fun ee_01_func() {
         val out = test("""
             do {
-                func f (v: Int) -> Int {
+                func f: (v: Int) -> Int {
                     return(v)
                 }
                 `printf("%d\n", f(10));`
@@ -113,7 +113,7 @@ class Exec  {
     @Test
     fun ee_02_func_rec () {
         val out = test("""
-            func f (v: Int) -> Int {
+            func f: (v: Int) -> Int {
                 if v == 0 {
                     return(v)
                 } else {
@@ -128,14 +128,14 @@ class Exec  {
     fun ab_02_func_rec_mutual () {
         val out = test("""
             do {
-                func f (v: Int) -> Int {
+                func f: (v: Int) -> Int {
                     if v == 0 {
                         return(v)
                     } else {
                         return(v + g(v-1))
                     }
                 }
-                func g (v: Int) -> Int {
+                func g: (v: Int) -> Int {
                     return(f(v))
                 }
                 `printf("%d\n", g(5));`
@@ -150,9 +150,9 @@ class Exec  {
     fun ef_01_func_nested() {
         val out = test("""
             var i: Int = 10
-            func f () -> () {
+            func f: () -> () {
                 var j: Int = 20
-                func g () -> Int {
+                func g: () -> Int {
                     return(i + j)
                 }
                 `printf("%d\n", g());`
@@ -166,10 +166,10 @@ class Exec  {
         val out = test("""
             do {
                 var i: Int = 10
-                func f () -> (\func () -> Int) {
+                func f: () -> (\func () -> Int) {
                     do {
                         var j: Int = 20
-                        func g () -> Int {
+                        func g: () -> Int {
                             return(i + j)
                         }
                         return(\g)
@@ -188,7 +188,7 @@ class Exec  {
     fun ff_01_coro () {
         val out = test("""
             do {
-                coro co () -> () -> () -> () {
+                coro co: () -> () -> () -> () {
                     `puts("OK");`
                 }
                 var exe: exec () -> () -> () -> () = create(co)
@@ -200,7 +200,7 @@ class Exec  {
     @Test
     fun ff_02_coro () {
         val out = test("""
-            coro co () -> () -> () -> () {
+            coro co: () -> () -> () -> () {
                 `puts("OK");`
             }
             var exe: exec () -> () -> () -> () = create(co)
@@ -212,7 +212,7 @@ class Exec  {
     @Test
     fun ff_03_coro () {
         val out = test("""
-            coro co (v: Int) -> () -> () -> () {
+            coro co: (v: Int) -> () -> () -> () {
                 `printf("%d\n", mar_exe->mem.v);`
             }
             var exe: exec (Int) -> () -> () -> () = create(co)
@@ -223,7 +223,7 @@ class Exec  {
     @Test
     fun ff_04_coro () {
         val out = test("""
-            coro co (v: Int) -> Int -> () -> () {
+            coro co: (v: Int) -> Int -> () -> () {
                 `printf("%d\n", mar_exe->mem.v);`
                 yield()
                 set v = v + 10
@@ -239,7 +239,7 @@ class Exec  {
     fun ff_05_coro () {
         val out = test("""
             do {
-                coro co (x2: Int) -> Int -> Int -> Int {
+                coro co: (x2: Int) -> Int -> Int -> Int {
                     var y2:Int = yield(x2*2)
                     return(y2 * 2)
                 }
@@ -357,7 +357,7 @@ class Exec  {
         assert(out == "10 / 1\n") { out }
     }
     @Test
-    fun hh_06_data () {
+    fun NEW_hh_06_data () {     // Res.Ok
         val out = test("""
             data Res: <Err:(),Ok:Int>
             var r1: Res.Ok = Res.Ok(10)
