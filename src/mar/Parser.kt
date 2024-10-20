@@ -194,7 +194,12 @@ fun parser_type (req_vars: Boolean = false, pre: Tk? = null): Type {
             if (PRIMS.contains(tp.str)) {
                 Type.Prim(tp)
             } else {
-                Type.Data(tp)
+                val l = mutableListOf(tp)
+                while (accept_fix(".")) {
+                    accept_enu("Type")
+                    l.add(G.tk0 as Tk.Type)
+                }
+                Type.Data(tp, l)
             }
         }
         accept_op("\\") -> {
@@ -310,20 +315,17 @@ fun parser_expr_4_prim (): Expr {
 
         accept_enu("Type") -> {
             val tp = G.tk0 as Tk.Type
-            val sub = if (!accept_fix(".")) null else {
+            val l = mutableListOf(tp)
+            while (accept_fix(".")) {
                 accept_enu_err("Type")
-                G.tk0 as Tk.Type
+                l.add(G.tk0 as Tk.Type)
             }
             val par = if (check_fix("[") || check_op("<")) false else accept_fix_err("(")
             val e = if (par && check_fix(")")) Expr.Unit(G.tk0!!) else parser_expr()
             if (par) {
                 accept_fix_err(")")
             }
-            if (sub == null) {
-                Expr.Cons(tp, e)
-            } else {
-                Expr.Cons(tp, Expr.Union(tp, null, sub.str, e))
-            }
+            Expr.Cons(tp, l, Expr.Union(tp, null, l[1].str, e))
         }
 
         else                    -> err_expected(G.tk1!!, "expression")

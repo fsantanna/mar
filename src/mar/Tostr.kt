@@ -20,11 +20,16 @@ fun Tk.fpre (pre: Boolean): String {
     return if (pre) this.pos.pre() else ""
 }
 
+@JvmName("List_Tk_Type_to_str")
+fun List<Tk.Type>.to_str (pre: Boolean=false): String {
+    return this.map { it.str }.joinToString(".")
+}
+
 fun Type.to_str (pre: Boolean = false): String {
     return when (this) {
         is Type.Any -> TODO()
         is Type.Prim -> this.tk.str
-        is Type.Data -> this.tk.str
+        is Type.Data -> this.ts.to_str(pre)
         is Type.Unit -> "()"
         is Type.Pointer -> "\\" + this.ptr.to_str(pre)
         is Type.Tuple -> {

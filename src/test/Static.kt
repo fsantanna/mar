@@ -604,8 +604,39 @@ class Static {
         """)
         assert(out == "anon : (lin 4, col 27) : field error : types mismatch") { out!! }
     }
+
+    // DATA HIER
+
     @Test
-    fun NEW_dd_10_data_cons () {        // Res.Ok
+    fun de_01_hier () {
+        val out = static("""
+            data B: <T:(), F:()>
+            var b: B.T = B.F ()
+        """)
+        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun de_02_hier () {
+        val out = static("""
+            data B: <T:(), F:()>
+            var b: B = B.F ()
+            var c: B.T = b
+        """)
+        assert(out == "anon : (lin 4, col 13) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun de_03_hier () {
+        val out = static("""
+            data B: <T:(), F:()>
+            var b: B.F = B.F ()
+            var c: B = b
+            var d: B.F = b
+        """)
+        assert(out == null) { out!! }
+    }
+
+    @Test
+    fun NEW_dd_1X_data_cons () {        // Res.Ok
         val out = static("""
             data Res: <Err:(),Ok:Int>
             var r = Res.Ok(10)
@@ -613,7 +644,7 @@ class Static {
         assert(out == null) { out!! }
     }
     @Test
-    fun NEW_dd_11_data_cons_err () {    // Res.XXX
+    fun NEW_dd_1Y_data_cons_err () {    // Res.XXX
         val out = static("""
             data Res: <Err:(),Ok:Int>
             var r = Res.XXX(10)
@@ -878,7 +909,23 @@ class Static {
         assert(out == "anon : (lin 3, col 13) : inference error : unknown type") { out!! }
     }
     @Test
-    fun ee_18_infer () {
+    fun ee_18_infer_tuple () {
+        val out = static("""
+            data X: [x:[a:Int]]
+            var x = X [[10]]
+            var a = x.x.a
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: [x:[a:Int]]\n" +
+                "var x: X\n" +
+                "set x = (X(([([10]:[a:Int])]:[x:[a:Int]])))\n" +
+                "var a: Int\n" +
+                "set a = ((x.x).a)\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ee_19_infer_union () {
         val out = static("""
             data X: <A:[a:Int]>
             var x = X.A [10]

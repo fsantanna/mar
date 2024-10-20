@@ -60,7 +60,7 @@ sealed class Type (var n: Int, val tk: Tk) {
     class Any     (tk: Tk): Type(G.N++, tk)
     class Unit    (tk: Tk): Type(G.N++, tk)
     class Prim    (val tk_: Tk.Type): Type(G.N++, tk_)
-    class Data    (val tk_: Tk.Type): Type(G.N++, tk_)
+    class Data    (tk: Tk, val ts: List<Tk.Type>): Type(G.N++, tk)
     class Pointer (tk: Tk, val ptr: Type): Type(G.N++, tk)
     class Tuple   (tk: Tk, val ts: List<Type>, val ids: List<Tk.Var>?): Type(G.N++, tk)
     class Union   (tk: Tk, val tagged: Boolean, val ts: List<Type>, val ids: List<Tk.Type>?): Type(G.N++, tk)
@@ -92,7 +92,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
     class Union (tk: Tk, var xtp: Type.Union?, val idx: String, val v: Expr): Expr(G.N++, tk)
     class Pred  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
     class Disc  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
-    class Cons  (val tk_: Tk.Type, val e: Expr): Expr(G.N++, tk_)
+    class Cons  (tk: Tk, val ts: List<Tk.Type>, val e: Expr): Expr(G.N++, tk)
 
     class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, tk_)
     class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, tk_)

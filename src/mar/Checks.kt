@@ -111,7 +111,7 @@ fun check_types () {
             is Stmt.Dcl -> me.xtp.let { xtp ->
                 if (xtp is Type.Data) {
                     if (xtp.to_data() == null) {
-                        err(me.tk, "declaration error : data \"${xtp.tk_.str}\" is not declared")
+                        err(me.tk, "declaration error : data \"${xtp.ts.to_str()}\" is not declared")
                     }
                 }
             }
@@ -175,7 +175,7 @@ fun check_types () {
             is Expr.Cons -> {
                 val dat = me.tk_.to_data()
                 if (dat == null) {
-                    err(me.tk, "constructor error : data \"${me.tk_.str}\" is not declared")
+                    err(me.tk, "constructor error : data \"${me.ts.to_str()}\" is not declared")
                 }
                 if (!dat.tp.is_sup_of(me.e.type())) {
                     err(me.tk, "constructor error : types mismatch")

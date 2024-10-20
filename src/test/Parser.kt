@@ -127,6 +127,14 @@ class Parser {
         //assert(trap { parser_type() } == "anon : (lin 1, col 7) : expected \"<\" : have \"Int\"")
         //assert(trap { parser_type() } == "anon : (lin 1, col 1) : exec error : unexpected second argument")
     }
+    @Test
+    fun aj_12_data_hier () {
+        G.tks = ("X.Y.Z").lexer()
+        parser_lexer()
+        val tp = parser_type()
+        assert(tp is Type.Data && tp.ts.size==3)
+        assert(tp.to_str() == "X.Y.Z")
+    }
 
     // TUPLE / UNION
 
@@ -708,17 +716,18 @@ class Parser {
             }
             struct Frame {
                 
-            data Event: [
+            data Event.*: [
                 ts: Int,
-                subs: <
+                *: <
                     Quit:   (),
                     Frame:  Int,
                     Key:    [
                         key: Int,
-                        <Dn:(), Up:()>
+                        *: <Dn:(), Up:()>
                     ],
                 >,
             ]
+            data Event.Pause.*: [
             
             data Event: <
                 Quit:  [ts:Int],

@@ -364,10 +364,20 @@ class Exec  {
             var a = x!A.a
             `printf("%d\n", a);`
         """)
-        assert(out == "10 / 1\n") { out }
+        assert(out == "10\n") { out }
     }
     @Test
     fun hh_07_data () {
+        val out = test("""
+            data B: <T:(), F:()>
+            var b: B.T = B.T ()
+            var ok = b?T
+            `printf("%d\n", ok);`
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun hh_0X_data () {
         val out = test("""
             data Event: <
                 Quit:  [ts:Int],
@@ -377,9 +387,55 @@ class Exec  {
                     Up: [ts:Int, key:Int],
                 >,
             >
-            var x = Event.Quit [10]
-            var ts = x!Quit.ts
-            `printf("%d\n", ts);`
+            var q  = Event.Quit [10]
+            var a  = q?Quit
+            var ts = q!Quit.ts
+            var up = Event.Key.Up [10,50]
+            var b  = up?Key && up!Key?Up
+            var k  = up!Key!Up.key
+            `printf("%d / %d\n", a, ts);`
+            `printf("%d / %d\n", b, k);`
+        """)
+        assert(out == "10 / 1\n") { out }
+    }
+    @Test
+    fun hh_0Y_data () {
+        val out = test("""
+            data Event: [
+                ts: Int,
+                sub: <
+                    Quit:  (),
+                    Frame: Int,
+                    Key: [
+                        key: Int,
+                        sub: <
+                            Dn: (),
+                            Up: (),
+                        >,
+                    ],
+                >,
+            ]
+            ;;;
+            data Event.*: [
+                ts: Int,
+                *: <
+                    Quit:   (),
+                    Frame:  Int,
+                    Key:    [
+                        key: Int,
+                        *: <Dn:(), Up:()>
+                    ],
+                >,
+            ]
+            var q  = Event.Quit [10]
+            var a  = q?Quit
+            var ts = q!Quit.ts
+            var up = Event.Key.Up [10,50]
+            var b  = up?Key && up!Key?Up
+            var k  = up!Key!Up.key
+            `printf("%d / %d\n", a, ts);`
+            `printf("%d / %d\n", b, k);`
+            ;;;
         """)
         assert(out == "10 / 1\n") { out }
     }

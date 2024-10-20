@@ -302,7 +302,7 @@ fun Expr.coder (pre: Boolean = false): String {
             val i = (this.col.type().no_data() as Type.Union).disc_to_i(this.idx)!!
             "(${this.col.coder(pre)}.tag == $i)"
         }
-        is Expr.Cons  -> "((${this.tk_.str}) ${this.e.coder(pre)})"
+        is Expr.Cons  -> "((${this.ts.to_str(pre)}) ${this.e.coder(pre)})"
 
         is Expr.Nat -> this.tk.str
         is Expr.Acc -> this.tk_.coder(this, pre)
