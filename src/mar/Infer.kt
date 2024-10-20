@@ -3,48 +3,66 @@ package mar
 fun Expr.typex (): Type? {
     return try {
         this.type()
-    } catch (e: Exception ) {
-        null
+    } catch (e: Throwable) {
+        try {
+            this.infer()
+        } catch (e: Throwable) {
+            null
+        }
+    }
+}
+
+fun Expr.infer (): Type? {
+    val up = this.fupx()
+    return when (up) {
+        is Stmt.Set -> {
+            assert(up.src.n == this.n)
+            up.dst.typex()
+        }
+        is Expr.Cons -> up.ts[0].to_data()!!.tp
+        is Expr.Tuple -> up.typex().let {
+            if (it == null) null else {
+                it as Type.Tuple
+                val i = up.vs.indexOfFirst { it.n==this.n }
+                it.ts[i]
+            }
+        }
+        is Expr.Union -> up.typex().let {
+            if (it == null) null else {
+                it as Type.Union
+                it.ts[it.disc_to_i(up.idx)!! - 1]
+            }
+        }
+        is Expr.Call -> {
+            val i = up.args.indexOfFirst { it.n == this.n }
+            (up.f.type() as Type.Proto.Func).inps[i]
+        }
+        is Stmt.Return -> {
+            assert(up.e.n == this.n)
+            (up.up_first { it is Stmt.Proto.Func } as Stmt.Proto.Func).tp.out
+        }
+        is Expr.Start -> {
+            val i = up.args.indexOfFirst { it.n == this.n }
+            (up.exe.type() as Type.Exec).inps[i]
+        }
+        is Expr.Resume -> {
+            assert(up.arg.n == this.n)
+            (up.exe.type() as Type.Exec).res
+        }
+        is Expr.Yield -> {
+            assert(up.arg.n == this.n)
+            (up.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_.yld
+        }
+        else -> null
     }
 }
 
 fun infer_types () {
     fun fe (me: Expr) {
-        fun infer (): Type? {
-            val up = me.fupx()
-            return when (up) {
-                is Stmt.Set -> {
-                    assert(up.src.n == me.n)
-                    up.dst.typex()
-                }
-                is Expr.Cons -> up.tk_.to_data()!!.tp
-                is Expr.Call -> {
-                    val i = up.args.indexOfFirst { it.n == me.n }
-                    (up.f.type() as Type.Proto.Func).inps[i]
-                }
-                is Stmt.Return -> {
-                    assert(up.e.n == me.n)
-                    (up.up_first { it is Stmt.Proto.Func } as Stmt.Proto.Func).tp.out
-                }
-                is Expr.Start -> {
-                    val i = up.args.indexOfFirst { it.n == me.n }
-                    (up.exe.type() as Type.Exec).inps[i]
-                }
-                is Expr.Resume -> {
-                    assert(up.arg.n == me.n)
-                    (up.exe.type() as Type.Exec).res
-                }
-                is Expr.Yield -> {
-                    assert(up.arg.n == me.n)
-                    (up.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_.yld
-                }
-                else -> null
-            }
-        }
         when (me) {
             is Expr.Tuple -> {
                 if (me.xtp == null) {
-                    me.xtp = infer().let {
+                    me.xtp = me.infer().let {
                         when (it) {
                             null -> null
                             is Type.Tuple -> it
@@ -59,7 +77,7 @@ fun infer_types () {
             }
             is Expr.Union -> {
                 if (me.xtp == null) {
-                    me.xtp = infer().let {
+                    me.xtp = me.infer().let {
                         when (it) {
                             null -> err(me.tk, "inference error : unknown type")
                             !is Type.Union -> err(me.tk, "inference error : incompatible types")
