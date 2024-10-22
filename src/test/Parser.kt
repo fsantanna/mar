@@ -783,6 +783,17 @@ class Parser {
                 "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
     }
 
+    // CONS
+
+    @Test
+    fun ll_01_cons () {
+        G.tks = ("B.F ()").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e is Expr.Cons && e.ts.size==2)
+        assert(e.to_str() == "(B(<.F=()>))\n") { e.to_str() }
+    }
+
     // TEMPLATE
 
     @Test

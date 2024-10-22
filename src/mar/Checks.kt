@@ -173,11 +173,62 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val dat = me.tk_.to_data()
+                // X.A.B [...]
+                val dat = me.ts.first().to_data()   // X
                 if (dat == null) {
                     err(me.tk, "constructor error : data \"${me.ts.to_str()}\" is not declared")
                 }
-                if (!dat.tp.is_sup_of(me.e.type())) {
+
+                var tup = mutableListOf<Type>()     // X[]   + A[]   + B[]
+                var ids = mutableListOf<Tk.Var>()   // X[x:] + A[a:] + B[b:]
+
+                fun Type.add (n: Int) {
+                    when (this) {
+                        is Type.Unit -> {}      // X: <A:(),...>
+                        is Type.Tuple -> {      // X: <A:[a:...],...>
+                            tup.addAll(this.ts.dropLast(if (n>0) 1 else 0))
+                            if (this.ids != null) {
+                                ids.addAll(this.ids as List<Tk.Var>)
+                            }
+                        }
+                        is Type.Union -> {}     // X: <A: <B:...>>>
+                        else -> tup.add(this)
+                    }
+                }
+
+                var cur = dat.tp
+                var n = me.ts.size - 1
+                cur.add(n)
+                for (sub in me.ts.drop(1)) {    // A, B
+                    val uni = when (cur) {
+                        //is Type.Unit  -> null
+                        is Type.Tuple -> cur.ts.lastOrNull()    // data X: [x, <K:...,A: ...>]
+                        is Type.Union -> cur                    // data X: <K:...,A: ...>
+                        else -> TODO("unit/tuple/union")
+                    }
+                    val ok = when {                             // find A inside X
+                        (uni !is Type.Union) -> -1
+                        (uni.ids == null)    -> -1
+                        else -> uni.ids.indexOfFirst { it.str == sub.str }
+                    }
+                    if (ok == -1) {
+                        err(me.tk, "constructor error : data \"${me.ts.to_str()}\" is not declared")
+                    }
+                    uni as Type.Union
+                    cur = uni.ts[ok]
+                    n--
+                    cur.add(n)
+                }
+                val tp = when {
+                    tup.isEmpty() -> Type.Unit(me.tk)
+                    //(tup.size == 1) -> tup.first()
+                    (ids.size == 0) -> Type.Tuple(me.tk, tup, null)
+                    (tup.size != ids.size) -> TODO("tup vs ids")
+                    else -> Type.Tuple(me.tk, tup, ids)
+                }
+                //println(tp.to_str())
+                //println(me.e.type().to_str())
+                if (!tp.is_sup_of(me.e.type())) {
                     err(me.tk, "constructor error : types mismatch")
                 }
             }

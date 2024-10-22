@@ -5,6 +5,9 @@ fun trap (f: ()->Unit): String? {
         f()
         return null
     } catch (e: Throwable) {
+        if (THROW) {
+            throw e
+        }
         return e.message!!
     }
 }
