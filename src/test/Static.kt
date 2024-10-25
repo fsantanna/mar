@@ -640,7 +640,8 @@ class Static {
             data X: [()]
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
+        //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_05_hier_err () {
@@ -648,7 +649,8 @@ class Static {
             data X: []
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
+        //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_06_hier_err () {
@@ -656,7 +658,8 @@ class Static {
             data X: <A:[a:Int]>
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
+        //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_07_hier () {
@@ -668,19 +671,24 @@ class Static {
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data X: <A:[a:Int]>\n" +
-                "var x: X\n" +
-                "set x = (X(<.A=([10]:[a:Int])>:<A:[a:Int]>))\n" +
+                "var x: X.A\n" +
+                "set x = (X.A(([10]:[a:Int])))\n" +
                 "var a: Int\n" +
                 "set a = ((x!A).a)\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
-    fun de_07_hier_err () {
+    fun de_08_hier () {
         val out = static("""
             data X: <A: <B:Int>>
             var x = X.A.B (10) 
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: <A:<B:Int>>\n" +
+                "var x: X.A.B\n" +
+                "set x = (X.A.B(10))\n" +
+                "}") { G.outer!!.to_str() }
     }
 
     @Test

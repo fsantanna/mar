@@ -689,7 +689,7 @@ class Parser {
         assert(ss.to_str() == "do {\n" +
                 "data Result: <Error:(),Success:Int>\n" +
                 "var r: Result\n" +
-                "set r = (Result(<.Success=10>))\n" +
+                "set r = (Result.Success(10))\n" +
                 "}\n") { ss.to_str() }
     }
     @Test
@@ -791,7 +791,7 @@ class Parser {
         parser_lexer()
         val e = parser_expr()
         assert(e is Expr.Cons && e.ts.size==2)
-        assert(e.to_str() == "(B(<.F=()>))\n") { e.to_str() }
+        assert(e.to_str() == "(B.F(()))") { e.to_str() }
     }
 
     // TEMPLATE
