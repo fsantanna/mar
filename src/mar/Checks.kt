@@ -179,6 +179,7 @@ fun check_types () {
                     err(me.tk, "constructor error : data \"${me.ts.to_str()}\" is not declared")
                 }
 
+                var has_tup = false
                 var tup = mutableListOf<Type>()     // X[]   + A[]   + B[]
                 var ids = mutableListOf<Tk.Var>()   // X[x:] + A[a:] + B[b:]
 
@@ -186,6 +187,7 @@ fun check_types () {
                     when (this) {
                         is Type.Unit -> {}      // X: <A:(),...>
                         is Type.Tuple -> {      // X: <A:[a:...],...>
+                            has_tup = true
                             tup.addAll(this.ts.dropLast(if (n>0) 1 else 0))
                             if (this.ids != null) {
                                 ids.addAll(this.ids as List<Tk.Var>)
@@ -221,13 +223,14 @@ fun check_types () {
                 }
                 val tp = when {
                     tup.isEmpty() -> Type.Unit(me.tk)
-                    //(tup.size == 1) -> tup.first()
+                    (!has_tup && tup.size==1) -> tup.first()
                     (ids.size == 0) -> Type.Tuple(me.tk, tup, null)
                     (tup.size != ids.size) -> TODO("tup vs ids")
                     else -> Type.Tuple(me.tk, tup, ids)
                 }
-                //println(tp.to_str())
-                //println(me.e.type().to_str())
+                println(tup.map { it.to_str() }.joinToString(","))
+                println(tp.to_str())
+                println(me.e.type().to_str())
                 if (!tp.is_sup_of(me.e.type())) {
                     err(me.tk, "constructor error : types mismatch")
                 }
