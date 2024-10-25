@@ -1,5 +1,16 @@
 package mar
 
+fun <T> T.dump(): T {
+    val s = when (this) {
+        is Type -> this.to_str()
+        is Expr -> this.to_str()
+        is Stmt -> this.to_str()
+        else -> this.toString()
+    }
+    println(s)
+    return this
+}
+
 fun trap (f: ()->Unit): String? {
     try {
         f()

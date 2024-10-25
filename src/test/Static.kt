@@ -990,8 +990,8 @@ class Static {
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data X: <A:[a:Int]>\n" +
-                "var x: X\n" +
-                "set x = (X(<.A=([10]:[a:Int])>:<A:[a:Int]>))\n" +
+                "var x: X.A\n" +
+                "set x = (X.A(([10]:[a:Int])))\n" +
                 "var a: Int\n" +
                 "set a = ((x!A).a)\n" +
                 "}") { G.outer!!.to_str() }

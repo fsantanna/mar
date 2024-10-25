@@ -173,78 +173,10 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                // X.A.B [...]
-
-                val dat = me.ts.first().to_data()   // X
-                if (dat == null) {
-                    err(me.tk, "constructor error : data \"${me.ts.to_str()}\" is not declared")
-                }
-                println(listOf(dat.id.str, dat.tp.to_str()))
-
-                var cur: Type? = dat.tp
-                val tps: MutableList<Type> = mutableListOf()
-                val ids: MutableList<Tk.Var?> = mutableListOf()
-                var n = me.ts.size - 1
-
-                fun xxx () {
-                    val tp = cur!!
-                    when (tp) {
-                        is Type.Unit -> {}
-                        is Type.Union -> {}
-                        is Type.Tuple -> {
-                            val ts = if (n == 0) tp.ts else tp.ts.dropLast(1)
-                            tps.addAll(ts)
-                            ids.addAll(ts.mapIndexed { i,_ -> if (tp.ids == null) null else tp.ids[i] })
-                        }
-                        else -> {
-                            tps.add(tp)
-                            ids.add(null)
-                        }
-                    }
-                }
-
-                xxx()
-                for (sub in me.ts.drop(1)) {
-                    n--
-                    val uni = when (cur) {
-                        is Type.Tuple -> cur.ts.lastOrNull()    // data X: [x, <K:...,A: ...>]
-                        is Type.Union -> cur                    // data X: <K:...,A: ...>
-                        else -> null
-                    }
-                    cur = when {
-                        (uni !is Type.Union) -> null
-                        (uni.ids == null) -> null
-                        else -> {
-                            val i = uni.ids.indexOfFirst { it.str == sub.str }
-                            if (i == -1) null else {
-                                uni.ts[i]
-                            }
-                        }
-                    }
-                    if (cur == null) {
-                        err(me.tk, "constructor error : invalid subtype \"${sub.str}\"")
-                    }
-                    xxx()
-                    println(listOf(sub.str, cur.to_str()))
-                }
-
-                val ids1 = ids.filter { it != null }
-                val ids2 = ids.filter { it == null }
-                if (ids1.size!=0 && ids2.size!=0) {
-                    error("TODO - mixing ids and nulls")
-                }
-
-                val sup = Type.Tuple(me.tk, tps, if (ids1.size==0) null else ids1 as List<Tk.Var>)
-                val sub = me.e.type().let {
-                    when (it) {
-                        is Type.Unit -> Type.Tuple(me.tk, emptyList(), null)
-                        is Type.Tuple -> it
-                        else -> Type.Tuple(me.tk, listOf(it), null)
-                    }
-                }
-                println("-=-=-")
-                println(sup.to_str())
-                println(sub.to_str())
+                val sup = me.ts.data_to_tuple()
+                val sub = me.e.cons_to_tuple()
+                //println(sup.to_str())
+                //println(sub.to_str())
                 if (!sup.is_sup_of(sub)) {
                     err(me.tk, "constructor error : types mismatch")
                 }
