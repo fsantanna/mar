@@ -137,7 +137,8 @@ object G {
     var ns: MutableMap<Node,Any> = mutableMapOf()
     var ups: MutableMap<Node,Node> = mutableMapOf()
 
-    val types = mutableSetOf<String>()
+    //val cons  = mutableMapOf<Node,Type.Tuple>()     // resolve sub types
+    val types = mutableSetOf<String>()              // for C generation
 
     /*
     var tags: MutableMap<String,Tk.Type> = mutableMapOf()
@@ -158,6 +159,7 @@ object G {
         ns.clear()
         ups.clear()
 
+        //cons.clear()
         types.clear()
 
         /*

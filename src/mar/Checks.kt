@@ -180,7 +180,7 @@ fun check_types () {
                 if (!sup.is_sup_of(sub)) {
                     err(me.tk, "constructor error : types mismatch")
                 }
-
+                //G.cons[me.n] = sup
             }
             is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {
                 err(me.tk, "operation error : types mismatch")
