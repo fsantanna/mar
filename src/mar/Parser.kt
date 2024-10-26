@@ -558,6 +558,13 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val tp = parser_type()
             listOf(Stmt.Data(tk0, id, tp))
         }
+        accept_fix("print") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            accept_fix_err("(")
+            val e = parser_expr()
+            accept_fix_err(")")
+            listOf(Stmt.Print(tk0, e))
+        }
 
         accept_enu("Nat") -> listOf(Stmt.Nat(G.tk0 as Tk.Nat))
         else -> {

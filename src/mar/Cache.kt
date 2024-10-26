@@ -50,6 +50,7 @@ fun cache_ups () {
             }
             is Stmt.Break -> {}
 
+            is Stmt.Print -> G.ups[me.e.n] = me.n
             is Stmt.XExpr -> G.ups[me.e.n] = me.n
             is Stmt.Nat -> {}
         }

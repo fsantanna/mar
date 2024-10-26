@@ -377,7 +377,38 @@ class Exec  {
         assert(out == "1\n") { out }
     }
     @Test
-    fun hh_0X_data () {
+    fun TODO_hh_08_data () {
+        val out = test("""
+            data A: <B: <C: Int>>
+            var c = A.B.C(10)
+            var v = 10 ;;c.?
+            `printf("%d\n", v);`
+        """)
+        assert(out == "10 / 1\n") { out }
+    }
+    @Test
+    fun TODO_hh_09_data () {
+        val out = test("""
+            data A: <B: <C: Int>>
+            var c = A.B.C(10)
+            var v = c!B!C
+            `printf("%d\n", v);`
+        """)
+        assert(out == "10 / 1\n") { out }
+    }
+    @Test
+    fun TODO_hh_10_data () {
+        val out = test("""
+            data A: [x:Int, y:<B: <C: Int>>]
+            var c: A.B.C = A.B.C(10,20)
+            var x = c.x
+            var v = c?
+            `printf("%d\n", c);`
+        """)
+        assert(out == "10 / 1\n") { out }
+    }
+    @Test
+    fun TODO_hh_11_data () {
         val out = test("""
             data Event: <
                 Quit:  [ts:Int],
@@ -399,7 +430,7 @@ class Exec  {
         assert(out == "10 / 1\n") { out }
     }
     @Test
-    fun hh_0Y_data () {
+    fun TODO_hh_12_data () {
         val out = test("""
             data Event: [
                 ts: Int,
@@ -478,5 +509,30 @@ class Exec  {
             `printf("%d\n", ok);`
         """)
         assert(out == "1\n") { out }
+    }
+
+    // PRINT
+
+    @Test
+    fun jj_01_print () {
+        val out = test("""
+            print(10)
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun jj_02_print () {
+        val out = test("""
+            print([10,20])
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun jj_03_print () {
+        val out = test("""
+            var x = <.2 10>: <(),Int>
+            print(x)
+        """)
+        assert(out == "10\n") { out }
     }
 }

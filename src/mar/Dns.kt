@@ -17,6 +17,7 @@ fun <V> Stmt.dn_collect_pos (fs: ((Stmt)->List<V>)?, fe: ((Expr)->List<V>)?, ft:
         is Stmt.Loop  -> this.blk.dn_collect_pos(fs,fe,ft)
         is Stmt.Break -> emptyList()
 
+        is Stmt.Print -> this.e.dn_collect_pos(fe)
         is Stmt.XExpr -> this.e.dn_collect_pos(fe)
         is Stmt.Nat -> emptyList()
     } + fs(this)
@@ -96,6 +97,7 @@ fun <V> Stmt.dn_collect_pre (fs: ((Stmt)->List<V>?)?, fe: ((Expr)->List<V>?)?, f
         is Stmt.Loop  -> this.blk.dn_collect_pre(fs,fe,ft)
         is Stmt.Break -> emptyList()
 
+        is Stmt.Print -> this.e.dn_collect_pre(fe)
         is Stmt.XExpr -> this.e.dn_collect_pre(fe)
         is Stmt.Nat -> emptyList()
     }

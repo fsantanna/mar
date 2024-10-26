@@ -273,8 +273,18 @@ fun Stmt.coder (pre: Boolean = false): String {
         """
         is Stmt.Break -> "break;"
 
+        is Stmt.Print  -> {
+            val tp = this.e.type()
+            when (tp) {
+                is Type.Prim -> when (tp.tk_.str) {
+                    "Int" -> "printf(\"%d\\n\", ${this.e.coder(pre)});"
+                    else -> TODO()
+                }
+                else -> TODO()
+            }
+        }
+        is Stmt.XExpr  -> this.e.coder(pre) + ";"
         is Stmt.Nat    -> this.tk.str
-        is Stmt.XExpr   -> this.e.coder(pre) + ";"
     }
 }
 
