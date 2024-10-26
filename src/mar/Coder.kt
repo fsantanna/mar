@@ -278,7 +278,14 @@ fun Stmt.coder (pre: Boolean = false): String {
                 return when (tp) {
                     is Type.Unit -> "printf(\"()\");"
                     is Type.Prim -> when (tp.tk_.str) {
-                        "Int" -> "printf(\"%d\", $v);"
+                        "Bool" -> """
+                            if ($v) {
+                                printf("true");
+                            } else {
+                                printf("false");
+                            }
+                        """
+                        "Int"  -> "printf(\"%d\", $v);"
                         else -> TODO()
                     }
                     is Type.Tuple -> {
@@ -310,6 +317,16 @@ fun Stmt.coder (pre: Boolean = false): String {
                             printf(">");
                         }
                         """
+                    }
+                    is Type.Data -> {
+                        val dat = tp.to_data()!!
+                        val par = (dat.tp !is Type.Tuple) && (dat.tp !is Type.Union)
+                        """
+                        printf("${tp.ts.first().str}");
+                        ${par.cond2({ "printf(\"(\");" }, { "printf(\" \");" })}
+                        ${aux(dat.tp, v)}
+                        ${par.cond { "printf(\")\");" }}
+                    """
                     }
                     else -> TODO()
                 }

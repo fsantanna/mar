@@ -120,7 +120,7 @@ class Exec  {
                     return(v + f(v-1))
                 }
             }
-            `printf("%d\n", f(5));`
+            print(f(5))
         """)
         assert(out == "15\n") { out }
     }
@@ -138,7 +138,7 @@ class Exec  {
                 func g: (v: Int) -> Int {
                     return(f(v))
                 }
-                `printf("%d\n", g(5));`
+                print(g(5))
             }
         """)
         assert(out == "15\n") { out }
@@ -155,7 +155,7 @@ class Exec  {
                 func g: () -> Int {
                     return(i + j)
                 }
-                `printf("%d\n", g());`
+                print(g())
             }
             f()
         """)
@@ -176,7 +176,7 @@ class Exec  {
                     }
                 }
                 var gg: (\func () -> Int) = f()
-                `printf("%d\n", gg());`
+                print(gg\())
             }
         """)
         assert(out == "30\n") { out }
@@ -246,7 +246,7 @@ class Exec  {
                 var exe: exec (Int) -> Int -> Int -> Int = create(co)
                 var x1: <Int,Int> = start exe(5)
                 var y1: <Int,Int> = resume exe(x1!1 + 10)
-                `printf("%d\n", y1._2);`
+                print(y1!2)
             }
         """)
         assert(out == "40\n") { out }
@@ -258,7 +258,7 @@ class Exec  {
     fun gg_01_tuple () {
         val out = test("""
             var x: [Int] = [10]: [Int]
-            `printf("%d\n", x._1);`
+            print(x.1)
         """)
         assert(out == "10\n") { out }
     }
@@ -267,16 +267,16 @@ class Exec  {
         val out = test("""
             var x: [Int] = [10]: [Int]
             var y: [Int] = [20]: [Int]
-            `printf("%d / %d\n", x._1, y._1);`
+            print([x,y])
         """)
-        assert(out == "10 / 20\n") { out }
+        assert(out == "[[10],[20]]\n") { out }
     }
     @Test
     fun gg_03_tuple () {
         val out = test("""
             var x: [Int] = [10]: [Int]
             var y: Int = x.1
-            `printf("%d\n", y);`
+            print(y)
         """)
         assert(out == "10\n") { out }
     }
@@ -284,8 +284,7 @@ class Exec  {
     fun gg_04_tuple () {
         val out = test("""
             var pos: [x:Int,y:Int] = [10,20]: [x:Int,y:Int]
-            var y: Int = pos.y
-            `printf("%d\n", y);`
+            print(pos.y)
         """)
         assert(out == "20\n") { out }
     }
@@ -296,9 +295,9 @@ class Exec  {
             var pos: [x:Int,y:Int] = [10,20]: [x:Int,y:Int]
             var y: Int = pos.y
             var w: Int = dim.w
-            `printf("%d %d\n", y, w);`
+            print([y, w])
         """)
-        assert(out == "20 10\n") { out }
+        assert(out == "[20,10]\n") { out }
     }
 
     // DATA
@@ -309,7 +308,7 @@ class Exec  {
             data Pos: [Int, Int]
             var p: Pos = Pos [10, 20]:[Int,Int]
             var x: Int = p.1
-            `printf("%d\n", x);`
+            print(x)
         """)
         assert(out == "10\n") { out }
     }
@@ -321,7 +320,7 @@ class Exec  {
             data Obj: [Pos, Dim]
             var o: Obj = Obj [Pos [3,5]:[Int,Int], Dim [20,30]:[Int,Int]]: [Pos, Dim]
             var w: Int = o.2.1
-            `printf("%d\n", w);`
+            print(w)
         """)
         assert(out == "20\n") { out }
     }
@@ -340,9 +339,9 @@ class Exec  {
             data Result: <(),Int>
             var r: Result = Result <.2=10>: <(),Int>
             var i: Int = r!2
-            `printf("%d\n", i);`
+            print([i,r!2,r])
         """)
-        assert(out == "10\n") { out }
+        assert(out == "[10,10,Result <.2=10>]\n") { out }
     }
     @Test
     fun hh_05_data () {
@@ -352,17 +351,16 @@ class Exec  {
             var r2: Res  = Res <.Err=()>: <Err:(),Ok:Int>
             var i1: Int  = r1!Ok
             var e2: Bool = r2?Err
-            `printf("%d / %d\n", i1, e2);`
+            print([i1, e2])
         """)
-        assert(out == "10 / 1\n") { out }
+        assert(out == "[10,true]\n") { out }
     }
     @Test
     fun hh_06_data () {
         val out = test("""
             data X: <A:[a:Int]>
             var x = X.A [10]
-            var a = x!A.a
-            `printf("%d\n", a);`
+            print(x!A.a)
         """)
         assert(out == "10\n") { out }
     }
@@ -371,10 +369,9 @@ class Exec  {
         val out = test("""
             data B: <T:(), F:()>
             var b: B.T = B.T ()
-            var ok = b?T
-            `printf("%d\n", ok);`
+            print(b?T)
         """)
-        assert(out == "1\n") { out }
+        assert(out == "true\n") { out }
     }
     @Test
     fun TODO_hh_08_data () {
@@ -477,7 +474,7 @@ class Exec  {
     fun ii_01_infer () {
         val out = test("""
             var n = 10
-            `printf("%d\n", n);`
+            print(n)
         """)
         assert(out == "10\n") { out }
     }
@@ -485,8 +482,7 @@ class Exec  {
     fun ii_02_infer () {
         val out = test("""
             var t = [10,20]
-            var n = t.2
-            `printf("%d\n", n);`
+            print(t.2)
         """)
         assert(out == "20\n") { out }
     }
@@ -495,7 +491,7 @@ class Exec  {
         val out = test("""
             var t: <(),Int> = <.2=10>
             var n = t!2
-            `printf("%d\n", n);`
+            print(n)
         """)
         assert(out == "10\n") { out }
     }
@@ -506,40 +502,57 @@ class Exec  {
             var r1 = Res.Ok(10)
             var r2 = r1
             var ok = r2?Ok
-            `printf("%d\n", ok);`
+            print(ok)
         """)
-        assert(out == "1\n") { out }
+        assert(out == "true\n") { out }
     }
 
     // PRINT
 
     @Test
-    fun jj_01_print () {
+    fun jj_01_print_int () {
         val out = test("""
             print(10)
         """)
         assert(out == "10\n") { out }
     }
     @Test
-    fun jj_02_print () {
+    fun jj_02_print_tuple () {
         val out = test("""
             print([10,20])
         """)
         assert(out == "[10,20]\n") { out }
     }
     @Test
-    fun jj_03_print () {
+    fun jj_03_print_tuple () {
         val out = test("""
             print([10, [20], 30])
         """)
         assert(out == "[10,[20],30]\n") { out }
     }
     @Test
-    fun jj_04_print () {
+    fun jj_04_print_union () {
         val out = test("""
             var x = <.2=10>: <(),Int>
             print(x)
         """)
         assert(out == "<.2=10>\n") { out }
+    }
+    @Test
+    fun jj_05_print_data () {
+        val out = test("""
+            data Meter: Int
+            print(Meter(10))
+        """)
+        assert(out == "Meter(10)\n") { out }
+    }
+    @Test
+    fun jj_06_print_data () {
+        val out = test("""
+            data X: <Y:(), Z:Int>
+            var x = X.Z(10)
+            print(x)
+        """)
+        assert(out == "X <.2=10>\n") { out }
     }
 }
