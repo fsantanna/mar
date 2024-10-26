@@ -276,24 +276,41 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Print  -> {
             fun aux (tp: Type, v: String): String {
                 return when (tp) {
+                    is Type.Unit -> "printf(\"()\");"
                     is Type.Prim -> when (tp.tk_.str) {
                         "Int" -> "printf(\"%d\", $v);"
                         else -> TODO()
                     }
-
                     is Type.Tuple -> {
                         """
-                        printf("[");
                         {
+                            printf("[");
                             ${tp.coder(pre)} mar_${tp.n} = $v;
                             ${tp.ts.mapIndexed { i,t ->
                                 aux(t, "mar_${tp.n}._${i+1}")
-                            }.joinToString("")}
+                            }.joinToString("printf(\",\");")}
+                            printf("]");
                         }
-                        printf("]");
                         """
                     }
-
+                    is Type.Union -> {
+                        """
+                        {
+                            ${tp.coder(pre)} mar_${tp.n} = $v;
+                            printf("<.%d=", mar_${tp.n}.tag);
+                            switch (mar_${tp.n}.tag) {
+                                ${tp.ts.mapIndexed { i,t ->
+                                    """
+                                    case ${i+1}:
+                                        ${aux(t, "mar_${tp.n}._${i+1}")}
+                                        break;
+                                    """
+                                }.joinToString("printf(\",\");")}
+                            }
+                            printf(">");
+                        }
+                        """
+                    }
                     else -> TODO()
                 }
             }

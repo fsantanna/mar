@@ -525,14 +525,21 @@ class Exec  {
         val out = test("""
             print([10,20])
         """)
-        assert(out == "10\n") { out }
+        assert(out == "[10,20]\n") { out }
     }
     @Test
     fun jj_03_print () {
         val out = test("""
-            var x = <.2 10>: <(),Int>
+            print([10, [20], 30])
+        """)
+        assert(out == "[10,[20],30]\n") { out }
+    }
+    @Test
+    fun jj_04_print () {
+        val out = test("""
+            var x = <.2=10>: <(),Int>
             print(x)
         """)
-        assert(out == "10\n") { out }
+        assert(out == "<.2=10>\n") { out }
     }
 }
