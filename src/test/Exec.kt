@@ -374,7 +374,7 @@ class Exec  {
             var ok = b?T
             `printf("%d\n", ok);`
         """)
-        assert(out == "10\n") { out }
+        assert(out == "1\n") { out }
     }
     @Test
     fun hh_0X_data () {

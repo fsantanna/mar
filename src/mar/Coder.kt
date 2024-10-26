@@ -130,8 +130,8 @@ fun coder_types (pre: Boolean): String {
                         ${me.tagged.cond { "int tag;" }}
                         union {
                             ${me.ts.mapIndexed { i,tp ->
-                    tp.coder() + " _" + (i+1) + ";\n"
-                }.joinToString("")}
+                                tp.coder() + " _" + (i+1) + ";\n"
+                            }.joinToString("")}
                         };
                     } $x;
                 """)
@@ -142,8 +142,25 @@ fun coder_types (pre: Boolean): String {
     fun fs (me: Stmt): List<String> {
         return when (me) {
             is Stmt.Data -> {
+                val ids = when (me.tp) {
+                    is Type.Union -> me.tp.ids
+                    is Type.Tuple -> me.tp.ts.lastOrNull()?.let {
+                        if (it !is Type.Union) null else {
+                            it.ids
+                        }
+                    }
+                    else -> null
+                }
                 listOf("""
                     typedef ${me.tp.coder(pre)} ${me.id.str};
+                    ${ids.cond { """
+                        typedef enum MAR_${me.id.str} {
+                            MAR_${me.id.str}_ZERO,
+                            ${it.map { """
+                                MAR_${me.id.str}_${it.str},
+                            """ }.joinToString("")}
+                        } MAR_${me.id.str};
+                    """ }}
                 """)
             }
             is Stmt.Proto.Coro -> {
@@ -302,7 +319,18 @@ fun Expr.coder (pre: Boolean = false): String {
             val i = (this.col.type().no_data() as Type.Union).disc_to_i(this.idx)!!
             "(${this.col.coder(pre)}.tag == $i)"
         }
-        is Expr.Cons  -> "((${this.ts.to_str(pre)}) ${this.e.coder(pre)})"
+        is Expr.Cons  -> {
+            val id = this.ts.first().str
+            val e = if (this.ts.size == 1) {
+                this.e.coder(pre)
+            } else {
+                //for (sub in this.ts.drop(1)) {
+                val sub = this.ts.drop(1).first()
+                "{ .tag=MAR_${id}_${sub.str}, { ${this.e.coder(pre)} } }"
+                //}
+            }
+            "(($id) ${e})"
+        }
 
         is Expr.Nat -> this.tk.str
         is Expr.Acc -> this.tk_.coder(this, pre)
