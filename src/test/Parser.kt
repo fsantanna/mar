@@ -267,7 +267,7 @@ class Parser {
         parser_lexer()
         val s = parser_stmt().first()
         assert(s is Stmt.Block)
-        assert(s.to_str() == "do {\n(print(a))\n}") { s.to_str() }
+        assert(s.to_str() == "do {\nprint(a)\n}") { s.to_str() }
     }
     @Test
     fun dd_04_do() {

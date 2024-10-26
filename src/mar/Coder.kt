@@ -188,7 +188,7 @@ fun coder_types (pre: Boolean): String {
             else -> emptyList()
         }
     }
-    val ts = G.outer!!.dn_collect_pos(::fs, null, ::ft)
+    val ts = G.outer!!.dn_collect_pos(::fs, {emptyList()}, ::ft)
     return ts.joinToString("")
 }
 
@@ -274,14 +274,32 @@ fun Stmt.coder (pre: Boolean = false): String {
         is Stmt.Break -> "break;"
 
         is Stmt.Print  -> {
-            val tp = this.e.type()
-            when (tp) {
-                is Type.Prim -> when (tp.tk_.str) {
-                    "Int" -> "printf(\"%d\\n\", ${this.e.coder(pre)});"
+            fun aux (tp: Type, v: String): String {
+                return when (tp) {
+                    is Type.Prim -> when (tp.tk_.str) {
+                        "Int" -> "printf(\"%d\", $v);"
+                        else -> TODO()
+                    }
+
+                    is Type.Tuple -> {
+                        """
+                        printf("[");
+                        {
+                            ${tp.coder(pre)} mar_${tp.n} = $v;
+                            ${tp.ts.mapIndexed { i,t ->
+                                aux(t, "mar_${tp.n}._${i+1}")
+                            }.joinToString("")}
+                        }
+                        printf("]");
+                        """
+                    }
+
                     else -> TODO()
                 }
-                else -> TODO()
             }
+            aux(this.e.type(), this.e.coder(pre)) + """
+                puts("");
+            """
         }
         is Stmt.XExpr  -> this.e.coder(pre) + ";"
         is Stmt.Nat    -> this.tk.str
