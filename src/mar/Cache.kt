@@ -22,7 +22,7 @@ fun cache_ns () {
     G.outer!!.dn_visit_pre (
         {G.ns[it.n] = it ; Unit},
         {G.ns[it.n] = it ; Unit},
-        null
+        {null}
     )
 }
 
@@ -94,5 +94,5 @@ fun cache_ups () {
 
         }
     }
-    G.outer!!.dn_visit_pre(::fs, ::fe, null)
+    G.outer!!.dn_visit_pre(::fs, ::fe, {null})
 }

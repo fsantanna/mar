@@ -1,13 +1,13 @@
 package mar
 
 fun Tk.Type.to_data (): Stmt.Data? {
-    return G.outer!!.dn_filter_pre({ it is Stmt.Data }, null, null)
+    return G.outer!!.dn_filter_pre({ it is Stmt.Data }, {null}, {null})
         .let { it as List<Stmt.Data> }
         .find { it.id.str == this.str }
 }
 
 fun Type.Data.to_data (): Stmt.Data? {
-    return this.tk_.to_data()
+    return this.ts[0].to_data()
 }
 
 fun Expr.Acc.to_xdcl (): XDcl? {
@@ -41,8 +41,8 @@ fun Stmt.Block.to_dcls (): List<XDcl> {
                 else -> false
             }
         },
-        null,
-        null
+        {null},
+        {null}
     )
         .let { it as List<Stmt> }
         .map {
@@ -86,7 +86,7 @@ fun check_vars () {
             else -> {}
         }
     }
-    G.outer!!.dn_visit_pre(::fs, ::fe, null)
+    G.outer!!.dn_visit_pre(::fs, ::fe, {null})
 }
 
 fun check_types () {
@@ -237,5 +237,5 @@ fun check_types () {
             else -> {}
         }
     }
-    G.outer!!.dn_visit_pos(::fs, ::fe, null)
+    G.outer!!.dn_visit_pos(::fs, ::fe, {null})
 }

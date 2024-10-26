@@ -171,7 +171,7 @@ fun coder_types (pre: Boolean): String {
                             is Stmt.Block -> listOf(it)
                             else -> emptyList()
                         }
-                    }, null, null)
+                    }, {null}, {null})
                     return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(pre) + ";\n" } }.flatten().joinToString("")
                 }
                 val (co,exe) = me.tp_.x_coro_exec(pre)

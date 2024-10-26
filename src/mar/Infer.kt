@@ -194,12 +194,12 @@ fun infer_types () {
             else -> {}
         }
     }
-    G.outer!!.dn_visit_pos(::fs, ::fe, null)
+    G.outer!!.dn_visit_pos(::fs, ::fe, {null})
     G.outer!!.dn_visit_pre({
         if (it is Stmt.Dcl) {
             if (it.xtp == null) {
                 err(it.tk, "inference error : unknown type")
             }
         }
-    }, null, null)
+    }, {null}, {null})
 }
