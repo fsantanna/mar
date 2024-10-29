@@ -127,7 +127,7 @@ fun List<Stmt>.to_str (pre: Boolean = false): String {
 
 fun Stmt.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Stmt.Data   -> "data " + this.id.str + ": " + this.tp.to_str(pre)
+        is Stmt.Data   -> "data " + this.id.str + this.hier.cond { ".*" } + ": " + this.tp.to_str(pre)
         is Stmt.Proto.Func -> "func " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Proto.Coro -> "coro " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Return -> "return(" + this.e.to_str(pre) + ")"
