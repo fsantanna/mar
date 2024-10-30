@@ -52,6 +52,12 @@ fun Tk.Var.type (fr: Any): Type? {
     } as Type?
 }
 
+fun Type.Data.to_data (): Stmt.Data? {
+    return G.outer!!.dn_filter_pre({ it is Stmt.Data }, {null}, {null})
+        .let { it as List<Stmt.Data> }
+        .find { it.id.str == this.ts.first().str }
+}
+
 fun Type.no_data (): Type {
     return if (this !is Type.Data) this else {
         this.to_data()!!.tp

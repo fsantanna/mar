@@ -34,14 +34,14 @@ fun Stmt.Data.flat_to_type (tp: Type.Data): Type? {
     return cur
 }
 
-fun List<Tk.Type>.data_hier_to_tuple (): Type.Tuple {
-    val dat = this.first().to_data()!!
-    //println(listOf(dat.id.str, dat.tp.to_str()))
+fun Stmt.Data.hier_to_tuple (hier: Type.Data): Type.Tuple {
+    assert(this.hier)
 
-    var cur: Type? = dat.tp
+    val fst = hier.ts.first()
+    var cur: Type? = this.tp
     val tps: MutableList<Type> = mutableListOf()
     val ids: MutableList<Tk.Var?> = mutableListOf()
-    var n = this.size - 1
+    var n = hier.ts.size - 1
 
     fun xxx () {
         val tp = cur!!
@@ -64,7 +64,7 @@ fun List<Tk.Type>.data_hier_to_tuple (): Type.Tuple {
     }
 
     xxx()
-    for (sub in this.drop(1)) {
+    for (sub in hier.ts.drop(1)) {
         n--
         val uni = when (cur) {
             is Type.Tuple -> cur.ts.lastOrNull()    // data X: [x, <K:...,A: ...>]
@@ -82,7 +82,7 @@ fun List<Tk.Type>.data_hier_to_tuple (): Type.Tuple {
             }
         }
         if (cur == null) {
-            err(this[0], "constructor error : invalid subtype \"${sub.str}\"")
+            err(fst, "constructor error : invalid subtype \"${sub.str}\"")
         }
         xxx()
         //println(listOf(sub.str, cur.to_str()))
@@ -94,7 +94,7 @@ fun List<Tk.Type>.data_hier_to_tuple (): Type.Tuple {
         error("TODO - mixing ids and nulls")
     }
 
-    return Type.Tuple(this[0], tps, if (ids1.size==0) null else ids1 as List<Tk.Var>)
+    return Type.Tuple(fst, tps, if (ids1.size==0) null else ids1 as List<Tk.Var>)
 }
 
 fun Expr.infer (): Type? {
@@ -105,13 +105,13 @@ fun Expr.infer (): Type? {
             up.dst.typex()
         }
         is Expr.Cons -> {
-            val dat = up.ts.ts.first().to_data()!!
+            val dat = up.ts.to_data()!!
             if (!dat.hier) {
                 dat.flat_to_type(up.ts)
             } else {
                 // always expands to tuple, but depending on this.typex() context,
                 // we may change from tup -> one
-                val tup = up.ts.ts.data_hier_to_tuple()
+                val tup = dat.hier_to_tuple(up.ts)
                 val one = when {
                     (tup.ts.size == 0) -> Type.Unit(tup.tk)
                     (tup.ts.size >= 2) -> tup

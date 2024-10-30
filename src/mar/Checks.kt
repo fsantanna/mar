@@ -1,15 +1,5 @@
 package mar
 
-fun Tk.Type.to_data (): Stmt.Data? {
-    return G.outer!!.dn_filter_pre({ it is Stmt.Data }, {null}, {null})
-        .let { it as List<Stmt.Data> }
-        .find { it.id.str == this.str }
-}
-
-fun Type.Data.to_data (): Stmt.Data? {
-    return this.ts[0].to_data()
-}
-
 fun Expr.Acc.to_xdcl (): XDcl? {
     return this.up_first {
         if (it !is Stmt.Block) null else {
@@ -207,13 +197,13 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val dat = me.ts.ts.first().to_data()!!
+                val dat = me.ts.to_data()!!
                 if (!dat.hier) {
                     if (!dat.flat_to_type(me.ts)!!.is_sup_of(me.e.type())) {
                         err(me.tk, "constructor error : types mismatch")
                     }
                 } else {
-                    val sup = me.ts.ts.data_hier_to_tuple()
+                    val sup = dat.hier_to_tuple(me.ts)
                     val sub = me.e.type()
                     //println(sup.to_str())
                     //println(sub.to_str())
