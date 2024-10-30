@@ -86,7 +86,41 @@ fun check_vars () {
             else -> {}
         }
     }
-    G.outer!!.dn_visit_pre(::fs, ::fe, {null})
+    fun ft (me: Type) {
+        when (me) {
+            is Type.Data -> {
+                val dat = me.to_data()
+                val t = me.ts.first()
+                when {
+                    (dat == null) -> err(me.tk, "type error : data \"${t.str}\" is not declared")
+                    (me.ts.size == 1) -> {}
+                    (!dat.hier) -> err(me.tk, "type error : data \"${t.str}\" is not hierarchic")
+                    else -> {
+                        var tp = dat.tp as Type.Tuple
+                        var id = dat.id.str
+                        for (sub in me.ts.drop(1)) {
+                            when {
+                                (tp.ids == null) -> TODO()
+                                (tp.ids!!.last().str != "*") -> TODO()
+                                else -> {
+                                    val xxx = tp.ts.last() as Type.Union
+                                    val i = xxx.ids!!.indexOfFirst { it.str == sub.str }
+                                    id = id + "." + sub.str
+                                    if (i == -1) {
+                                        err(me.tk, "type error : data \"$id\" is not declared")
+                                    } else {
+                                        tp = xxx.ts[i] as Type.Tuple
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else -> {}
+        }
+    }
+    G.outer!!.dn_visit_pre(::fs, ::fe, ::ft)
 }
 
 fun check_types () {
@@ -173,14 +207,22 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val sup = me.ts.data_to_tuple()
-                val sub = me.e.cons_to_tuple()
-                //println(sup.to_str())
-                //println(sub.to_str())
-                if (!sup.is_sup_of(sub)) {
-                    err(me.tk, "constructor error : types mismatch")
+                val dat = me.ts.ts.first().to_data()!!
+                if (!dat.hier) {
+                    if (!dat.flat_to_type(me.ts)!!.is_sup_of(me.e.type())) {
+                        err(me.tk, "constructor error : types mismatch")
+                    }
+                } else {
+                    val sup = me.ts.ts.data_hier_to_tuple()
+                    val sub = me.e.type()
+                    //println(sup.to_str())
+                    //println(sub.to_str())
+                    when {
+                        (sub !is Type.Tuple) -> err(me.tk, "constructor error : expected tuple")
+                        !sup.is_sup_of(sub) -> err(me.tk, "constructor error : types mismatch")
+                    }
+                    //G.cons[me.n] = sup
                 }
-                //G.cons[me.n] = sup
             }
             is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {
                 err(me.tk, "operation error : types mismatch")

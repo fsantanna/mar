@@ -607,6 +607,46 @@ class Static {
 
     // DATA HIER
 
+    // no data
+    // not hier
+    // no sub
+
+    @Test
+    fun de_00a_hier_ee () {
+        val out = static("""
+            var b: B.T
+        """)
+        assert(out == "anon : (lin 2, col 20) : type error : data \"B\" is not declared") { out!! }
+    }
+    @Test
+    fun de_00b_hier_ee () {
+        val out = static("""
+            data B: <T:(), F:()>
+            var b: B.T
+        """)
+        assert(out == "anon : (lin 3, col 20) : type error : data \"B\" is not hierarchic") { out!! }
+    }
+    @Test
+    fun de_00c_hier_ee () {
+        val out = static("""
+            data B.*: [*:<T:[],F:[]>]
+            var b: B.X
+        """)
+        assert(out == "anon : (lin 3, col 20) : type error : data \"B.X\" is not declared") { out!! }
+    }
+    @Test
+    fun de_00d_hier_ee () {
+        val out = static("""
+            data B.*: [*:<T:[],F:[]>]
+            var b: B.T
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data B.*: [*:<T:[],F:[]>]\n" +
+                "var b: B.T\n" +
+                "}") { G.outer!!.to_str() }
+    }
+
     @Test
     fun de_01_hier () {
         val out = static("""
@@ -689,6 +729,23 @@ class Static {
                 "var x: X.A.B\n" +
                 "set x = (X.A.B(10))\n" +
                 "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun de_09_hier_err () {
+        val out = static("""
+            data B.*: [*: <T:[],F:[]>]
+            var b: B.T = B.T ()     ;; () -> []
+        """)
+        assert(out == "anon : (lin 3, col 26) : constructor error : expected tuple") { out!! }
+    }
+    @Test
+    fun de_10_hier () {
+        val out = static("""
+            data B.*: [*: <T:[], F:[]>]
+            var b: B.T = B.T []
+            print(b?T)
+        """)
+        assert(out == null) { out!! }
     }
 
     @Test

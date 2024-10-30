@@ -12,11 +12,30 @@ fun Expr.typex (): Type? {
     }
 }
 
-fun List<Tk.Type>.data_to_tuple (): Type.Tuple {
-    val dat = this.first().to_data()   // X
-    if (dat == null) {
-        err(this[0], "constructor error : data \"${this.to_str()}\" is not declared")
+fun Stmt.Data.flat_to_type (tp: Type.Data): Type? {
+    assert(!this.hier && this.id.str==tp.ts.first().str)
+    var cur: Type? = this.tp
+    for (sub in tp.ts.drop(1)) {
+        val uni = cur
+        cur = when {
+            (uni !is Type.Union) -> null
+            (uni.ids == null) -> null
+            else -> {
+                val i = uni.ids.indexOfFirst { it.str == sub.str }
+                if (i == -1) null else {
+                    uni.ts[i]
+                }
+            }
+        }
+        if (cur == null) {
+            break
+        }
     }
+    return cur
+}
+
+fun List<Tk.Type>.data_hier_to_tuple (): Type.Tuple {
+    val dat = this.first().to_data()!!
     //println(listOf(dat.id.str, dat.tp.to_str()))
 
     var cur: Type? = dat.tp
@@ -78,16 +97,6 @@ fun List<Tk.Type>.data_to_tuple (): Type.Tuple {
     return Type.Tuple(this[0], tps, if (ids1.size==0) null else ids1 as List<Tk.Var>)
 }
 
-fun Expr.cons_to_tuple (): Type.Tuple {
-    return this.type().let {
-        when (it) {
-            is Type.Unit -> Type.Tuple(this.tk, emptyList(), null)
-            is Type.Tuple -> it
-            else -> Type.Tuple(this.tk, listOf(it), null)
-        }
-    }
-}
-
 fun Expr.infer (): Type? {
     val up = this.fupx()
     return when (up) {
@@ -96,20 +105,25 @@ fun Expr.infer (): Type? {
             up.dst.typex()
         }
         is Expr.Cons -> {
-            // always expands to tuple, but depending on this.typex() context,
-            // we may change from tup -> one
-            val tup = up.ts.data_to_tuple()
-            val one = when {
-                (tup.ts.size == 0) -> Type.Unit(tup.tk)
-                (tup.ts.size >= 2) -> tup
-                else -> tup.ts.first()
-            }
-            //println(listOf("ins", tup.to_str(), one.to_str()))
-            when (this) {
-                is Expr.Tuple -> tup
-                is Expr.Unit  -> one
-                else -> one
+            val dat = up.ts.ts.first().to_data()!!
+            if (!dat.hier) {
+                dat.flat_to_type(up.ts)
+            } else {
+                // always expands to tuple, but depending on this.typex() context,
+                // we may change from tup -> one
+                val tup = up.ts.ts.data_hier_to_tuple()
+                val one = when {
+                    (tup.ts.size == 0) -> Type.Unit(tup.tk)
+                    (tup.ts.size >= 2) -> tup
+                    else -> tup.ts.first()
+                }
+                //println(listOf("ins", tup.to_str(), one.to_str()))
+                when (this) {
+                    is Expr.Tuple -> tup
+                    is Expr.Unit -> one
+                    else -> one
 
+                }
             }
         }
         is Expr.Tuple -> up.typex().let {

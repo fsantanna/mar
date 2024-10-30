@@ -105,7 +105,7 @@ fun Expr.type (): Type {
             it.ts[n!! - 1]
         }
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
-        is Expr.Cons  -> Type.Data(this.tk, this.ts)
+        is Expr.Cons  -> this.ts
 
         is Expr.Acc -> this.tk_.type(this)!!
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))

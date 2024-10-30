@@ -382,12 +382,12 @@ fun Expr.coder (pre: Boolean = false): String {
             "(${this.col.coder(pre)}.tag == $i)"
         }
         is Expr.Cons  -> {
-            val id = this.ts.first().str
-            val e = if (this.ts.size == 1) {
+            val id = this.ts.ts.first().str
+            val e = if (this.ts.ts.size == 1) {
                 this.e.coder(pre)
             } else {
                 //for (sub in this.ts.drop(1)) {
-                val sub = this.ts.drop(1).first()
+                val sub = this.ts.ts.drop(1).first()
                 "{ .tag=MAR_${id}_${sub.str}, { ${this.e.coder(pre)} } }"
                 //}
             }

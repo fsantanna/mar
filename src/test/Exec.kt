@@ -367,8 +367,8 @@ class Exec  {
     @Test
     fun hh_07_data () {
         val out = test("""
-            data B: <T:(), F:()>
-            var b: B.T = B.T ()
+            data B.*: [*: <T:[], F:[]>]
+            var b: B.T = B.T []
             print(b?T)
         """)
         assert(out == "true\n") { out }
