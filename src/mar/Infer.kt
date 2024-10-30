@@ -111,7 +111,7 @@ fun Expr.infer (): Type? {
             } else {
                 // always expands to tuple, but depending on this.typex() context,
                 // we may change from tup -> one
-                val tup = dat.hier_to_tuple(up.ts)
+                val tup = dat.hier_to_tuple(up.ts)!!
                 val one = when {
                     (tup.ts.size == 0) -> Type.Unit(tup.tk)
                     (tup.ts.size >= 2) -> tup

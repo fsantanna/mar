@@ -552,14 +552,16 @@ class Static {
         val out = static("""
             var p: Pos
         """)
-        assert(out == "anon : (lin 2, col 13) : declaration error : data \"Pos\" is not declared") { out!! }
+        //assert(out == "anon : (lin 2, col 13) : declaration error : data \"Pos\" is not declared") { out!! }
+        assert(out == "anon : (lin 2, col 20) : type error : data \"Pos\" is not declared") { out!! }
     }
     @Test
     fun dd_04_data_err () {
         val out = static("""
             var p: Int = Pos ()
         """)
-        assert(out == "anon : (lin 2, col 26) : constructor error : data \"Pos\" is not declared") { out!! }
+        assert(out == "anon : (lin 2, col 26) : type error : data \"Pos\" is not declared") { out!! }
+        //assert(out == "anon : (lin 2, col 26) : constructor error : data \"Pos\" is not declared") { out!! }
     }
     @Test
     fun dd_05_data_err () {

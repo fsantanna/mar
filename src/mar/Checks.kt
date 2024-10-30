@@ -84,25 +84,15 @@ fun check_vars () {
                 when {
                     (dat == null) -> err(me.tk, "type error : data \"${t.str}\" is not declared")
                     (me.ts.size == 1) -> {}
-                    (!dat.hier) -> err(me.tk, "type error : data \"${t.str}\" is not hierarchic")
+                    (!dat.hier) -> {
+                        when {
+                            //(me.fupx() is Expr.Cons) -> err(me.tk, "type error : data \"${t.str}\" is not hierarchic")
+                            (dat.flat_to_type(me) == null) -> err(me.tk, "type error : data \"${t.str}\" is invalid")
+                        }
+                    }
                     else -> {
-                        var tp = dat.tp as Type.Tuple
-                        var id = dat.id.str
-                        for (sub in me.ts.drop(1)) {
-                            when {
-                                (tp.ids == null) -> TODO()
-                                (tp.ids!!.last().str != "*") -> TODO()
-                                else -> {
-                                    val xxx = tp.ts.last() as Type.Union
-                                    val i = xxx.ids!!.indexOfFirst { it.str == sub.str }
-                                    id = id + "." + sub.str
-                                    if (i == -1) {
-                                        err(me.tk, "type error : data \"$id\" is not declared")
-                                    } else {
-                                        tp = xxx.ts[i] as Type.Tuple
-                                    }
-                                }
-                            }
+                        if (dat.hier_to_tuple(me) == null) {
+                            err(me.tk, "type error : data \"${t.str}\" is invalid")
                         }
                     }
                 }
@@ -130,13 +120,6 @@ fun check_types () {
                 }
                 if (!out.is_sup_of(me.e.type())) {
                     err(me.tk, "return error : types mismatch")
-                }
-            }
-            is Stmt.Dcl -> me.xtp.let { xtp ->
-                if (xtp is Type.Data) {
-                    if (xtp.to_data() == null) {
-                        err(me.tk, "declaration error : data \"${xtp.ts.to_str()}\" is not declared")
-                    }
                 }
             }
             is Stmt.Set -> {
@@ -203,7 +186,7 @@ fun check_types () {
                         err(me.tk, "constructor error : types mismatch")
                     }
                 } else {
-                    val sup = dat.hier_to_tuple(me.ts)
+                    val sup = dat.hier_to_tuple(me.ts)!!
                     val sub = me.e.type()
                     //println(sup.to_str())
                     //println(sub.to_str())
