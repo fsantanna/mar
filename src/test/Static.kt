@@ -626,33 +626,39 @@ class Static {
             data B: <T:(), F:()>
             var b: B.T
         """)
-        assert(out == "anon : (lin 3, col 20) : type error : data \"B\" is not hierarchic") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data B: <T:(),F:()>\n" +
+                "var b: B.T\n" +
+                "}") { G.outer!!.to_str() }
+        //assert(out == "anon : (lin 3, col 20) : type error : data \"B\" is not hierarchic") { out!! }
     }
     @Test
     fun de_00c_hier_ee () {
         val out = static("""
-            data B.*: [*:<T:[],F:[]>]
+            data B: [<T:[],F:[]>]
             var b: B.X
         """)
-        assert(out == "anon : (lin 3, col 20) : type error : data \"B.X\" is not declared") { out!! }
+        //assert(out == "anon : (lin 3, col 20) : type error : data \"B.X\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 20) : type error : data \"B.X\" is invalid") { out!! }
     }
     @Test
     fun de_00d_hier_ee () {
         val out = static("""
-            data B.*: [*:<T:[],F:[]>]
-            var b: B.T
+            data B: <T:[],F:[]>
+            var b: B.F
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "data B.*: [*:<T:[],F:[]>]\n" +
-                "var b: B.T\n" +
+                "data B: <T:[],F:[]>\n" +
+                "var b: B.F\n" +
                 "}") { G.outer!!.to_str() }
     }
 
     @Test
     fun de_01_hier () {
         val out = static("""
-            data B.*: [*:<T:[],F:[]>]
+            data B: <T:[],F:[]>
             var b: B.T = B.F []
         """)
         assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
@@ -660,7 +666,7 @@ class Static {
     @Test
     fun de_02_hier () {
         val out = static("""
-            data B.*: [*:<T:[],F:[]>]
+            data B: <T:[],F:[]>
             var b: B = B.F []
             var c: B.T = b
         """)
@@ -669,7 +675,7 @@ class Static {
     @Test
     fun de_03_hier () {
         val out = static("""
-            data B.*: [*:<T:[],F:[]>]
+            data B: <T:[],F:[]>
             var b: B.F = B.F []
             var c: B = b
             var d: B.F = b
@@ -737,15 +743,16 @@ class Static {
     @Test
     fun de_09_hier_err () {
         val out = static("""
-            data B.*: [*: <T:[],F:[]>]
+            data B: <T:[],F:[]>
             var b: B.T = B.T ()     ;; () -> []
         """)
-        assert(out == "anon : (lin 3, col 26) : constructor error : expected tuple") { out!! }
+        //assert(out == "anon : (lin 3, col 26) : constructor error : expected tuple") { out!! }
+        assert(out == "anon : (lin 3, col 26) : constructor error : types mismatch") { out!! }
     }
     @Test
     fun de_10_hier () {
         val out = static("""
-            data B.*: [*: <T:[], F:[]>]
+            data B: <T:[], F:[]>
             var b: B.T = B.T []
             print(b?T)
             print(b!T)
