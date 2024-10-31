@@ -82,7 +82,7 @@ fun Stmt.Data.hier_to_tuple (hier: Type.Data): Type.Tuple {
             }
         }
         if (cur == null) {
-            err(fst, "constructor error : invalid subtype \"${sub.str}\"")
+            return null //err(fst, "constructor error : invalid subtype \"${sub.str}\"")
         }
         xxx()
         //println(listOf(sub.str, cur.to_str()))

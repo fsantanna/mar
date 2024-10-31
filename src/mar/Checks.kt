@@ -86,13 +86,13 @@ fun check_vars () {
                     (me.ts.size == 1) -> {}
                     (!dat.hier) -> {
                         when {
-                            //(me.fupx() is Expr.Cons) -> err(me.tk, "type error : data \"${t.str}\" is not hierarchic")
+                            (me.fupx() !is Expr.Cons) -> err(me.tk, "type error : data \"${t.str}\" is not hierarchic")
                             (dat.flat_to_type(me) == null) -> err(me.tk, "type error : data \"${t.str}\" is invalid")
                         }
                     }
                     else -> {
                         if (dat.hier_to_tuple(me) == null) {
-                            err(me.tk, "type error : data \"${t.str}\" is invalid")
+                            err(me.tk, "type error : data \"${me.ts.map { it.str }.joinToString(".")}\" is not declared")
                         }
                     }
                 }
