@@ -652,16 +652,16 @@ class Static {
     @Test
     fun de_01_hier () {
         val out = static("""
-            data B: <T:(), F:()>
-            var b: B.T = B.F ()
+            data B.*: [*:<T:[],F:[]>]
+            var b: B.T = B.F []
         """)
         assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
     }
     @Test
     fun de_02_hier () {
         val out = static("""
-            data B: <T:(), F:()>
-            var b: B = B.F ()
+            data B.*: [*:<T:[],F:[]>]
+            var b: B = B.F []
             var c: B.T = b
         """)
         assert(out == "anon : (lin 4, col 13) : set error : types mismatch") { out!! }
@@ -669,8 +669,8 @@ class Static {
     @Test
     fun de_03_hier () {
         val out = static("""
-            data B: <T:(), F:()>
-            var b: B.F = B.F ()
+            data B.*: [*:<T:[],F:[]>]
+            var b: B.F = B.F []
             var c: B = b
             var d: B.F = b
         """)
@@ -682,7 +682,7 @@ class Static {
             data X: [()]
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
@@ -691,7 +691,8 @@ class Static {
             data X: []
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
+        //assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
@@ -700,7 +701,8 @@ class Static {
             data X: <A:[a:Int]>
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
+        //assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
@@ -746,6 +748,7 @@ class Static {
             data B.*: [*: <T:[], F:[]>]
             var b: B.T = B.T []
             print(b?T)
+            print(b!T)
         """)
         assert(out == null) { out!! }
     }

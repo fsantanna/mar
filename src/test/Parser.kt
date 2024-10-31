@@ -802,7 +802,15 @@ class Parser {
                     } Key;
                 }
             }
-            struct Frame {
+            
+            data Event: [ts:Int] + <
+                Quit:   (),
+                Frame:  Int,
+                Key:    [key:Int] + <
+                    Dn:(),
+                    Up:(),
+                >,
+            >
                 
             data Event.*: [
                 ts: Int,
