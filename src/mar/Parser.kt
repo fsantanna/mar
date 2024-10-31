@@ -128,11 +128,11 @@ fun parser_var_type (pre: Tk.Var?): Var_Type {
     if (check_fix("func") || check_fix("coro")) {
         err(G.tk1!!, "type error : unexpected \"${G.tk1!!.str}\"")
     }
-    val tp = parser_type(null, false, 0)
+    val tp = parser_type(null, false, false)
     return Pair(id, tp)
 }
 
-fun parser_type (pre: Tk?, fr_proto: Boolean, fr_hier: Int): Type {
+fun parser_type (pre: Tk?, fr_proto: Boolean, fr_hier: Boolean): Type {
     return when {
         (pre is Tk.Fix || accept_fix("func") || accept_fix("coro")) -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
@@ -142,18 +142,18 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_hier: Int): Type {
                 if (req) {
                     parser_var_type(null)
                 } else {
-                    parser_type(null, false, 0)
+                    parser_type(null, false, false)
                 }
             }
             accept_fix_err("->")
             val (res,yld) = if (tk0.str != "coro") Pair(null,null) else {
-                val res = parser_type(null, false, 0)
+                val res = parser_type(null, false, false)
                 accept_fix_err("->")
-                val yld = parser_type(null, false, 0)
+                val yld = parser_type(null, false, false)
                 accept_fix_err("->")
                 Pair(res, yld)
             }
-            val out = parser_type(null, false, 0)
+            val out = parser_type(null, false, false)
             when {
                 (tk0.str=="func" &&  req) ->
                     Type.Proto.Func.Vars(tk0, inps as List<Var_Type>, out)
@@ -170,21 +170,21 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_hier: Int): Type {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
             accept_fix_err("(")
             val inps = parser_list(",", ")") {
-                parser_type(null, false, 0)
+                parser_type(null, false, false)
             }
             accept_fix_err("->")
-            val res = parser_type(null, false, 0)
+            val res = parser_type(null, false, false)
             accept_fix_err("->")
-            val yld = parser_type(null, false, 0)
+            val yld = parser_type(null, false, false)
             accept_fix_err("->")
-            val out = parser_type(null, false, 0)
+            val out = parser_type(null, false, false)
             Type.Exec(tk0, inps, res, yld, out)
         }
         accept_fix("(") -> {
             val tp = if (check_fix(")")) {
                 Type.Unit(G.tk0 as Tk.Fix)
             } else {
-                parser_type(null, false, 0)
+                parser_type(null, false, false)
             }
             accept_fix_err(")")
             tp
@@ -204,34 +204,20 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_hier: Int): Type {
         }
         accept_op("\\") -> {
             val tk0 = G.tk0 as Tk.Op
-            val ptr = parser_type(null, false, 0)
+            val ptr = parser_type(null, false, false)
             Type.Pointer(tk0, ptr)
         }
         accept_fix("[") -> {
             val tk0 = G.tk0 as Tk.Fix
             val ids = mutableListOf<Tk.Var>()
             val ts = parser_list(",", "]") {
-                val star = when {
-                    accept_op("*") -> {
-                        ids.add(Tk.Var("*", G.tk0!!.pos.copy()))
-                        accept_fix_err(":")
-                        check_op_err("<")
-                        true
-                    }
-                    accept_enu("Var") || (fr_hier!=0 && accept_enu_err("Var")) -> {
-                        ids.add(G.tk0 as Tk.Var)
-                        accept_fix_err(":")
-                        false
-                    }
-                    else -> false
+                if (accept_enu("Var")) {
+                    ids.add(G.tk0 as Tk.Var)
+                    accept_fix_err(":")
                 }
-                val tp = parser_type(null, false, if (star) 2 else 0)
-                if (star) {
-                    check_fix_err("]")
-                }
-                tp
+                parser_type(null, false, false)
             }
-            if (ids.isEmpty()) {
+            val tup = if (ids.isEmpty()) {
                 Type.Tuple(tk0, ts, null)
             } else {
                 if (ts.size != ids.size) {
@@ -239,24 +225,41 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_hier: Int): Type {
                 }
                 Type.Tuple(tk0, ts, ids)
             }
+            if (!accept_op("+")) {
+                tup
+            } else {
+                check_op_err("<")
+                val uni = parser_type(null, false, true) as Type.Union
+                val tups = uni.ts.map {
+                    it as Type.Tuple
+                    when {
+                        (tup.ts.size==0 || it.ts.size==0) -> {}
+                        (tup.ids==null && it.ids==null)   -> {}
+                        (tup.ids!=null && it.ids!=null)   -> {}
+                        (tup.ids == null) -> err(tup.tk, "data error : missing field identifier")
+                        (it.ids == null)  -> err(it.tk, "data error : missing field identifier")
+                    }
+                    Type.Tuple(it.tk, tup.ts+it.ts, (tup.ids?:emptyList()) + (it.ids?: emptyList()))
+                }
+                Type.Union(uni.tk, true, tups, uni.ids)
+            }
         }
         accept_op("<") -> {
             val tk0 = G.tk0 as Tk.Op
             val ids = mutableListOf<Tk.Type>()
             val ts = parser_list(",", ">") {
                 val tk1 = G.tk1
-                val has_id = when {
-                    (fr_hier != 0) -> accept_enu_err("Type") && accept_fix_err(":") && check_fix_err("[")
-                    accept_enu("Type") -> accept_fix(":")
-                    else -> false
+                val has_id = accept_enu("Type") && accept_fix(":")
+                if (fr_hier) {
+                    check_fix_err("[")
                 }
                 when {
                     has_id -> {
                         ids.add(tk1 as Tk.Type)
-                        parser_type(null, false, fr_hier)
+                        parser_type(null, false, false)
                     }
-                    (tk1 is Tk.Type) -> parser_type(tk1, false, fr_hier)
-                    else -> parser_type(null, false, fr_hier)
+                    (tk1 is Tk.Type) -> parser_type(tk1, false, false)
+                    else -> parser_type(null, false, false)
                 }
             }
             if (ids.isEmpty()) {
@@ -312,7 +315,7 @@ fun parser_expr_4_prim (): Expr {
             }
             val tp = if (!accept_fix(":")) null else {
                 check_fix_err("[")
-                parser_type(null, false, 0) as Type.Tuple
+                parser_type(null, false, false) as Type.Tuple
             }
             Expr.Tuple(tk0, tp, vs, xids)
         }
@@ -326,7 +329,7 @@ fun parser_expr_4_prim (): Expr {
             accept_op_err(">")
             val tp = if (!accept_fix(":")) null else {
                 check_op_err("<")
-                parser_type(null, false, 0) as Type.Union
+                parser_type(null, false, false) as Type.Union
             }
             Expr.Union(tk0, tp, idx, v)
         }
@@ -430,7 +433,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             accept_enu_err("Var")
             val id = G.tk0 as Tk.Var
             accept_fix_err(":")
-            val tp = parser_type(tk0, true, 0)
+            val tp = parser_type(tk0, true, false)
             accept_fix_err("{")
             val ss = parser_list(null, "}") {
                 parser_stmt()
@@ -572,22 +575,9 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val tk0 = G.tk0!!
             accept_enu_err("Type")
             val id = G.tk0 as Tk.Type
-            val hier = if (!accept_fix(".")) false else {
-                accept_op_err("*")
-                true
-            }
             accept_fix_err(":")
-            if (hier) {
-                check_fix_err("[")
-            }
-            val tp = parser_type(null, false, if (hier) 1 else 0)
-            /*
-             *  data X: [       // hier=1 (tuple mandatory)
-             *      x: Int      // hier=1 (req_vars=true)
-             *      *: <        // hier=1 (last field=*)
-             *          Y: ...  // hier=2 (req_vars=true)
-             */
-            listOf(Stmt.Data(tk0, id, hier, tp))
+            val tp = parser_type(null, false, false)
+            listOf(Stmt.Data(tk0, id, tp))
         }
         accept_fix("print") -> {
             val tk0 = G.tk0 as Tk.Fix

@@ -367,7 +367,7 @@ class Exec  {
     @Test
     fun hh_07_data () {
         val out = test("""
-            data B.*: [*: <T:[], F:[]>]
+            data B: <T:[], F:[]>
             var b: B.T = B.T []
             print(b?T)
         """)
@@ -466,6 +466,16 @@ class Exec  {
             ;;;
         """)
         assert(out == "10 / 1\n") { out }
+    }
+    @Test
+    fun hh_13_data_rep () {
+        val out = test("""
+            data X: <A:[x:Int],B:[x:Int]>
+            var r: X = X.B [10]
+            print(r)
+            print(r!B.x)
+        """)
+        assert(out == "X <.2=[10]>\n10\n") { out }
     }
 
     // INFER

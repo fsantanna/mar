@@ -84,17 +84,7 @@ fun check_vars () {
                 when {
                     (dat == null) -> err(me.tk, "type error : data \"${t.str}\" is not declared")
                     (me.ts.size == 1) -> {}
-                    (!dat.hier) -> {
-                        when {
-                            (me.fupx() !is Expr.Cons) -> err(me.tk, "type error : data \"${t.str}\" is not hierarchic")
-                            (dat.flat_to_type(me) == null) -> err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
-                        }
-                    }
-                    else -> {
-                        if (dat.hier_to_tuple(me) == null) {
-                            err(me.tk, "type error : data \"${me.ts.to_str()}\" is not declared")
-                        }
-                    }
+                    (dat.hier_to_type(me) == null) -> err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
                 }
             }
             else -> {}
@@ -181,21 +171,9 @@ fun check_types () {
             }
             is Expr.Cons -> {
                 val dat = me.ts.to_data()!!
-                if (!dat.hier) {
-                    if (!dat.flat_to_type(me.ts)!!.is_sup_of(me.e.type())) {
+                if (!dat.hier_to_type(me.ts)!!.is_sup_of(me.e.type())) {
                         err(me.tk, "constructor error : types mismatch")
                     }
-                } else {
-                    val sup = dat.hier_to_tuple(me.ts)!!
-                    val sub = me.e.type()
-                    //println(sup.to_str())
-                    //println(sub.to_str())
-                    when {
-                        (sub !is Type.Tuple) -> err(me.tk, "constructor error : expected tuple")
-                        !sup.is_sup_of(sub) -> err(me.tk, "constructor error : types mismatch")
-                    }
-                    //G.cons[me.n] = sup
-                }
             }
             is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {
                 err(me.tk, "operation error : types mismatch")
