@@ -569,7 +569,7 @@ class Static {
             data Pos: [Int, Int]
             var p: Pos = Pos [10, true]: [Int, Bool]
         """)
-        assert(out == "anon : (lin 3, col 26) : constructor error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 30) : constructor error : types mismatch") { out!! }
     }
     @Test
     fun dd_06_data_err () {
@@ -577,7 +577,7 @@ class Static {
             data Pos: [Int, Int]
             var p: Pos = Pos(null)
         """)
-        assert(out == "anon : (lin 3, col 26) : constructor error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 30) : constructor error : types mismatch") { out!! }
     }
     @Test
     fun dd_07_data_err () {
@@ -616,21 +616,17 @@ class Static {
         assert(out == "anon : (lin 4, col 20) : discriminator error : types mismatch") { out!! }
     }
 
-    // DATA HIER
-
-    // no data
-    // not hier
-    // no sub
+    // DATA SUBS
 
     @Test
-    fun de_00a_hier_ee () {
+    fun de_00a_subs_ee () {
         val out = static("""
             var b: B.T
         """)
         assert(out == "anon : (lin 2, col 20) : type error : data \"B\" is not declared") { out!! }
     }
     @Test
-    fun de_00b_hier_ee () {
+    fun de_00b_subs_ee () {
         val out = static("""
             data B: <T:(), F:()>
             var b: B.T
@@ -643,7 +639,7 @@ class Static {
         //assert(out == "anon : (lin 3, col 20) : type error : data \"B\" is not hierarchic") { out!! }
     }
     @Test
-    fun de_00c_hier_ee () {
+    fun de_00c_subs_ee () {
         val out = static("""
             data B: [<T:[],F:[]>]
             var b: B.X
@@ -652,7 +648,7 @@ class Static {
         assert(out == "anon : (lin 3, col 20) : type error : data \"B.X\" is invalid") { out!! }
     }
     @Test
-    fun de_00d_hier_ee () {
+    fun de_00d_subs_ee () {
         val out = static("""
             data B: <T:[],F:[]>
             var b: B.F
@@ -664,7 +660,7 @@ class Static {
                 "}") { G.outer!!.to_str() }
     }
     @Test
-    fun de_01_hier () {
+    fun de_01_subs () {
         val out = static("""
             data B: <T:[],F:[]>
             var b: B.T = B.F []
@@ -672,7 +668,7 @@ class Static {
         assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
     }
     @Test
-    fun de_02_hier () {
+    fun de_02_subs () {
         val out = static("""
             data B: <T:[],F:[]>
             var b: B = B.F []
@@ -681,7 +677,7 @@ class Static {
         assert(out == "anon : (lin 4, col 13) : set error : types mismatch") { out!! }
     }
     @Test
-    fun de_03_hier () {
+    fun de_03_subs () {
         val out = static("""
             data B: <T:[],F:[]>
             var b: B.F = B.F []
@@ -691,7 +687,7 @@ class Static {
         assert(out == null) { out!! }
     }
     @Test
-    fun de_04_hier_err () {
+    fun de_04_subs_err () {
         val out = static("""
             data X: [()]
             var x = X.B () 
@@ -700,7 +696,7 @@ class Static {
         //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
-    fun de_05_hier_err () {
+    fun de_05_subs_err () {
         val out = static("""
             data X: []
             var x = X.B () 
@@ -710,7 +706,7 @@ class Static {
         //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
-    fun de_06_hier_err () {
+    fun de_06_subs_err () {
         val out = static("""
             data X: <A:[a:Int]>
             var x = X.B () 
@@ -720,7 +716,7 @@ class Static {
         //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
-    fun de_07_hier () {
+    fun de_07_subs () {
         val out = static("""
             data X: <A:[a:Int]>
             var x = X.A [10]:[a:Int] 
@@ -736,7 +732,7 @@ class Static {
                 "}") { G.outer!!.to_str() }
     }
     @Test
-    fun de_08_hier () {
+    fun de_08_subs () {
         val out = static("""
             data X: <A: <B:Int>>
             var x = X.A.B (10) 
@@ -749,16 +745,16 @@ class Static {
                 "}") { G.outer!!.to_str() }
     }
     @Test
-    fun de_09_hier_err () {
+    fun de_09_subs_err () {
         val out = static("""
             data B: <T:[],F:[]>
             var b: B.T = B.T ()     ;; () -> []
         """)
         //assert(out == "anon : (lin 3, col 26) : constructor error : expected tuple") { out!! }
-        assert(out == "anon : (lin 3, col 26) : constructor error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 30) : constructor error : types mismatch") { out!! }
     }
     @Test
-    fun de_10_hier () {
+    fun de_10_subs () {
         val out = static("""
             data B: <T:[], F:[]>
             var b: B.T = B.T []
@@ -784,7 +780,7 @@ class Static {
         assert(out == "anon : (lin 3, col 21) : type error : data \"Res.XXX\" is invalid") { out!! }
     }
     @Test
-    fun de_13_hier () {
+    fun de_13_subs () {
         val out = static("""
             data B: <True:(), False:()>
             var b: B = B.True ()
@@ -792,12 +788,45 @@ class Static {
         assert(out == null) { out!! }
     }
     @Test
-    fun de_14_hier () {
+    fun de_14_subs () {
         val out = static("""
             data X: [Int, [Int]+<[],[]>]
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\ndata X: [Int,[Int] + <[],[]>]\n}") { G.outer!!.to_str() }
+    }
+
+    // DATA HIER
+
+    @Test
+    fun df_01_hier_err () {
+        val out = static("""
+            data X: Int + <Y:()>
+            var y = X.Y()   ;; missing Int
+        """)
+        assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
+    }
+    @Test
+    fun df_02_hier_err () {
+        val out = static("""
+            data X: Int + <Y:()>
+            var y = X.Y(10) ;; missing ()
+        """)
+        println(out)
+        assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
+    }
+    @Test
+    fun df_03_hier () {
+        val out = static("""
+            data X: Int + <Y:()>
+            var y = X.Y(10,())
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: Int + <Y:()>\n" +
+                "var y: X.Y\n" +
+                "set y = (X.Y(10,()))\n" +
+                "}") { G.outer!!.to_str() }
     }
 
     // INFER

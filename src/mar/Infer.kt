@@ -12,26 +12,27 @@ fun Expr.typex (): Type? {
     }
 }
 
-fun Stmt.Data.hier_to_type (tp: Type.Data): Type? {
+fun Stmt.Data.hier_to_types (tp: Type.Data): List<Type>? {
     assert(this.id.str==tp.ts.first().str)
-    var cur: Type? = this.tp
+    val lst = mutableListOf<Type>()
+    var cur: Type = this.tp
     for (sub in tp.ts.drop(1)) {
-        val uni = cur
-        cur = when {
-            (uni !is Type.Union) -> null
-            (uni.ids == null) -> null
-            else -> {
-                val i = uni.ids.indexOfFirst { it.str == sub.str }
-                if (i == -1) null else {
-                    uni.ts[i]
-                }
-            }
+        when {
+            (cur !is Type.Union) -> return null
+            (cur.ids == null) -> return null
         }
-        if (cur == null) {
-            break
+        val uni = cur as Type.Union
+        if (uni.o != null) {
+            lst.add(uni.o)
         }
+        val i = uni.ids!!.indexOfFirst { it.str == sub.str }
+        if (i == -1) {
+            return null
+        }
+        cur = uni.ts[i]
     }
-    return cur
+    lst.add(cur)
+    return lst
 }
 
 fun Expr.infer (): Type? {

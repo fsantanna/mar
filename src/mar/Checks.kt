@@ -84,7 +84,7 @@ fun check_vars () {
                 when {
                     (dat == null) -> err(me.tk, "type error : data \"${t.str}\" is not declared")
                     (me.ts.size == 1) -> {}
-                    (dat.hier_to_type(me) == null) -> err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
+                    (dat.hier_to_types(me) == null) -> err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
                 }
             }
             else -> {}
@@ -171,9 +171,18 @@ fun check_types () {
             }
             is Expr.Cons -> {
                 val dat = me.ts.to_data()!!
-                if (!dat.hier_to_type(me.ts)!!.is_sup_of(me.e.type())) {
-                        err(me.tk, "constructor error : types mismatch")
-                    }
+                val ts = dat.hier_to_types(me.ts)!!
+                //println(ts.map { it.to_str() })
+                if (ts.size != me.es.size) {
+                    err(me.tk, "constructor error : arity mismatch")
+                }
+                val x = ts.zip(me.es).find { (tp,e) ->
+                    !tp.is_sup_of(e.type())
+                }
+                if (x != null) {
+                    //println(x.second.to_str())
+                    err(x.second.tk, "constructor error : types mismatch")
+                }
             }
             is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {
                 err(me.tk, "operation error : types mismatch")

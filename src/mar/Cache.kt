@@ -104,7 +104,9 @@ fun cache_ups () {
             is Expr.Pred  -> G.ups[me.col.n] = me.n
             is Expr.Cons  -> {
                 G.ups[me.ts.n] = me.n
-                G.ups[me.e.n] = me.n
+                me.es.forEach {
+                    G.ups[it.n] = me.n
+                }
             }
 
             is Expr.Acc, is Expr.Bool, is Expr.Char, is Expr.Nat,
