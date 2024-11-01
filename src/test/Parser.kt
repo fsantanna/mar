@@ -800,7 +800,7 @@ class Parser {
         G.tks = ("B.F ()").lexer()
         parser_lexer()
         val e = parser_expr()
-        assert(e is Expr.Cons && e.ts.ts.size==2)
+        assert(e is Expr.Cons && e.dat.ts.size==2)
         assert(e.to_str() == "(B.F(()))") { e.to_str() }
     }
 

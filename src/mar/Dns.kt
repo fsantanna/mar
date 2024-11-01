@@ -28,7 +28,7 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
         is Expr.Field -> this.col.dn_collect_pos(fe,ft)
         is Expr.Disc  -> this.col.dn_collect_pos(fe,ft)
         is Expr.Pred  -> this.col.dn_collect_pos(fe,ft)
-        is Expr.Cons  -> this.ts.dn_collect_pos(ft) + this.es.map { it.dn_collect_pos(fe,ft) }.flatten()
+        is Expr.Cons  -> this.dat.dn_collect_pos(ft) + this.es.map { it.dn_collect_pos(fe,ft) }.flatten()
         is Expr.Call  -> this.f.dn_collect_pos(fe,ft) + this.args.map { it.dn_collect_pos(fe,ft) }.flatten()
         is Expr.Acc, is Expr.Nat, is Expr.Null, is Expr.Unit,
         is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()
@@ -104,7 +104,7 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
         is Expr.Field -> this.col.dn_collect_pre(fe,ft)
         is Expr.Disc  -> this.col.dn_collect_pre(fe,ft)
         is Expr.Pred  -> this.col.dn_collect_pre(fe,ft)
-        is Expr.Cons  -> this.ts.dn_collect_pre(ft) + this.es.map { it.dn_collect_pre(fe,ft) }.flatten()
+        is Expr.Cons  -> this.dat.dn_collect_pre(ft) + this.es.map { it.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Call  -> this.f.dn_collect_pre(fe,ft) + this.args.map { it.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Acc, is Expr.Nat, is Expr.Null, is Expr.Unit,
         is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()

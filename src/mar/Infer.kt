@@ -43,8 +43,9 @@ fun Expr.infer (): Type? {
             up.dst.typex()
         }
         is Expr.Cons -> {
-            val dat = up.ts.to_data()!!
-            dat.hier_to_type(up.ts)
+            val dat = up.dat.to_data()!!
+            val i = up.es.indexOfFirst { it.n==this.n }
+            dat.hier_to_types(up.dat)!![i]
         }
         is Expr.Tuple -> up.typex().let {
             if (it == null) null else {

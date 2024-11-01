@@ -170,8 +170,8 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val dat = me.ts.to_data()!!
-                val ts = dat.hier_to_types(me.ts)!!
+                val dat = me.dat.to_data()!!
+                val ts = dat.hier_to_types(me.dat)!!
                 //println(ts.map { it.to_str() })
                 if (ts.size != me.es.size) {
                     err(me.tk, "constructor error : arity mismatch")

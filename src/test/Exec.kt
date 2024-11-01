@@ -382,7 +382,8 @@ class Exec  {
             print(c)
             print(c!B!C)
         """)
-        assert(out == "10 / 1\n") { out }
+        assert(out == "A <.1=<.1=10>>\n" +
+                "10\n") { out }
     }
     @Test
     fun TODO_hh_09_data () {

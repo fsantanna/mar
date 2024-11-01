@@ -130,6 +130,7 @@ fun coder_types (pre: Boolean): String {
                         ${me.tagged.cond { "int tag;" }}
                         union {
                             ${me.ts.mapIndexed { i,tp ->
+                                me.ids.cond { tp.coder() + " " + it[i].str + ";\n" } +
                                 tp.coder() + " _" + (i+1) + ";\n"
                             }.joinToString("")}
                         };
@@ -142,26 +143,32 @@ fun coder_types (pre: Boolean): String {
     fun fs (me: Stmt): List<String> {
         return when (me) {
             is Stmt.Data -> {
-                val ids = when (me.tp) {
-                    is Type.Union -> me.tp.ids
-                    is Type.Tuple -> me.tp.ts.lastOrNull()?.let {
-                        if (it !is Type.Union) null else {
-                            it.ids
-                        }
+                fun f (tp: Type, s: String): List<String> {
+                    //println(listOf(s, tp.to_str()))
+                    val x1 = "typedef ${tp.coder(pre)} $s;"
+                    val x2 = if (tp !is Type.Union || tp.ids==null) {
+                        emptyList()
+                    } else {
+                        listOf(
+                            """
+                            typedef enum MAR_$s {
+                                MAR_TAG_${s}_ZERO,
+                                ${
+                                    tp.ids.map {
+                                        """
+                                        MAR_TAG_${s}_${it.str},
+                                        """
+                                    }.joinToString("")
+                                }
+                            } MAR_$s;
+                            """
+                        ) + tp.ids.zip(tp.ts).map { (id,t) ->
+                            f(t,"${s}_${id.str}")
+                        }.flatten()
                     }
-                    else -> null
+                    return listOf(x1) + x2
                 }
-                listOf("""
-                    typedef ${me.tp.coder(pre)} ${me.id.str};
-                    ${ids.cond { """
-                        typedef enum MAR_${me.id.str} {
-                            MAR_${me.id.str}_ZERO,
-                            ${it.map { """
-                                MAR_${me.id.str}_${it.str},
-                            """ }.joinToString("")}
-                        } MAR_${me.id.str};
-                    """ }}
-                """)
+                f(me.tp, me.id.str)
             }
             is Stmt.Proto.Coro -> {
                 fun mem (): String {
@@ -382,16 +389,59 @@ fun Expr.coder (pre: Boolean = false): String {
             "(${this.col.coder(pre)}.tag == $i)"
         }
         is Expr.Cons  -> {
-            val id = this.ts.ts.first().str
-            val e = if (this.ts.ts.size == 1) {
-                this.e.coder(pre)
+            assert(this.dat.ts.size >= this.es.size)
+            val idxs = mutableListOf<Int>() // indexes of hier types with no constructors
+            val dat = this.dat.to_data()!!
+            val xes = if (this.dat.ts.size == this.es.size) {
+                this.es
             } else {
-                //for (sub in this.ts.drop(1)) {
-                val sub = this.ts.ts.drop(1).first()
-                "{ .tag=MAR_${id}_${sub.str}, { ${this.e.coder(pre)} } }"
-                //}
+                var cur: Type = dat.tp
+                var I = 0
+                if (cur is Type.Union && cur.o == null) {
+                    idxs.add(I)
+                }
+                I++
+                for (sub in this.dat.ts.drop(1)) {
+                    val uni = cur as Type.Union
+                    val i = uni.ids!!.indexOfFirst { it.str == sub.str }
+                    assert(i >= 0)
+                    cur = uni.ts[i]
+                    if (cur is Type.Union && cur.o == null) {
+                        idxs.add(I)
+                    }
+                    I++
+                }
+                assert(I == this.dat.ts.size)
+                assert(idxs.size == this.dat.ts.size - this.es.size)
+                val xxes = (this.es as List<Expr?>).toMutableList().let { es ->
+                    idxs.forEach {
+                        es.add(it, null)
+                    }
+                    es
+                }
+                assert(this.dat.ts.size == xxes.size)
+                xxes
             }
-            "(($id) ${e})"
+            """
+            ({    
+                ${this.dat.ts.zip(xes).mapIndexed { i,(sub,e) ->
+                    val subs = this.dat.ts.take(i+1).map { it.str }.joinToString("_")
+                    "$subs ceu_$i = " +
+                        if (i == xes.size-1) {
+                            e!!.coder(pre)
+                        } else {
+                            val nxt = this.dat.ts[i+1].str
+                            """
+                            {
+                                .tag = MAR_TAG_${subs}_$nxt,
+                                { .$nxt = ceu_${i+1} }
+                            };
+                            """
+                        } + ";\n"
+                }.reversed().joinToString("")}
+                ceu_0;
+            })
+            """
         }
 
         is Expr.Nat -> this.tk.str
