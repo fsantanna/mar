@@ -40,10 +40,11 @@ fun Type.to_str (pre: Boolean = false): String {
             }
         }
         is Type.Union -> {
+            val o = this.o.cond { it.to_str(pre) + " + " }
             if (this.ids == null) {
-                "<" + this.ts.map { it.to_str(pre) }.joinToString(",") + ">"
+                o + "<" + this.ts.map { it.to_str(pre) }.joinToString(",") + ">"
             } else {
-                "<" + this.ids.zip(this.ts).map { (id,tp) -> id.str + ":" + tp.to_str(pre) }.joinToString(",") + ">"
+                o + "<" + this.ids.zip(this.ts).map { (id,tp) -> id.str + ":" + tp.to_str(pre) }.joinToString(",") + ">"
             }
         }
         is Type.Proto -> {

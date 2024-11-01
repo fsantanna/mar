@@ -387,6 +387,17 @@ class Exec  {
     @Test
     fun TODO_hh_09_data () {
         val out = test("""
+            data A: [a:Int] + <B: [b:Int] + <C: [c:Int]>>
+            var c = A.B.C [1,2,3]
+            var v = c
+            print(c)
+            print(c!B!C)
+        """)
+        assert(out == "10 / 1\n") { out }
+    }
+    @Test
+    fun TODO_hh_0X_data () {
+        val out = test("""
             data A: <B: <C: Int>>
             var c = A.B.C(10)
             var v = c!B!C

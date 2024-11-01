@@ -797,7 +797,7 @@ class Static {
             data X: [Int, [Int]+<[],[]>]
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "do {\ndata X: [Int,<[Int],[Int]>]\n}") { G.outer!!.to_str() }
+        assert(G.outer!!.to_str() == "do {\ndata X: [Int,[Int] + <[],[]>]\n}") { G.outer!!.to_str() }
     }
 
     // INFER
