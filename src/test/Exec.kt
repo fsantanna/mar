@@ -378,8 +378,9 @@ class Exec  {
         val out = test("""
             data A: <B: <C: Int>>
             var c = A.B.C(10)
-            var v = 10 ;;c.?
-            `printf("%d\n", v);`
+            var v = c
+            print(c)
+            print(c!B!C)
         """)
         assert(out == "10 / 1\n") { out }
     }
@@ -476,6 +477,25 @@ class Exec  {
             print(r!B.x)
         """)
         assert(out == "X <.2=[10]>\n10\n") { out }
+    }
+    @Test
+    fun hh_14_data_many () {
+        val out = test("""
+            data B: <True:(), False:()>
+            var b: B = B.True ()
+            print(b?True)
+            
+            data Maybe: <Nothing:(), Just:Int>
+            var x = Maybe.Just(10)
+            print(x)
+            
+            data Meter: Int
+            var y: Meter = Meter(10)
+            print(y)
+        """)
+        assert(out == "true\n" +
+                "Maybe <.2=10>\n" +
+                "Meter(10)\n") { out }
     }
 
     // INFER

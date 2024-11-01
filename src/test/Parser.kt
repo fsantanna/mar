@@ -180,12 +180,12 @@ class Parser {
         assert(tp.to_str() == "<Int,<Bool>,()>") { tp.to_str() }
     }
     @Test
-    fun TODO_ak_06_type_union () {  // tuple field names
+    fun ak_06_type_union () {
         G.tks = ("<X:Int,Y:[Bool],Z:()>").lexer()
         parser_lexer()
         val tp = parser_type(null, false, false)
-        assert(tp is Type.Tuple && tp.ts.size==3)
-        assert(tp.to_str() == "[X:Int,Y:[Bool],Z:()]") { tp.to_str() }
+        assert(tp is Type.Union && tp.ts.size==3)
+        assert(tp.to_str() == "<X:Int,Y:[Bool],Z:()>") { tp.to_str() }
     }
     @Test
     fun ak_07_type_union_err () {
@@ -748,104 +748,47 @@ class Parser {
         assert(ss.to_str() == "data Event: <Dn:[ts:Int],Up:[ts:Int]>\n") { ss.to_str() }
     }
     @Test
-    fun kj_0X_data_hier () {     // Event.*
+    fun kj_09_data_hier () {
         G.tks = ("""
-            struct Event {
-                int tag;
-                int ts;
-                union {
-                    struct {
-                        int ms;
-                    } Frame;
-                    struct {
-                        in tag;
-                        int key;
-                        union {
-                            struct {
-                            } Dn;
-                            struct {
-                            } Up;
-                        }
-                    } Key;
-                }
-            }
-            
-            data X: [Int, [Int]+<[],[]>]
-            
-            data Event: [ts:Int] + <
-                Quit:   (),
-                Frame:  Int,
-                Key:    [key:Int] + <
-                    Dn:(),
-                    Up:(),
-                >,
+            data A: [] + <
+                B: [] + <>
             >
-                
-            data Event.*: [
-                ts: Int,
-                *: <
-                    Quit:   (),
-                    Frame:  Int,
-                    Key:    [
-                        key: Int,
-                        *: <Dn:(), Up:()>
-                    ],
-                >,
-            ]
-            data Event.Pause.*: [
-            
-            data Event: <
-                Quit:  [ts:Int],
-                Frame: [ts:Int, ms:Int],
-                Key: <
-                    Dn: [ts:Int, key:Int],
-                    Up: [ts:Int, key:Int],
-                >
-            >
-                
-            
-            data Event: [ts:Int] {
-                Quit:   []
-                Frame:  [ms:Int]
-                Key:    [key:Int] {
-                    Dn: []
-                    Up: []
-                }
-            }
-            data Mouse: <
-                Left:   (),
-                Middle: (),
-                Right:  (),
-            >
-            
-            data Error.*: [msg: String]
-            data Error.Runtime: []
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "var v: <Int,Int>\n" +
-                "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
+        assert(ss.to_str() == "data A: <B:<>>\n") { ss.to_str() }
     }
     @Test
-    fun NEW_kk_XX_data () {     // Event.*
+    fun kj_10_data_hier () {
         G.tks = ("""
-            data Event: ()
-            data Event.Keys
-            var p: Pos = [10,10]
-            
-            data Mouse_Button: <
-                Left   = (),
-                Middle = (),
-                Right  = (),
-            >
-            
-            data Error.*: [msg: String]
-            data Error.Runtime: []
+            do {
+                data Event1: [ts:Int] + <
+                    Quit:   [],
+                    Frame:  [ms:Int],
+                    Key:    [key:Int] + <
+                        Dn:[],
+                        Up:[],
+                    >,
+                >
+                    
+                data Event2: <
+                    Quit:  [ts:Int],
+                    Frame: [ts:Int, ms:Int],
+                    Key: <
+                        Dn: [ts:Int, key:Int],
+                        Up: [ts:Int, key:Int],
+                    >
+                >
+                
+                data Mouse: <
+                    Left:   (),
+                    Middle: (),
+                    Right:  (),
+                >
+            }
         """).lexer()
         parser_lexer()
-        val ss = parser_stmt()
-        assert(ss.to_str() == "var v: <Int,Int>\n" +
-                "set v = <.1 20>:<Int,Int>\n") { ss.to_str() }
+        parser_stmt()
     }
 
     // CONS

@@ -69,7 +69,9 @@ fun Type.Union.disc_to_i (dsc: String): Int? {
     return when {
         (i!=null && (i<=0 || i>this.ts.size)) -> null
         (i==null && this.ids==null) -> null
-        (i==null) -> this.ids!!.indexOfFirst { it.str==dsc } + 1
+        (i==null) -> this.ids!!.indexOfFirst { it.str==dsc }.let {
+            if (it == -1) null else it+1
+        }
         else -> i
     }
 }

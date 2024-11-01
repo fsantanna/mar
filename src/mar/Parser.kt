@@ -230,18 +230,31 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_hier: Boolean): Type {
             } else {
                 check_op_err("<")
                 val uni = parser_type(null, false, true) as Type.Union
-                val tups = uni.ts.map {
-                    it as Type.Tuple
-                    when {
-                        (tup.ts.size==0 || it.ts.size==0) -> {}
-                        (tup.ids==null && it.ids==null)   -> {}
-                        (tup.ids!=null && it.ids!=null)   -> {}
-                        (tup.ids == null) -> err(tup.tk, "data error : missing field identifier")
-                        (it.ids == null)  -> err(it.tk, "data error : missing field identifier")
+                val xtp = uni.ts.map { it ->
+                    fun f (xit: Type): Type {
+                        return if (xit is Type.Tuple) {
+                            when {
+                                (tup.ts.size == 0 || xit.ts.size == 0) -> {}
+                                (tup.ids == null && xit.ids == null) -> {}
+                                (tup.ids != null && xit.ids != null) -> {}
+                                (tup.ids == null) -> err(tup.tk, "data error : missing field identifier")
+                                (xit.ids == null) -> err(xit.tk, "data error : missing field identifier")
+                            }
+                            val xids = if (tup.ids == null && xit.ids == null) {
+                                null
+                            } else {
+                                (tup.ids ?: emptyList()) + (xit.ids ?: emptyList())
+                            }
+                            Type.Tuple(xit.tk, tup.ts + xit.ts, xids)
+                        } else {
+                            xit as Type.Union
+                            val xtps = xit.ts.map { f(it) }
+                            Type.Union(xit.tk, true, xtps, xit.ids)
+                        }
                     }
-                    Type.Tuple(it.tk, tup.ts+it.ts, (tup.ids?:emptyList()) + (it.ids?: emptyList()))
+                    f(it)
                 }
-                Type.Union(uni.tk, true, tups, uni.ids)
+                Type.Union(uni.tk, true, xtp, uni.ids)
             }
         }
         accept_op("<") -> {

@@ -606,6 +606,15 @@ class Static {
         """)
         assert(out == "anon : (lin 4, col 27) : field error : types mismatch") { out!! }
     }
+    @Test
+    fun dd_10_data_err () {
+        val out = static("""
+            data A: <B:()>
+            var c: A = A.B()
+            print(c!A!B)
+        """)
+        assert(out == "anon : (lin 4, col 20) : discriminator error : types mismatch") { out!! }
+    }
 
     // DATA HIER
 
@@ -654,7 +663,6 @@ class Static {
                 "var b: B.F\n" +
                 "}") { G.outer!!.to_str() }
     }
-
     @Test
     fun de_01_hier () {
         val out = static("""
@@ -759,9 +767,8 @@ class Static {
         """)
         assert(out == null) { out!! }
     }
-
     @Test
-    fun NEW_dd_1X_data_cons () {        // Res.Ok
+    fun dd_11_data_cons () {
         val out = static("""
             data Res: <Err:(),Ok:Int>
             var r = Res.Ok(10)
@@ -769,12 +776,28 @@ class Static {
         assert(out == null) { out!! }
     }
     @Test
-    fun NEW_dd_1Y_data_cons_err () {    // Res.XXX
+    fun dd_12_data_cons_err () {
         val out = static("""
             data Res: <Err:(),Ok:Int>
             var r = Res.XXX(10)
         """)
-        assert(out == "TODO") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"Res.XXX\" is invalid") { out!! }
+    }
+    @Test
+    fun de_13_hier () {
+        val out = static("""
+            data B: <True:(), False:()>
+            var b: B = B.True ()
+        """)
+        assert(out == null) { out!! }
+    }
+    @Test
+    fun de_14_hier () {
+        val out = static("""
+            data X: [Int, [Int]+<[],[]>]
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\ndata X: [Int,<[Int],[Int]>]\n}") { G.outer!!.to_str() }
     }
 
     // INFER
