@@ -68,6 +68,7 @@ fun Type.Union.disc_to_i (dsc: String): Int? {
     val i = dsc.toIntOrNull()
     return when {
         (i!=null && (i<=0 || i>this.ts.size)) -> null
+        (i==null && this.fup().let { it is Stmt.Data && it.id.str==dsc }) -> 0
         (i==null && this.ids==null) -> null
         (i==null) -> this.ids!!.indexOfFirst { it.str==dsc }.let {
             if (it == -1) null else it+1

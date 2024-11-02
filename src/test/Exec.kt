@@ -388,17 +388,69 @@ class Exec  {
     @Test
     fun hh_09_data () {
         val out = test("""
-            data A: [a:Int] + <B: [b:Int]>
-            var xa: A   = A.B([10],[20])
-            var xb: A.B = A.B([30],[40])
-            print(xa)
-            print(xb)
+            data X: Int + <Y:()>
+            var xy: X.Y = X.Y(10,())
+            var y = xy!Y    ;; ()
+            print(y)
+        """)
+        assert(out == "()\n") { out }
+    }
+    @Test
+    fun hh_10_data () {
+        val out = test("""
+            data B: <T:[], F:[]>
+            var b: B.T = B.T []
+            print(b?B)      ;; OK
+            ;;print(b!B)      ;; NO: no B._o
+        """)
+        assert(out == "true\n") { out }
+    }
+
+    // DATA / HIER
+
+    @Test
+    fun hi_01_data () {
+        val out = test("""
+            data A: Int + <B: [b:Int]>
+            var x0: A = A(100)
+            print(x0)
         """)
         assert(out == "A [10] + <.1=[20]>\n" +
                 "A [30] + <.1=[40]>\n") { out }
     }
     @Test
-    fun TODO_hh_0Y_data () {
+    fun hi_02_data () {
+        val out = test("""
+            data A: [a:Int] + <B: [b:Int]>
+            var x0 = A([100])
+            print(x0)
+            print(x0.a)
+        """)
+        assert(out == "A [10] + <.1=[20]>\n" +
+                "A [30] + <.1=[40]>\n") { out }
+    }
+    @Test
+    fun hi_03_data () {
+        val out = test("""
+            data A: [a:Int] + <B: [b:Int]>
+            var x0: A   = A([100])
+            var xa: A   = A.B([10],[20])
+            var xb: A.B = A.B([30],[40])
+            print(x0)
+            print(xa)
+            print(xb)
+            
+            print(x0.a)
+            print(xa.a)
+            print(xa!B.b)
+            print(xb!A.a)
+            print(xb.b)
+        """)
+        assert(out == "A [10] + <.1=[20]>\n" +
+                "A [30] + <.1=[40]>\n") { out }
+    }
+    @Test
+    fun TODO_hi_04_data () {
         val out = test("""
             data A: [a:Int] + <B: [b:Int] + <C: [c:Int]>>
             var c = A.B.C [1,2,3]
@@ -409,7 +461,7 @@ class Exec  {
         assert(out == "10 / 1\n") { out }
     }
     @Test
-    fun TODO_hh_0X_data () {
+    fun TODO_hi_05_data () {
         val out = test("""
             data A: <B: <C: Int>>
             var c = A.B.C(10)
@@ -419,7 +471,7 @@ class Exec  {
         assert(out == "10 / 1\n") { out }
     }
     @Test
-    fun TODO_hh_10_data () {
+    fun TODO_hi_06_data () {
         val out = test("""
             data A: [x:Int, y:<B: <C: Int>>]
             var c: A.B.C = A.B.C(10,20)
@@ -430,7 +482,7 @@ class Exec  {
         assert(out == "10 / 1\n") { out }
     }
     @Test
-    fun TODO_hh_11_data () {
+    fun TODO_hi_07_data () {
         val out = test("""
             data Event: <
                 Quit:  [ts:Int],
@@ -452,7 +504,7 @@ class Exec  {
         assert(out == "10 / 1\n") { out }
     }
     @Test
-    fun TODO_hh_12_data () {
+    fun TODO_hi_08_data () {
         val out = test("""
             data Event: [
                 ts: Int,
@@ -493,7 +545,7 @@ class Exec  {
         assert(out == "10 / 1\n") { out }
     }
     @Test
-    fun hh_13_data_rep () {
+    fun hi_09_data_rep () {
         val out = test("""
             data X: <A:[x:Int],B:[x:Int]>
             var r: X = X.B [10]
@@ -503,7 +555,7 @@ class Exec  {
         assert(out == "X <.2=[10]>\n10\n") { out }
     }
     @Test
-    fun hh_14_data_many () {
+    fun hi_10_data_many () {
         val out = test("""
             data B: <True:(), False:()>
             var b: B = B.True ()

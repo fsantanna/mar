@@ -619,7 +619,7 @@ class Static {
     // DATA SUBS
 
     @Test
-    fun de_00a_subs_ee () {
+    fun de_00a_subs_ee_err () {
         val out = static("""
             var b: B.T
         """)
@@ -639,7 +639,7 @@ class Static {
         //assert(out == "anon : (lin 3, col 20) : type error : data \"B\" is not hierarchic") { out!! }
     }
     @Test
-    fun de_00c_subs_ee () {
+    fun de_00c_subs_ee_err () {
         val out = static("""
             data B: [<T:[],F:[]>]
             var b: B.X
@@ -660,7 +660,7 @@ class Static {
                 "}") { G.outer!!.to_str() }
     }
     @Test
-    fun de_01_subs () {
+    fun de_01_subs_err () {
         val out = static("""
             data B: <T:[],F:[]>
             var b: B.T = B.F []
@@ -668,7 +668,7 @@ class Static {
         assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
     }
     @Test
-    fun de_02_subs () {
+    fun de_02_subs_err () {
         val out = static("""
             data B: <T:[],F:[]>
             var b: B = B.F []
@@ -795,6 +795,16 @@ class Static {
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\ndata X: [Int,[Int] + <[],[]>]\n}") { G.outer!!.to_str() }
     }
+    @Test
+    fun de_15_subs_err () {
+        val out = static("""
+            data B: <T:[], F:[]>
+            var b: B.T = B.T []
+            print(b?B)      ;; OK
+            print(b!B)      ;; NO: no B._o
+        """)
+        assert(out == "anon : (lin 5, col 20) : discriminator error : types mismatch") { out!! }
+    }
 
     // DATA HIER
 
@@ -827,6 +837,33 @@ class Static {
                 "var y: X.Y\n" +
                 "set y = (X.Y(10,()))\n" +
                 "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun df_04_hier () {
+        val out = static("""
+            data X: Int + <Y:()>
+            var xy: X.Y = X.Y(10,())
+            var y = xy!Y    ;; ()
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: Int + <Y:()>\n" +
+                "var xy: X.Y\n" +
+                "set xy = (X.Y(10,()))\n" +
+                "var y: ()\n" +
+                "set y = (xy!Y)\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun TODO_df_05_hier () {
+        val out = static("""
+            data X: Int + <Y:()>
+            var xy = X.Y(10,())
+            var x = xy!X    ;; 10
+            var y = xy!Y    ;; ()
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
     }
 
     // INFER

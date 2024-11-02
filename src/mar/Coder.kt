@@ -391,7 +391,7 @@ fun Expr.coder (pre: Boolean = false): String {
         }
         is Expr.Pred  -> {
             val i = (this.col.type().no_data() as Type.Union).disc_to_i(this.idx)!!
-            "(${this.col.coder(pre)}.tag == $i)"
+            "($i==0 || ${this.col.coder(pre)}.tag==$i)"
         }
         is Expr.Cons  -> {
             assert(this.dat.ts.size >= this.es.size)

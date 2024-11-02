@@ -156,10 +156,14 @@ fun check_types () {
                 }
             }
             is Expr.Disc -> {
-                val n = me.col.type().no_data().let {
-                    if (it !is Type.Union) null else it.disc_to_i(me.idx)
+                val tp = me.col.type().no_data()
+                val n = if (tp !is Type.Union) null else tp.disc_to_i(me.idx)
+                val ok = when {
+                    (n == null) -> false
+                    (n > 0) -> true
+                    else -> ((tp is Type.Union) && tp.o!=null)
                 }
-                if (n == null) {
+                if (!ok) {
                     err(me.tk, "discriminator error : types mismatch")
                 }
             }
@@ -175,6 +179,7 @@ fun check_types () {
                 val dat = me.dat.to_data()!!
                 val ts = dat.hier_to_types(me.dat)!!
                 //println(ts.map { it.to_str() })
+                //println(me.es.map { it.to_str() })
                 if (ts.size != me.es.size) {
                     err(me.tk, "constructor error : arity mismatch")
                 }
