@@ -134,8 +134,13 @@ fun cache_ups () {
             is Type.Tuple -> me.ts.forEach {
                 G.ups[it.n] = me.n
             }
-            is Type.Union -> me.ts.forEach {
-                G.ups[it.n] = me.n
+            is Type.Union -> {
+                if (me.o != null) {
+                    G.ups[me.o.n] = me.n
+                }
+                me.ts.forEach {
+                    G.ups[it.n] = me.n
+                }
             }
             is Type.Exec -> {
                 me.inps.forEach {

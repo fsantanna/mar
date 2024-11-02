@@ -128,9 +128,10 @@ fun coder_types (pre: Boolean): String {
                 listOf("""
                     typedef struct $x {
                         ${me.tagged.cond { "int tag;" }}
+                        ${me.o.cond { it.coder(pre) + " " + "_o;" }}
                         union {
                             ${me.ts.mapIndexed { i,tp ->
-                                me.ids.cond { tp.coder() + " " + it[i].str + ";\n" } +
+                                me.ids.cond { tp.coder(pre) + " " + it[i].str + ";\n" } +
                                 tp.coder() + " _" + (i+1) + ";\n"
                             }.joinToString("")}
                         };
@@ -311,6 +312,10 @@ fun Stmt.coder (pre: Boolean = false): String {
                         """
                         {
                             ${tp.coder(pre)} mar_${tp.n} = $v;
+                            ${tp.o.cond {
+                                aux(it, "mar_${tp.n}._o") +
+                                "printf(\" + \");"
+                            }}
                             printf("<.%d=", mar_${tp.n}.tag);
                             switch (mar_${tp.n}.tag) {
                                 ${tp.ts.mapIndexed { i,t ->
@@ -424,7 +429,7 @@ fun Expr.coder (pre: Boolean = false): String {
             }
             """
             ({    
-                ${this.dat.ts.zip(xes).mapIndexed { i,(sub,e) ->
+                ${xes.mapIndexed { i,e ->
                     val subs = this.dat.ts.take(i+1).map { it.str }.joinToString("_")
                     "$subs ceu_$i = " +
                         if (i == xes.size-1) {
@@ -434,6 +439,7 @@ fun Expr.coder (pre: Boolean = false): String {
                             """
                             {
                                 .tag = MAR_TAG_${subs}_$nxt,
+                                ${e.cond { "._o = ${it.coder(pre)}," }}
                                 { .$nxt = ceu_${i+1} }
                             };
                             """

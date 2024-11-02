@@ -374,7 +374,7 @@ class Exec  {
         assert(out == "true\n") { out }
     }
     @Test
-    fun TODO_hh_08_data () {
+    fun hh_08_data () {
         val out = test("""
             data A: <B: <C: Int>>
             var c = A.B.C(10)
@@ -386,7 +386,19 @@ class Exec  {
                 "10\n") { out }
     }
     @Test
-    fun TODO_hh_09_data () {
+    fun hh_09_data () {
+        val out = test("""
+            data A: [a:Int] + <B: [b:Int]>
+            var xa: A   = A.B([10],[20])
+            var xb: A.B = A.B([30],[40])
+            print(xa)
+            print(xb)
+        """)
+        assert(out == "A [10] + <.1=[20]>\n" +
+                "A [30] + <.1=[40]>\n") { out }
+    }
+    @Test
+    fun TODO_hh_0Y_data () {
         val out = test("""
             data A: [a:Int] + <B: [b:Int] + <C: [c:Int]>>
             var c = A.B.C [1,2,3]
