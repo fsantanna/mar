@@ -52,6 +52,14 @@ fun Tk.Var.type (fr: Any): Type? {
     } as Type?
 }
 
+fun Type.Data.base (): String? {
+    return when {
+        (this.ts.size < 2) -> null
+        (this.ts[this.ts.size-1].str == this.ts[this.ts.size-2].str) -> this.ts[this.ts.size-1].str
+        else -> null
+    }
+}
+
 fun Type.Data.to_data (): Stmt.Data? {
     return G.outer!!.dn_filter_pre({ it is Stmt.Data }, {null}, {null})
         .let { it as List<Stmt.Data> }
@@ -111,7 +119,11 @@ fun Expr.type (): Type {
         }
         is Expr.Disc  -> (this.col.type().no_data() as Type.Union).let {
             val n = it.disc_to_i(this.idx)
-            it.ts[n!! - 1]
+            if (n == 0) {
+                it._0!!
+            } else {
+                it.ts[n!! - 1]
+            }
         }
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> this.dat

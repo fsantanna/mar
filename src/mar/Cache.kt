@@ -135,8 +135,8 @@ fun cache_ups () {
                 G.ups[it.n] = me.n
             }
             is Type.Union -> {
-                if (me.o != null) {
-                    G.ups[me.o.n] = me.n
+                if (me._0 != null) {
+                    G.ups[me._0.n] = me.n
                 }
                 me.ts.forEach {
                     G.ups[it.n] = me.n

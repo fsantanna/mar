@@ -161,7 +161,7 @@ fun check_types () {
                 val ok = when {
                     (n == null) -> false
                     (n > 0) -> true
-                    else -> ((tp is Type.Union) && tp.o!=null)
+                    else -> ((tp is Type.Union) && tp._0!=null)
                 }
                 if (!ok) {
                     err(me.tk, "discriminator error : types mismatch")

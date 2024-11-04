@@ -855,7 +855,41 @@ class Static {
                 "}") { G.outer!!.to_str() }
     }
     @Test
-    fun TODO_df_05_hier () {
+    fun df_05_hier_base () {
+        val out = static("""
+            data X: Int + <Y:()>
+            var xy = X.X(10)
+            print(xy!X)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: Int + <Y:()>\n" +
+                "var xy: X.X\n" +
+                "set xy = (X.X(10))\n" +
+                "print((xy!X))\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun df_06_hier_base_err () {
+        val out = static("""
+            data X: <Y:()>
+            var xy = X.X()
+            print(xy!X)
+        """)
+        assert(out == "anon : (lin 3, col 22) : constructor error : arity mismatch") { out!! }
+    }
+    @Test
+    fun TODO_df_07_hier_base () {
+        val out = static("""
+            data A: Bool + <B: Int + <C: Char>>
+            var x0: A = A.B.B(true,100)  ;; ignore subsubtype C
+            print(x0)
+            print(x0!A!B)
+        """)
+        assert(out == "anon : (lin 3, col 22) : constructor error : arity mismatch") { out!! }
+    }
+    @Test
+    fun df_08_hier () {
         val out = static("""
             data X: Int + <Y:()>
             var xy = X.Y(10,())
@@ -863,7 +897,15 @@ class Static {
             var y = xy!Y    ;; ()
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: Int + <Y:()>\n" +
+                "var xy: X.Y\n" +
+                "set xy = (X.Y(10,()))\n" +
+                "var x: Int\n" +
+                "set x = (xy!X)\n" +
+                "var y: ()\n" +
+                "set y = (xy!Y)\n" +
+                "}") { G.outer!!.to_str() }
     }
 
     // INFER
