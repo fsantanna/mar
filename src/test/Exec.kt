@@ -43,8 +43,8 @@ class Exec  {
     @Test
     fun bb_01_nat_printf() {
         val out = test("""
-            var x: Int = 1 + 10
-            `printf("%d\n", x);`
+            var x: Int = 1 + `10`
+            `printf("%d\n", x)`
         """)
         assert(out == "11\n") { out }
     }

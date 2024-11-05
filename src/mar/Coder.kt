@@ -349,7 +349,7 @@ fun Stmt.coder (pre: Boolean = false): String {
             """
         }
         is Stmt.XExpr  -> this.e.coder(pre) + ";"
-        is Stmt.Nat    -> this.tk.str
+        is Stmt.Nat    -> this.tk.str + ";"
     }
 }
 
