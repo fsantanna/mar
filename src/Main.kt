@@ -18,7 +18,7 @@ fun main (args: Array<String>) {
                 throw Exception("argument error : --lib : expected \"=\"")
             }
             else -> {
-                File(PATH + "/" + ys["--lib"] + "/ceu.lib")
+                File(PATH + "/" + ys["--lib"] + "/mar.lib")
                     .readText()
                     .trim()
                     .replace("@/",PATH+"/")
