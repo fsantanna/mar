@@ -800,10 +800,11 @@ class Static {
         val out = static("""
             data B: <T:[], F:[]>
             var b: B.T = B.T []
-            print(b?B)      ;; OK
+            print(b?B)      ;; NO: B is not a subtype
             print(b!B)      ;; NO: no B._o
         """)
-        assert(out == "anon : (lin 5, col 20) : discriminator error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 20) : predicate error : types mismatch") { out!! }
+        //assert(out == "anon : (lin 5, col 20) : discriminator error : types mismatch") { out!! }
     }
 
     // DATA HIER
@@ -906,6 +907,28 @@ class Static {
                 "var y: ()\n" +
                 "set y = (xy!Y)\n" +
                 "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun TODO_df_09_hier () {
+        val out = test("""
+            data A: [x:Int] + <B: [y:Int] + <C: Int>>
+            var c: A.B.C = A.B.C([10],[20],30)
+            ;;var b: [y:Int]+<C: Int>  = c!B
+            var bb: [Int] = c!B!B
+            ;;var y: Int  = c!B!B.y
+        """)
+        assert(out == "TODO\n") { out }
+    }
+    @Test
+    fun TODO_df_10_hier () {
+        val out = test("""
+            data A: [x:Int] + <B: [y:Int] + <C: Int>>
+            var c: A.B.C = A.B.C([10],[20],30)
+            var b  = c!B
+            var bb = c!B!B
+            var y  = c!B!B.y
+        """)
+        assert(out == "TODO\n") { out }
     }
 
     // INFER

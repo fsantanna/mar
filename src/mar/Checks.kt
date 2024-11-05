@@ -156,8 +156,11 @@ fun check_types () {
                 }
             }
             is Expr.Disc -> {
+                //println(me.col.type().to_str())
+                //println(me.col.type().no_data().to_str())
                 val tp = me.col.type().no_data()
-                val n = if (tp !is Type.Union) null else tp.disc_to_i(me.idx)
+                val n = if (tp !is Type.Union) null else tp.disc_to_i_from_disc(me.idx, me)
+                //println(n)
                 val ok = when {
                     (n == null) -> false
                     (n > 0) -> true

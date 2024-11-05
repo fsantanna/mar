@@ -387,7 +387,7 @@ fun Expr.coder (pre: Boolean = false): String {
             "(${this.col.coder(pre)}.$idx)"
         }
         is Expr.Disc  -> {
-            val i = (this.col.type().no_data() as Type.Union).disc_to_i(this.idx)!!
+            val i = (this.col.type().no_data() as Type.Union).disc_to_i_from_disc(this.idx, this)!!
             "(${this.col.coder(pre)}._$i)"
         }
         is Expr.Pred  -> {

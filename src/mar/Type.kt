@@ -72,11 +72,21 @@ fun Type.no_data (): Type {
     }
 }
 
+fun Type.Union.disc_to_i_from_disc (dsc: String, e: Expr.Disc): Int? {
+    val i = dsc.toIntOrNull()
+    if (i == null) {
+        when {
+            this.fup().let { it is Stmt.Data && it.id.str==dsc } -> return 0
+            e.fup().let { it is Expr.Disc && it.idx==dsc } -> return 0
+        }
+    }
+    return this.disc_to_i(dsc)
+}
+
 fun Type.Union.disc_to_i (dsc: String): Int? {
     val i = dsc.toIntOrNull()
     return when {
         (i!=null && (i<=0 || i>this.ts.size)) -> null
-        (i==null && this.fup().let { it is Stmt.Data && it.id.str==dsc }) -> 0
         (i==null && this.ids==null) -> null
         (i==null) -> this.ids!!.indexOfFirst { it.str==dsc }.let {
             if (it == -1) null else it+1
@@ -118,7 +128,7 @@ fun Expr.type (): Type {
             tp.ts[idx]
         }
         is Expr.Disc  -> (this.col.type().no_data() as Type.Union).let {
-            val n = it.disc_to_i(this.idx)
+            val n = it.disc_to_i_from_disc(this.idx, this)
             if (n == 0) {
                 it._0!!
             } else {

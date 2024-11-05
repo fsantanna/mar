@@ -403,7 +403,8 @@ class Exec  {
             print(b?B)      ;; OK
             ;;print(b!B)      ;; NO: no B._o
         """)
-        assert(out == "true\n") { out }
+        assert(out == "anon : (lin 4, col 20) : predicate error : types mismatch\n") { out }
+        //assert(out == "true\n") { out }
     }
 
     // DATA / HIER
@@ -492,11 +493,12 @@ class Exec  {
     @Test
     fun TODO_hi_06_data () {
         val out = test("""
-            data A: [x:Int, y:<B: <C: Int>>]
-            var c: A.B.C = A.B.C(10,20)
-            var x = c.x
-            var v = c?
-            `printf("%d\n", c);`
+            data A: [x:Int] + <B: [y:Int] + <C: Int>>
+            var c: A.B.C = A.B.C([10],[20],30)
+            var x = c!A.x
+            var y = c!B.y
+            print(x)
+            print(y)
         """)
         assert(out == "10 / 1\n") { out }
     }
@@ -591,6 +593,20 @@ class Exec  {
         assert(out == "true\n" +
                 "Maybe <.2=10>\n" +
                 "Meter(10)\n") { out }
+    }
+    @Test
+    fun TODO_hi_11_data () {
+        val out = test("""
+            data A: [x:Int] + <B: [y:Int] + <C: Int>>
+            var c: A.B.C = A.B.C([10],[20],30)
+            var b  = c!B
+            var bb = c!B!B
+            var y  = c!B!B.y
+            print(b)
+            print(bb)
+            print(y)
+        """)
+        assert(out == "TODO\n") { out }
     }
 
     // INFER
