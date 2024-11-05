@@ -10,6 +10,12 @@ var DUMP = true
 val PATH = File(File(System.getProperty("java.class.path")).absolutePath).parent
 val D = "\$"
 
+// VERSION
+const val MAJOR    = 0
+const val MINOR    = 1
+const val REVISION = 0
+const val VERSION  = "v$MAJOR.$MINOR.$REVISION"
+
 val OPERATORS = Pair (
     setOf('+', '-', '*', '/', '%', '>', '<', '=', '|', '&', '\\', '?', '!'),
     setOf(
@@ -218,7 +224,6 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String, Int, Int
         }
         return e.message!! + "\n"
     }
-
 
     if (verbose) {
         System.err.println("... mar -> c ...")
