@@ -525,8 +525,6 @@ fun coder_main (pre: Boolean): String {
         #define true   1
         #define false  0
         
-        ${File("src/mar/Prelude.c").readLines().joinToString("\n")}
-        
         ${coder_types(pre)}
         
         int main (void) {
