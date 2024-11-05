@@ -457,7 +457,7 @@ fun Expr.coder (pre: Boolean = false): String {
             """
         }
 
-        is Expr.Nat -> this.tk.str
+        is Expr.Nat -> "MAR_CAST(XY, ${this.tk.str})"
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> "_void_"
         is Expr.Bool, is Expr.Char,
@@ -524,6 +524,8 @@ fun coder_main (pre: Boolean): String {
         #define null   NULL
         #define true   1
         #define false  0
+        
+        #define MAR_CAST(tp,v) (*(tp*)({typeof(v) x=v; &x;}))
         
         ${coder_types(pre)}
         

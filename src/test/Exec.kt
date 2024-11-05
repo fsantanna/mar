@@ -48,6 +48,21 @@ class Exec  {
         """)
         assert(out == "11\n") { out }
     }
+    @Test
+    fun bb_02_nat_cast() {
+        val out = test("""
+            data XY: [Int,Int]
+            ```
+            typedef struct _XY {
+                int x, y;
+            } _XY;
+            _XY _xy = { 10,20 };
+            ```
+            var xy: XY = `_xy`
+            print(xy)
+        """)
+        assert(out == "XY [10,20]\n") { out }
+    }
 
     // CALL / PRINT / IF / LOOP
 
