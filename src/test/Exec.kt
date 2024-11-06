@@ -720,10 +720,24 @@ class Exec  {
         assert(out == "X <.2=10>\n") { out }
     }
 
+    // CATCH / THROW
+
+    @Test
+    fun kk_01_catch () {
+        val out = test("""
+            data Exception: ()
+            catch Exception {
+            }
+            print(10)
+        """)
+        //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
+        assert(out == "10\n") { out }
+    }
+
     // DEFER
 
     @Test
-    fun kk_01_defer () {
+    fun ll_01_defer () {
         val out = test("""
             print(1)
             defer { print(2) }

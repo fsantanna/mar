@@ -801,10 +801,22 @@ class Parser {
         assert(e.to_str() == "(B.F(()))") { e.to_str() }
     }
 
+    // CATCH / THROW
+
+    @Test
+    fun ll_01_catch () {
+        G.tks = ("catch { }").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "defer {\n" +
+                "print(1)\n" +
+                "}\n") { ss.to_str() }
+    }
+
     // DEFER
 
     @Test
-    fun ll_01_defer () {
+    fun mm_01_defer () {
         G.tks = ("defer { print(1) }").lexer()
         parser_lexer()
         val ss = parser_stmt()

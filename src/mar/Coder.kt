@@ -274,6 +274,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                 this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
             }
         }
+
         is Stmt.Defer -> {
             val bup = this.up_first { it is Stmt.Block } as Stmt.Block
             val (ns,ini,end) = G.defers.getOrDefault(bup.n, Triple(mutableListOf(),"",""))
@@ -292,6 +293,8 @@ fun Stmt.coder (pre: Boolean = false): String {
             $id = 1;   // now reached
             """
         }
+        is Stmt.Catch -> TODO()
+        is Stmt.Throw -> TODO()
 
         is Stmt.If     -> """
             if (${this.cnd.coder(pre)}) {
