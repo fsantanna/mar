@@ -63,6 +63,14 @@ class Exec  {
         """)
         assert(out == "XY [10,20]\n") { out }
     }
+    @Test
+    fun bb_03_nat_infer() {
+        val out = test("""
+            var x = `10`:Int
+            print(x)
+        """)
+        assert(out == "10\n") { out }
+    }
 
     // CALL / PRINT / IF / LOOP
 

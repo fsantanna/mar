@@ -95,6 +95,19 @@ fun Expr.infer (): Type? {
             assert(up.arg.n == this.n)
             (up.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_.yld
         }
+        is Expr.Bin -> {
+            when (up.tk_.str) {
+                in listOf(">", "<", ">=", "<=", "+", "-", "*", "/", "%") -> Type.Prim(Tk.Type("Int",up.tk.pos.copy()))
+                in listOf("||", "&&") -> Type.Prim(Tk.Type("Bool",up.tk.pos.copy()))
+                else -> null
+            }
+        }
+        is Expr.Uno -> {
+            when (up.tk_.str) {
+                "-" -> Type.Prim(Tk.Type("Int",up.tk.pos.copy()))
+                else -> null
+            }
+        }
         else -> null
     }
 }
@@ -124,6 +137,21 @@ fun infer_types () {
                             null -> err(me.tk, "inference error : unknown type")
                             !is Type.Union -> err(me.tk, "inference error : incompatible types")
                             else -> it
+                        }
+                    }
+                }
+            }
+            is Expr.Nat -> {
+                if (me.xtp == null) {
+                    val up = me.fupx()
+                    me.xtp = when {
+                        (up is Expr.Call && up.f.n==me.n)   -> null
+                        (up is Stmt.Set  && up.dst.n==me.n) -> null
+                        else -> me.infer().let {
+                            when (it) {
+                                null -> err(me.tk, "inference error : unknown type")
+                                else -> it
+                            }
                         }
                     }
                 }

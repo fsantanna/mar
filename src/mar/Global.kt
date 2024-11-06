@@ -85,7 +85,7 @@ sealed class Type (var n: Int, val tk: Tk) {
 }
 
 sealed class Expr (var n: Int, val tk: Tk) {
-    class Nat  (val tk_: Tk.Nat): Expr(G.N++, tk_)
+    class Nat  (val tk_: Tk.Nat, var xtp: Type?): Expr(G.N++, tk_)
     class Acc  (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, tk_)
     class Bool (val tk_: Tk.Fix): Expr(G.N++, tk_)
     class Char (val tk_: Tk.Chr): Expr(G.N++, tk_)

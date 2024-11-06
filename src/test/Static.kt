@@ -1114,14 +1114,14 @@ class Static {
                 "data D: Int\n" +
                 "coro co: (a: A) -> B -> C -> D {\n" +
                 "var x: B\n" +
-                "set x = yield(```x```)\n" +
+                "set x = yield(```x```: C)\n" +
                 "}\n" +
                 "var exe: exec (A) -> B -> C -> D\n" +
                 "set exe = create(co)\n" +
                 "var y: <C,D>\n" +
-                "set y = start exe(```x```)\n" +
+                "set y = start exe(```x```: A)\n" +
                 "var z: <C,D>\n" +
-                "set z = resume exe(```x```)\n" +
+                "set z = resume exe(```x```: B)\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -1217,6 +1217,24 @@ class Static {
                 "set x = (X.A(([10]:[a:Int])))\n" +
                 "var a: Int\n" +
                 "set a = ((x!A).a)\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ee_20_infer_nat_err () {
+        val out = static("""
+            var x = `10`
+        """)
+        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+    }
+    @Test
+    fun ee_21_infer_nat () {
+        val out = static("""
+            var x = `10`:Int
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "var x: Int\n" +
+                "set x = ```10```: Int\n" +
                 "}") { G.outer!!.to_str() }
     }
 }

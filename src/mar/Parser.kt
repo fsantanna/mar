@@ -263,7 +263,13 @@ fun parser_type (pre: Tk?, pre_uni: Type?, fr_proto: Boolean): Type {
 
 fun parser_expr_4_prim (): Expr {
     return when {
-        accept_enu("Nat")  -> Expr.Nat(G.tk0 as Tk.Nat)
+        accept_enu("Nat")  -> {
+            val tk0 = G.tk0 as Tk.Nat
+            val tp = if (!accept_fix(":")) null else {
+                parser_type(null, null, false)
+            }
+            Expr.Nat(tk0, tp)
+        }
         accept_enu("Var")  -> Expr.Acc(G.tk0 as Tk.Var)
         accept_fix("false") -> Expr.Bool(G.tk0 as Tk.Fix)
         accept_fix("true")  -> Expr.Bool(G.tk0 as Tk.Fix)

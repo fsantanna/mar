@@ -108,8 +108,13 @@ fun cache_ups () {
                     G.ups[it.n] = me.n
                 }
             }
+            is Expr.Nat -> {
+                if (me.xtp != null) {
+                    G.ups[me.xtp!!.n] = me.n
+                }
+            }
 
-            is Expr.Acc, is Expr.Bool, is Expr.Char, is Expr.Nat,
+            is Expr.Acc, is Expr.Bool, is Expr.Char,
             is Expr.Null, is Expr.Num, is Expr.Unit -> {}
 
             is Expr.Create -> G.ups[me.co.n] = me.n

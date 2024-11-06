@@ -457,7 +457,9 @@ fun Expr.coder (pre: Boolean = false): String {
             """
         }
 
-        is Expr.Nat -> "MAR_CAST(XY, ${this.tk.str})"
+        is Expr.Nat -> if (this.xtp == null) this.tk.str else {
+            "MAR_CAST(${this.xtp!!.coder(pre)}, ${this.tk.str})"
+        }
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> "_void_"
         is Expr.Bool, is Expr.Char,

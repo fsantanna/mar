@@ -78,7 +78,7 @@ fun Tk.Op.to_str (pre: Boolean): String {
 
 fun Expr.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Expr.Nat    -> "```" + this.tk.str + "```"
+        is Expr.Nat    -> "```" + this.tk.str + "```" + this.xtp.cond { ": " + it.to_str(pre) }
         is Expr.Acc    -> this.ign.cond { "__" } + this.tk.str
         is Expr.Bool   -> this.tk.str
         is Expr.Char   -> this.tk.str
