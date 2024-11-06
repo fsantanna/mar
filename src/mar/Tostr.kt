@@ -15,6 +15,11 @@ fun Expr.dump (): String {
         this.tk.dump() + " | " + this.to_str().quote(15)
     }
 }
+fun Stmt.dump (): String {
+    return if (!DUMP) "" else {
+        this.tk.dump() + " | " + this.to_str().quote(15)
+    }
+}
 
 fun Tk.fpre (pre: Boolean): String {
     return if (pre) this.pos.pre() else ""

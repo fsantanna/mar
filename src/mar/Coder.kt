@@ -1,7 +1,5 @@
 package mar
 
-import java.io.File
-
 fun String.clean (): String {
     return this.replace('*','_')
 }
@@ -243,8 +241,11 @@ fun Stmt.coder (pre: Boolean = false): String {
         }
 
         is Stmt.Block  -> {
+            val body = this.ss.map {
+                it.coder(pre) + "\n"
+            }.joinToString("")
             """
-            {
+            { // BLOCK | ${this.dump()}
                 ${this.to_dcls().map { (_,id,tp) ->
                     when (tp) {
                         is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inps.map { it.coder(pre) }.joinToString(",") + ");\n"
@@ -252,7 +253,13 @@ fun Stmt.coder (pre: Boolean = false): String {
                         else -> ""
                     }
                 }.joinToString("")}
-                ${this.ss.map { it.coder(pre) + "\n" }.joinToString("")}
+                ${G.defers[this.n].cond {
+                    it.second
+                }}
+                $body
+                ${G.defers[this.n].cond {
+                    it.third
+                }}
             }
         """
         }
@@ -266,6 +273,24 @@ fun Stmt.coder (pre: Boolean = false): String {
             } else {
                 this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
             }
+        }
+        is Stmt.Defer -> {
+            val bup = this.up_first { it is Stmt.Block } as Stmt.Block
+            val (ns,ini,end) = G.defers.getOrDefault(bup.n, Triple(mutableListOf(),"",""))
+            val id = "mar_defer_$n"
+            val inix = """
+                int $id = 0;   // not yet reached
+            """
+            val endx = """
+                if ($id) {     // if true: reached, finalize
+                    ${this.blk.coder(pre)}
+                }
+            """
+            ns.add(n)
+            G.defers[bup.n] = Triple(ns, ini+inix, endx+end)
+            """
+            $id = 1;   // now reached
+            """
         }
 
         is Stmt.If     -> """

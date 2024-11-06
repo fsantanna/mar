@@ -719,4 +719,17 @@ class Exec  {
         """)
         assert(out == "X <.2=10>\n") { out }
     }
+
+    // DEFER
+
+    @Test
+    fun kk_01_defer () {
+        val out = test("""
+            print(1)
+            defer { print(2) }
+            defer { print(3) }
+            print(4)
+        """)
+        assert(out == "1\n4\n3\n2\n") { out }
+    }
 }

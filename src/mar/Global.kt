@@ -148,6 +148,8 @@ object G {
     //val cons  = mutableMapOf<Node,Type.Tuple>()     // resolve sub types
     val types = mutableSetOf<String>()              // for C generation
 
+    val defers: MutableMap<Node, Triple<MutableList<Int>,String,String>> = mutableMapOf()
+
     /*
     var tags: MutableMap<String,Tk.Type> = mutableMapOf()
     val datas = mutableMapOf<String,List<Var_Type>>()
@@ -169,6 +171,7 @@ object G {
 
         //cons.clear()
         types.clear()
+        defers.clear()
 
         /*
         tags.clear()
