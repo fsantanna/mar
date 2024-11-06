@@ -59,6 +59,9 @@ fun cache_ups () {
                 G.ups[me.dst.n] = me.n
                 G.ups[me.src.n] = me.n
             }
+            is Stmt.Defer -> {
+                G.ups[me.blk.n] = me.n
+            }
 
             is Stmt.If -> {
                 G.ups[me.cnd.n] = me.n

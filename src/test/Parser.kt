@@ -792,16 +792,25 @@ class Parser {
         parser_lexer()
         parser_stmt()
     }
-
-    // CONS
-
     @Test
-    fun ll_01_cons () {
+    fun kj_11_cons () {
         G.tks = ("B.F ()").lexer()
         parser_lexer()
         val e = parser_expr()
         assert(e is Expr.Cons && e.dat.ts.size==2)
         assert(e.to_str() == "(B.F(()))") { e.to_str() }
+    }
+
+    // DEFER
+
+    @Test
+    fun ll_01_defer () {
+        G.tks = ("defer { print(1) }").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "defer {\n" +
+                "print(1)\n" +
+                "}\n") { ss.to_str() }
     }
 
     // TEMPLATE

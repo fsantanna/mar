@@ -9,6 +9,7 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
         is Stmt.Block -> this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
         is Stmt.Dcl -> this.xtp?.dn_collect_pos(ft) ?: emptyList()
         is Stmt.Set -> this.src.dn_collect_pos(fe,ft) + this.dst.dn_collect_pos(fe,ft)
+        is Stmt.Defer -> this.blk.dn_collect_pos(fs,fe,ft)
 
         is Stmt.If    -> this.cnd.dn_collect_pos(fe,ft) + this.t.dn_collect_pos(fs,fe,ft) + this.f.dn_collect_pos(fs,fe,ft)
         is Stmt.Loop  -> this.blk.dn_collect_pos(fs,fe,ft)
@@ -81,6 +82,7 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
         is Stmt.Block -> this.ss.map { it.dn_collect_pre(fs,fe,ft) }.flatten()
         is Stmt.Dcl -> this.xtp?.dn_collect_pre(ft) ?: emptyList()
         is Stmt.Set -> this.dst.dn_collect_pre(fe,ft) + this.src.dn_collect_pre(fe,ft)
+        is Stmt.Defer -> this.blk.dn_collect_pre(fs,fe,ft)
 
         is Stmt.If    -> this.cnd.dn_collect_pre(fe,ft) + this.t.dn_collect_pre(fs,fe,ft) + this.f.dn_collect_pre(fs,fe,ft)
         is Stmt.Loop  -> this.blk.dn_collect_pre(fs,fe,ft)

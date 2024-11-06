@@ -492,6 +492,14 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 }
             }
         }
+        accept_fix("defer") -> {
+            val tk0 = G.tk0!!
+            accept_fix_err("{")
+            val blk = parser_list(null, "}") {
+                parser_stmt()
+            }.flatten()
+            listOf(Stmt.Defer(tk0, Stmt.Block(tk0, blk)))
+        }
 
         accept_fix("if") -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -511,7 +519,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             listOf(Stmt.If(tk0, cnd, Stmt.Block(tk0, t), Stmt.Block(tk0, f)))
         }
         accept_fix("loop") -> {
-            val tk0 = G.tk0 as Tk.Fix
+            val tk0 = G.tk0!!
             accept_fix_err("{")
             val blk = parser_list(null, "}") {
                 parser_stmt()

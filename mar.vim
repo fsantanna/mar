@@ -23,7 +23,7 @@ syn match   Type      '[A-Z][a-zA-Z0-9]\+'
 
 syn match   Statement '[\+\-\*\/\%\>\<\=\|\&\~]'
 
-syn keyword Statement break do coro create data else
+syn keyword Statement break do coro create data defer else
 syn keyword Statement false func if loop null print resume
 syn keyword Statement return set start true var exec
 syn keyword Statement yield
