@@ -516,7 +516,9 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
         }
         accept_fix("throw") -> {
             val tk0 = G.tk0!!
+            accept_fix_err("(")
             val e = parser_expr()
+            accept_fix_err(")")
             listOf(Stmt.Throw(tk0, e))
         }
 

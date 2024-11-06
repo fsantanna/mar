@@ -65,7 +65,7 @@ fun Type.coder (pre: Boolean = false): String {
                 "MAR_Tuple__${this.ts.zip(this.ids).map { (tp,id) -> tp.coder(pre)+"_"+id.str }.joinToString("__")}".clean()
             }
         }
-        is Type.Union      -> "MAR_Union__${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
+        is Type.Union      -> "MAR_Union__${this._0.cond { "${it.coder(pre)}__" }}${this.ts.map { it.coder(pre) }.joinToString("__")}".clean()
         is Type.Proto.Func -> "MAR_Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(pre).first
         is Type.Exec       -> this.x_exec_coro(pre).first
@@ -83,7 +83,7 @@ fun coder_types (pre: Boolean): String {
         }
         return when (me) {
             is Type.Proto.Func -> listOf (
-                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")});"
+                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")});\n"
             )
             is Type.Proto.Coro -> {
                 val (co,exe) = me.x_coro_exec(pre)
@@ -152,7 +152,7 @@ fun coder_types (pre: Boolean): String {
                     } else {
                         listOf(
                             """
-                            typedef enum MAR_TAG_$SS {
+                            typedef enum MAR_TAGS_$SS {
                                 MAR_TAG_${SS}_${s.last().uppercase()},
                                 ${
                                     tp.ids.map {
@@ -161,7 +161,7 @@ fun coder_types (pre: Boolean): String {
                                         """
                                     }.joinToString("")
                                 }
-                            } MAR_TAG_$SS;
+                            } MAR_TAGS_$SS;
                             """
                         ) + tp.ids.zip(tp.ts).map { (id,t) ->
                             f(t,s+listOf(id.str))
@@ -489,7 +489,7 @@ fun Expr.coder (pre: Boolean = false): String {
                             val nxt = this.dat.ts[i+1].str
                             """
                             {
-                                .tag = MAR_TAG_${subs}_$nxt,
+                                .tag = MAR_TAG_${subs.uppercase()}_${nxt.uppercase()},
                                 ${e.cond { "._0 = ${it.coder(pre)}," }}
                                 { ${(base==null || i<xes.size-1).cond { ".$nxt = ceu_${i+1}"  }} }
                             };

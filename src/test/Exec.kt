@@ -411,6 +411,7 @@ class Exec  {
     @Test
     fun hh_09_data () {
         val out = test("""
+            data K: <None:()>
             data X: Int + <Y:()>
             var xy: X.Y = X.Y(10,())
             var y = xy!Y    ;; ()
@@ -725,10 +726,17 @@ class Exec  {
     @Test
     fun kk_01_catch () {
         val out = test("""
-            ;;data Exception: ()
             catch Exception {
             }
             print(10)
+        """)
+        //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun kk_02_throw () {
+        val out = test("""
+            throw(Exception.X())
         """)
         //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
         assert(out == "10\n") { out }
