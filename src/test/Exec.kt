@@ -725,7 +725,7 @@ class Exec  {
     @Test
     fun kk_01_catch () {
         val out = test("""
-            data Exception: ()
+            ;;data Exception: ()
             catch Exception {
             }
             print(10)

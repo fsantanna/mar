@@ -144,23 +144,24 @@ fun coder_types (pre: Boolean): String {
             is Stmt.Data -> {
                 fun f (tp: Type, s: List<String>): List<String> {
                     val ss = s.joinToString("_")
+                    val SS = ss.uppercase()
                     //println(listOf(s, tp.to_str()))
-                    val x1 = "typedef ${tp.coder(pre)} $ss;"
+                    val x1 = "typedef ${tp.coder(pre)} $ss;\n"
                     val x2 = if (tp !is Type.Union || tp.ids==null) {
                         emptyList()
                     } else {
                         listOf(
                             """
-                            typedef enum MAR_$ss {
-                                MAR_TAG_${ss}_${s.last()},
+                            typedef enum MAR_TAG_$SS {
+                                MAR_TAG_${SS}_${s.last().uppercase()},
                                 ${
                                     tp.ids.map {
                                         """
-                                        MAR_TAG_${ss}_${it.str},
+                                        MAR_TAG_${SS}_${it.str.uppercase()},
                                         """
                                     }.joinToString("")
                                 }
-                            } MAR_$ss;
+                            } MAR_TAG_$SS;
                             """
                         ) + tp.ids.zip(tp.ts).map { (id,t) ->
                             f(t,s+listOf(id.str))
@@ -293,7 +294,22 @@ fun Stmt.coder (pre: Boolean = false): String {
             $id = 1;   // now reached
             """
         }
-        is Stmt.Catch -> TODO()
+        is Stmt.Catch -> {
+            """
+            { // CATCH | ${this.dump()}
+                do {
+                    ${this.blk.coder(pre)}
+                } while (0);
+                if (MAR_EXCEPTION.tag == MAR_TAG_EXCEPTION_NONE) {
+                    // no escape
+                } else if (MAR_EXCEPTION.tag == MAR_TAG_EXCEPTION_${this.xtp!!.coder(pre).uppercase()}) {
+                    MAR_EXCEPTION.tag = MAR_TAG_EXCEPTION_NONE;
+                } else {
+                    continue;
+                }
+            }
+            """
+        }
         is Stmt.Throw -> TODO()
 
         is Stmt.If     -> """
@@ -559,6 +575,8 @@ fun coder_main (pre: Boolean): String {
         
         ${coder_types(pre)}
         
+        Exception MAR_EXCEPTION = { MAR_TAG_EXCEPTION_NONE, {} };
+
         int main (void) {
             ${G.outer!!.coder(pre)}
         }
