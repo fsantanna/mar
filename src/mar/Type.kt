@@ -80,15 +80,15 @@ fun Type.Union.disc_to_i_from_disc (dsc: String, e: Expr.Disc): Int? {
             e.fup().let { it is Expr.Disc && it.idx==dsc } -> return 0
         }
     }
-    return this.disc_to_i(dsc)
+    return this.sub_to_idx(dsc)
 }
 
-fun Type.Union.disc_to_i (dsc: String): Int? {
-    val i = dsc.toIntOrNull()
+fun Type.Union.sub_to_idx (sub: String): Int? {
+    val i = sub.toIntOrNull()
     return when {
         (i!=null && (i<=0 || i>this.ts.size)) -> null
         (i==null && this.ids==null) -> null
-        (i==null) -> this.ids!!.indexOfFirst { it.str==dsc }.let {
+        (i==null) -> this.ids!!.indexOfFirst { it.str==sub }.let {
             if (it == -1) null else it+1
         }
         else -> i

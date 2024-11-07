@@ -167,7 +167,7 @@ fun check_types () {
                 }
             }
             is Expr.Union -> {
-                val n = me.xtp!!.disc_to_i(me.idx)
+                val n = me.xtp!!.sub_to_idx(me.idx)
                 if (n==null || !me.xtp!!.ts[n-1].is_sup_of(me.v.type())) {
                     err(me.tk, "union error : types mismatch")
                 }
@@ -189,7 +189,7 @@ fun check_types () {
             }
             is Expr.Pred -> {
                 val n = me.col.type().no_data().let {
-                    if (it !is Type.Union) null else it.disc_to_i(me.idx)
+                    if (it !is Type.Union) null else it.sub_to_idx(me.idx)
                 }
                 if (n == null) {
                     err(me.tk, "predicate error : types mismatch")

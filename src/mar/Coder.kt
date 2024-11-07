@@ -421,7 +421,7 @@ fun Expr.coder (pre: Boolean = false): String {
 
         is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } })"
         is Expr.Union -> {
-            val i = this.xtp!!.disc_to_i(this.idx)!!
+            val i = this.xtp!!.sub_to_idx(this.idx)!!
             "((${this.type().coder(pre)}) { .tag=$i, ._$i=${this.v.coder(pre) } })"
         }
         is Expr.Field -> {
@@ -435,7 +435,7 @@ fun Expr.coder (pre: Boolean = false): String {
             "(${this.col.coder(pre)}._$i)"
         }
         is Expr.Pred  -> {
-            val i = (this.col.type().no_data() as Type.Union).disc_to_i(this.idx)!!
+            val i = (this.col.type().no_data() as Type.Union).sub_to_idx(this.idx)!!
             "($i==0 || ${this.col.coder(pre)}.tag==$i)"
         }
         is Expr.Cons  -> {

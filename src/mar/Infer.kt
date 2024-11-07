@@ -72,7 +72,7 @@ fun Expr.infer (): Type? {
         is Expr.Union -> up.typex().let {
             if (it == null) null else {
                 it as Type.Union
-                it.ts[it.disc_to_i(up.idx)!! - 1]
+                it.ts[it.sub_to_idx(up.idx)!! - 1]
             }
         }
         is Expr.Call -> {
