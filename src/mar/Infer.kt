@@ -36,8 +36,8 @@ fun Stmt.Data.hier_to_types (tp: Type.Data): List<Type>? {
         if (base!=null && i==tp.ts.size-1) {
             return lst  // X.A.A
         }
-        val k = uni.ids!!.indexOfFirst { it.str == sub.str }
-        if (k == -1) {
+        val k = uni.sub_to_idx(sub.str)
+        if (k == null) {
             return null
         }
         cur = uni.ts[k]
@@ -72,7 +72,7 @@ fun Expr.infer (): Type? {
         is Expr.Union -> up.typex().let {
             if (it == null) null else {
                 it as Type.Union
-                it.ts[it.sub_to_idx(up.idx)!! - 1]
+                it.ts[it.sub_to_idx(up.idx)!!]
             }
         }
         is Expr.Call -> {

@@ -422,7 +422,7 @@ fun Expr.coder (pre: Boolean = false): String {
         is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } })"
         is Expr.Union -> {
             val i = this.xtp!!.sub_to_idx(this.idx)!!
-            "((${this.type().coder(pre)}) { .tag=$i, ._$i=${this.v.coder(pre) } })"
+            "((${this.type().coder(pre)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"
         }
         is Expr.Field -> {
             val idx = this.idx.toIntOrNull().let {
@@ -432,11 +432,11 @@ fun Expr.coder (pre: Boolean = false): String {
         }
         is Expr.Disc  -> {
             val i = (this.col.type().no_data() as Type.Union).disc_to_i_from_disc(this.idx, this)!!
-            "(${this.col.coder(pre)}._$i)"
+            "(${this.col.coder(pre)}._${i+1})"
         }
         is Expr.Pred  -> {
             val i = (this.col.type().no_data() as Type.Union).sub_to_idx(this.idx)!!
-            "($i==0 || ${this.col.coder(pre)}.tag==$i)"
+            "(${i+1}==0 || ${this.col.coder(pre)}.tag==${i+1})"
         }
         is Expr.Cons  -> {
             assert(this.dat.ts.size >= this.es.size)
@@ -456,8 +456,7 @@ fun Expr.coder (pre: Boolean = false): String {
                 I++
                 for (sub in this.dat.ts.drop(1)) {
                     val uni = cur as Type.Union
-                    val i = uni.ids!!.indexOfFirst { it.str == sub.str }
-                    assert(i >= 0)
+                    val i = uni.sub_to_idx(sub.str)!!
                     cur = uni.ts[i]
                     if (cur is Type.Union && cur._0 == null) {
                         idxs.add(I)

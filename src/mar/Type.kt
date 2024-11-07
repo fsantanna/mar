@@ -76,8 +76,8 @@ fun Type.Union.disc_to_i_from_disc (dsc: String, e: Expr.Disc): Int? {
     val i = dsc.toIntOrNull()
     if (i == null) {
         when {
-            this.fup().let { it is Stmt.Data && it.id.str==dsc } -> return 0
-            e.fup().let { it is Expr.Disc && it.idx==dsc } -> return 0
+            this.fup().let { it is Stmt.Data && it.id.str==dsc } -> return -1
+            e.fup().let { it is Expr.Disc && it.idx==dsc } -> return -1
         }
     }
     return this.sub_to_idx(dsc)
@@ -89,9 +89,9 @@ fun Type.Union.sub_to_idx (sub: String): Int? {
         (i!=null && (i<=0 || i>this.ts.size)) -> null
         (i==null && this.ids==null) -> null
         (i==null) -> this.ids!!.indexOfFirst { it.str==sub }.let {
-            if (it == -1) null else it+1
+            if (it == -1) null else it
         }
-        else -> i
+        else -> i-1
     }
 }
 
@@ -128,11 +128,11 @@ fun Expr.type (): Type {
             tp.ts[idx]
         }
         is Expr.Disc  -> (this.col.type().no_data() as Type.Union).let {
-            val n = it.disc_to_i_from_disc(this.idx, this)
-            if (n == 0) {
+            val n = it.disc_to_i_from_disc(this.idx, this)!!
+            if (n == -1) {
                 it._0!!
             } else {
-                it.ts[n!! - 1]
+                it.ts[n]
             }
         }
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))

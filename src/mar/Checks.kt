@@ -168,7 +168,7 @@ fun check_types () {
             }
             is Expr.Union -> {
                 val n = me.xtp!!.sub_to_idx(me.idx)
-                if (n==null || !me.xtp!!.ts[n-1].is_sup_of(me.v.type())) {
+                if (n==null || !me.xtp!!.ts[n].is_sup_of(me.v.type())) {
                     err(me.tk, "union error : types mismatch")
                 }
             }
@@ -180,7 +180,7 @@ fun check_types () {
                 //println(n)
                 val ok = when {
                     (n == null) -> false
-                    (n > 0) -> true
+                    (n >= 0) -> true
                     else -> ((tp is Type.Union) && tp._0!=null)
                 }
                 if (!ok) {
