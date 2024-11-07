@@ -808,8 +808,7 @@ class Parser {
         G.tks = ("catch { }").lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "defer {\n" +
-                "print(1)\n" +
+        assert(ss.to_str() == "catch {\n" +
                 "}\n") { ss.to_str() }
     }
 

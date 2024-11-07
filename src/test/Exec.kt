@@ -633,6 +633,20 @@ class Exec  {
         assert(out == "TODO\n") { out }
     }
 
+    // DATA / HIER / EXTD / EXTENDS
+
+    @Test
+    fun hj_01_hier_extd () {
+        val out = test("""
+            data X: Int + <Y:()>
+            data X.Z: Int
+            var xz = X.Z(10,20)
+            var x = xz!X    ;; 10
+            var y = xz!Z    ;; 20
+        """)
+        assert(out == "10\n20\n") { out }
+    }
+
     // INFER
 
     @Test

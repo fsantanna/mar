@@ -3,6 +3,7 @@ package mar
 fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> {
     return when (this) {
         is Stmt.Data   -> this.tp.dn_collect_pos(ft)
+        is Stmt.Extd   -> this.tp.dn_collect_pos(ft)
         is Stmt.Proto  -> this.blk.dn_collect_pos(fs,fe,ft) + this.tp.dn_collect_pos(ft)
         is Stmt.Return -> this.e.dn_collect_pos(fe,ft)
 
@@ -79,6 +80,7 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
     }
     return v + when (this) {
         is Stmt.Data   -> this.tp.dn_collect_pre(ft)
+        is Stmt.Extd   -> this.tp.dn_collect_pre(ft)
         is Stmt.Proto  -> this.blk.dn_collect_pre(fs,fe,ft) + this.tp.dn_collect_pre(ft)
         is Stmt.Return -> this.e.dn_collect_pre(fe,ft)
 

@@ -39,6 +39,12 @@ fun cache_ups () {
                 G.ups[me.id.n] = me.n
                 G.ups[me.tp.n] = me.n
             }
+            is Stmt.Extd   -> {
+                me.ids.forEach {
+                    G.ups[it.n] = me.n
+                }
+                G.ups[me.tp.n] = me.n
+            }
             is Stmt.Proto  -> {
                 G.ups[me.tp.n] = me.n
                 G.ups[me.blk.n] = me.n

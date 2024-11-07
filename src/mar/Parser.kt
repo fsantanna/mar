@@ -242,12 +242,12 @@ fun parser_type (pre: Tk?, pre_uni: Type?, fr_proto: Boolean): Type {
                 }
             }
             if (ids.isEmpty()) {
-                Type.Union(tk0, true, pre_uni, ts, null)
+                Type.Union(tk0, true, pre_uni, ts.toMutableList(), null)
             } else {
                 if (ts.size != ids.size) {
                     err(tk0, "union error : missing type identifier")
                 }
-                Type.Union(tk0, true, pre_uni, ts, ids)
+                Type.Union(tk0, true, pre_uni, ts.toMutableList(), ids)
             }
         }
         else -> err_expected(G.tk1!!, "type")
@@ -604,11 +604,15 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
 
         accept_fix("data") -> {
             val tk0 = G.tk0!!
-            accept_enu_err("Type")
-            val id = G.tk0 as Tk.Type
+            check_enu_err("Type")
+            val tp1 = parser_type(null, null, false) as Type.Data
             accept_fix_err(":")
-            val tp = parser_type(null, null, false)
-            listOf(Stmt.Data(tk0, id, tp))
+            val tp2 = parser_type(null, null, false)
+            if (tp1.ts.size == 1) {
+                listOf(Stmt.Data(tk0, tp1.ts.first(), tp2))
+            } else {
+                listOf(Stmt.Extd(tk0, tp1.ts, tp2))
+            }
         }
         accept_fix("print") -> {
             val tk0 = G.tk0 as Tk.Fix

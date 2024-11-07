@@ -69,7 +69,7 @@ sealed class Type (var n: Int, val tk: Tk) {
     class Data    (tk: Tk, val ts: List<Tk.Type>): Type(G.N++, tk)
     class Pointer (tk: Tk, val ptr: Type): Type(G.N++, tk)
     class Tuple   (tk: Tk, val ts: List<Type>, val ids: List<Tk.Var>?): Type(G.N++, tk)
-    class Union   (tk: Tk, val tagged: Boolean, val _0: Type?, val ts: List<Type>, val ids: List<Tk.Type>?): Type(G.N++, tk)
+    class Union   (tk: Tk, val tagged: Boolean, val _0: Type?, val ts: MutableList<Type>, val ids: MutableList<Tk.Type>?): Type(G.N++, tk)
 
     sealed class Proto (tk: Tk, val inps: List<Type>, val out: Type): Type(G.N++, tk) {
         open class Func (tk: Tk, inps: List<Type>, out: Type): Proto(tk, inps, out) {
@@ -112,6 +112,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
 
 sealed class Stmt (var n: Int, val tk: Tk) {
     class Data (tk: Tk, val id: Tk.Type, val tp: Type): Stmt(G.N++, tk)
+    class Extd (tk: Tk, val ids: List<Tk.Type>, val tp: Type): Stmt(G.N++, tk)
     sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, tk) {
         class Func (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
         class Coro (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Coro.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)

@@ -47,6 +47,23 @@ fun Stmt.Block.to_dcls (): List<XDcl> {
 fun check_vars () {
     fun fs (me: Stmt) {
         when (me) {
+            is Stmt.Extd -> {
+                val path = me.ids.dropLast(1)
+                val xtp = Type.Data(me.tk, path)
+                val dat = xtp.to_data()
+                when {
+                    (dat == null) -> err(me.tk, "type error : data \"${xtp.ts.first().str}\" is not declared")
+                    (dat.tp !is Type.Union) -> err(me.tk, "type error : data \"${xtp.ts.to_str()}\" is not a extendable")
+                    (dat.hier_to_types(xtp) == null) -> err(me.tk, "type error : data \"${xtp.ts.to_str()}\" is invalid")
+                    (dat.hier_to_types(Type.Data(me.tk, me.ids)) != null) -> err(me.tk, "type error : data \"${me.ids.to_str()}\" is already declared")
+                }
+                var uni = dat!!.tp as Type.Union
+                for (id in path.drop(1)) {
+                    uni = uni.ts[uni.sub_to_idx(id.str)!!] as Type.Union
+                }
+                uni.ids?.add(me.ids.last())
+                uni.ts.add(me.tp)
+            }
             is Stmt.Block -> {
                 val ids2 = me.to_dcls()
                 me.ups().filter { it is Stmt.Block }.forEach {

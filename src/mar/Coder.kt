@@ -15,12 +15,12 @@ fun Type.Proto.Coro.x_inp_tup (pre: Boolean): Pair<String, Type.Tuple> {
 }
 fun Type.Proto.Coro.x_inp_uni (pre: Boolean): Pair<String, Type.Union> {
     val tup = this.x_inp_tup(pre)
-    val tp = Type.Union(this.tk, false, null, listOf(tup.second, this.res), null)
+    val tp = Type.Union(this.tk, false, null, mutableListOf(tup.second, this.res), null)
     val id = tp.coder(pre)
     return Pair(id, tp)
 }
 fun Type.Proto.Coro.x_out_uni (pre: Boolean): Pair<String, Type.Union> {
-    val tp = Type.Union(this.tk, true, null, listOf(this.yld, this.out), null)
+    val tp = Type.Union(this.tk, true, null, mutableListOf(this.yld, this.out), null)
     val id = tp.coder(pre)
     return Pair(id, tp)
 }
@@ -42,7 +42,7 @@ fun Type.Exec.x_inp_tup (pre: Boolean): Pair<String, Type.Tuple> {
 }
 fun Type.Exec.x_inp_uni (pre: Boolean): Pair<String, Type.Union> {
     val tup = this.x_inp_tup(pre)
-    val tp = Type.Union(this.tk, false, null, listOf(tup.second, this.res), null)
+    val tp = Type.Union(this.tk, false, null, mutableListOf(tup.second, this.res), null)
     val id = tp.coder(pre)
     return Pair(id, tp)
 }
@@ -202,7 +202,7 @@ fun coder_types (pre: Boolean): String {
 
 fun Stmt.coder (pre: Boolean = false): String {
     return when (this) {
-        is Stmt.Data  -> ""
+        is Stmt.Data, is Stmt.Extd  -> ""
         is Stmt.Proto -> {
             when (this) {
                 is Stmt.Proto.Func ->

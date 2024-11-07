@@ -931,6 +931,85 @@ class Static {
         assert(out == "TODO\n") { out }
     }
 
+    // DATA HIER / EXTD / EXTENDS
+
+    @Test
+    fun TODO_dg_01_hier_extd () {
+        val out = static("""
+            data X: Int + <Y:()>    ;; TODO: Z:Int should not appear in output
+            data X.Z: Int
+            var xz = X.Z(10,20)
+            var x = xz!X    ;; 10
+            var y = xz!Z    ;; 20
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: Int + <Y:()>\n" +
+                "data X.Z: Int\n" +
+                "var xz: X.Z\n" +
+                "set xz = (X.Z(10,20))\n" +
+                "var x: Int\n" +
+                "set x = (xz!X)\n" +
+                "var y: Int\n" +
+                "set y = (xz!Z)\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun dg_02_hier_extd_err () {
+        val out = static("""
+            data X: Int
+            data X.Y: ()
+        """)
+        assert(out == "anon : (lin 3, col 13) : type error : data \"X\" is not a extendable") { out!! }
+    }
+    @Test
+    fun dg_02x_hier_extd_err () {
+        val out = static("""
+            data X: Int + <Y:()>
+            data Y.Z: Int
+        """)
+        assert(out == "anon : (lin 3, col 13) : type error : data \"Y\" is not declared") { out!! }
+    }
+    @Test
+    fun dg_03_hier_extd_err () {
+        val out = static("""
+            data X: Int + <Y:()>
+            data X.A.B: Int
+        """)
+        assert(out == "anon : (lin 3, col 13) : type error : data \"X.A\" is invalid") { out!! }
+    }
+    @Test
+    fun dg_04_hier_extd_err () {
+        val out = static("""
+            data X: Int + <Y:()>
+            data X.Y: Int
+        """)
+        assert(out == "anon : (lin 3, col 13) : type error : data \"X.Y\" is already declared") { out!! }
+    }
+    @Test
+    fun dg_05_hier_extd () {
+        val out = static("""
+            data X: Int + <Y:()>
+            data X.Z: Int
+            data X.Z.A: ()
+            data X.Y.A: Int
+            var xza = X.Z.A(10)
+            var xya = X.Y.A(10,20)
+         """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+    }
+    @Test
+    fun dg_06_hier_extd () {
+        val out = static("""
+            data X: Int + <Y:()>
+            data X.Z: Int
+            data X.Z.A: Int
+         """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+    }
+
     // INFER
 
     @Test

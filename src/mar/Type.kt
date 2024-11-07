@@ -151,10 +151,10 @@ fun Expr.type (): Type {
             Type.Exec(co.tk, co.inps, co.res, co.yld, co.out)
         }
         is Expr.Start -> (this.exe.type() as Type.Exec).let {
-            Type.Union(this.tk, true, null, listOf(it.yld, it.out), null)
+            Type.Union(this.tk, true, null, mutableListOf(it.yld, it.out), null)
         }
         is Expr.Resume -> (this.exe.type() as Type.Exec).let {
-            Type.Union(this.tk, true, null, listOf(it.yld, it.out), null)
+            Type.Union(this.tk, true, null, mutableListOf(it.yld, it.out), null)
         }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
     }
