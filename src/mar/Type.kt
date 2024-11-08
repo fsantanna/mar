@@ -121,31 +121,30 @@ fun Stmt.Data.walk (l: List<String>): Pair<Int?,Type>? {
             return null
         }
         val uni = cur
-        val i = id.toIntOrNull()
-        val v = if (i != null) {
+        val num = id.toIntOrNull()
+        if (num != null) {
             when {
-                (i<0 || i>uni.ts.size) -> return null
-                (i==0 && uni._0==null) -> return null
-                (i==0 && uni._0!=null) -> Pair(-1, uni._0)
-                else                   -> Pair(i-1, uni.ts[i-1])
+                (num<0 || num>uni.ts.size) -> return null
+                (num==0 && uni._0==null)   -> return null
+                (num==0 && uni._0!=null)   -> { idx=-1    ; cur=uni._0        }
+                else                       -> { idx=num-1 ; cur=uni.ts[num-1] }
             }
         } else {
             when {
                 (sup==id && uni._0==null) -> return null
-                (sup==id && uni._0!=null) -> Pair(-1, uni._0)
-                (uni.ids == null) -> return null
+                (sup==id && uni._0!=null) -> { idx=-1 ; cur=uni._0 }
+                (uni.ids == null)         -> return null
                 else -> uni.ids.indexOfFirst { it.str == id }.let {
                     if (it == -1) {
                         return null
                     } else {
-                        Pair(it, uni.ts[it])
+                        idx = it
+                        cur = uni.ts[it]
                     }
                 }
             }
         }
 //        if (cur._0 != null)
-        idx = v.first
-        cur = v.second
         sup = id
     }
     return Pair(idx,cur)
