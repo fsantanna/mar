@@ -989,7 +989,33 @@ class Static {
     @Test
     fun dg_05_hier_extd () {
         val out = static("""
+            data X: Int + <Y:<>>
+            data X.Z: Int + <>
+            data X.Z.A: ()
+            data X.Y.A: Int
+            var xza = X.Z.A(10)
+            var xya = X.Y.A(10,20)
+         """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+    }
+    @Test
+    fun dg_05x_hier_extd_err () {
+        val out = static("""
             data X: Int + <Y:()>
+            data X.Z: Int + <>
+            data X.Z.A: ()
+            data X.Y.A: Int
+            var xza = X.Z.A(10)
+            var xya = X.Y.A(10,20)
+         """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+    }
+    @Test
+    fun dg_05y_hier_extd_err () {
+        val out = static("""
+            data X: Int + <Y:<>>
             data X.Z: Int
             data X.Z.A: ()
             data X.Y.A: Int

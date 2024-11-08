@@ -421,7 +421,7 @@ fun Expr.coder (pre: Boolean = false): String {
 
         is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } })"
         is Expr.Union -> {
-            val i = this.xtp!!.sub_to_idx(this.idx)!!
+            val (i,_) = this.xtp!!.sub__idx_id__to__idx_tp(null,this.idx)!!
             "((${this.type().coder(pre)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"
         }
         is Expr.Field -> {
@@ -431,11 +431,18 @@ fun Expr.coder (pre: Boolean = false): String {
             "(${this.col.coder(pre)}.$idx)"
         }
         is Expr.Disc  -> {
-            val i = (this.col.type().no_data() as Type.Union).disc_to_i_from_disc(this.idx, this)!!
+            /*
+            val x = when {
+                this.fup().let { it is Stmt.Data && it.id.str==dsc } -> return -1
+                e.fup().let { it is Expr.Disc && it.idx==dsc } -> return -1
+                else -> null
+            }
+             */
+            val (i,_) = this.col.type().no_data().sub__idx_id__to__idx_tp(null,this.idx)!!
             "(${this.col.coder(pre)}._${i+1})"
         }
         is Expr.Pred  -> {
-            val i = (this.col.type().no_data() as Type.Union).sub_to_idx(this.idx)!!
+            val (i,_) = (this.col.type().no_data() as Type.Union).sub__idx_id__to__idx_tp(null, this.idx)!!
             "(${i+1}==0 || ${this.col.coder(pre)}.tag==${i+1})"
         }
         is Expr.Cons  -> {
@@ -456,8 +463,8 @@ fun Expr.coder (pre: Boolean = false): String {
                 I++
                 for (sub in this.dat.ts.drop(1)) {
                     val uni = cur as Type.Union
-                    val i = uni.sub_to_idx(sub.str)!!
-                    cur = uni.ts[i]
+                    val xxx = uni.sub__idx_id__to__idx_tp(null, sub.str)!!
+                    cur = xxx.second
                     if (cur is Type.Union && cur._0 == null) {
                         idxs.add(I)
                     }

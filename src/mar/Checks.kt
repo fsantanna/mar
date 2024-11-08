@@ -48,21 +48,26 @@ fun check_vars () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Extd -> {
-                val path = me.ids.dropLast(1)
-                val xtp = Type.Data(me.tk, path)
-                val dat = xtp.to_data()
-                when {
-                    (dat == null) -> err(me.tk, "type error : data \"${xtp.ts.first().str}\" is not declared")
-                    (dat.tp !is Type.Union) -> err(me.tk, "type error : data \"${xtp.ts.to_str()}\" is not a extendable")
-                    (dat.hier_to_types(xtp) == null) -> err(me.tk, "type error : data \"${xtp.ts.to_str()}\" is invalid")
-                    (dat.hier_to_types(Type.Data(me.tk, me.ids)) != null) -> err(me.tk, "type error : data \"${me.ids.to_str()}\" is already declared")
+                val top = me.ids.first().str
+                val dat = top.to_data()
+                if (dat == null) {
+                    err(me.tk, "type error : data \"$top\" is not declared")
                 }
-                var uni = dat!!.tp as Type.Union
-                for (id in path.drop(1)) {
-                    uni = uni.ts[uni.sub_to_idx(id.str)!!] as Type.Union
+                var uni = dat.tp
+                for (i in 1..me.ids.size-1) {
+                    val xtp = Type.Data(me.tk, me.ids.take(i+1))
+                    when {
+                        (uni !is Type.Union) -> err(me.tk, "type error : data \"${xtp.ts.to_str()}\" is not a extendable")
+                        (dat.hier_to_types(xtp) == null) -> err(me.tk, "type error : data \"${xtp.ts.to_str()}\" is invalid")
+                        (dat.hier_to_types(Type.Data(me.tk, me.ids)) != null) -> err(me.tk, "type error : data \"${me.ids.to_str()}\" is already declared")
+                    }
+                    uni as Type.Union
+                    //uni = uni.ts[uni.sub_to_idx(id.str)!!] as Type.Union
                 }
-                uni.ids?.add(me.ids.last())
-                uni.ts.add(me.tp)
+                //for (id in path.drop(1)) {
+                //}
+                //uni.ids?.add(me.ids.last())
+                //uni.ts.add(me.tp)
             }
             is Stmt.Block -> {
                 val ids2 = me.to_dcls()
@@ -167,8 +172,8 @@ fun check_types () {
                 }
             }
             is Expr.Union -> {
-                val n = me.xtp!!.sub_to_idx(me.idx)
-                if (n==null || !me.xtp!!.ts[n].is_sup_of(me.v.type())) {
+                val idx_tp = me.xtp!!.sub__idx_id__to__idx_tp(null, me.idx)
+                if (idx_tp==null || !idx_tp.second.is_sup_of(me.v.type())) {
                     err(me.tk, "union error : types mismatch")
                 }
             }
@@ -176,22 +181,15 @@ fun check_types () {
                 //println(me.col.type().to_str())
                 //println(me.col.type().no_data().to_str())
                 val tp = me.col.type().no_data()
-                val n = if (tp !is Type.Union) null else tp.disc_to_i_from_disc(me.idx, me)
+                val ok = tp.sub__idx_id__to__idx_tp(null, me.idx)
                 //println(n)
-                val ok = when {
-                    (n == null) -> false
-                    (n >= 0) -> true
-                    else -> ((tp is Type.Union) && tp._0!=null)
-                }
-                if (!ok) {
+                if (ok == null) {
                     err(me.tk, "discriminator error : types mismatch")
                 }
             }
             is Expr.Pred -> {
-                val n = me.col.type().no_data().let {
-                    if (it !is Type.Union) null else it.sub_to_idx(me.idx)
-                }
-                if (n == null) {
+                val ok = me.col.type().no_data().sub__idx_id__to__idx_tp(null, me.idx)
+                if (ok == null) {
                     err(me.tk, "predicate error : types mismatch")
                 }
             }

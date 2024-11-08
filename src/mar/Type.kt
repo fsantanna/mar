@@ -60,10 +60,14 @@ fun Type.Data.base (): String? {
     }
 }
 
-fun Type.Data.to_data (): Stmt.Data? {
+fun String.to_data (): Stmt.Data? {
     return G.outer!!.dn_filter_pre({ it is Stmt.Data }, {null}, {null})
         .let { it as List<Stmt.Data> }
-        .find { it.id.str == this.ts.first().str }
+        .find { it.id.str == this }
+}
+
+fun Type.Data.to_data (): Stmt.Data? {
+    return this.ts.first().str.to_data()
 }
 
 fun Type.no_data (): Type {
@@ -72,27 +76,42 @@ fun Type.no_data (): Type {
     }
 }
 
-fun Type.Union.disc_to_i_from_disc (dsc: String, e: Expr.Disc): Int? {
-    val i = dsc.toIntOrNull()
-    if (i == null) {
-        when {
-            this.fup().let { it is Stmt.Data && it.id.str==dsc } -> return -1
-            e.fup().let { it is Expr.Disc && it.idx==dsc } -> return -1
-        }
-    }
-    return this.sub_to_idx(dsc)
-}
-
-fun Type.Union.sub_to_idx (sub: String): Int? {
+fun Type.sub__idx_id__to__idx_tp (pre: String?, sub: String): Pair<Int,Type>? {
     val i = sub.toIntOrNull()
     return when {
+        (this !is Type.Union) -> null
         (i!=null && (i<=0 || i>this.ts.size)) -> null
+        (i==null && pre==sub && this._0!=null) -> Pair(-1, this._0)
         (i==null && this.ids==null) -> null
         (i==null) -> this.ids!!.indexOfFirst { it.str==sub }.let {
-            if (it == -1) null else it
+            if (it == -1) null else Pair(it, this.ts[it])
         }
-        else -> i-1
+        else -> Pair(i-1, this.ts[i-1])
     }
+}
+
+fun List<Tk.Type>.walk (): Type?  {
+    val top = this.first()
+    val dat = top.str.to_data()
+    if (dat == null) {
+        return null
+    }
+    var pre = top.str
+    var cur: Type? = dat.tp
+    for (id in this.drop(1)) {
+        when {
+            (cur !is Type.Union) -> return null
+            (cur.ids == null)    -> return null
+        }
+        cur as Type.Union
+        pre = id.str
+        val xxx = cur.sub__idx_id__to__idx_tp(pre, id.str)
+        if (xxx == null) {
+            return null
+        }
+        cur = xxx.second
+    }
+    return cur
 }
 
 fun Expr.type (): Type {
@@ -127,14 +146,7 @@ fun Expr.type (): Type {
             }
             tp.ts[idx]
         }
-        is Expr.Disc  -> (this.col.type().no_data() as Type.Union).let {
-            val n = it.disc_to_i_from_disc(this.idx, this)!!
-            if (n == -1) {
-                it._0!!
-            } else {
-                it.ts[n]
-            }
-        }
+        is Expr.Disc  -> this.col.type().no_data().sub__idx_id__to__idx_tp(null, this.idx)!!.second
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> this.dat
 
