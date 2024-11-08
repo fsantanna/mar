@@ -52,7 +52,8 @@ fun Tk.Var.type (fr: Any): Type? {
     } as Type?
 }
 
-fun Type.Data.base (): String? {
+// last two are equal: X.Y.Y
+fun Type.Data._0 (): String? {
     return when {
         (this.ts.size < 2) -> null
         (this.ts[this.ts.size-1].str == this.ts[this.ts.size-2].str) -> this.ts[this.ts.size-1].str
@@ -70,18 +71,33 @@ fun Type.Data.to_data (): Stmt.Data? {
     return this.ts.first().str.to_data()
 }
 
+fun Type.Data.hier_to_types (): List<Type> {
+    val lst = mutableListOf<Type>()
+    for (n in 1 .. this.ts.size-1) {
+        val uni = this.ts.take(n).walk() as Type.Union
+        if (uni._0 != null) {
+            lst.add(uni._0)
+        }
+    }
+    if (this._0() == null) {
+        lst.add(this.ts.walk()!!)
+    }
+    return lst
+}
+
 fun Type.no_data (): Type {
     return if (this !is Type.Data) this else {
         this.to_data()!!.tp
     }
 }
 
-fun Type.sub__idx_id__to__idx_tp (pre: String?, sub: String): Pair<Int,Type>? {
+fun Type.sub__idx_id__to__idx_tp (sup: String?, sub: String): Pair<Int,Type>? {
     val i = sub.toIntOrNull()
+    //println(listOf(sup,sub, if (this !is Type.Union) "---" else this._0))
     return when {
         (this !is Type.Union) -> null
         (i!=null && (i<=0 || i>this.ts.size)) -> null
-        (i==null && pre==sub && this._0!=null) -> Pair(-1, this._0)
+        (i==null && sup==sub && this._0!=null) -> Pair(-1, this._0)
         (i==null && this.ids==null) -> null
         (i==null) -> this.ids!!.indexOfFirst { it.str==sub }.let {
             if (it == -1) null else Pair(it, this.ts[it])
@@ -96,7 +112,7 @@ fun List<Tk.Type>.walk (): Type?  {
     if (dat == null) {
         return null
     }
-    var pre = top.str
+    var sup = top.str
     var cur: Type? = dat.tp
     for (id in this.drop(1)) {
         when {
@@ -104,11 +120,11 @@ fun List<Tk.Type>.walk (): Type?  {
             (cur.ids == null)    -> return null
         }
         cur as Type.Union
-        pre = id.str
-        val xxx = cur.sub__idx_id__to__idx_tp(pre, id.str)
+        val xxx = cur.sub__idx_id__to__idx_tp(sup, id.str)
         if (xxx == null) {
             return null
         }
+        sup = id.str
         cur = xxx.second
     }
     return cur
@@ -146,7 +162,11 @@ fun Expr.type (): Type {
             }
             tp.ts[idx]
         }
-        is Expr.Disc  -> this.col.type().no_data().sub__idx_id__to__idx_tp(null, this.idx)!!.second
+        is Expr.Disc  -> {
+            val tp = this.col.type()
+            val sup = if (tp !is Type.Data) null else tp.ts.last().str
+            tp.no_data().sub__idx_id__to__idx_tp(sup, this.idx)!!.second
+        }
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> this.dat
 

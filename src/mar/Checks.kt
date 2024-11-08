@@ -53,21 +53,27 @@ fun check_vars () {
                 if (dat == null) {
                     err(me.tk, "type error : data \"$top\" is not declared")
                 }
-                var uni = dat.tp
-                for (i in 1..me.ids.size-1) {
-                    val xtp = Type.Data(me.tk, me.ids.take(i+1))
+                // all path, excluding last, exists
+                var sup: Type.Union? = null
+                for (n in 1..me.ids.size-1) {
+                    val path = me.ids.take(n)
+                    val tp = path.walk()
                     when {
-                        (uni !is Type.Union) -> err(me.tk, "type error : data \"${xtp.ts.to_str()}\" is not a extendable")
-                        (dat.hier_to_types(xtp) == null) -> err(me.tk, "type error : data \"${xtp.ts.to_str()}\" is invalid")
-                        (dat.hier_to_types(Type.Data(me.tk, me.ids)) != null) -> err(me.tk, "type error : data \"${me.ids.to_str()}\" is already declared")
+                        (tp == null) -> err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is invalid")
+                        (tp !is Type.Union) ->  err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is not extendable")
                     }
-                    uni as Type.Union
-                    //uni = uni.ts[uni.sub_to_idx(id.str)!!] as Type.Union
+                    if (n == me.ids.size-1) {
+                        sup = tp
+                    }
                 }
-                //for (id in path.drop(1)) {
-                //}
-                //uni.ids?.add(me.ids.last())
-                //uni.ts.add(me.tp)
+                // last path does not exist
+                if (me.ids.walk() != null) {
+                    err(me.tk, "type error : data \"${me.ids.map { it.str }.joinToString(".")}\" is already declared")
+                }
+                sup!!.let {
+                    it.ids!!.add(me.ids.last())
+                    it.ts.add(me.tp)
+                }
             }
             is Stmt.Block -> {
                 val ids2 = me.to_dcls()
@@ -102,11 +108,19 @@ fun check_vars () {
         when (me) {
             is Type.Data -> {
                 val dat = me.to_data()
-                val t = me.ts.first()
-                when {
-                    (dat == null) -> err(me.tk, "type error : data \"${t.str}\" is not declared")
-                    (me.ts.size == 1) -> {}
-                    (dat.hier_to_types(me) == null) -> err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
+                val fst = me.ts.first()
+                if (dat == null) {
+                    err(me.tk, "type error : data \"${fst.str}\" is not declared")
+                }
+                val ok = me.ts.filterIndexed { i,t -> i<me.ts.size-1 && t.str==me.ts[i+1].str }.let {
+                    when {
+                        (it.size >= 2) -> false
+                        (it.size == 0) -> true
+                        else -> it.first().str == me.ts[me.ts.size - 1].str
+                    }
+                }
+                if (!ok || me.ts.walk()==null) {
+                    err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
                 }
             }
             else -> {}
@@ -178,11 +192,9 @@ fun check_types () {
                 }
             }
             is Expr.Disc -> {
-                //println(me.col.type().to_str())
-                //println(me.col.type().no_data().to_str())
-                val tp = me.col.type().no_data()
-                val ok = tp.sub__idx_id__to__idx_tp(null, me.idx)
-                //println(n)
+                val tp = me.col.type()
+                val sup = if (tp !is Type.Data) null else tp.ts.last().str
+                val ok = tp.no_data().sub__idx_id__to__idx_tp(sup, me.idx)
                 if (ok == null) {
                     err(me.tk, "discriminator error : types mismatch")
                 }
@@ -194,11 +206,10 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val dat = me.dat.to_data()!!
-                val ts = dat.hier_to_types(me.dat)!!
-                //println(ts.map { it.to_str() })
-                //println(me.es.map { it.to_str() })
+                val ts = me.dat.hier_to_types()
                 if (ts.size != me.es.size) {
+                    //println(ts.map { it.to_str() })
+                    //println(me.es.map { it.to_str() })
                     err(me.tk, "constructor error : arity mismatch")
                 }
                 val x = ts.zip(me.es).find { (tp,e) ->

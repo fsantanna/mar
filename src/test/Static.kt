@@ -877,7 +877,8 @@ class Static {
             var xy = X.X()
             print(xy!X)
         """)
-        assert(out == "anon : (lin 3, col 22) : constructor error : arity mismatch") { out!! }
+        //assert(out == "anon : (lin 3, col 22) : constructor error : arity mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 22) : type error : data \"X.X\" is invalid") { out!! }
     }
     @Test
     fun TODO_df_07_hier_base () {
@@ -960,7 +961,7 @@ class Static {
             data X: Int
             data X.Y: ()
         """)
-        assert(out == "anon : (lin 3, col 13) : type error : data \"X\" is not a extendable") { out!! }
+        assert(out == "anon : (lin 3, col 13) : type error : data \"X\" is not extendable") { out!! }
     }
     @Test
     fun dg_02x_hier_extd_err () {

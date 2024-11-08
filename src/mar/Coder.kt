@@ -431,14 +431,9 @@ fun Expr.coder (pre: Boolean = false): String {
             "(${this.col.coder(pre)}.$idx)"
         }
         is Expr.Disc  -> {
-            /*
-            val x = when {
-                this.fup().let { it is Stmt.Data && it.id.str==dsc } -> return -1
-                e.fup().let { it is Expr.Disc && it.idx==dsc } -> return -1
-                else -> null
-            }
-             */
-            val (i,_) = this.col.type().no_data().sub__idx_id__to__idx_tp(null,this.idx)!!
+            val tp = this.col.type()
+            val sup = if (tp !is Type.Data) null else tp.ts.last().str
+            val (i,_) = tp.no_data().sub__idx_id__to__idx_tp(sup,this.idx)!!
             "(${this.col.coder(pre)}._${i+1})"
         }
         is Expr.Pred  -> {
@@ -449,7 +444,7 @@ fun Expr.coder (pre: Boolean = false): String {
             assert(this.dat.ts.size >= this.es.size)
             val idxs = mutableListOf<Int>() // indexes of hier types with no constructors
             val dat = this.dat.to_data()!!
-            val base = this.dat.base()
+            val base = this.dat._0()
             val xes = if (this.dat.ts.size-(if (base==null) 0 else 1) == this.es.size) {
                 // A: <a> + <B: <b> + <C: <c>>>
                 this.es

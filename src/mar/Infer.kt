@@ -12,40 +12,6 @@ fun Expr.typex (): Type? {
     }
 }
 
-fun Stmt.Data.hier_to_types (tp: Type.Data): List<Type>? {
-    assert(this.id.str==tp.ts.first().str)
-    val base = tp.base()
-    val lst = mutableListOf<Type>()
-    var cur: Type = this.tp
-    if (base != null) {
-        val sub = tp.ts.dropLast(2).find { it.str==base }
-        if (sub != null) {
-            return null // X.Y.A.Y.Y
-        }
-    }
-    for (i in 1 .. tp.ts.size-1) {
-        val sub = tp.ts[i]
-        when {
-            (cur !is Type.Union) -> return null
-            (cur.ids == null) -> return null
-        }
-        val uni = cur as Type.Union
-        if (uni._0 != null) {
-            lst.add(uni._0)
-        }
-        if (base!=null && i==tp.ts.size-1) {
-            return lst  // X.A.A
-        }
-        val xxx = uni.sub__idx_id__to__idx_tp(null, sub.str)
-        if (xxx == null) {
-            return null
-        }
-        cur = xxx.second
-    }
-    lst.add(cur)
-    return lst
-}
-
 fun Expr.infer (): Type? {
     val up = this.fupx()
     return when (up) {
@@ -54,13 +20,9 @@ fun Expr.infer (): Type? {
             up.dst.typex()
         }
         is Expr.Cons -> {
-            val dat = up.dat.to_data()!!
             val i = up.es.indexOfFirst { it.n==this.n }
-            val tp = dat.hier_to_types(up.dat)!![i]
-            //println(this.to_str())
-            //println(up.to_str())
-            //println(listOf(i,tp.to_str()))
-            tp
+            val tps = up.dat.hier_to_types()
+            tps[i]
         }
         is Expr.Tuple -> up.typex().let {
             if (it == null) null else {
@@ -172,7 +134,7 @@ fun infer_types () {
             else -> {}
         }
     }
-    G.outer!!.dn_visit_pos(::fs, ::fe, {null})
+    G.outer!!.dn_visit_pos(::fs, ::fe, {})
     G.outer!!.dn_visit_pre({
         if (it is Stmt.Dcl) {
             if (it.xtp == null) {
