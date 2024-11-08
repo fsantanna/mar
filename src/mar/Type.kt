@@ -73,14 +73,16 @@ fun Type.Data.to_data (): Stmt.Data? {
 
 fun Type.Data.hier_to_types (): List<Type> {
     val lst = mutableListOf<Type>()
+    val dat = this.to_data()!!
     for (n in 1 .. this.ts.size-1) {
-        val uni = this.ts.take(n).walk() as Type.Union
+        val (_,uni) = dat.walk(this.ts.take(n).map { it.str })!!
+        uni as Type.Union
         if (uni._0 != null) {
             lst.add(uni._0)
         }
     }
     if (this._0() == null) {
-        lst.add(this.ts.walk()!!)
+        lst.add(dat.walk(this.ts.map { it.str })!!.second)
     }
     return lst
 }
@@ -106,28 +108,45 @@ fun Type.sub__idx_id__to__idx_tp (sup: String?, sub: String): Pair<Int,Type>? {
     }
 }
 
-fun List<Tk.Type>.walk (): Type?  {
-    val top = this.first()
-    val dat = top.str.to_data()
-    if (dat == null) {
+fun Stmt.Data.walk (l: List<String>): Pair<Int?,Type>? {
+    var idx: Int? = null
+    var cur: Type = this.tp
+    var sup: String? = l.first()
+    if (this.id.str != sup) {
         return null
     }
-    var sup = top.str
-    var cur: Type? = dat.tp
-    for (id in this.drop(1)) {
-        when {
-            (cur !is Type.Union) -> return null
-            (cur.ids == null)    -> return null
-        }
-        cur as Type.Union
-        val xxx = cur.sub__idx_id__to__idx_tp(sup, id.str)
-        if (xxx == null) {
+    for (id in l.drop(1)) {
+        if (cur !is Type.Union) {
             return null
         }
-        sup = id.str
-        cur = xxx.second
+        val uni = cur
+        val i = id.toIntOrNull()
+        val v = if (i != null) {
+            when {
+                (i<0 || i>uni.ts.size) -> return null
+                (i==0 && uni._0==null) -> return null
+                (i==0 && uni._0!=null) -> Pair(-1, uni._0)
+                else                   -> Pair(i-1, uni.ts[i-1])
+            }
+        } else {
+            when {
+                (sup==id && uni._0==null) -> return null
+                (sup==id && uni._0!=null) -> Pair(-1, uni._0)
+                (uni.ids == null) -> return null
+                else -> uni.ids.indexOfFirst { it.str == id }.let {
+                    if (it == -1) {
+                        return null
+                    } else {
+                        Pair(it, uni.ts[it])
+                    }
+                }
+            }
+        }
+        idx = v.first
+        cur = v.second
+        sup = id
     }
-    return cur
+    return Pair(idx,cur)
 }
 
 fun Expr.type (): Type {

@@ -57,17 +57,20 @@ fun check_vars () {
                 var sup: Type.Union? = null
                 for (n in 1..me.ids.size-1) {
                     val path = me.ids.take(n)
-                    val tp = path.walk()
-                    when {
-                        (tp == null) -> err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is invalid")
-                        (tp !is Type.Union) ->  err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is not extendable")
+                    val idx_tp = dat.walk(path.map { it.str })
+                    if (idx_tp == null) {
+                        err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is invalid")
+                    }
+                    val (_,tp) = idx_tp
+                    if (tp !is Type.Union) {
+                        err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is not extendable")
                     }
                     if (n == me.ids.size-1) {
-                        sup = tp as Type.Union
+                        sup = tp
                     }
                 }
                 // last path does not exist
-                if (me.ids.walk() != null) {
+                if (dat.walk(me.ids.map { it.str }) != null) {
                     err(me.tk, "type error : data \"${me.ids.map { it.str }.joinToString(".")}\" is already declared")
                 }
                 sup!!.let {
@@ -119,7 +122,7 @@ fun check_vars () {
                         else -> it.first().str == me.ts[me.ts.size - 1].str
                     }
                 }
-                if (!ok || me.ts.walk()==null) {
+                if (!ok || dat.walk(me.ts.map { it.str })==null) {
                     err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
                 }
             }
