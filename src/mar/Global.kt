@@ -97,7 +97,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
     class Field (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
     class Union (tk: Tk, var xtp: Type.Union?, val idx: String, val v: Expr): Expr(G.N++, tk)
     class Pred  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
-    class Disc  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
+    class Disc  (tk: Tk, val col: Expr, val path: List<String>): Expr(G.N++, tk)
     class Cons  (tk: Tk, val dat: Type.Data, val es: List<Expr>): Expr(G.N++, tk)
 
     class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, tk_)

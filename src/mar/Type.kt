@@ -95,7 +95,7 @@ fun Type.no_data (): Type {
 
 fun Type.sub__idx_id__to__idx_tp (sup: String?, sub: String): Pair<Int,Type>? {
     val i = sub.toIntOrNull()
-    //println(listOf(sup,sub, if (this !is Type.Union) "---" else this._0))
+    //println(listOf("f", sup,sub, if (this !is Type.Union) "---" else this._0))
     return when {
         (this !is Type.Union) -> null
         (i!=null && (i<=0 || i>this.ts.size)) -> null
@@ -115,7 +115,8 @@ fun Stmt.Data.walk (l: List<String>): Pair<Int?,Type>? {
     if (this.id.str != sup) {
         return null
     }
-    for (id in l.drop(1)) {
+    for (i in 1..l.size-1) {
+        val id = l[i]
         if (cur !is Type.Union) {
             return null
         }
@@ -142,6 +143,7 @@ fun Stmt.Data.walk (l: List<String>): Pair<Int?,Type>? {
                 }
             }
         }
+//        if (cur._0 != null)
         idx = v.first
         cur = v.second
         sup = id
@@ -183,8 +185,13 @@ fun Expr.type (): Type {
         }
         is Expr.Disc  -> {
             val tp = this.col.type()
-            val sup = if (tp !is Type.Data) null else tp.ts.last().str
-            tp.no_data().sub__idx_id__to__idx_tp(sup, this.idx)!!.second
+            val sup = if (tp !is Type.Data) null else {
+                //println(tp.ts.map { it.str })
+                tp.ts.last().str
+            }
+            val x = tp.no_data().sub__idx_id__to__idx_tp(sup, this.path.first())
+            //println(listOf("disc", sup, this.path, x))
+            x!!.second
         }
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> this.dat

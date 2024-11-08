@@ -197,7 +197,7 @@ fun check_types () {
             is Expr.Disc -> {
                 val tp = me.col.type()
                 val sup = if (tp !is Type.Data) null else tp.ts.last().str
-                val ok = tp.no_data().sub__idx_id__to__idx_tp(sup, me.idx)
+                val ok = tp.no_data().sub__idx_id__to__idx_tp(sup, me.path.first())
                 if (ok == null) {
                     err(me.tk, "discriminator error : types mismatch")
                 }
