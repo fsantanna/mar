@@ -851,7 +851,7 @@ class Static {
                 "data X: Int + <Y:()>\n" +
                 "var xy: X.Y\n" +
                 "set xy = (X.Y(10,()))\n" +
-                "var y: ()\n" +
+                "var y: Int\n" +
                 "set y = (xy!Y)\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -994,11 +994,20 @@ class Static {
             data X.Z: Int + <>
             data X.Z.A: ()
             data X.Y.A: Int
-            var xza = X.Z.A(10)
+            var xza = X.Z.A(10,20,())
             var xya = X.Y.A(10,20)
          """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: Int + <Y:<A:Int>,Z:Int + <A:()>>\n" +
+                "data X.Z: Int + <A:()>\n" +
+                "data X.Z.A: ()\n" +
+                "data X.Y.A: Int\n" +
+                "var xza: X.Z.A\n" +
+                "set xza = (X.Z.A(10,20,()))\n" +
+                "var xya: X.Y.A\n" +
+                "set xya = (X.Y.A(10,20))\n" +
+                "}") { G.outer!!.to_str() }
     }
     @Test
     fun dg_05x_hier_extd_err () {
@@ -1010,8 +1019,7 @@ class Static {
             var xza = X.Z.A(10)
             var xya = X.Y.A(10,20)
          """)
-        assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+        assert(out == "anon : (lin 5, col 13) : type error : data \"X.Y\" is not extendable") { out!! }
     }
     @Test
     fun dg_05y_hier_extd_err () {
@@ -1023,8 +1031,7 @@ class Static {
             var xza = X.Z.A(10)
             var xya = X.Y.A(10,20)
          """)
-        assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+        assert(out == "anon : (lin 4, col 13) : type error : data \"X.Z\" is not extendable") { out!! }
     }
     @Test
     fun dg_06_hier_extd () {
@@ -1033,8 +1040,7 @@ class Static {
             data X.Z: Int
             data X.Z.A: Int
          """)
-        assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "TODO") { G.outer!!.to_str() }
+        assert(out == "anon : (lin 4, col 13) : type error : data \"X.Z\" is not extendable") { out!! }
     }
 
     // INFER

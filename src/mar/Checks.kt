@@ -63,7 +63,7 @@ fun check_vars () {
                         (tp !is Type.Union) ->  err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is not extendable")
                     }
                     if (n == me.ids.size-1) {
-                        sup = tp
+                        sup = tp as Type.Union
                     }
                 }
                 // last path does not exist

@@ -241,7 +241,7 @@ fun parser_type (pre: Tk?, pre_uni: Type?, fr_proto: Boolean): Type {
                     else -> parser_type(null, null, false)
                 }
             }
-            if (ids.isEmpty()) {
+            if (ids.isEmpty() && ts.size>0) {
                 Type.Union(tk0, true, pre_uni, ts.toMutableList(), null)
             } else {
                 if (ts.size != ids.size) {
