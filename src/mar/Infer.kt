@@ -21,7 +21,7 @@ fun Expr.infer (): Type? {
         }
         is Expr.Cons -> {
             val i = up.es.indexOfFirst { it.n==this.n }
-            val tps = up.dat.hier_to_types()
+            val tps = up.dat.walk()!!.third
             tps[i]
         }
         is Expr.Tuple -> up.typex().let {

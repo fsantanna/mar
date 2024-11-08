@@ -71,22 +71,6 @@ fun Type.Data.to_data (): Stmt.Data? {
     return this.ts.first().str.to_data()
 }
 
-fun Type.Data.hier_to_types (): List<Type> {
-    val lst = mutableListOf<Type>()
-    val dat = this.to_data()!!
-    for (n in 1 .. this.ts.size-1) {
-        val (_,uni) = dat.walk(this.ts.take(n).map { it.str })!!
-        uni as Type.Union
-        if (uni._0 != null) {
-            lst.add(uni._0)
-        }
-    }
-    if (this._0() == null) {
-        lst.add(dat.walk(this.ts.map { it.str })!!.second)
-    }
-    return lst
-}
-
 fun Type.no_data (): Type {
     return if (this !is Type.Data) this else {
         this.to_data()!!.tp
@@ -108,10 +92,17 @@ fun Type.sub__idx_id__to__idx_tp (sup: String?, sub: String): Pair<Int,Type>? {
     }
 }
 
-fun Stmt.Data.walk (l: List<String>): Pair<Int?,Type>? {
+fun Type.Data.walk (): Triple<Int?,Type,List<Type>>? {
+    val dat = this.to_data()
+    return dat!!.walk(this.ts.map { it.str })
+}
+
+fun Stmt.Data.walk (l: List<String>): Triple<Int?,Type,List<Type>>? {
     var idx: Int? = null
     var cur: Type = this.tp
     var sup: String? = l.first()
+    var lst = true
+    val tps = mutableListOf<Type>()
     if (this.id.str != sup) {
         return null
     }
@@ -144,10 +135,18 @@ fun Stmt.Data.walk (l: List<String>): Pair<Int?,Type>? {
                 }
             }
         }
-//        if (cur._0 != null)
+        if (uni._0 != null) {
+            tps.add(uni._0)
+        }
+        if (i==l.size-1 && idx==-1) {
+            lst = false     // last is _0: do not add again outside
+        }
         sup = id
     }
-    return Pair(idx,cur)
+    if (lst) {
+        tps.add(cur)
+    }
+    return Triple(idx, cur, tps)
 }
 
 fun Expr.type (): Type {

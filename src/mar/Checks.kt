@@ -122,7 +122,7 @@ fun check_vars () {
                         else -> it.first().str == me.ts[me.ts.size - 1].str
                     }
                 }
-                if (!ok || dat.walk(me.ts.map { it.str })==null) {
+                if (!ok || me.walk()==null) {
                     err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
                 }
             }
@@ -209,7 +209,7 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val ts = me.dat.hier_to_types()
+                val ts = me.dat.walk()!!.third
                 if (ts.size != me.es.size) {
                     //println(ts.map { it.to_str() })
                     //println(me.es.map { it.to_str() })
