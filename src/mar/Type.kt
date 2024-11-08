@@ -92,9 +92,66 @@ fun Type.sub__idx_id__to__idx_tp (sup: String?, sub: String): Pair<Int,Type>? {
     }
 }
 
+fun Type.Union.walk (l: List<String>): Triple<Int?,Type,List<Type>>? {
+    var idx: Int? = null
+    var cur: Type = this
+    var sup: String? = l.first()
+    var lst = true
+    val tps = mutableListOf<Type>()
+    for (i in 0..l.size-1) {
+        val id = l[i]
+        if (cur !is Type.Union) {
+            return null
+        }
+        val uni = cur
+        val num = id.toIntOrNull()
+        if (num != null) {
+            when {
+                (num<0 || num>uni.ts.size) -> return null
+                (num==0 && uni._0==null)   -> return null
+                (num==0 && uni._0!=null)   -> { idx=-1    ; cur=uni._0        }
+                else                       -> { idx=num-1 ; cur=uni.ts[num-1] }
+            }
+        } else {
+            when {
+                (sup==id && uni._0==null) -> return null
+                (sup==id && uni._0!=null) -> { idx=-1 ; cur=uni._0 }
+                (uni.ids == null)         -> return null
+                else -> uni.ids.indexOfFirst { it.str == id }.let {
+                    if (it == -1) {
+                        return null
+                    } else {
+                        idx = it
+                        cur = uni.ts[it]
+                    }
+                }
+            }
+        }
+        if (uni._0 != null) {
+            tps.add(uni._0)
+        }
+        if (i==l.size-1 && idx==-1) {
+            lst = false     // last is _0: do not add again outside
+        }
+        sup = id
+    }
+    if (lst) {
+        tps.add(cur)
+    }
+    return Triple(idx, cur, tps)
+}
+
 fun Type.Data.walk (): Triple<Int?,Type,List<Type>>? {
     val dat = this.to_data()
     return dat!!.walk(this.ts.map { it.str })
+}
+
+fun Type.walk (l: List<String>): Triple<Int?,Type,List<Type>>? {
+    return when (this) {
+        is Type.Data -> this.walk()
+        is Type.Union -> this.walk(l)
+        else -> TODO()
+    }
 }
 
 fun Stmt.Data.walk (l: List<String>): Triple<Int?,Type,List<Type>>? {
@@ -187,8 +244,11 @@ fun Expr.type (): Type {
                 //println(tp.ts.map { it.str })
                 tp.ts.last().str
             }
+            println(this.path)
+            //val x = tp.walk(this.path)
             val x = tp.no_data().sub__idx_id__to__idx_tp(sup, this.path.first())
             //println(listOf("disc", sup, this.path, x))
+            println(x!!.second.to_str())
             x!!.second
         }
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
