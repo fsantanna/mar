@@ -57,11 +57,12 @@ fun check_vars () {
                 var sup: Type.Union? = null
                 for (n in 1..me.ids.size-1) {
                     val path = me.ids.take(n)
-                    val idx_tp = dat.walk(path.map { it.str })
-                    if (idx_tp == null) {
+                    val idx_tps = dat.walk(path.map { it.str })
+                    if (idx_tps == null) {
                         err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is invalid")
                     }
-                    val (_,tp) = idx_tp
+                    val (_,tps) = idx_tps
+                    val tp = tps.last()
                     if (tp !is Type.Union) {
                         err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is not extendable")
                     }
@@ -209,13 +210,14 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val ts = me.dat.walk()!!.third
-                if (ts.size != me.es.size) {
+                val ts = me.dat.walk()!!.second
+                if (ts.filter { it != null }.size != me.es.size) {
                     //println(ts.map { it.to_str() })
                     //println(me.es.map { it.to_str() })
                     err(me.tk, "constructor error : arity mismatch")
                 }
-                val x = ts.zip(me.es).find { (tp,e) ->
+                val xts = ts.filter { it != null } as List<Type>
+                val x = xts.zip(me.es).find { (tp,e) ->
                     !tp.is_sup_of(e.type())
                 }
                 if (x != null) {

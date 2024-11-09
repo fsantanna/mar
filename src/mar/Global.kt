@@ -145,7 +145,7 @@ object G {
     var tk0: Tk? = null
     var tk1: Tk? = null
 
-    var outer: Stmt? = null
+    var outer: Stmt.Block? = null
     var ns: MutableMap<Node,Any> = mutableMapOf()
     var ups: MutableMap<Node,Node> = mutableMapOf()
 

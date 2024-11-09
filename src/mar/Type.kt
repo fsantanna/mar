@@ -92,7 +92,7 @@ fun Type.sub__idx_id__to__idx_tp (sup: String?, sub: String): Pair<Int,Type>? {
     }
 }
 
-fun Type.Union.walk (l: List<String>): Triple<Int?,Type,List<Type>>? {
+fun Type.Union.walk (l: List<String>): Pair<Int?,List<Type>>? {
     var idx: Int? = null
     var cur: Type = this
     var sup: String? = l.first()
@@ -138,15 +138,15 @@ fun Type.Union.walk (l: List<String>): Triple<Int?,Type,List<Type>>? {
     if (lst) {
         tps.add(cur)
     }
-    return Triple(idx, cur, tps)
+    return Pair(idx, tps)
 }
 
-fun Type.Data.walk (): Triple<Int?,Type,List<Type>>? {
+fun Type.Data.walk (): Pair<Int?,List<Type?>>? {
     val dat = this.to_data()
     return dat!!.walk(this.ts.map { it.str })
 }
 
-fun Type.walk (l: List<String>): Triple<Int?,Type,List<Type>>? {
+fun Type.walk (l: List<String>): Pair<Int?,List<Type?>>? {
     return when (this) {
         is Type.Data -> this.walk()
         is Type.Union -> this.walk(l)
@@ -154,12 +154,12 @@ fun Type.walk (l: List<String>): Triple<Int?,Type,List<Type>>? {
     }
 }
 
-fun Stmt.Data.walk (l: List<String>): Triple<Int?,Type,List<Type>>? {
+fun Stmt.Data.walk (l: List<String>): Pair<Int?,List<Type?>>? {
     var idx: Int? = null
     var cur: Type = this.tp
     var sup: String? = l.first()
     var lst = true
-    val tps = mutableListOf<Type>()
+    val tps = mutableListOf<Type?>()
     if (this.id.str != sup) {
         return null
     }
@@ -192,9 +192,7 @@ fun Stmt.Data.walk (l: List<String>): Triple<Int?,Type,List<Type>>? {
                 }
             }
         }
-        if (uni._0 != null) {
-            tps.add(uni._0)
-        }
+        tps.add(uni._0)
         if (i==l.size-1 && idx==-1) {
             lst = false     // last is _0: do not add again outside
         }
@@ -203,7 +201,7 @@ fun Stmt.Data.walk (l: List<String>): Triple<Int?,Type,List<Type>>? {
     if (lst) {
         tps.add(cur)
     }
-    return Triple(idx, cur, tps)
+    return Pair(idx, tps)
 }
 
 fun Expr.type (): Type {
