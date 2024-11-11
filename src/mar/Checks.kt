@@ -123,7 +123,7 @@ fun check_vars () {
                         else -> it.first().str == me.ts[me.ts.size - 1].str
                     }
                 }
-                if (!ok || me.walk()==null) {
+                if (!ok || me.self_walk()==null) {
                     err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
                 }
             }
@@ -197,8 +197,9 @@ fun check_types () {
             }
             is Expr.Disc -> {
                 val tp = me.col.type()
-                val sup = if (tp !is Type.Data) null else tp.ts.last().str
-                val ok = tp.no_data().sub__idx_id__to__idx_tp(sup, me.path.first())
+                println(tp.to_str())
+                println(me.path)
+                val ok = tp.walk(me.path)
                 if (ok == null) {
                     err(me.tk, "discriminator error : types mismatch")
                 }
@@ -210,7 +211,7 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val ts = me.dat.walk()!!.second
+                val ts = me.dat.self_walk()!!.second
                 if (ts.filter { it != null }.size != me.es.size) {
                     //println(ts.map { it.to_str() })
                     //println(me.es.map { it.to_str() })

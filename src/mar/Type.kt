@@ -98,6 +98,9 @@ fun Type.Union.walk (l: List<String>): Pair<Int?,List<Type>>? {
     var sup: String? = l.first()
     var lst = true
     val tps = mutableListOf<Type>()
+    println("-=-=-")
+    println(this.to_str())
+    println(l)
     for (i in 0..l.size-1) {
         val id = l[i]
         if (cur !is Type.Union) {
@@ -114,7 +117,10 @@ fun Type.Union.walk (l: List<String>): Pair<Int?,List<Type>>? {
             }
         } else {
             when {
-                (sup==id && uni._0==null) -> return null
+                (sup==id && uni._0==null) -> {
+                    println(listOf(sup,id,uni._0))
+                    return null
+                }
                 (sup==id && uni._0!=null) -> { idx=-1 ; cur=uni._0 }
                 (uni.ids == null)         -> return null
                 else -> uni.ids.indexOfFirst { it.str == id }.let {
@@ -141,16 +147,16 @@ fun Type.Union.walk (l: List<String>): Pair<Int?,List<Type>>? {
     return Pair(idx, tps)
 }
 
-fun Type.Data.walk (): Pair<Int?,List<Type?>>? {
+fun Type.Data.self_walk (): Pair<Int?,List<Type?>>? {
     val dat = this.to_data()
     return dat!!.walk(this.ts.map { it.str })
 }
 
 fun Type.walk (l: List<String>): Pair<Int?,List<Type?>>? {
     return when (this) {
-        is Type.Data -> this.walk()
+        is Type.Data -> this.no_data().walk(l)
         is Type.Union -> this.walk(l)
-        else -> TODO()
+        else -> null
     }
 }
 
@@ -242,11 +248,11 @@ fun Expr.type (): Type {
                 //println(tp.ts.map { it.str })
                 tp.ts.last().str
             }
-            println(this.path)
+            //println(this.path)
             //val x = tp.walk(this.path)
             val x = tp.no_data().sub__idx_id__to__idx_tp(sup, this.path.first())
             //println(listOf("disc", sup, this.path, x))
-            println(x!!.second.to_str())
+            //println(x!!.second.to_str())
             x!!.second
         }
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))

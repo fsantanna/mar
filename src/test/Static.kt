@@ -615,6 +615,21 @@ class Static {
         """)
         assert(out == "anon : (lin 4, col 20) : discriminator error : types mismatch") { out!! }
     }
+    @Test
+    fun dd_11_data () {
+        val out = static("""
+            data A: <B: <C:()>>
+            var c: A = A.B.C()
+            print(c!B!C)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data A: <B:<C:()>>\n" +
+                "var c: A\n" +
+                "set c = (A.B.C(()))\n" +
+                "print((c!B!C))\n" +
+                "}") { G.outer!!.to_str() }
+    }
 
     // DATA SUBS
 
@@ -1362,7 +1377,7 @@ class Static {
         G.outer!!.ss.let {
             val X = it[0] as Stmt.Data
             val x = it[1] as Stmt.Dcl
-            println((x.xtp as Type.Data).walk())
+            println((x.xtp as Type.Data).self_walk())
             //println(x.it.walk(emptyList()))
             //println(X.to_str())
             //println(x.to_str())
@@ -1382,7 +1397,7 @@ class Static {
         G.outer!!.ss.let {
             val X = it[0] as Stmt.Data
             val x = it[1] as Stmt.Dcl
-            println((x.xtp as Type.Data).walk())
+            println((x.xtp as Type.Data).self_walk())
             //println(x.it.walk(emptyList()))
             //println(X.to_str())
             //println(x.to_str())

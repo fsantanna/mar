@@ -434,7 +434,10 @@ fun Expr.coder (pre: Boolean = false): String {
             val tp = this.col.type()
             val sup = if (tp !is Type.Data) null else tp.ts.last().str
             val (i,_) = tp.no_data().sub__idx_id__to__idx_tp(sup,this.path.first())!!
-            "(${this.col.coder(pre)}._${i+1})"
+            """
+            // DISC | ${this.dump()}
+            (${this.col.coder(pre)}._${i+1})
+            """
         }
         is Expr.Pred  -> {
             val (i,_) = (this.col.type().no_data() as Type.Union).sub__idx_id__to__idx_tp(null, this.idx)!!
