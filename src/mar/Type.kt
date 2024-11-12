@@ -68,7 +68,50 @@ fun Type.no_data (): Type {
     }
 }
 
-fun Type.Union.walk (sups: List<Tk.Type>, subs: List<String>): Pair<List<Int>,List<Type>>? {
+fun Type.Union.index (sup: String?, sub: String): Pair<Int, Type>? {
+    val num = sub.toIntOrNull()
+    return if (num != null) {
+        when {
+            (num<0 || num>this.ts.size) -> null
+            (num==0 && this._0==null)   -> null
+            (num==0 && this._0!=null)   -> Pair(-1, this._0)
+            else                        -> Pair(num-1, this.ts[num-1])
+        }
+    } else {
+        when {
+            (sup==sub && this._0==null) -> null
+            (sup==sub && this._0!=null) -> Pair(-1, this._0)
+            (this.ids == null)          -> null
+            else -> this.ids.indexOfFirst { it.str == sub }.let {
+                if (it == -1) {
+                    null
+                } else {
+                    Pair(it, this.ts[it])
+                }
+            }
+        }
+    }
+}
+
+fun Type.Union.indexes (sup: String?, subs: List<String>): List<Pair<Int,Type>>? {
+    assert(subs.size == 1)
+    return this.index(sup, subs.first()).let {
+        if (it == null) null else {
+            listOf(it)
+        }
+    }
+}
+
+fun Type.indexes (sup: String?, subs: List<String>): List<Pair<Int,Type>>? {
+    return when (this) {
+        is Type.Union -> this.indexes(sup, subs)
+        else -> null
+    }
+}
+
+fun Type.Union.walk (sups: List<Tk.Type>, subs: List<String>): List<Pair<Int,Type>> {
+    TODO()
+    /*
     var idx: Int? = null
     var cur: Type = this
     var supx: String? = null //sups
@@ -121,6 +164,8 @@ fun Type.Union.walk (sups: List<Tk.Type>, subs: List<String>): Pair<List<Int>,Li
         tps.add(cur)
     }
     return Pair(listOf(idx!!), tps)
+
+     */
 }
 
 fun Type.Data.self_walk (): Pair<List<Int>,List<Type?>>? {
@@ -129,6 +174,8 @@ fun Type.Data.self_walk (): Pair<List<Int>,List<Type?>>? {
 }
 
 fun Type.walk (sups: List<Tk.Type>, subs: List<String>): Pair<List<Int>,List<Type?>>? {
+    TODO()
+    /*
     return when (this) {
         is Type.Data -> {
             assert(sups.isEmpty())
@@ -137,9 +184,13 @@ fun Type.walk (sups: List<Tk.Type>, subs: List<String>): Pair<List<Int>,List<Typ
         is Type.Union -> this.walk(sups, subs)
         else -> null
     }
+
+     */
 }
 
 fun Stmt.Data.walk (l: List<String>): Pair<List<Int>,List<Type?>>? {
+    TODO()
+    /*
     var cur: Type = this.tp
     var sup: String? = l.first()
     var lst = true
@@ -188,6 +239,8 @@ fun Stmt.Data.walk (l: List<String>): Pair<List<Int>,List<Type?>>? {
         tps.add(cur)
     }
     return Pair(idxs, tps)
+
+     */
 }
 
 fun Expr.type (): Type {
@@ -222,7 +275,7 @@ fun Expr.type (): Type {
             }
             tp.ts[idx]
         }
-        is Expr.Disc  -> this.col.type().walk(emptyList(), this.path)?.second?.last()!!
+        is Expr.Disc  -> this.col.type().indexes(null, this.path)!!.last().second
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> this.dat
 

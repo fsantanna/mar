@@ -1,5 +1,9 @@
 package mar
 
+fun <A,B> Pair<A,B>?.nulls (): Pair<A?,B?> {
+    return if (this == null) Pair(null, null) else this
+}
+
 fun <T> T.dump(): T {
     val s = when (this) {
         is Type -> this.to_str()
