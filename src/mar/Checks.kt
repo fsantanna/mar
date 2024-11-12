@@ -222,14 +222,16 @@ fun check_types () {
                 when {
                     (tp == null) -> TODO()
                     (tp is Type.Union) -> {
-                        val l = tp.indexes(null, me.dat.ts.drop(1).map { it.str })
+                        val l = tp.indexes(null, me.dat.ts.drop(1).map { it.str })?.map { it.second }?.filter { it != null } as List<Type>?
+                        if (l != null) {
+                            //println(l.map { it.to_str() })
+                            //println(me.es.map { it.to_str() })
+                        }
                         when {
                             (l == null) -> err(me.tk, "constructor error : types mismatch")
                             (l.size != me.es.size) -> err(me.tk, "constructor error : arity mismatch")
                             else -> {
-                                //println(l.map { it.second.to_str() })
-                                //println(me.es.map { it.to_str() })
-                                val i = l.map { it.second }.zip(me.es.map { it.type() }).find { (t,e) ->
+                                val i = l.zip(me.es.map { it.type() }).find { (t,e) ->
                                     !t.is_sup_of(e)
                                 }
                                 if (i != null) {
