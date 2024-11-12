@@ -94,19 +94,20 @@ fun Type.Union.index (sup: String?, sub: String): Pair<Int, Type>? {
 }
 
 fun Type.Union.indexes (sup: String?, subs: List<String>): List<Pair<Int,Type>>? {
-    assert(subs.size == 1)
-    return this.index(sup, subs.first()).let {
-        if (it == null) null else {
-            listOf(it)
+    var cur: Type = this
+    val l: MutableList<Pair<Int,Type>> = mutableListOf()
+    for (sub in subs) {
+        if (cur !is Type.Union) {
+            return null
         }
+        val idx_tp = cur.index(null, sub)
+        if (idx_tp == null) {
+            return null
+        }
+        l.add(idx_tp)
+        cur = idx_tp.second
     }
-}
-
-fun Type.indexes (sup: String?, subs: List<String>): List<Pair<Int,Type>>? {
-    return when (this) {
-        is Type.Union -> this.indexes(sup, subs)
-        else -> null
-    }
+    return l
 }
 
 fun Type.Union.walk (sups: List<Tk.Type>, subs: List<String>): List<Pair<Int,Type>> {
@@ -275,7 +276,10 @@ fun Expr.type (): Type {
             }
             tp.ts[idx]
         }
-        is Expr.Disc  -> this.col.type().indexes(null, this.path)!!.last().second
+        is Expr.Disc  -> {
+            val tp = this.col.type().no_data() as Type.Union
+            tp.indexes(null, this.path)!!.last().second
+        }
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> this.dat
 

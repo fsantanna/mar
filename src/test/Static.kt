@@ -510,7 +510,8 @@ class Static {
             var x: Int
             var y: Int = x!1
         """)
-        assert(out == "anon : (lin 3, col 27) : discriminator error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 27) : discriminator error : expected union type") { out!! }
+        //assert(out == "anon : (lin 3, col 27) : discriminator error : types mismatch") { out!! }
     }
     @Test
     fun cd_08_disc_err () {

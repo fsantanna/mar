@@ -116,6 +116,7 @@ fun check_vars () {
                 if (dat == null) {
                     err(me.tk, "type error : data \"${fst.str}\" is not declared")
                 }
+                /*
                 val ok = me.ts.filterIndexed { i,t -> i<me.ts.size-1 && t.str==me.ts[i+1].str }.let {
                     when {
                         (it.size >= 2) -> false
@@ -123,8 +124,13 @@ fun check_vars () {
                         else -> it.first().str == me.ts[me.ts.size - 1].str
                     }
                 }
-                if (!ok || me.self_walk()==null) {
-                    err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
+                 */
+                when {
+                    (me.ts.size == 1) -> {}
+                    (dat.tp !is Type.Union) ->
+                        err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
+                    (dat.tp.indexes(null, me.ts.drop(1).map { it.str }) == null) ->
+                        err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
                 }
             }
             else -> {}
@@ -196,33 +202,54 @@ fun check_types () {
                 }
             }
             is Expr.Disc -> {
-                val tp = me.col.type()
-                val ok = tp.indexes(null, me.path)
-                if (ok == null) {
-                    err(me.tk, "discriminator error : types mismatch")
+                val tp = me.col.type().no_data()
+                when {
+                    (tp !is Type.Union) -> err(me.tk, "discriminator error : expected union type")
+                    (tp.indexes(null, me.path) != null) -> {}
+                    else -> err(me.tk, "discriminator error : types mismatch")
                 }
             }
             is Expr.Pred -> {
-                val tp = me.col.type()
-                val ok = tp.indexes(null, me.path)
-                if (ok == null) {
-                    err(me.tk, "predicate error : types mismatch")
+                val tp = me.col.type().no_data()
+                when {
+                    (tp !is Type.Union) -> err(me.tk, "predicate error : expected union type")
+                    (tp.indexes(null, me.path) != null) -> {}
+                    else -> err(me.tk, "predicate error : types mismatch")
                 }
             }
             is Expr.Cons -> {
-                val ts = me.dat.self_walk()!!.second
-                if (ts.filter { it != null }.size != me.es.size) {
-                    //println(ts.map { it.to_str() })
-                    //println(me.es.map { it.to_str() })
-                    err(me.tk, "constructor error : arity mismatch")
-                }
-                val xts = ts.filter { it != null } as List<Type>
-                val x = xts.zip(me.es).find { (tp,e) ->
-                    !tp.is_sup_of(e.type())
-                }
-                if (x != null) {
-                    //println(x.second.to_str())
-                    err(x.second.tk, "constructor error : types mismatch")
+                val tp = me.dat.to_data()?.tp
+                when {
+                    (tp == null) -> TODO()
+                    (tp is Type.Union) -> {
+                        val l = tp.indexes(null, me.dat.ts.drop(1).map { it.str })
+                        if (l == null) {
+                            err(me.tk, "constructor error : types mismatch")
+                        }
+                        /*
+                        val ts = me.dat.self_walk()!!.second
+                        if (ts.filter { it != null }.size != me.es.size) {
+                            //println(ts.map { it.to_str() })
+                            //println(me.es.map { it.to_str() })
+                            err(me.tk, "constructor error : arity mismatch")
+                        }
+                        val xts = ts.filter { it != null } as List<Type>
+                        val x = xts.zip(me.es).find { (tp,e) ->
+                            !tp.is_sup_of(e.type())
+                        }
+                        if (x != null) {
+                            //println(x.second.to_str())
+                            err(x.second.tk, "constructor error : types mismatch")
+                        }
+                         */
+                    }
+                    (me.es.size != 1) -> TODO()
+                    else -> {
+                        val e = me.es.first()
+                        if (!tp.is_sup_of(e.type())) {
+                            err(e.tk, "constructor error : types mismatch")
+                        }
+                    }
                 }
             }
             is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {
