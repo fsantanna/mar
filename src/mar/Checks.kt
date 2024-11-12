@@ -223,25 +223,20 @@ fun check_types () {
                     (tp == null) -> TODO()
                     (tp is Type.Union) -> {
                         val l = tp.indexes(null, me.dat.ts.drop(1).map { it.str })
-                        if (l == null) {
-                            err(me.tk, "constructor error : types mismatch")
+                        when {
+                            (l == null) -> err(me.tk, "constructor error : types mismatch")
+                            (l.size != me.es.size) -> err(me.tk, "constructor error : arity mismatch")
+                            else -> {
+                                //println(l.map { it.second.to_str() })
+                                //println(me.es.map { it.to_str() })
+                                val i = l.map { it.second }.zip(me.es.map { it.type() }).find { (t,e) ->
+                                    !t.is_sup_of(e)
+                                }
+                                if (i != null) {
+                                    err(i.second.tk, "constructor error : types mismatch")
+                                }
+                            }
                         }
-                        /*
-                        val ts = me.dat.self_walk()!!.second
-                        if (ts.filter { it != null }.size != me.es.size) {
-                            //println(ts.map { it.to_str() })
-                            //println(me.es.map { it.to_str() })
-                            err(me.tk, "constructor error : arity mismatch")
-                        }
-                        val xts = ts.filter { it != null } as List<Type>
-                        val x = xts.zip(me.es).find { (tp,e) ->
-                            !tp.is_sup_of(e.type())
-                        }
-                        if (x != null) {
-                            //println(x.second.to_str())
-                            err(x.second.tk, "constructor error : types mismatch")
-                        }
-                         */
                     }
                     (me.es.size != 1) -> TODO()
                     else -> {

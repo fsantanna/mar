@@ -21,8 +21,14 @@ fun Expr.infer (): Type? {
         }
         is Expr.Cons -> {
             val i = up.es.indexOfFirst { it.n==this.n }
-            val tps = up.dat.self_walk()!!.second.filter { it != null }
-            tps[i]
+            val tp = up.dat.to_data()?.tp
+            if (tp !is Type.Union) {
+                assert(i == 0)
+                tp
+            } else {
+                val l = tp.indexes(null, up.dat.ts.drop(1).map { it.str })!!
+                l[i].second
+            }
         }
         is Expr.Tuple -> up.typex().let {
             if (it == null) null else {
