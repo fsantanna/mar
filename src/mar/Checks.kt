@@ -190,22 +190,21 @@ fun check_types () {
                 }
             }
             is Expr.Union -> {
-                val idx_tp = me.xtp!!.sub__idx_id__to__idx_tp(null, me.idx)
-                if (idx_tp==null || !idx_tp.second.is_sup_of(me.v.type())) {
+                val idx_tp = me.xtp!!.walk(emptyList(), listOf(me.idx))
+                if (idx_tp==null || !idx_tp.second.last()!!.is_sup_of(me.v.type())) {
                     err(me.tk, "union error : types mismatch")
                 }
             }
             is Expr.Disc -> {
                 val tp = me.col.type()
-                println(tp.to_str())
-                println(me.path)
-                val ok = tp.walk(me.path)
+                val ok = tp.walk(emptyList(), me.path)
                 if (ok == null) {
                     err(me.tk, "discriminator error : types mismatch")
                 }
             }
             is Expr.Pred -> {
-                val ok = me.col.type().no_data().sub__idx_id__to__idx_tp(null, me.idx)
+                val tp = me.col.type()
+                val ok = tp.walk(emptyList(), me.path)
                 if (ok == null) {
                     err(me.tk, "predicate error : types mismatch")
                 }

@@ -388,8 +388,14 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
             }
             "?" -> {
                 val dot = G.tk0 as Tk.Op
-                (accept_enu("Type") || accept_enu_err("Num"))
-                Expr.Pred(dot, e, G.tk0!!.str)
+                val l = mutableListOf<String>()
+                while (accept_enu("Type") || accept_enu_err("Num")) {
+                    l.add(G.tk0!!.str)
+                    if (!accept_op("?")) {
+                        break
+                    }
+                }
+                Expr.Pred(dot, e, l)
             }
             else -> error("impossible case")
         }

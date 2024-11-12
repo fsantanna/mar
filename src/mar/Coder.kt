@@ -421,7 +421,8 @@ fun Expr.coder (pre: Boolean = false): String {
 
         is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { it.coder(pre) }.joinToString(",") } })"
         is Expr.Union -> {
-            val (i,_) = this.xtp!!.sub__idx_id__to__idx_tp(null,this.idx)!!
+            val (i,_) = this.xtp!!.walk(emptyList(), listOf(this.idx))!!
+            i!!
             "((${this.type().coder(pre)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"
         }
         is Expr.Field -> {
@@ -432,21 +433,23 @@ fun Expr.coder (pre: Boolean = false): String {
         }
         is Expr.Disc  -> {
             val tp = this.col.type()
-            val sup = if (tp !is Type.Data) null else tp.ts.last().str
-            val (i,_) = tp.no_data().sub__idx_id__to__idx_tp(sup,this.path.first())!!
+            val (i,_) = tp.walk(emptyList(), this.path)!!
+            i!!
             """
             // DISC | ${this.dump()}
             (${this.col.coder(pre)}._${i+1})
             """
         }
         is Expr.Pred  -> {
-            val (i,_) = (this.col.type().no_data() as Type.Union).sub__idx_id__to__idx_tp(null, this.idx)!!
-            "(${i+1}==0 || ${this.col.coder(pre)}.tag==${i+1})"
+            val (idxs,_) = this.col.type().walk(emptyList(), this.path)!!
+            "(${this.col.coder(pre)}.tag==${idxs.last()+1})"
         }
         is Expr.Cons  -> {
             assert(this.dat.ts.size >= this.es.size)
             val idxs = mutableListOf<Int>() // indexes of hier types with no constructors
             val dat = this.dat.to_data()!!
+            TODO()
+            /*
             val base = this.dat._0()
             val xes = if (this.dat.ts.size-(if (base==null) 0 else 1) == this.es.size) {
                 // A: <a> + <B: <b> + <C: <c>>>
@@ -503,6 +506,7 @@ fun Expr.coder (pre: Boolean = false): String {
                 ceu_0;
             })
             """
+             */
         }
 
         is Expr.Nat -> if (this.xtp == null) this.tk.str else {

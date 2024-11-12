@@ -102,7 +102,7 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Field  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"
         is Expr.Union  -> "<." + this.idx + "=" + this.v.to_str(pre) + ">" + this.xtp.cond { ":${it.to_str()}" }
         is Expr.Disc  -> "(${this.col.to_str(pre)}${this.path.map { "!" + it }.joinToString("")})"
-        is Expr.Pred  -> "(${this.col.to_str(pre)}?${this.idx})"
+        is Expr.Pred  -> "(${this.col.to_str(pre)}${this.path.map { "?" + it }.joinToString("")})"
         is Expr.Cons  -> "(${this.dat.to_str(pre)}(${this.es.map { it.to_str(pre) }.joinToString(",") }))"
 
         is Expr.Uno    -> "(" + this.tk_.to_str(pre) + this.e.to_str(pre) + ")"

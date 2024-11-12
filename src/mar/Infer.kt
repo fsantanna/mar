@@ -34,7 +34,7 @@ fun Expr.infer (): Type? {
         is Expr.Union -> up.typex().let {
             if (it == null) null else {
                 it as Type.Union
-                it.sub__idx_id__to__idx_tp(null,up.idx)!!.second
+                it.walk(emptyList(),listOf(up.idx))!!.second.last()
             }
         }
         is Expr.Call -> {
