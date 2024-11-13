@@ -80,7 +80,9 @@ fun Type.Union.index (sup: String?, sub: String): Pair<Int, Type>? {
     } else {
         when {
             (sup==sub && this._0==null) -> null
-            (sup==sub && this._0!=null) -> Pair(-1, this._0)
+            (sup==sub && this._0!=null) -> {
+                Pair(-1, this._0)
+            }
             (this.ids == null)          -> null
             else -> this.ids.indexOfFirst { it.str == sub }.let {
                 if (it == -1) {
@@ -99,20 +101,22 @@ fun Type.Union.indexes (sup: String?, subs: List<String>): List<Pair<Int,Type?>>
     val l: MutableList<Pair<Int,Type?>> = mutableListOf()
     for (i in 0 .. subs.size-1) {
         val sub = subs[i]
-        val idx_tp = cur.index(null, sub)
+        //println(listOf(xsup, sub))
+        val idx_tp = cur.index(xsup, sub)
         if (idx_tp == null) {
             return null
         }
         val (idx,tp) = idx_tp
-        if (cur._0 != null) {
-            l.add(Pair(idx, cur._0))
-        }
+        l.add(Pair(idx, cur._0))
         when {
-            (i == subs.size-1) -> l.add(idx_tp)
+            (i == subs.size-1) -> if (idx == -1) { /* added above */ } else {
+                l.add(idx_tp)
+            }
             (tp !is Type.Union) -> return null
             else -> {
                 l.add(Pair(idx, null))
                 cur = tp
+                xsup = sub
             }
         }
     }
