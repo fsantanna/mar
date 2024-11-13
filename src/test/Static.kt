@@ -867,7 +867,7 @@ class Static {
                 "data X: Int + <Y:()>\n" +
                 "var xy: X.Y\n" +
                 "set xy = (X.Y(10,()))\n" +
-                "var y: Int\n" +
+                "var y: ()\n" +
                 "set y = (xy!Y)\n" +
                 "}") { G.outer!!.to_str() }
     }
