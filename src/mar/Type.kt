@@ -94,6 +94,7 @@ fun Type.Union.index (sup: String?, sub: String): Pair<Int, Type>? {
 }
 
 fun Type.Union.indexes (sup: String?, subs: List<String>): List<Pair<Int,Type?>>? {
+    var xsup = sup
     var cur: Type.Union = this
     val l: MutableList<Pair<Int,Type?>> = mutableListOf()
     for (i in 0 .. subs.size-1) {

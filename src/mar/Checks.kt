@@ -129,7 +129,7 @@ fun check_vars () {
                     (me.ts.size == 1) -> {}
                     (dat.tp !is Type.Union) ->
                         err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
-                    (dat.tp.indexes(null, me.ts.drop(1).map { it.str }) == null) ->
+                    (dat.tp.indexes(me.ts.first().str, me.ts.drop(1).map { it.str }) == null) ->
                         err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
                 }
             }
