@@ -223,7 +223,7 @@ fun check_types () {
                 val tp = me.dat.to_data()?.tp
                 when {
                     (tp == null) -> TODO()
-                    (tp is Type.Union) -> {
+                    (tp is Type.Union && me.dat.ts.size>1) -> {
                         val l = tp.indexes(me.dat.ts.first().str, me.dat.ts.drop(1).map { it.str })?.map { it.second }?.filter { it != null } as List<Type>?
                         if (l != null) {
                             //println(l.map { it.to_str() })
