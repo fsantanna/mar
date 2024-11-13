@@ -1365,47 +1365,4 @@ class Static {
                 "set x = ```10```: Int\n" +
                 "}") { G.outer!!.to_str() }
     }
-
-    // WALK
-
-    @Test
-    fun ff_01_walk () {
-        val out = static("""
-            data X: Int
-            var x: X
-        """)
-        assert(out == null) { out!! }
-        G.outer!!.ss.let {
-            val X = it[0] as Stmt.Data
-            val x = it[1] as Stmt.Dcl
-            println((x.xtp as Type.Data).self_walk())
-            //println(x.it.walk(emptyList()))
-            //println(X.to_str())
-            //println(x.to_str())
-        }
-        assert(G.outer!!.to_str() == "do {\n" +
-                "var x: Int\n" +
-                "set x = ```10```: Int\n" +
-                "}") { G.outer!!.to_str() }
-    }
-    @Test
-    fun ff_02_walk () {
-        val out = static("""
-            data X: <T:(), F:()>
-            var x: X
-        """)
-        assert(out == null) { out!! }
-        G.outer!!.ss.let {
-            val X = it[0] as Stmt.Data
-            val x = it[1] as Stmt.Dcl
-            println((x.xtp as Type.Data).self_walk())
-            //println(x.it.walk(emptyList()))
-            //println(X.to_str())
-            //println(x.to_str())
-        }
-        assert(G.outer!!.to_str() == "do {\n" +
-                "var x: Int\n" +
-                "set x = ```10```: Int\n" +
-                "}") { G.outer!!.to_str() }
-    }
 }

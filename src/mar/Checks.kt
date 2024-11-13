@@ -202,10 +202,12 @@ fun check_types () {
                 }
             }
             is Expr.Disc -> {
-                val tp = me.col.type().no_data()
+                val tp  = me.col.type()
+                val tpx = tp.no_data()
+                val sup = if (tp is Type.Data) tp.ts.first().str else null
                 when {
-                    (tp !is Type.Union) -> err(me.tk, "discriminator error : expected union type")
-                    (tp.indexes(null, me.path) != null) -> {}
+                    (tpx !is Type.Union) -> err(me.tk, "discriminator error : expected union type")
+                    (tpx.indexes(sup, me.path) != null) -> {}
                     else -> err(me.tk, "discriminator error : types mismatch")
                 }
             }
