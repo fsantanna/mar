@@ -32,8 +32,10 @@ fun Expr.infer (): Type? {
                     tp
                 }
                 else -> {
-                    val l = tp.indexes(null, up.dat.ts.drop(1).map { it.str })!!
-                    l[i].second
+                    tp.indexes(null, up.dat.ts.drop(1).map { it.str })!!
+                        .map { it.second }
+                        .filter { it != null }
+                        .get(i)
                 }
             }
         }
