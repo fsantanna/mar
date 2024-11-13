@@ -22,12 +22,19 @@ fun Expr.infer (): Type? {
         is Expr.Cons -> {
             val i = up.es.indexOfFirst { it.n==this.n }
             val tp = up.dat.to_data()?.tp
-            if (tp !is Type.Union) {
-                assert(i == 0)
-                tp
-            } else {
-                val l = tp.indexes(null, up.dat.ts.drop(1).map { it.str })!!
-                l[i].second
+            when {
+                (tp !is Type.Union) -> {
+                    assert(i == 0)
+                    tp
+                }
+                (up.dat.ts.size == 1) -> {
+                    assert(i == 0)
+                    tp
+                }
+                else -> {
+                    val l = tp.indexes(null, up.dat.ts.drop(1).map { it.str })!!
+                    l[i].second
+                }
             }
         }
         is Expr.Tuple -> up.typex().let {
