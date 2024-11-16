@@ -24,11 +24,9 @@ fun Expr.infer (): Type? {
             val tp = up.dat.to_data()?.tp
             when {
                 (tp !is Type.Union) -> {
-                    assert(i == 0)
                     tp
                 }
                 (up.dat.ts.size == 1) -> {
-                    assert(i == 0)
                     tp
                 }
                 else -> {
@@ -38,6 +36,7 @@ fun Expr.infer (): Type? {
                         .get(i)
                 }
             }
+             */
         }
         is Expr.Tuple -> up.typex().let {
             if (it == null) null else {
@@ -49,7 +48,7 @@ fun Expr.infer (): Type? {
         is Expr.Union -> up.typex().let {
             if (it == null) null else {
                 it as Type.Union
-                val (_,tp) = it.index(null,up.idx)!!
+                val (_,tp) = it.index(up.idx)!!
                 tp
             }
         }

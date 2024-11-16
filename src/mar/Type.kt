@@ -68,7 +68,7 @@ fun Type.no_data (): Type {
     }
 }
 
-fun Type.Union.index (sup: String?, sub: String): Pair<Int, Type>? {
+fun Type.Union.index (sub: String): Pair<Int, Type>? {
     val num = sub.toIntOrNull()
     return if (num != null) {
         when {
@@ -79,12 +79,8 @@ fun Type.Union.index (sup: String?, sub: String): Pair<Int, Type>? {
         }
     } else {
         when {
-            (sup==sub && this._0==null) -> null
-            (sup==sub && this._0!=null) -> {
-                Pair(-1, this._0)
-            }
             (this.ids == null)          -> null
-            else -> this.ids.indexOfFirst { it.str == sub }.let {
+            else                        -> this.ids.indexOfFirst { it.str == sub }.let {
                 if (it == -1) {
                     null
                 } else {
@@ -95,29 +91,25 @@ fun Type.Union.index (sup: String?, sub: String): Pair<Int, Type>? {
     }
 }
 
-fun Type.Union.indexes (sup: String?, subs: List<String>): List<Pair<Int,Type?>>? {
+fun Type.Union.indexes (subs: List<String>): List<Pair<Int,Type?>>? {
     assert(subs.size > 0)
-    var xsup = sup
     var cur: Type.Union = this
     val l: MutableList<Pair<Int,Type?>> = mutableListOf()
     for (i in 0 .. subs.size-1) {
         val sub = subs[i]
         //println(listOf(xsup, sub))
-        val idx_tp = cur.index(xsup, sub)
+        val idx_tp = cur.index(sub)
         if (idx_tp == null) {
             return null
         }
         val (idx,tp) = idx_tp
         l.add(Pair(idx, cur._0))
         when {
-            (i == subs.size-1) -> if (idx == -1) { /* added above */ } else {
-                l.add(idx_tp)
-            }
+            (i == subs.size-1) -> l.add(idx_tp)
             (tp !is Type.Union) -> return null
             else -> {
                 l.add(Pair(idx, null))
                 cur = tp
-                xsup = sub
             }
         }
     }
@@ -229,8 +221,7 @@ fun Expr.type (): Type {
         is Expr.Disc  -> {
             val tp  = this.col.type()
             val tpx = tp.no_data() as Type.Union
-            val sup = if (tp is Type.Data) tp.ts.first().str else null
-            tpx.indexes(sup, this.path)!!.last().second!!
+            tpx.indexes(this.path)!!.last().second!!
         }
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> this.dat

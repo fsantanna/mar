@@ -129,7 +129,7 @@ fun check_vars () {
                     (me.ts.size == 1) -> {}
                     (dat.tp !is Type.Union) ->
                         err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
-                    (dat.tp.indexes(me.ts.first().str, me.ts.drop(1).map { it.str }) == null) ->
+                    (dat.tp.indexes(me.ts.drop(1).map { it.str }) == null) ->
                         err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
                 }
             }
@@ -196,7 +196,7 @@ fun check_types () {
                 }
             }
             is Expr.Union -> {
-                val (_,sub) = me.xtp!!.index(null, me.idx).nulls()
+                val (_,sub) = me.xtp!!.index(me.idx).nulls()
                 if (sub==null || !sub.is_sup_of(me.v.type())) {
                     err(me.tk, "union error : types mismatch")
                 }
@@ -204,10 +204,9 @@ fun check_types () {
             is Expr.Disc -> {
                 val tp  = me.col.type()
                 val tpx = tp.no_data()
-                val sup = if (tp is Type.Data) tp.ts.first().str else null
                 when {
                     (tpx !is Type.Union) -> err(me.tk, "discriminator error : expected union type")
-                    (tpx.indexes(sup, me.path) != null) -> {}
+                    (tpx.indexes(me.path) != null) -> {}
                     else -> err(me.tk, "discriminator error : types mismatch")
                 }
             }
@@ -215,7 +214,7 @@ fun check_types () {
                 val tp = me.col.type().no_data()
                 when {
                     (tp !is Type.Union) -> err(me.tk, "predicate error : expected union type")
-                    (tp.indexes(null, me.path) != null) -> {}
+                    (tp.indexes(me.path) != null) -> {}
                     else -> err(me.tk, "predicate error : types mismatch")
                 }
             }
@@ -225,7 +224,7 @@ fun check_types () {
                 when {
                     (tp == null) -> TODO()
                     (tp is Type.Union && me.dat.ts.size>1) -> {
-                        val l = tp.indexes(me.dat.ts.first().str, me.dat.ts.drop(1).map { it.str })?.map { it.second }?.filter { it != null } as List<Type>?
+                        val l = tp.indexes(me.dat.ts.drop(1).map { it.str })?.map { it.second }?.filter { it != null } as List<Type>?
                         if (l != null) {
                             //println(l.map { it.to_str() })
                             //println(me.es.map { it.to_str() })
