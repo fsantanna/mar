@@ -222,35 +222,22 @@ fun check_types () {
                 val tp = me.dat.to_data()?.tp
                 val te = me.e.type()
                 when {
-                    (tp == null) -> TODO()
-                    (tp is Type.Union && me.dat.ts.size>1) -> {
-                        val l = tp.indexes(me.dat.ts.drop(1).map { it.str })?.map { it.second }?.filter { it != null } as List<Type>?
-                        if (l != null) {
-                            //println(l.map { it.to_str() })
-                            //println(me.es.map { it.to_str() })
+                    (tp == null) -> TODO("1")
+                    (tp !is Type.Union) -> {
+                        if (!tp.is_sup_of(te)) {
+                            err(me.e.tk, "constructor error : types mismatch")
                         }
+                    }
+                    else -> {
+                        val tpx = tp.indexes(me.dat.ts.drop(1).map { it.str })?.third
                         when {
-                            (l == null) -> err(me.tk, "constructor error : types mismatch")
-                            (te !is Type.Tuple) -> {
-                                if (l.size!=1 || !l.first().is_sup_of(te)) {
+                            (tpx == null) -> TODO("3") //err(me.tk, "constructor error : types mismatch")
+                            else -> {
+                                if (!tpx.is_sup_of(te)) {
                                     err(me.e.tk, "constructor error : types mismatch")
                                 }
                             }
-                            else -> {
-                                val ll = (l as List<Type.Tuple>).map { it.ts }.flatten()
-                                //println(ll.map { it.to_str() })
-                                //println(me.es.map { it.to_str() })
-                                val i = ll.zip(te.ts).find { (t,e) ->
-                                    !t.is_sup_of(e)
-                                }
-                                if (i != null) {
-                                    err(i.second.tk, "constructor error : types mismatch")
-                                }
-                            }
                         }
-                    }
-                    (!tp.is_sup_of(te)) -> {
-                        err(me.e.tk, "constructor error : types mismatch")
                     }
                 }
             }

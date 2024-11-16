@@ -70,50 +70,59 @@ fun Type.no_data (): Type {
 
 fun Type.Union.index (sub: String): Pair<Int, Type>? {
     val num = sub.toIntOrNull()
-    return if (num != null) {
-        when {
-            (num<0 || num>this.ts.size) -> null
-            (num==0 && this._0==null)   -> null
-            (num==0 && this._0!=null)   -> Pair(-1, this._0)
-            else                        -> Pair(num-1, this.ts[num-1])
-        }
-    } else {
-        when {
-            (this.ids == null)          -> null
-            else                        -> this.ids.indexOfFirst { it.str == sub }.let {
-                if (it == -1) {
-                    null
-                } else {
-                    Pair(it, this.ts[it])
+    return when {
+        (num == null) -> {
+            if (this.ids == null) {
+                null
+            } else {
+                this.ids.indexOfFirst { it.str == sub }.let {
+                    if (it == -1) {
+                        null
+                    } else {
+                        Pair(it, this.ts[it])
+                    }
                 }
             }
         }
+        (num<0 || num>this.ts.size) -> null
+        (num==0 && this._0==null)   -> null
+        (num==0 && this._0!=null)   -> Pair(-1, this._0)
+        else                        -> Pair(num-1, this.ts[num-1])
     }
 }
 
-fun Type.Union.indexes (subs: List<String>): List<Pair<Int,Type?>>? {
+fun Type.Union.indexes (subs: List<String>): Triple<List<Int>, List<Type.Tuple>?, Type>? {
     assert(subs.size > 0)
     var cur: Type.Union = this
-    val l: MutableList<Pair<Int,Type?>> = mutableListOf()
+    val idxs: MutableList<Int> = mutableListOf()
+    val typs: MutableList<Type.Tuple> = mutableListOf()
     for (i in 0 .. subs.size-1) {
         val sub = subs[i]
         //println(listOf(xsup, sub))
-        val idx_tp = cur.index(sub)
-        if (idx_tp == null) {
+        val (idx,tp) = cur.index(sub).nulls()
+        if (idx==null || tp==null) {
             return null
         }
-        val (idx,tp) = idx_tp
-        l.add(Pair(idx, cur._0))
-        when {
-            (i == subs.size-1) -> l.add(idx_tp)
-            (tp !is Type.Union) -> return null
-            else -> {
-                l.add(Pair(idx, null))
-                cur = tp
+        idxs.add(idx)
+        if (cur._0 != null) {
+            typs.add(cur._0!!)
+        }
+        if (i == subs.size-1) {
+            return if (cur._0 == null) {
+                return Triple(idxs, null, tp)
+            } else {
+                val tups = (typs + tp as Type.Tuple)
+                return Triple(idxs, typs,
+                    Type.Tuple(tp.tk, tups.map { it.ts }.flatten(), tups.mapNotNull { it.ids }.flatten())
+                )
             }
         }
+        if (tp !is Type.Union) {
+            return null
+        }
+        cur = tp
     }
-    return l
+    error("bug found")
 }
 
 fun Type.walk (sups: List<Tk.Type>, subs: List<String>): Pair<List<Int>,List<Type?>>? {
@@ -221,7 +230,7 @@ fun Expr.type (): Type {
         is Expr.Disc  -> {
             val tp  = this.col.type()
             val tpx = tp.no_data() as Type.Union
-            tpx.indexes(this.path)!!.last().second!!
+            tpx.indexes(this.path)!!.third
         }
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> this.dat
