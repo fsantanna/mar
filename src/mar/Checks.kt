@@ -221,6 +221,7 @@ fun check_types () {
             }
             is Expr.Cons -> {
                 val tp = me.dat.to_data()?.tp
+                val te = me.e.type()
                 when {
                     (tp == null) -> TODO()
                     (tp is Type.Union && me.dat.ts.size>1) -> {
@@ -231,9 +232,16 @@ fun check_types () {
                         }
                         when {
                             (l == null) -> err(me.tk, "constructor error : types mismatch")
-                            (l.size != me.es.size) -> err(me.tk, "constructor error : arity mismatch")
+                            (te !is Type.Tuple) -> {
+                                if (l.size!=1 || !l.first().is_sup_of(te)) {
+                                    err(me.e.tk, "constructor error : types mismatch")
+                                }
+                            }
                             else -> {
-                                val i = l.zip(me.es.map { it.type() }).find { (t,e) ->
+                                val ll = (l as List<Type.Tuple>).map { it.ts }.flatten()
+                                //println(ll.map { it.to_str() })
+                                //println(me.es.map { it.to_str() })
+                                val i = ll.zip(te.ts).find { (t,e) ->
                                     !t.is_sup_of(e)
                                 }
                                 if (i != null) {
@@ -242,12 +250,8 @@ fun check_types () {
                             }
                         }
                     }
-                    (me.es.size != 1) -> TODO()
-                    else -> {
-                        val e = me.es.first()
-                        if (!tp.is_sup_of(e.type())) {
-                            err(e.tk, "constructor error : types mismatch")
-                        }
+                    (!tp.is_sup_of(te)) -> {
+                        err(me.e.tk, "constructor error : types mismatch")
                     }
                 }
             }

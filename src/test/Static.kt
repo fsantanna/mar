@@ -681,6 +681,7 @@ class Static {
             data B: <T:[],F:[]>
             var b: B.T = B.F []
         """)
+        //assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
         assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
     }
     @Test
@@ -831,7 +832,8 @@ class Static {
             data X: [a:Int] + <Y:[]>
             var y = X.Y()   ;; missing Int
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 24) : constructor error : types mismatch") { out!! }
+        //assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
     }
     @Test
     fun df_02_hier_err () {
@@ -840,7 +842,13 @@ class Static {
             var y = X.Y([10]) ;; missing ()
         """)
         //println(out)
-        assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
+        //assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: [a:Int] + <Y:[]>\n" +
+                "var y: X.Y\n" +
+                "set y = (X.Y(([10]:[a:Int])))\n" +
+                "}") { G.outer!!.to_str() }
     }
     @Test
     fun df_03_hier () {
@@ -850,9 +858,9 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "data X: Int + <Y:()>\n" +
+                "data X: [a:Int] + <Y:[]>\n" +
                 "var y: X.Y\n" +
-                "set y = (X.Y(10,()))\n" +
+                "set y = (X.Y(([10]:[a:Int])))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test

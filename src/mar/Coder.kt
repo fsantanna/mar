@@ -444,7 +444,6 @@ fun Expr.coder (pre: Boolean = false): String {
             "(${this.col.coder(pre)}.tag==${idxs.last()+1})"
         }
         is Expr.Cons  -> {
-            assert(this.dat.ts.size >= this.es.size)
             val idxs = mutableListOf<Int>() // indexes of hier types with no constructors
             val dat = this.dat.to_data()!!
             TODO()
