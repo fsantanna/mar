@@ -702,17 +702,19 @@ class Parser {
         """).lexer()
         parser_lexer()
         val s = parser_stmt().first()
+        assert(G.tk1?.str == "+")
         //assert(s.to_str() == "data Event.*: [x:Int,*:<>]") { s.to_str() }
-        assert(s.to_str() == "data Event: [Int] + <>") { s.to_str() }
+        //assert(s.to_str() == "data Event: [Int] + <>") { s.to_str() }
+        assert(s.to_str() == "data Event: [Int]") { s.to_str() }
     }
     @Test
     fun kj_05_data_hier_err () {
         G.tks = ("""
-            data Event: Int + <>
+            data Event: [a:Int] + <>
         """).lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s.to_str() == "data Event: Int + <>") { s.to_str() }
+        assert(s.to_str() == "data Event: [a:Int] + <>") { s.to_str() }
         //assert(trap { parser_stmt() } == "anon : (lin 4, col 20) : expected \"<\" : have \"Int\"")
     }
     @Test
@@ -723,9 +725,9 @@ class Parser {
             >
         """).lexer()
         parser_lexer()
-        val s = parser_stmt().first()
-        assert(s.to_str() == "data Event: [] + <Dn:()>") { s.to_str() }
-        //assert(trap { parser_stmt() } == "anon : (lin 3, col 21) : expected \"[\" : have \"(\"")
+        //val s = parser_stmt().first()
+        //assert(s.to_str() == "data Event: [] + <Dn:()>") { s.to_str() }
+        assert(trap { parser_stmt() } == "anon : (lin 3, col 21) : expected \"[\" : have \"(\"")
     }
     @Test
     fun kj_07_data_hier_err () {
@@ -735,9 +737,10 @@ class Parser {
             >
         """).lexer()
         parser_lexer()
-        val s = parser_stmt().first()
-        assert(s.to_str() == "data Event: [ts:Int] + <Dn:[Int]>") { s.to_str() }
+        //val s = parser_stmt().first()
+        //assert(s.to_str() == "data Event: [ts:Int] + <Dn:[Int]>") { s.to_str() }
         //assert(trap { parser_stmt() } == "anon : (lin 3, col 21) : data error : missing field identifier")
+        assert(trap { parser_stmt() } == "anon : (lin 3, col 21) : union error : missing type identifiers")
     }
     @Test
     fun kj_08_data_hier () {
@@ -799,6 +802,16 @@ class Parser {
         val e = parser_expr()
         assert(e is Expr.Cons && e.dat.ts.size==2)
         assert(e.to_str() == "(B.F(()))") { e.to_str() }
+    }
+    @Test
+    fun kj_12_data_hier_err () {
+        G.tks = ("""
+            data E: [ts:Int] + <
+                Quit:   [Int],
+            >
+        """).lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 3, col 25) : union error : missing type identifiers")
     }
 
     // CATCH / THROW

@@ -806,10 +806,10 @@ class Static {
     @Test
     fun de_14_subs () {
         val out = static("""
-            data X: [Int, [Int]+<[],[]>]
+            data X: [Int, [a:Int]+<[],[]>]
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "do {\ndata X: [Int,[Int] + <[],[]>]\n}") { G.outer!!.to_str() }
+        assert(G.outer!!.to_str() == "do {\ndata X: [Int,[a:Int] + <[],[]>]\n}") { G.outer!!.to_str() }
     }
     @Test
     fun de_15_subs_err () {
@@ -828,7 +828,7 @@ class Static {
     @Test
     fun df_01_hier_err () {
         val out = static("""
-            data X: Int + <Y:()>
+            data X: [a:Int] + <Y:[]>
             var y = X.Y()   ;; missing Int
         """)
         assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
@@ -836,17 +836,17 @@ class Static {
     @Test
     fun df_02_hier_err () {
         val out = static("""
-            data X: Int + <Y:()>
-            var y = X.Y(10) ;; missing ()
+            data X: [a:Int] + <Y:[]>
+            var y = X.Y([10]) ;; missing ()
         """)
-        println(out)
+        //println(out)
         assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
     }
     @Test
     fun df_03_hier () {
         val out = static("""
-            data X: Int + <Y:()>
-            var y = X.Y(10,())
+            data X: [a:Int] + <Y:[]>
+            var y = X.Y [10]
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
