@@ -108,12 +108,12 @@ fun Type.Union.indexes (subs: List<String>): Triple<List<Int>, List<Type.Tuple>?
             typs.add(cur._0!!)
         }
         if (i == subs.size-1) {
-            return if (cur._0 == null) {
+            if (cur._0 == null) {
                 return Triple(idxs, null, tp)
             } else {
                 val tups = (typs + tp as Type.Tuple)
                 return Triple(idxs, typs,
-                    Type.Tuple(tp.tk, tups.map { it.ts }.flatten(), tups.mapNotNull { it.ids }.flatten())
+                    Type.Tuple(tp.tk, tups.map { it.ts }.flatten(), tups.map { it.ids!! }.flatten())
                 )
             }
         }
