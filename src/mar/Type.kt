@@ -225,8 +225,10 @@ fun Expr.type (): Type {
             //println(listOf("type-field", this.to_str(), this.col.type().to_str()))
             val tp = this.col.type()
             val tpx = this.col.type().no_data()
-            val tup = if (tp !is Type.Data) tpx as Type.Tuple else {
-                (tpx as Type.Union).indexes(tp)!!.third as Type.Tuple
+            val tup = when {
+                (tp !is Type.Data) -> tpx as Type.Tuple
+                (tp.ts.size == 1) -> tpx as Type.Tuple
+                else -> (tpx as Type.Union).indexes(tp)!!.third as Type.Tuple
             }
             val idx = this.idx.toIntOrNull().let {
                 if (it == null) {

@@ -178,8 +178,10 @@ fun check_types () {
                 if (tpx is Type.Any) {
                     return
                 }
-                val tup = if (tp !is Type.Data) tpx else {
-                    (tpx as Type.Union).indexes(tp)?.third
+                val tup = when {
+                    (tp !is Type.Data) -> tpx
+                    (tp.ts.size == 1) -> tpx
+                    else -> (tpx as Type.Union).indexes(tp)?.third
                 }
                 val i = me.idx.toIntOrNull()
                 val ok = when {
@@ -221,12 +223,13 @@ fun check_types () {
                 val te = me.e.type()
                 when {
                     (tp == null) -> TODO("1")
-                    (tp !is Type.Union) -> {
+                    (me.dat.ts.size == 1) -> {
                         if (!tp.is_sup_of(te)) {
                             err(me.e.tk, "constructor error : types mismatch")
                         }
                     }
                     else -> {
+                        tp as Type.Union
                         val tpx = tp.indexes(me.dat)?.third
                         when {
                             (tpx == null) -> TODO("3") //err(me.tk, "constructor error : types mismatch")
