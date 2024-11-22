@@ -53,31 +53,22 @@ fun check_vars () {
                 if (dat == null) {
                     err(me.tk, "type error : data \"$top\" is not declared")
                 }
-                // all path, excluding last, exists
-                var sup: Type.Union? = null
-                for (n in 1..me.ids.size-1) {
-                    val path = me.ids.take(n)
-                    val idx_tps = dat.walk(path.map { it.str })
-                    if (idx_tps == null) {
-                        err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is invalid")
-                    }
-                    val (_,tps) = idx_tps
-                    val tp = tps.last()
-                    if (tp !is Type.Union) {
-                        err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is not extendable")
-                    }
-                    if (n == me.ids.size-1) {
-                        sup = tp
-                    }
+                val uni = dat.tp as Type.Union
+                val tp1 = uni.indexes(me.ts.drop(1).dropLast(1).map { it.str })
+                if (tp1 == null) {
+                    err(me.tk, "type error : data \"${me.ts.dropLast(1).map { it.str }.joinToString(".")}\" is invalid")
+                    //err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is not extendable")
                 }
-                // last path does not exist
-                if (dat.walk(me.ids.map { it.str }) != null) {
-                    err(me.tk, "type error : data \"${me.ids.map { it.str }.joinToString(".")}\" is already declared")
+                val tp2 = uni.indexes(me.ts.drop(1).map { it.str })
+                if (tp2 != null) {
+                    err(me.tk, "type error : data \"${me.ts.map { it.str }.joinToString(".")}\" is already declared")
                 }
+                /*
                 sup!!.let {
                     it.ids!!.add(me.ts.last())
                     it.ts.add(me.tp)
                 }
+                 */
             }
             is Stmt.Block -> {
                 val ids2 = me.to_dcls()

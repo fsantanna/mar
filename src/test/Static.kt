@@ -993,7 +993,7 @@ class Static {
     @Test
     fun dg_02x_hier_extd_err () {
         val out = static("""
-            data X: Int + <Y:()>
+            data X: [a:Int] + <Y:[]>
             data Y.Z: Int
         """)
         assert(out == "anon : (lin 3, col 13) : type error : data \"Y\" is not declared") { out!! }
@@ -1001,7 +1001,7 @@ class Static {
     @Test
     fun dg_03_hier_extd_err () {
         val out = static("""
-            data X: Int + <Y:()>
+            data X: [a:Int] + <Y:[]>
             data X.A.B: Int
         """)
         assert(out == "anon : (lin 3, col 13) : type error : data \"X.A\" is invalid") { out!! }
@@ -1009,7 +1009,7 @@ class Static {
     @Test
     fun dg_04_hier_extd_err () {
         val out = static("""
-            data X: Int + <Y:()>
+            data X: [a:Int] + <Y:[]>
             data X.Y: Int
         """)
         assert(out == "anon : (lin 3, col 13) : type error : data \"X.Y\" is already declared") { out!! }

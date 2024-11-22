@@ -628,10 +628,16 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             check_enu_err("Type")
             val tp1 = parser_type(null, null, false) as Type.Data
             accept_fix_err(":")
-            val tp2 = parser_type(null, null, false)
             if (tp1.ts.size == 1) {
+                val tp2 = parser_type(null, null, false)
                 listOf(Stmt.Data(tk0, tp1.ts.first(), tp2))
             } else {
+                check_fix_err("[")
+                val tp2 = parser_type(null, null, false) as Type.Tuple
+                when {
+                    (tp2.ts.size == 0) -> {}
+                    (tp2.ids==null || tp2.ids.size!=tp2.ts.size) -> err(tp2.tk, "tuple error : missing field identifier")
+                }
                 listOf(Stmt.Extd(tk0, tp1.ts, tp2))
             }
         }

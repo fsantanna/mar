@@ -814,6 +814,30 @@ class Parser {
         assert(trap { parser_stmt() } == "anon : (lin 3, col 25) : union error : missing type identifiers")
     }
 
+    // DATA / HIER / EXTD
+
+    @Test
+    fun kl_01_data_hier_extd_err () {
+        G.tks = ("""
+            data X.Y: ()
+        """).lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 2, col 23) : expected \"[\" : have \"(\"")
+    }
+    @Test
+    fun kl_02_data_hier_extd_err () {
+        G.tks = ("data X.Y: [Int]").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 11) : tuple error : missing field identifier")
+    }
+    @Test
+    fun kl_03_data_hier_extd () {
+        G.tks = ("data X.Y: [y:Int]").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "data X.Y: [y:Int]\n") { ss.to_str() }
+    }
+
     // CATCH / THROW
 
     @Test
