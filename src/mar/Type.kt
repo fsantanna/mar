@@ -91,6 +91,10 @@ fun Type.Union.index (sub: String): Pair<Int, Type>? {
     }
 }
 
+fun Type.Union.indexes (dat: Type.Data): Triple<List<Int>, List<Type.Tuple>?, Type>? {
+    return this.indexes(dat.ts.drop(1).map { it.str })
+}
+
 fun Type.Union.indexes (subs: List<String>): Triple<List<Int>, List<Type.Tuple>?, Type>? {
     assert(subs.size > 0)
     var cur: Type.Union = this
@@ -217,15 +221,21 @@ fun Expr.type (): Type {
         is Expr.Tuple -> this.xtp!!
         is Expr.Union -> this.xtp!!
         is Expr.Field -> {
-            val tp = this.col.type().no_data() as Type.Tuple
+            //println(listOf("type-field", this.to_str(), this.col.type().to_str()))
+            val tp = this.col.type()
+            val tpx = this.col.type().no_data()
+            val tup = if (tp !is Type.Data) tpx as Type.Tuple else {
+                (tpx as Type.Union).indexes(tp)!!.third as Type.Tuple
+            }
             val idx = this.idx.toIntOrNull().let {
                 if (it == null) {
-                    tp.ids!!.indexOfFirst { it.str==this.idx }
+                    tup.ids!!.indexOfFirst { it.str==this.idx }
                 } else {
                     it - 1
                 }
             }
-            tp.ts[idx]
+            //println(listOf("type-field", this.to_str(), tup.to_str(), tup.ts[idx].to_str()))
+            tup.ts[idx]
         }
         is Expr.Disc  -> {
             val tp  = this.col.type()

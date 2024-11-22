@@ -129,7 +129,7 @@ fun check_vars () {
                     (me.ts.size == 1) -> {}
                     (dat.tp !is Type.Union) ->
                         err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
-                    (dat.tp.indexes(me.ts.drop(1).map { it.str }) == null) ->
+                    (dat.tp.indexes(me) == null) ->
                         err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
                 }
             }
@@ -182,13 +182,19 @@ fun check_types () {
                 }
             }
             is Expr.Field -> {
-                val tp = me.col.type().no_data()
+                val tp = me.col.type()
+                val tpx = me.col.type().no_data()
+                if (tpx is Type.Any) {
+                    return
+                }
+                val tup = if (tp !is Type.Data) tpx else {
+                    (tpx as Type.Union).indexes(tp)?.third
+                }
                 val i = me.idx.toIntOrNull()
                 val ok = when {
-                    (tp is Type.Any) -> true
-                    (tp !is Type.Tuple) -> false
-                    (i!=null && (i<=0 || i>tp.ts.size)) -> false
-                    (i==null && (tp.ids==null || tp.ids.find { it.str==me.idx } == null)) -> false
+                    (tup !is Type.Tuple) -> false
+                    (i!=null && (i<=0 || i>tup.ts.size)) -> false
+                    (i==null && (tup.ids==null || tup.ids.find { it.str==me.idx } == null)) -> false
                     else -> true
                 }
                 if (!ok) {
@@ -204,6 +210,7 @@ fun check_types () {
             is Expr.Disc -> {
                 val tp  = me.col.type()
                 val tpx = tp.no_data()
+                //println(listOf("XXX", me.to_str()))
                 when {
                     (tpx !is Type.Union) -> err(me.tk, "discriminator error : expected union type")
                     (tpx.indexes(me.path) != null) -> {}
@@ -229,7 +236,7 @@ fun check_types () {
                         }
                     }
                     else -> {
-                        val tpx = tp.indexes(me.dat.ts.drop(1).map { it.str })?.third
+                        val tpx = tp.indexes(me.dat)?.third
                         when {
                             (tpx == null) -> TODO("3") //err(me.tk, "constructor error : types mismatch")
                             else -> {

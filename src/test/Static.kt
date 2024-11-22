@@ -866,26 +866,28 @@ class Static {
     @Test
     fun df_04_hier () {
         val out = static("""
-            data X: Int + <Y:()>
-            var xy: X.Y = X.Y(10,())
+            data X: [a:Int] + <Y:[]>
+            var xy: X.Y = X.Y [10]
             var y = xy!Y    ;; ()
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "data X: Int + <Y:()>\n" +
+                "data X: [a:Int] + <Y:[]>\n" +
                 "var xy: X.Y\n" +
-                "set xy = (X.Y(10,()))\n" +
-                "var y: ()\n" +
+                "set xy = (X.Y(([10]:[a:Int])))\n" +
+                "var y: [a:Int]\n" +
                 "set y = (xy!Y)\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
     fun df_05_hier_base () {
         val out = static("""
-            data X: Int + <Y:()>
+            data X: [a:Int] + <Y:[]>
             var xy = X.X(10)
             print(xy!X)
         """)
+        assert(out == "anon : (lin 3, col 22) : type error : data \"X.X\" is invalid") { out!! }
+        /*
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data X: Int + <Y:()>\n" +
@@ -893,6 +895,7 @@ class Static {
                 "set xy = (X.X(10))\n" +
                 "print((xy!X))\n" +
                 "}") { G.outer!!.to_str() }
+         */
     }
     @Test
     fun df_06_hier_base_err () {
@@ -907,7 +910,7 @@ class Static {
     @Test
     fun TODO_df_07_hier_base () {
         val out = static("""
-            data A: Bool + <B: Int + <C: Char>>
+            data A: [a:Bool] + <B: [b:Int] + <C: [c:Char]>>
             var x0: A = A.B.B(true,100)  ;; ignore subsubtype C
             print(x0)
             print(x0!A!B)
@@ -917,19 +920,19 @@ class Static {
     @Test
     fun df_08_hier () {
         val out = static("""
-            data X: Int + <Y:()>
-            var xy = X.Y(10,())
-            var x = xy!X    ;; 10
+            data X: [a:Int] + <Y:[]>
+            var xy = X.Y [10]
+            var x = xy.a    ;; 10
             var y = xy!Y    ;; ()
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "data X: Int + <Y:()>\n" +
+                "data X: [a:Int] + <Y:[]>\n" +
                 "var xy: X.Y\n" +
-                "set xy = (X.Y(10,()))\n" +
+                "set xy = (X.Y(([10]:[a:Int])))\n" +
                 "var x: Int\n" +
-                "set x = (xy!X)\n" +
-                "var y: ()\n" +
+                "set x = (xy.a)\n" +
+                "var y: [a:Int]\n" +
                 "set y = (xy!Y)\n" +
                 "}") { G.outer!!.to_str() }
     }

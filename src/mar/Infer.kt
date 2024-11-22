@@ -20,23 +20,14 @@ fun Expr.infer (): Type? {
             up.dst.typex()
         }
         is Expr.Cons -> {
-            val i = up.es.indexOfFirst { it.n==this.n }
             val tp = up.dat.to_data()?.tp
             when {
-                (tp !is Type.Union) -> {
-                    tp
-                }
-                (up.dat.ts.size == 1) -> {
-                    tp
-                }
-                else -> {
-                    tp.indexes(null, up.dat.ts.drop(1).map { it.str })!!
-                        .map { it.second }
-                        .filter { it != null }
-                        .get(i)
+                (tp !is Type.Union) -> tp       // Pos(...)
+                (up.dat.ts.size == 1) -> tp     // X(<...>)
+                else -> {                       // X.Y [a,b]
+                    tp.indexes(up.dat)!!.third
                 }
             }
-             */
         }
         is Expr.Tuple -> up.typex().let {
             if (it == null) null else {
@@ -142,6 +133,7 @@ fun infer_types () {
                 if (me.dst is Expr.Acc) {
                     val dcl = me.dst.to_xdcl()!!.to_dcl()
                     if (dcl!=null && dcl.xtp==null) {
+                        //println(listOf("infer-set",me.to_str()))
                         dcl.xtp = me.src.typex()
                     }
                 }
