@@ -50,14 +50,18 @@ fun check_vars () {
             is Stmt.Extd -> {
                 val top = me.ts.first().str
                 val dat = top.to_data()
-                if (dat == null) {
-                    err(me.tk, "type error : data \"$top\" is not declared")
+                when {
+                    (dat == null) -> err(me.tk, "type error : data \"$top\" is not declared")
+                    (dat.tp !is Type.Union) -> err(me.tk, "type error : data \"$top\" is not extendable")
                 }
-                val uni = dat.tp as Type.Union
-                val tp1 = uni.indexes(me.ts.drop(1).dropLast(1).map { it.str })
-                if (tp1 == null) {
-                    err(me.tk, "type error : data \"${me.ts.dropLast(1).map { it.str }.joinToString(".")}\" is invalid")
-                    //err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is not extendable")
+                val uni = dat!!.tp as Type.Union
+                if (me.ts.size >= 3) {
+                    val tp1 = uni.indexes(me.ts.drop(1).dropLast(1).map { it.str })
+                    if (tp1 == null) {
+                        err(me.tk,"type error : data \"${me.ts.dropLast(1).map { it.str }.joinToString(".")}\" is invalid")
+                        //err(me.tk, "type error : data \"${path.map { it.str }.joinToString(".")}\" is not extendable")
+                    }
+                    println(tp1.third.to_str())
                 }
                 val tp2 = uni.indexes(me.ts.drop(1).map { it.str })
                 if (tp2 != null) {

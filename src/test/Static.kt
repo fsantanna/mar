@@ -985,8 +985,8 @@ class Static {
     @Test
     fun dg_02_hier_extd_err () {
         val out = static("""
-            data X: Int
-            data X.Y: ()
+            data X: [Int]
+            data X.Y: []
         """)
         assert(out == "anon : (lin 3, col 13) : type error : data \"X\" is not extendable") { out!! }
     }
@@ -994,7 +994,7 @@ class Static {
     fun dg_02x_hier_extd_err () {
         val out = static("""
             data X: [a:Int] + <Y:[]>
-            data Y.Z: Int
+            data Y.Z: [c:Int]
         """)
         assert(out == "anon : (lin 3, col 13) : type error : data \"Y\" is not declared") { out!! }
     }
@@ -1002,7 +1002,7 @@ class Static {
     fun dg_03_hier_extd_err () {
         val out = static("""
             data X: [a:Int] + <Y:[]>
-            data X.A.B: Int
+            data X.A.B: [b:Int]
         """)
         assert(out == "anon : (lin 3, col 13) : type error : data \"X.A\" is invalid") { out!! }
     }
@@ -1010,19 +1010,19 @@ class Static {
     fun dg_04_hier_extd_err () {
         val out = static("""
             data X: [a:Int] + <Y:[]>
-            data X.Y: Int
+            data X.Y: [b:Int]
         """)
         assert(out == "anon : (lin 3, col 13) : type error : data \"X.Y\" is already declared") { out!! }
     }
     @Test
     fun dg_05_hier_extd () {
         val out = static("""
-            data X: Int + <Y:<>>
-            data X.Z: Int + <>
+            data X: [x:Int] + <Y:[]+<>>
+            data X.Z: [z:Int] + <>
             data X.Z.A: ()
-            data X.Y.A: Int
-            var xza = X.Z.A(10,20,())
-            var xya = X.Y.A(10,20)
+            data X.Y.A: [a:Int]
+            var xza = X.Z.A [10,20]
+            var xya = X.Y.A [10,20]
          """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
