@@ -36,11 +36,11 @@ fun cache_ups () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Data   -> {
-                G.ups[me.id.n] = me.n
+                G.ups[me.t.n] = me.n
                 G.ups[me.tp.n] = me.n
             }
             is Stmt.Extd   -> {
-                me.ids.forEach {
+                me.ts.forEach {
                     G.ups[it.n] = me.n
                 }
                 G.ups[me.tp.n] = me.n

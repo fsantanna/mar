@@ -55,7 +55,7 @@ fun Tk.Var.type (fr: Any): Type? {
 fun String.to_data (): Stmt.Data? {
     return G.outer!!.dn_filter_pre({ it is Stmt.Data }, {null}, {null})
         .let { it as List<Stmt.Data> }
-        .find { it.id.str == this }
+        .find { it.t.str == this }
 }
 
 fun Type.Data.to_data (): Stmt.Data? {
@@ -92,11 +92,12 @@ fun Type.Union.index (sub: String): Pair<Int, Type>? {
 }
 
 fun Type.Union.indexes (dat: Type.Data): Triple<List<Int>, List<Type.Tuple>?, Type>? {
+    assert(dat.ts.size >= 2)
     return this.indexes(dat.ts.drop(1).map { it.str })
 }
 
 fun Type.Union.indexes (subs: List<String>): Triple<List<Int>, List<Type.Tuple>?, Type>? {
-    assert(subs.size > 0)
+    assert(subs.size >= 1)
     var cur: Type.Union = this
     val idxs: MutableList<Int> = mutableListOf()
     val typs: MutableList<Type.Tuple> = mutableListOf()

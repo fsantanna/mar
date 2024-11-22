@@ -169,7 +169,7 @@ fun coder_types (pre: Boolean): String {
                     }
                     return listOf(x1) + x2
                 }
-                f(me.tp, listOf(me.id.str))
+                f(me.tp, listOf(me.t.str))
             }
             is Stmt.Proto.Coro -> {
                 fun mem (): String {

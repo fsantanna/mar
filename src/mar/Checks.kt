@@ -48,7 +48,7 @@ fun check_vars () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Extd -> {
-                val top = me.ids.first().str
+                val top = me.ts.first().str
                 val dat = top.to_data()
                 if (dat == null) {
                     err(me.tk, "type error : data \"$top\" is not declared")
@@ -75,7 +75,7 @@ fun check_vars () {
                     err(me.tk, "type error : data \"${me.ids.map { it.str }.joinToString(".")}\" is already declared")
                 }
                 sup!!.let {
-                    it.ids!!.add(me.ids.last())
+                    it.ids!!.add(me.ts.last())
                     it.ts.add(me.tp)
                 }
             }
