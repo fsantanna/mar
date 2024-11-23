@@ -124,7 +124,6 @@ fun infer_types () {
                 if (me.dst is Expr.Acc) {
                     val dcl = me.dst.to_xdcl()!!.to_dcl()
                     if (dcl!=null && dcl.xtp==null) {
-                        //println(listOf("infer-set",me.to_str()))
                         dcl.xtp = me.src.typex()
                     }
                 }

@@ -740,8 +740,10 @@ class Static {
         val out = static("""
             data X: <A:[a:Int]>
             var x = X.A [10]:[a:Int] 
-            var a = x!A.a
+            var a = x!A ;; ERR: x is already X.A
         """)
+        assert(out == "anon : (lin 4, col 13) : inference error : unknown type") { out!! }
+        /*
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data X: <A:[a:Int]>\n" +
@@ -749,6 +751,23 @@ class Static {
                 "set x = (X.A(([10]:[a:Int])))\n" +
                 "var a: Int\n" +
                 "set a = ((x!A).a)\n" +
+                "}") { G.outer!!.to_str() }
+         */
+    }
+    @Test
+    fun de_07x_subs () {
+        val out = static("""
+            data X: <A:[a:Int]>
+            var x = X.A [10]:[a:Int] 
+            var a = x.a
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: <A:[a:Int]>\n" +
+                "var x: X.A\n" +
+                "set x = (X.A(([10]:[a:Int])))\n" +
+                "var a: Int\n" +
+                "set a = (x.a)\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -778,6 +797,17 @@ class Static {
         val out = static("""
             data B: <T:[], F:[]>
             var b: B.T = B.T []
+            print(b?T)
+            print(b!T)
+        """)
+        //assert(out == null) { out!! }
+        assert(out == "anon : (lin 4, col 20) : predicate error : types mismatch") { out!! }
+    }
+    @Test
+    fun de_10x_subs () {
+        val out = static("""
+            data B: <T:[], F:[]>
+            var b: B = B.T []
             print(b?T)
             print(b!T)
         """)
@@ -1349,13 +1379,13 @@ class Static {
     fun ee_19_infer_union () {
         val out = static("""
             data X: <A:[a:Int]>
-            var x = X.A [10]
+            var x: X = X.A [10]
             var a = x!A.a
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data X: <A:[a:Int]>\n" +
-                "var x: X.A\n" +
+                "var x: X\n" +
                 "set x = (X.A(([10]:[a:Int])))\n" +
                 "var a: Int\n" +
                 "set a = ((x!A).a)\n" +
