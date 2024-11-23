@@ -19,16 +19,7 @@ fun Expr.infer (): Type? {
             assert(up.src.n == this.n)
             up.dst.typex()
         }
-        is Expr.Cons -> {
-            val tp = up.dat.to_data()?.tp
-            when {
-                (tp !is Type.Union) -> tp       // Pos(...)
-                (up.dat.ts.size == 1) -> tp     // X(<...>)
-                else -> {                       // X.Y [a,b]
-                    tp.indexes(up.dat)!!.third
-                }
-            }
-        }
+        is Expr.Cons -> up.dat.no_data()
         is Expr.Tuple -> up.typex().let {
             if (it == null) null else {
                 it as Type.Tuple
@@ -39,7 +30,7 @@ fun Expr.infer (): Type? {
         is Expr.Union -> up.typex().let {
             if (it == null) null else {
                 it as Type.Union
-                val (_,tp) = it.index(up.idx)!!
+                val (_,tp) = it.disc(up.idx)!!
                 tp
             }
         }

@@ -52,30 +52,54 @@ fun Tk.Var.type (fr: Any): Type? {
     } as Type?
 }
 
-fun String.to_data (): Stmt.Data? {
-    return G.outer!!.dn_filter_pre({ it is Stmt.Data }, {null}, {null})
-        .let { it as List<Stmt.Data> }
-        .find { it.t.str == this }
-}
-
-fun Type.Data.to_data (): Stmt.Data? {
-    return this.ts.first().str.to_data()
+fun Type.Data.to_stmt (): Stmt? {
+    val flats = G.outer!!.dn_filter_pre({ it is Stmt.Flat }, {null}, {null})
+        .let { it as List<Stmt.Flat> }
+        .find { it.t.str == this.to_str() }
+    val hiers = G.outer!!.dn_filter_pre({ it is Stmt.Hier }, {null}, {null})
+        .let { it as List<Stmt.Hier> }
+        .find { it.to_str() == this.to_str() }
+    return flats ?: hiers
 }
 
 fun Type.no_data (): Type {
-    return if (this !is Type.Data) this else {
-        this.to_data()!!.tp
+    return when (this) {
+        !is Type.Data -> this
+        else -> {
+            val stmt = this.to_stmt()
+            when (stmt) {
+                is Stmt.Flat -> stmt.tp
+                is Stmt.Hier -> TODO()
+                else -> error("impossible case")
+            }
+        }
     }
 }
 
-fun Type.Union.index (sub: String): Pair<Int, Type>? {
-    val num = sub.toIntOrNull()
+fun Type.Data.disc (idx: String): Pair<Int, Type>? {
+    val stmt = this.to_stmt()
+    return when (stmt) {
+        is Stmt.Flat -> {
+            val tp2 = this.no_data()
+            if (tp2 is Type.Union) {
+                tp2.disc(idx)
+            } else {
+                null
+            }
+        }
+        is Stmt.Hier -> TODO()
+        else -> error("impossible case")
+    }
+}
+
+fun Type.Union.disc (idx: String): Pair<Int, Type>? {
+    val num = idx.toIntOrNull()
     return when {
         (num == null) -> {
             if (this.ids == null) {
                 null
             } else {
-                this.ids.indexOfFirst { it.str == sub }.let {
+                this.ids.indexOfFirst { it.str == idx }.let {
                     if (it == -1) {
                         null
                     } else {
@@ -84,10 +108,8 @@ fun Type.Union.index (sub: String): Pair<Int, Type>? {
                 }
             }
         }
-        (num<0 || num>this.ts.size) -> null
-        (num==0 && this._0==null)   -> null
-        (num==0 && this._0!=null)   -> Pair(-1, this._0)
-        else                        -> Pair(num-1, this.ts[num-1])
+        (num<=0 || num>this.ts.size) -> null
+        else -> Pair(num-1, this.ts[num-1])
     }
 }
 
@@ -261,10 +283,10 @@ fun Expr.type (): Type {
             Type.Exec(co.tk, co.inps, co.res, co.yld, co.out)
         }
         is Expr.Start -> (this.exe.type() as Type.Exec).let {
-            Type.Union(this.tk, true, null, mutableListOf(it.yld, it.out), null)
+            Type.Union(this.tk, true, mutableListOf(it.yld, it.out), null)
         }
         is Expr.Resume -> (this.exe.type() as Type.Exec).let {
-            Type.Union(this.tk, true, null, mutableListOf(it.yld, it.out), null)
+            Type.Union(this.tk, true, mutableListOf(it.yld, it.out), null)
         }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
     }

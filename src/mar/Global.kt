@@ -69,7 +69,7 @@ sealed class Type (var n: Int, val tk: Tk) {
     class Data    (tk: Tk, val ts: List<Tk.Type>): Type(G.N++, tk)
     class Pointer (tk: Tk, val ptr: Type): Type(G.N++, tk)
     class Tuple   (tk: Tk, val ts: List<Type>, val ids: List<Tk.Var>?): Type(G.N++, tk)
-    class Union   (tk: Tk, val tagged: Boolean, val _0: Type.Tuple?, val ts: MutableList<Type>, val ids: MutableList<Tk.Type>?): Type(G.N++, tk)
+    class Union   (tk: Tk, val tagged: Boolean, val ts: MutableList<Type>, val ids: MutableList<Tk.Type>?): Type(G.N++, tk)
 
     sealed class Proto (tk: Tk, val inps: List<Type>, val out: Type): Type(G.N++, tk) {
         open class Func (tk: Tk, inps: List<Type>, out: Type): Proto(tk, inps, out) {
@@ -96,8 +96,8 @@ sealed class Expr (var n: Int, val tk: Tk) {
     class Tuple (tk: Tk, var xtp: Type.Tuple?, val vs: List<Expr>, val ids: List<Tk.Var>?): Expr(G.N++, tk)
     class Field (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
     class Union (tk: Tk, var xtp: Type.Union?, val idx: String, val v: Expr): Expr(G.N++, tk)
-    class Pred  (tk: Tk, val col: Expr, val path: List<String>): Expr(G.N++, tk)
-    class Disc  (tk: Tk, val col: Expr, val path: List<String>): Expr(G.N++, tk)
+    class Pred  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
+    class Disc  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
     class Cons  (tk: Tk, val dat: Type.Data, val e: Expr): Expr(G.N++, tk)
 
     class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, tk_)
@@ -111,29 +111,29 @@ sealed class Expr (var n: Int, val tk: Tk) {
 }
 
 sealed class Stmt (var n: Int, val tk: Tk) {
-    class Data (tk: Tk, val t: Tk.Type, val tp: Type): Stmt(G.N++, tk)
-    class Extd (tk: Tk, val ts: List<Tk.Type>, val tp: Type): Stmt(G.N++, tk)
+    class Flat   (tk: Tk, val t: Tk.Type, val tp: Type): Stmt(G.N++, tk)
+    class Hier   (tk: Tk, val ts: List<Tk.Type>, val tp: Type.Tuple): Stmt(G.N++, tk)
+    class Return (tk: Tk, val e: Expr) : Stmt(G.N++, tk)
     sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, tk) {
         class Func (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
         class Coro (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Coro.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
     }
-    class Return  (tk: Tk, val e: Expr) : Stmt(G.N++, tk)
 
-    class Block   (tk: Tk, val ss: List<Stmt>) : Stmt(G.N++, tk)
-    class Dcl     (tk: Tk, val id: Tk.Var, var xtp: Type?) : Stmt(G.N++, tk)
-    class Set     (tk: Tk, val dst: Expr, val src: Expr): Stmt(G.N++, tk)
+    class Block  (tk: Tk, val ss: List<Stmt>) : Stmt(G.N++, tk)
+    class Dcl    (tk: Tk, val id: Tk.Var, var xtp: Type?) : Stmt(G.N++, tk)
+    class Set    (tk: Tk, val dst: Expr, val src: Expr): Stmt(G.N++, tk)
 
-    class Defer   (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, tk)
-    class Catch   (tk: Tk, val xtp: Type.Data?, val blk: Stmt.Block): Stmt(G.N++, tk)
-    class Throw   (tk: Tk, val e: Expr): Stmt(G.N++, tk)
+    class Defer  (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, tk)
+    class Catch  (tk: Tk, val xtp: Type.Data?, val blk: Stmt.Block): Stmt(G.N++, tk)
+    class Throw  (tk: Tk, val e: Expr): Stmt(G.N++, tk)
 
-    class If      (tk: Tk, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, tk)
-    class Loop    (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, tk)
-    class Break   (tk: Tk): Stmt(G.N++, tk)
+    class If     (tk: Tk, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, tk)
+    class Loop   (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, tk)
+    class Break  (tk: Tk): Stmt(G.N++, tk)
 
-    class Print   (tk: Tk, val e: Expr): Stmt(G.N++, tk)
-    class XExpr   (tk: Tk, val e: Expr): Stmt(G.N++, tk)
-    class Nat     (tk: Tk.Nat): Stmt(G.N++, tk)
+    class Print  (tk: Tk, val e: Expr): Stmt(G.N++, tk)
+    class XExpr  (tk: Tk, val e: Expr): Stmt(G.N++, tk)
+    class Nat    (tk: Tk.Nat): Stmt(G.N++, tk)
 }
 
 typealias Node = Int

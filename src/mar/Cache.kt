@@ -35,11 +35,11 @@ fun cache_ns () {
 fun cache_ups () {
     fun fs (me: Stmt) {
         when (me) {
-            is Stmt.Data   -> {
+            is Stmt.Flat   -> {
                 G.ups[me.t.n] = me.n
                 G.ups[me.tp.n] = me.n
             }
-            is Stmt.Extd   -> {
+            is Stmt.Hier   -> {
                 me.ts.forEach {
                     G.ups[it.n] = me.n
                 }
@@ -157,9 +157,6 @@ fun cache_ups () {
                 G.ups[it.n] = me.n
             }
             is Type.Union -> {
-                if (me._0 != null) {
-                    G.ups[me._0.n] = me.n
-                }
                 me.ts.forEach {
                     G.ups[it.n] = me.n
                 }

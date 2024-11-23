@@ -106,10 +106,9 @@ fun check_vars () {
     fun ft (me: Type) {
         when (me) {
             is Type.Data -> {
-                val dat = me.to_data()
-                val fst = me.ts.first()
-                if (dat == null) {
-                    err(me.tk, "type error : data \"${fst.str}\" is not declared")
+                val stmt = me.to_stmt()
+                if (stmt == null) {
+                    err(me.tk, "type error : data \"${me.to_str()}\" is not declared")
                 }
                 /*
                 val ok = me.ts.filterIndexed { i,t -> i<me.ts.size-1 && t.str==me.ts[i+1].str }.let {
@@ -205,45 +204,32 @@ fun check_types () {
                 }
             }
             is Expr.Disc -> {
-                val tp  = me.col.type()
-                val tpx = tp.no_data()
-                //println(listOf("XXX", me.to_str()))
-                when {
-                    (tpx !is Type.Union) -> err(me.tk, "discriminator error : expected union type")
-                    (tpx.indexes(me.path) != null) -> {}
-                    else -> err(me.tk, "discriminator error : types mismatch")
+                val tp = me.col.type()
+                val ret = when (tp) {
+                    is Type.Union -> tp.disc(me.idx)
+                    is Type.Data -> tp.disc(me.idx)
+                    else -> null
+                }
+                if (ret == null) {
+                    err(me.tk, "discriminator error : types mismatch")
                 }
             }
             is Expr.Pred -> {
-                val tp = me.col.type().no_data()
-                when {
-                    (tp !is Type.Union) -> err(me.tk, "predicate error : expected union type")
-                    (tp.indexes(me.path) != null) -> {}
-                    else -> err(me.tk, "predicate error : types mismatch")
+                val tp = me.col.type()
+                val ret = when (tp) {
+                    is Type.Union -> tp.disc(me.idx)
+                    is Type.Data -> tp.disc(me.idx)
+                    else -> null
+                }
+                if (ret == null) {
+                    err(me.tk, "predicate error : types mismatch")
                 }
             }
             is Expr.Cons -> {
-                val tp = me.dat.to_data()?.tp
+                val tp = me.dat.no_data()
                 val te = me.e.type()
-                when {
-                    (tp == null) -> TODO("1")
-                    (me.dat.ts.size == 1) -> {
-                        if (!tp.is_sup_of(te)) {
-                            err(me.e.tk, "constructor error : types mismatch")
-                        }
-                    }
-                    else -> {
-                        tp as Type.Union
-                        val tpx = tp.indexes(me.dat)?.third
-                        when {
-                            (tpx == null) -> TODO("3") //err(me.tk, "constructor error : types mismatch")
-                            else -> {
-                                if (!tpx.is_sup_of(te)) {
-                                    err(me.e.tk, "constructor error : types mismatch")
-                                }
-                            }
-                        }
-                    }
+                if (!tp.is_sup_of(te)) {
+                    err(me.e.tk, "constructor error : types mismatch")
                 }
             }
             is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {

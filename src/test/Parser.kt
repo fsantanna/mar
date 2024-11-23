@@ -49,21 +49,21 @@ class Parser {
     fun aj_01_type () {
         G.tks = ("Int").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Prim && tp.tk.str=="Int")
     }
     @Test
     fun aj_02_type () {
         G.tks = ("func (Int,Int) -> ()").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Proto.Func && tp.tk.str=="func" && tp.inps.size==2 && tp.out is Type.Unit)
     }
     @Test
     fun aj_03_type () {
         G.tks = ("func () -> Int").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Proto.Func && (tp.out as Type.Prim).tk.str=="Int")
         assert(tp.to_str() == "func () -> Int")
     }
@@ -71,7 +71,7 @@ class Parser {
     fun aj_04_type () {
         G.tks = ("func (x: Int) -> Int").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Proto.Func && (tp.out as Type.Prim).tk.str=="Int")
         assert(tp.to_str() == "func (x: Int) -> Int")
     }
@@ -79,19 +79,19 @@ class Parser {
     fun aj_05_type () {
         G.tks = ("func (Int, x: Int) -> ()").lexer()
         parser_lexer()
-        assert(trap { parser_type(null, null, false) } == "anon : (lin 1, col 12) : expected type : have \"x\"")
+        assert(trap { parser_type(null, false) } == "anon : (lin 1, col 12) : expected type : have \"x\"")
     }
     @Test
     fun aj_06_type () {
         G.tks = ("func (x: Int, Int) -> ()").lexer()
         parser_lexer()
-        assert(trap { parser_type(null, null, false) } == "anon : (lin 1, col 15) : expected variable : have \"Int\"")
+        assert(trap { parser_type(null, false) } == "anon : (lin 1, col 15) : expected variable : have \"Int\"")
     }
     @Test
     fun aj_07_type_ptr () {
         G.tks = ("\\Int").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Pointer && tp.ptr is Type.Prim)
         assert(tp.to_str() == "\\Int")
     }
@@ -99,7 +99,7 @@ class Parser {
     fun aj_08_type_coro () {
         G.tks = ("coro () -> () -> () -> ()").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Proto.Coro && tp.inps.size==0 && tp.res is Type.Unit && tp.yld is Type.Unit && tp.out is Type.Unit)
         assert(tp.to_str() == "coro () -> () -> () -> ()")
     }
@@ -107,7 +107,7 @@ class Parser {
     fun aj_09_type_exec () {
         G.tks = ("exec (Int) -> () -> () -> Int").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Exec && tp.inps.size==1 && tp.res is Type.Unit && tp.yld is Type.Unit && tp.out is Type.Prim)
         assert(tp.to_str() == "exec (Int) -> () -> () -> Int") { tp.to_str() }
     }
@@ -115,7 +115,7 @@ class Parser {
     fun aj_10_type_coro_err () {
         G.tks = ("coro (Int,Int) -> ()").lexer()
         parser_lexer()
-        assert(trap { parser_type(null, null, false) } == "anon : (lin 1, col 21) : expected \"->\" : have end of file")
+        assert(trap { parser_type(null, false) } == "anon : (lin 1, col 21) : expected \"->\" : have end of file")
         //assert(trap { parser_type(false) } == "anon : (lin 1, col 1) : coro error : unexpected second argument")
         //assert(trap { parser_type(false) } == "anon : (lin 1, col 7) : expected \"<\" : have \"Int\"")
     }
@@ -123,7 +123,7 @@ class Parser {
     fun aj_11_type_exec_err () {
         G.tks = ("exec (Int,Int) -> Int").lexer()
         parser_lexer()
-        assert(trap { parser_type(null, null, false) } == "anon : (lin 1, col 22) : expected \"->\" : have end of file")
+        assert(trap { parser_type(null, false) } == "anon : (lin 1, col 22) : expected \"->\" : have end of file")
         //assert(trap { parser_type(false) } == "anon : (lin 1, col 7) : expected \"<\" : have \"Int\"")
         //assert(trap { parser_type(false) } == "anon : (lin 1, col 1) : exec error : unexpected second argument")
     }
@@ -131,7 +131,7 @@ class Parser {
     fun aj_12_data_hier () {
         G.tks = ("X.Y.Z").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Data && tp.ts.size==3)
         assert(tp.to_str() == "X.Y.Z")
     }
@@ -142,7 +142,7 @@ class Parser {
     fun ak_01_type_tuple () {
         G.tks = ("[]").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Tuple && tp.ts.size==0)
         assert(tp.to_str() == "[]") { tp.to_str() }
     }
@@ -150,7 +150,7 @@ class Parser {
     fun ak_02_type_tuple () {
         G.tks = ("[Int,[Bool],()]").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Tuple && tp.ts.size==3)
         assert(tp.to_str() == "[Int,[Bool],()]") { tp.to_str() }
     }
@@ -158,7 +158,7 @@ class Parser {
     fun ak_03_type_tuple () {  // tuple field names
         G.tks = ("[x:Int,y:[Bool],z:()]").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Tuple && tp.ts.size==3)
         assert(tp.to_str() == "[x:Int,y:[Bool],z:()]") { tp.to_str() }
     }
@@ -166,7 +166,7 @@ class Parser {
     fun ak_04_type_union () {
         G.tks = ("<>").lexer()  // lex sees <> as a single token
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Union && tp.ts.size==0)
         assert(tp.to_str() == "<>") { tp.to_str() }
     }
@@ -174,7 +174,7 @@ class Parser {
     fun ak_05_type_union () {
         G.tks = ("<Int,<Bool>,()>").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         //println(tp)
         assert(tp is Type.Union && tp.ts.size==3)
         assert(tp.to_str() == "<Int,<Bool>,()>") { tp.to_str() }
@@ -183,7 +183,7 @@ class Parser {
     fun ak_06_type_union () {
         G.tks = ("<X:Int,Y:[Bool],Z:()>").lexer()
         parser_lexer()
-        val tp = parser_type(null, null, false)
+        val tp = parser_type(null, false)
         assert(tp is Type.Union && tp.ts.size==3)
         assert(tp.to_str() == "<X:Int,Y:[Bool],Z:()>") { tp.to_str() }
     }
