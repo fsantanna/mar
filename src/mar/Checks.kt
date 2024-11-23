@@ -159,25 +159,13 @@ fun check_types () {
                 }
             }
             is Expr.Field -> {
-                val tp = me.col.type()
-                val tpx = me.col.type().no_data()
-                if (tpx is Type.Any) {
-                    return
-                }
-                val tup = when {
-                    (tp !is Type.Data) -> tpx
-                    (tp.ts.size == 1) -> tpx
-                    else -> (tpx as Type.Union).indexes(tp)?.third
-                }
-                val i = me.idx.toIntOrNull()
-                val ok = when {
-                    (tup !is Type.Tuple) -> false
-                    (i!=null && (i<=0 || i>tup.ts.size)) -> false
-                    (i==null && (tup.ids==null || tup.ids.find { it.str==me.idx } == null)) -> false
-                    else -> true
-                }
-                if (!ok) {
-                    err(me.tk, "field error : types mismatch")
+                val tp = me.col.type().no_data()
+                when (tp) {
+                    is Type.Any -> {}
+                    !is Type.Tuple -> err(me.tk, "field error : types mismatch")
+                    else -> if (tp.index(me.idx) == null) {
+                        err(me.tk, "field error : invalid index")
+                    }
                 }
             }
             is Expr.Union -> {

@@ -88,7 +88,7 @@ fun Type.no_data (): Type? {
     }
 }
 
-fun Type.Tuple.index (idx: String): Type {
+fun Type.Tuple.index (idx: String): Type? {
     val v = idx.toIntOrNull().let {
         if (it == null) {
             this.ids!!.indexOfFirst { it.str==idx }
@@ -96,7 +96,7 @@ fun Type.Tuple.index (idx: String): Type {
             it - 1
         }
     }
-    return this.ts[v]
+    return this.ts.getOrNull(v)
 }
 
 fun Type.discx (idx: String): Pair<Int, Type>? {
@@ -165,7 +165,7 @@ fun Expr.type (): Type {
 
         is Expr.Tuple -> this.xtp!!
         is Expr.Union -> this.xtp!!
-        is Expr.Field -> (this.col.type().no_data() as Type.Tuple).index(idx)
+        is Expr.Field -> (this.col.type().no_data() as Type.Tuple).index(idx)!!
         is Expr.Disc  -> this.col.type().discx(this.idx)!!.second
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> this.dat

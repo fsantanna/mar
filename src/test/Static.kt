@@ -419,7 +419,7 @@ class Static {
             var x: [Int]
             var y: Int = x.2
         """)
-        assert(out == "anon : (lin 3, col 27) : field error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 27) : field error : invalid index") { out!! }
     }
     @Test
     fun cc_07x_tuple_err () {
@@ -441,7 +441,7 @@ class Static {
             var v: [v:Int]
             set `x` = v.x
         """)
-        assert(out == "anon : (lin 3, col 24) : field error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 24) : field error : invalid index") { out!! }
     }
     @Test
     fun cc_09_tuple_err () {
@@ -605,7 +605,7 @@ class Static {
             var p: Pos = Pos [10, 20]: [Int, Int]
             var x: Int = p.3
         """)
-        assert(out == "anon : (lin 4, col 27) : field error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 27) : field error : invalid index") { out!! }
     }
     @Test
     fun dd_10_data_err () {
