@@ -423,7 +423,16 @@ fun Expr.coder (pre: Boolean = false): String {
             val idx = this.idx.toIntOrNull().let {
                 if (it == null) this.idx else "_"+it
             }
-            "(${this.col.coder(pre)}.$idx)"
+            val tp = this.col.type()
+            //println(tp.to_str())
+            val sub = when {
+                (tp !is Type.Data) -> ""
+                (tp.ts.size == 1)  -> ""
+                else -> {
+                    tp.ts.drop(1).map { it.str }.joinToString(".") + "."
+                }
+            }
+            "(${this.col.coder(pre)}.$sub$idx)"
         }
         is Expr.Disc  -> {
             val (i,_) = this.col.type().discx(this.idx)!!
@@ -437,14 +446,27 @@ fun Expr.coder (pre: Boolean = false): String {
             "(${this.col.coder(pre)}.tag==${i+1})"
         }
         is Expr.Cons  -> {
-            val idxs = mutableListOf<Int>() // indexes of hier types with no constructors
-            val dat = this.dat.to_data()!!
-            TODO()
-            /*
-            val base = this.dat._0()
-            val xes = if (this.dat.ts.size-(if (base==null) 0 else 1) == this.es.size) {
-                // A: <a> + <B: <b> + <C: <c>>>
-                this.es
+            val st = this.dat.to_stmt()
+            if (st is Stmt.Flat) {
+                var ret = "({"
+                for (i in this.dat.ts.size-1 downTo 0) {
+                    val tp = this.dat.ts.take(i+1).map { it.str }.joinToString("_")
+                    ret = ret + "$tp ceu_$i = " +
+                        if (i == this.dat.ts.size-1) {
+                            """
+                            ((${tp}) ${this.e.coder(pre)});
+                            """
+                        } else {
+                            val nxt = this.dat.ts[i+1].str
+                            """
+                            {
+                                .tag = MAR_TAG_${tp.uppercase()}_${nxt.uppercase()},
+                                { .$nxt = ceu_${i+1} }
+                            };
+                            """
+                        }
+                }
+                ret + " ceu_0; })"
             } else {
                 // A: <a> + <B: ~<b> +~ <C: <c>>>   // hole in <b>
                 var cur: Type = dat.tp

@@ -379,11 +379,22 @@ class Exec  {
         assert(out == "[10,true]\n") { out }
     }
     @Test
+    fun hh_06x_data () {
+        val out = test("""
+            data X: <A:[a:Int]>
+            var xa: X.A = X.A [10]
+            var x: X = xa
+            print(xa.a)
+            print(x!A.a)
+        """)
+        assert(out == "10\n10\n") { out }
+    }
+    @Test
     fun hh_06_data () {
         val out = test("""
             data X: <A:[a:Int]>
             var x = X.A [10]
-            print(x!A.a)
+            print(x.a)
         """)
         assert(out == "10\n") { out }
     }
@@ -391,7 +402,7 @@ class Exec  {
     fun hh_07_data () {
         val out = test("""
             data B: <T:[], F:[]>
-            var b: B.T = B.T []
+            var b: B = B.T []
             print(b?T)
         """)
         assert(out == "true\n") { out }
@@ -400,7 +411,7 @@ class Exec  {
     fun hh_08_data () {
         val out = test("""
             data A: <B: <C: Int>>
-            var c = A.B.C(10)
+            var c: A = A.B.C(10)
             var v = c
             print(c)
             print(c!B!C)
@@ -413,8 +424,8 @@ class Exec  {
         val out = test("""
             data K: <None:()>
             data X: Int + <Y:()>
-            var xy: X.Y = X.Y(10,())
-            var y = xy!Y    ;; ()
+            var xy = X.Y(10,())
+            var y = xy    ;; ()
             print(y)
         """)
         assert(out == "()\n") { out }
