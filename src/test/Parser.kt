@@ -615,7 +615,7 @@ class Parser {
         G.tks = ("v!1").lexer()
         parser_lexer()
         val e = parser_expr()
-        assert(e is Expr.Disc && e.col is Expr.Acc && e.path.first()=="1")
+        assert(e is Expr.Disc && e.col is Expr.Acc && e.idx=="1")
         assert(e.to_str() == "(v!1)") { e.to_str() }
     }
     @Test
@@ -623,7 +623,7 @@ class Parser {
         G.tks = ("v?1").lexer()
         parser_lexer()
         val e = parser_expr()
-        assert(e is Expr.Pred && e.col is Expr.Acc && e.path.first()=="1")
+        assert(e is Expr.Pred && e.col is Expr.Acc && e.idx=="1")
         assert(e.to_str() == "(v?1)") { e.to_str() }
     }
     @Test

@@ -366,25 +366,13 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
             }
             "!" -> {
                 val dot = G.tk0 as Tk.Op
-                val l = mutableListOf<String>()
-                while (accept_enu("Type") || accept_enu_err("Num")) {
-                    l.add(G.tk0!!.str)
-                    if (!accept_op("!")) {
-                        break
-                    }
-                }
-                Expr.Disc(dot, e, l)
+                (accept_enu("Type") || accept_enu_err("Num"))
+                Expr.Disc(dot, e, G.tk0!!.str)
             }
             "?" -> {
                 val dot = G.tk0 as Tk.Op
-                val l = mutableListOf<String>()
-                while (accept_enu("Type") || accept_enu_err("Num")) {
-                    l.add(G.tk0!!.str)
-                    if (!accept_op("?")) {
-                        break
-                    }
-                }
-                Expr.Pred(dot, e, l)
+                (accept_enu("Type") || accept_enu_err("Num"))
+                Expr.Pred(dot, e, G.tk0!!.str)
             }
             else -> error("impossible case")
         }
@@ -619,7 +607,8 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                     accept_fix_err(".")
                 }
                 accept_fix_err(":")
-                val tp = parser_type(null, false)
+                check_fix_err("[")
+                val tp = parser_type(null, false) as Type.Tuple
                 listOf(Stmt.Hier(tk0, ts, tp))
             }
         }

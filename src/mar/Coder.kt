@@ -426,24 +426,14 @@ fun Expr.coder (pre: Boolean = false): String {
             "(${this.col.coder(pre)}.$idx)"
         }
         is Expr.Disc  -> {
-            val tp = this.col.type()
-            val (i,_) = when (tp) {
-                is Type.Union -> tp.disc(this.idx)!!
-                is Type.Data -> tp.disc(this.idx)!!
-                else -> error("impossible case")
-            }
+            val (i,_) = this.col.type().discx(this.idx)!!
             """
             // DISC | ${this.dump()}
             (${this.col.coder(pre)}._${i+1})
             """
         }
         is Expr.Pred  -> {
-            val tp = this.col.type()
-            val (i,_) = when (tp) {
-                is Type.Union -> tp.disc(this.idx)!!
-                is Type.Data -> tp.disc(this.idx)!!
-                else -> error("impossible case")
-            }
+            val (i,_) = this.col.type().discx(this.idx)!!
             "(${this.col.coder(pre)}.tag==${i+1})"
         }
         is Expr.Cons  -> {

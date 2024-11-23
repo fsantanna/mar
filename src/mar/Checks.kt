@@ -198,30 +198,18 @@ fun check_types () {
                 }
             }
             is Expr.Union -> {
-                val (_,sub) = me.xtp!!.index(me.idx).nulls()
+                val (_,sub) = me.xtp!!.disc(me.idx).nulls()
                 if (sub==null || !sub.is_sup_of(me.v.type())) {
                     err(me.tk, "union error : types mismatch")
                 }
             }
             is Expr.Disc -> {
-                val tp = me.col.type()
-                val ret = when (tp) {
-                    is Type.Union -> tp.disc(me.idx)
-                    is Type.Data -> tp.disc(me.idx)
-                    else -> null
-                }
-                if (ret == null) {
+                if (me.col.type().discx(me.idx) == null) {
                     err(me.tk, "discriminator error : types mismatch")
                 }
             }
             is Expr.Pred -> {
-                val tp = me.col.type()
-                val ret = when (tp) {
-                    is Type.Union -> tp.disc(me.idx)
-                    is Type.Data -> tp.disc(me.idx)
-                    else -> null
-                }
-                if (ret == null) {
+                if (me.col.type().discx(me.idx) == null) {
                     err(me.tk, "predicate error : types mismatch")
                 }
             }
