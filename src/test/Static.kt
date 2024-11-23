@@ -639,7 +639,7 @@ class Static {
         val out = static("""
             var b: B.T
         """)
-        assert(out == "anon : (lin 2, col 20) : type error : data \"B\" is not declared") { out!! }
+        assert(out == "anon : (lin 2, col 20) : type error : data \"B.T\" is not declared") { out!! }
     }
     @Test
     fun de_00b_subs_ee () {
@@ -660,8 +660,8 @@ class Static {
             data B: [<T:[],F:[]>]
             var b: B.X
         """)
-        //assert(out == "anon : (lin 3, col 20) : type error : data \"B.X\" is not declared") { out!! }
-        assert(out == "anon : (lin 3, col 20) : type error : data \"B.X\" is invalid") { out!! }
+        assert(out == "anon : (lin 3, col 20) : type error : data \"B.X\" is not declared") { out!! }
+        //assert(out == "anon : (lin 3, col 20) : type error : data \"B.X\" is invalid") { out!! }
     }
     @Test
     fun de_00d_subs_ee () {
@@ -709,8 +709,9 @@ class Static {
             data X: [()]
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
+        //assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_05_subs_err () {
@@ -718,9 +719,10 @@ class Static {
             data X: []
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
+        //assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_06_subs_err () {
@@ -728,9 +730,10 @@ class Static {
             data X: <A:[a:Int]>
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
+        //assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_07_subs () {
@@ -794,7 +797,7 @@ class Static {
             data Res: <Err:(),Ok:Int>
             var r = Res.XXX(10)
         """)
-        assert(out == "anon : (lin 3, col 21) : type error : data \"Res.XXX\" is invalid") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"Res.XXX\" is not declared") { out!! }
     }
     @Test
     fun de_13_subs () {

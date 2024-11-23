@@ -62,16 +62,22 @@ fun Type.Data.to_stmt (): Stmt? {
     return flats ?: hiers
 }
 
-fun Type.no_data (): Type {
+fun Type.no_data (): Type? {
     return when (this) {
         !is Type.Data -> this
         else -> {
             val stmt = this.to_stmt()
             when (stmt) {
+                null -> null
                 is Stmt.Flat -> {
-                    var tp = stmt.tp
+                    var tp: Type? = stmt.tp
                     for (id in this.ts.drop(1)) {
-                        tp = (tp as Type.Union).disc(id.str)!!.second
+                        if (tp !is Type.Union) {
+                            tp = null
+                            break
+                        } else {
+                            tp = tp.disc(id.str)?.second
+                        }
                     }
                     tp
                 }

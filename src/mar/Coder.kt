@@ -371,7 +371,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                         """
                     }
                     is Type.Data -> {
-                        val tpx = tp.no_data()
+                        val tpx = tp.no_data()!!
                         val par = (tpx !is Type.Tuple) && (tpx !is Type.Union)
                         """
                         printf("${tp.ts.first().str}");

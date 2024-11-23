@@ -106,25 +106,8 @@ fun check_vars () {
     fun ft (me: Type) {
         when (me) {
             is Type.Data -> {
-                val stmt = me.to_stmt()
-                if (stmt == null) {
+                if (me.no_data() == null) {
                     err(me.tk, "type error : data \"${me.to_str()}\" is not declared")
-                }
-                /*
-                val ok = me.ts.filterIndexed { i,t -> i<me.ts.size-1 && t.str==me.ts[i+1].str }.let {
-                    when {
-                        (it.size >= 2) -> false
-                        (it.size == 0) -> true
-                        else -> it.first().str == me.ts[me.ts.size - 1].str
-                    }
-                }
-                 */
-                when {
-                    (me.ts.size == 1) -> {}
-                    (dat.tp !is Type.Union) ->
-                        err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
-                    (dat.tp.indexes(me) == null) ->
-                        err(me.tk, "type error : data \"${me.ts.to_str()}\" is invalid")
                 }
             }
             else -> {}
@@ -214,7 +197,7 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val tp = me.dat.no_data()
+                val tp = me.dat.no_data()!!
                 val te = me.e.type()
                 if (!tp.is_sup_of(te)) {
                     err(me.e.tk, "constructor error : types mismatch")
