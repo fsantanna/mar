@@ -55,7 +55,7 @@ fun Tk.Var.type (fr: Any): Type? {
 fun Type.Data.to_stmt (): Stmt? {
     val flats = G.outer!!.dn_filter_pre({ it is Stmt.Flat }, {null}, {null})
         .let { it as List<Stmt.Flat> }
-        .find { it.t.str == this.to_str() }
+        .find { it.t.str == this.ts.first().str }
     val hiers = G.outer!!.dn_filter_pre({ it is Stmt.Hier }, {null}, {null})
         .let { it as List<Stmt.Hier> }
         .find { it.to_str() == this.to_str() }
@@ -68,7 +68,13 @@ fun Type.no_data (): Type {
         else -> {
             val stmt = this.to_stmt()
             when (stmt) {
-                is Stmt.Flat -> stmt.tp
+                is Stmt.Flat -> {
+                    var tp = stmt.tp
+                    for (id in this.ts.drop(1)) {
+                        tp = (tp as Type.Union).disc(id.str)!!.second
+                    }
+                    tp
+                }
                 is Stmt.Hier -> TODO()
                 else -> error("impossible case")
             }
