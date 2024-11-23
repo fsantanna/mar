@@ -710,11 +710,11 @@ class Parser {
     @Test
     fun kj_05_data_hier_err () {
         G.tks = ("""
-            data Event: [a:Int] + <>
+            data Event.*: [a:Int]
         """).lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s.to_str() == "data Event: [a:Int] + <>") { s.to_str() }
+        assert(s.to_str() == "data Event.*: [a:Int]") { s.to_str() }
         //assert(trap { parser_stmt() } == "anon : (lin 4, col 20) : expected \"<\" : have \"Int\"")
     }
     @Test

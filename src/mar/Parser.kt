@@ -601,7 +601,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 listOf(Stmt.Flat(tk0, t1, tp))
             } else {
                 val ts = mutableListOf(t1)
-                while (!accept_fix("*")) {
+                while (!accept_op("*")) {
                     accept_enu_err("Type")
                     ts.add(G.tk0 as Tk.Type)
                     accept_fix_err(".")
