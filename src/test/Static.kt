@@ -1013,6 +1013,21 @@ class Static {
         """)
         assert(out == "TODO\n") { out }
     }
+    @Test
+    fun df_11_hier () {
+        val out = static("""
+            data X.*: [Int]
+            var x = X [10]
+            print(x.1)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X.*: [Int]\n" +
+                "var x: X\n" +
+                "set x = (X(([10]:[])))\n" +
+                "print((x.1))\n" +
+                "}") { G.outer!!.to_str() }
+    }
 
     // DATA HIER / EXTD / EXTENDS
 
@@ -1120,27 +1135,6 @@ class Static {
                 "var xya: X.Y.A\n" +
                 "set xya = (X.Y.A(([10,20]:[])))\n" +
                 "}") { G.outer!!.to_str() }
-    }
-    @Test
-    fun dg_05y_hier_extd_err () {
-        val out = static("""
-            data X: Int + <Y:<>>
-            data X.Z: Int
-            data X.Z.A: ()
-            data X.Y.A: Int
-            var xza = X.Z.A(10)
-            var xya = X.Y.A(10,20)
-         """)
-        assert(out == "anon : (lin 4, col 13) : type error : data \"X.Z\" is not extendable") { out!! }
-    }
-    @Test
-    fun dg_06_hier_extd () {
-        val out = static("""
-            data X: Int + <Y:()>
-            data X.Z: Int
-            data X.Z.A: Int
-         """)
-        assert(out == "anon : (lin 4, col 13) : type error : data \"X.Z\" is not extendable") { out!! }
     }
 
     // INFER

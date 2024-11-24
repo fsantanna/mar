@@ -447,10 +447,11 @@ class Exec  {
     @Test
     fun hi_01_data () {
         val out = test("""
-            data A: Int + <B: [b:Int]>
-            var x0: A = A.A(100)  ;; ignore subtype B
+            data A.*: [Int]
+            data A.B.*: [b:Int]
+            var x0: A = A [100]  ;; ignore subtype B
             print(x0)
-            print(x0!A)
+            print(x0.1)
         """)
         assert(out == "A 100 + <.0=>\n" +
                 "100\n") { out }

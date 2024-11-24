@@ -72,6 +72,10 @@ fun Type.coder (pre: Boolean = false): String {
     }
 }
 
+fun List<Tk.Type>.coder (pre: Boolean = false): String {
+    return this.map { it.str }.joinToString("_")
+}
+
 fun coder_types (pre: Boolean): String {
     fun ft (me: Type): List<String> {
         me.coder().let {
@@ -169,6 +173,14 @@ fun coder_types (pre: Boolean): String {
                     return listOf(x1) + x2
                 }
                 f(me.tp, listOf(me.t.str))
+            }
+            is Stmt.Hier -> {
+                listOf("""
+                    typedef struct ${me.ts.coder(pre)} {
+                        int tag;
+                        ${me.xtp!!.coder(pre)} tup;
+                    } ${me.ts.coder(pre)};
+                """)
             }
             is Stmt.Proto.Coro -> {
                 fun mem (): String {
@@ -447,79 +459,33 @@ fun Expr.coder (pre: Boolean = false): String {
         }
         is Expr.Cons  -> {
             val st = this.dat.to_flat_hier()
-            if (st is Stmt.Flat) {
-                var ret = "({"
-                for (i in this.dat.ts.size-1 downTo 0) {
-                    val tp = this.dat.ts.take(i+1).map { it.str }.joinToString("_")
-                    ret = ret + "$tp ceu_$i = " +
-                        if (i == this.dat.ts.size-1) {
-                            """
+            when (st) {
+                is Stmt.Flat -> {
+                    var ret = "({"
+                    for (i in this.dat.ts.size - 1 downTo 0) {
+                        val tp = this.dat.ts.take(i + 1).coder(pre)
+                        ret = ret + "$tp ceu_$i = " +
+                                if (i == this.dat.ts.size - 1) {
+                                    """
                             ((${tp}) ${this.e.coder(pre)});
                             """
-                        } else {
-                            val nxt = this.dat.ts[i+1].str
-                            """
+                                } else {
+                                    val nxt = this.dat.ts[i + 1].str
+                                    """
                             {
                                 .tag = MAR_TAG_${tp.uppercase()}_${nxt.uppercase()},
-                                { .$nxt = ceu_${i+1} }
+                                { .$nxt = ceu_${i + 1} }
                             };
                             """
-                        }
-                }
-                ret + " ceu_0; })"
-            } else {
-                // A: <a> + <B: ~<b> +~ <C: <c>>>   // hole in <b>
-                var cur: Type = dat.tp
-                var I = 0
-                if (cur is Type.Union && cur._0 == null) {
-                    idxs.add(I)
-                }
-                I++
-                for (sub in this.dat.ts.drop(1)) {
-                    val uni = cur as Type.Union
-                    val xxx = uni.sub__idx_id__to__idx_tp(null, sub.str)!!
-                    cur = xxx.second
-                    if (cur is Type.Union && cur._0 == null) {
-                        idxs.add(I)
+                                }
                     }
-                    I++
-                    if (sub.str == base) {
-                        break
-                    }
+                    ret + " ceu_0; })"
                 }
-                assert(I == this.dat.ts.size-(if (base==null) 0 else 1))
-                assert(idxs.size == this.dat.ts.size-(if (base==null) 0 else 1) - this.es.size)
-                val xxes = (this.es as List<Expr?>).toMutableList().let { es ->
-                    idxs.forEach {
-                        es.add(it, null)
-                    }
-                    es
+                is Stmt.Hier -> {
+                    "((${this.dat.coder(pre)}) { 99, ${this.e.coder(pre)} })"
                 }
-                assert(this.dat.ts.size == xxes.size)
-                xxes
+                else -> error("impossible case")
             }
-            """
-            ({    
-                ${xes.mapIndexed { i,e ->
-                    val subs = this.dat.ts.take(i+1).map { it.str }.joinToString("_")
-                    "$subs ceu_$i = " +
-                        if (base==null && i==xes.size-1) {
-                            e!!.coder(pre)
-                        } else {
-                            val nxt = this.dat.ts[i+1].str
-                            """
-                            {
-                                .tag = MAR_TAG_${subs.uppercase()}_${nxt.uppercase()},
-                                ${e.cond { "._0 = ${it.coder(pre)}," }}
-                                { ${(base==null || i<xes.size-1).cond { ".$nxt = ceu_${i+1}"  }} }
-                            };
-                            """
-                        } + ";\n"
-                }.reversed().joinToString("")}
-                ceu_0;
-            })
-            """
-             */
         }
 
         is Expr.Nat -> if (this.xtp == null) this.tk.str else {
