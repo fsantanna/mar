@@ -533,6 +533,26 @@ class Static {
     // DATA
 
     @Test
+    fun dd_00_data () {
+        val out = static("""
+            data X: ()
+            data X: Int
+        """)
+        assert(out == "anon : (lin 3, col 13) : type error : data \"X\" is already declared") { out!! }
+    }
+    @Test
+    fun dd_00x_data () {
+        val out = static("""
+            do {
+                data X: ()
+            }
+            do {
+                data X: Int
+            }
+        """)
+        assert(out == null) { out!! }
+    }
+    @Test
     fun dd_01_data () {
         val out = static("""
             data Pos: [Int, Int]

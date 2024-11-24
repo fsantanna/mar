@@ -52,13 +52,17 @@ fun Tk.Var.type (fr: Any): Type? {
     } as Type?
 }
 
-fun Type.Data.to_stmt (): Stmt? {
+fun Type.Data.to_flat_hier (): Stmt? {
+    return this.to_flat_hier(this.ts)
+}
+
+fun Any.to_flat_hier (ts: List<Tk.Type>): Stmt? {
     return this.up_first { blk ->
         if (blk !is Stmt.Block) null else {
-            blk.to_dats().find { s ->
+            blk.to_flat_hier().find { s ->
                 when (s) {
-                    is Stmt.Flat -> (s.t.str == this.ts.first().str)
-                    is Stmt.Hier -> (s.to_str() == this.to_str())
+                    is Stmt.Flat -> (s.t.str == ts.first().str)
+                    is Stmt.Hier -> (s.ts.to_str() == ts.to_str())
                     else -> error("impossible case")
                 }
             }
@@ -70,7 +74,7 @@ fun Type.no_data (): Type? {
     return when (this) {
         !is Type.Data -> this
         else -> {
-            val s = this.to_stmt()
+            val s = this.to_flat_hier()
             when (s) {
                 null -> null
                 is Stmt.Flat -> {
@@ -112,7 +116,7 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
 }
 
 fun Type.Data.disc (idx: String): Pair<Int, Type>? {
-    val s = this.to_stmt()
+    val s = this.to_flat_hier()
     return when (s) {
         is Stmt.Flat -> {
             val tp2 = this.no_data()

@@ -446,7 +446,7 @@ fun Expr.coder (pre: Boolean = false): String {
             "(${this.col.coder(pre)}.tag==${i+1})"
         }
         is Expr.Cons  -> {
-            val st = this.dat.to_stmt()
+            val st = this.dat.to_flat_hier()
             if (st is Stmt.Flat) {
                 var ret = "({"
                 for (i in this.dat.ts.size-1 downTo 0) {
