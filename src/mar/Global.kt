@@ -112,7 +112,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
 
 sealed class Stmt (var n: Int, val tk: Tk) {
     class Flat   (tk: Tk, val t: Tk.Type, val tp: Type): Stmt(G.N++, tk)
-    class Hier   (tk: Tk, val ts: List<Tk.Type>, val tp: Type.Tuple): Stmt(G.N++, tk)
+    class Hier   (tk: Tk, val ts: List<Tk.Type>, val tp: Type.Tuple, var xtp: Type.Tuple?, val xsubs: MutableList<Stmt.Hier>): Stmt(G.N++, tk)
     class Return (tk: Tk, val e: Expr) : Stmt(G.N++, tk)
     sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, tk) {
         class Func (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)

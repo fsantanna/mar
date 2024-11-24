@@ -70,9 +70,11 @@ fun check_vars () {
             }
             is Stmt.Hier -> {
                 val s1 = me.fupx().to_flat_hier(me.ts)
-                if (s1!=null && s1!=me) {
+                if (s1 is Stmt.Hier && s1!=me) {
                     err(me.tk, "type error : data \"${me.ts.to_str()}\" is already declared")
                 }
+
+                val l: MutableList<Type.Tuple> = mutableListOf()
 
                 if (me.ts.size >= 2) {
                     val top = me.ts.dropLast(1)
@@ -81,7 +83,21 @@ fun check_vars () {
                         (s2 == null) -> err(me.tk, "type error : data \"${top.to_str()}\" is not declared")
                         (s2 !is Stmt.Hier) -> err(me.tk, "type error : data \"${top.to_str()}\" is not extendable")
                     }
+                    for (n in 1..me.ts.size-1) {
+                        val sup = me.ts.take(n)
+                        val s = me.fupx().to_flat_hier(sup) as Stmt.Hier
+                        s.xsubs.add(me)
+                        l.add(s.tp)
+                    }
                 }
+
+                l.add(me.tp)
+
+                me.xtp = Type.Tuple (
+                    me.tk,
+                    l.map { it.ts }.flatten(),
+                    l.map { it.ids ?: emptyList() }.flatten()
+                )
             }
             is Stmt.Block -> {
                 val ids2 = me.to_dcls()

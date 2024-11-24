@@ -89,7 +89,7 @@ fun Type.no_data (): Type? {
                     }
                     tp
                 }
-                is Stmt.Hier -> TODO()
+                is Stmt.Hier -> s.xtp!!
                 else -> error("impossible case")
             }
         }
@@ -126,7 +126,12 @@ fun Type.Data.disc (idx: String): Pair<Int, Type>? {
                 null
             }
         }
-        is Stmt.Hier -> TODO()
+        is Stmt.Hier -> {
+            val i = s.xsubs.indexOfFirst { it.ts.to_str() == this.to_str()+"."+idx }
+            if (i == -1) null else {
+                Pair(i, s.xsubs[i].xtp!!)
+            }
+        }
         else -> error("impossible case")
     }
 }

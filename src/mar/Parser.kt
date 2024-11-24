@@ -609,7 +609,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 accept_fix_err(":")
                 check_fix_err("[")
                 val tp = parser_type(null, false) as Type.Tuple
-                listOf(Stmt.Hier(tk0, ts, tp))
+                listOf(Stmt.Hier(tk0, ts, tp, null, mutableListOf()))
             }
         }
         accept_fix("print") -> {

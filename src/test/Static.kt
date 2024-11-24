@@ -886,20 +886,23 @@ class Static {
             data X.Y.*: []
             var y = X.Y []   ;; missing Int
         """)
-        assert(out == "anon : (lin 3, col 24) : constructor error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 25) : tuple error : types mismatch") { out!! }
+        //assert(out == "anon : (lin 3, col 24) : constructor error : types mismatch") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
     }
     @Test
     fun df_02_hier_err () {
         val out = static("""
-            data X: [a:Int] + <Y:[]>
+            data X.*: [a:Int]
+            data X.Y.*: []
             var y = X.Y([10]) ;; missing ()
         """)
         //println(out)
         //assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "data X: [a:Int] + <Y:[]>\n" +
+                "data X.*: [a:Int]\n" +
+                "data X.Y.*: []\n" +
                 "var y: X.Y\n" +
                 "set y = (X.Y(([10]:[a:Int])))\n" +
                 "}") { G.outer!!.to_str() }
@@ -907,12 +910,14 @@ class Static {
     @Test
     fun df_03_hier () {
         val out = static("""
-            data X: [a:Int] + <Y:[]>
+            data X.*: [a:Int]
+            data X.Y.*: []
             var y = X.Y [10]
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "data X: [a:Int] + <Y:[]>\n" +
+                "data X.*: [a:Int]\n" +
+                "data X.Y.*: []\n" +
                 "var y: X.Y\n" +
                 "set y = (X.Y(([10]:[a:Int])))\n" +
                 "}") { G.outer!!.to_str() }
@@ -920,14 +925,16 @@ class Static {
     @Test
     fun df_04_hier () {
         val out = static("""
-            data X: [a:Int] + <Y:[]>
-            var xy: X.Y = X.Y [10]
+            data X.*: [a:Int]
+            data X.Y.*: []
+            var xy: X = X.Y [10]
             var y = xy!Y    ;; ()
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "data X: [a:Int] + <Y:[]>\n" +
-                "var xy: X.Y\n" +
+                "data X.*: [a:Int]\n" +
+                "data X.Y.*: []\n" +
+                "var xy: X\n" +
                 "set xy = (X.Y(([10]:[a:Int])))\n" +
                 "var y: [a:Int]\n" +
                 "set y = (xy!Y)\n" +
@@ -936,30 +943,22 @@ class Static {
     @Test
     fun df_05_hier_base () {
         val out = static("""
-            data X: [a:Int] + <Y:[]>
+            data X.*: [a:Int]
+            data X.Y.*: []
             var xy = X.X(10)
             print(xy!X)
         """)
-        assert(out == "anon : (lin 3, col 22) : type error : data \"X.X\" is invalid") { out!! }
-        /*
-        assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "do {\n" +
-                "data X: Int + <Y:()>\n" +
-                "var xy: X.X\n" +
-                "set xy = (X.X(10))\n" +
-                "print((xy!X))\n" +
-                "}") { G.outer!!.to_str() }
-         */
+        assert(out == "anon : (lin 4, col 22) : type error : data \"X.X\" is not declared") { out!! }
     }
     @Test
     fun df_06_hier_base_err () {
         val out = static("""
-            data X: <Y:()>
+            data X.*: []
             var xy = X.X()
             print(xy!X)
         """)
         //assert(out == "anon : (lin 3, col 22) : constructor error : arity mismatch") { out!! }
-        assert(out == "anon : (lin 3, col 22) : type error : data \"X.X\" is invalid") { out!! }
+        assert(out == "anon : (lin 3, col 22) : type error : data \"X.X\" is not declared") { out!! }
     }
     @Test
     fun TODO_df_07_hier_base () {
@@ -974,15 +973,17 @@ class Static {
     @Test
     fun df_08_hier () {
         val out = static("""
-            data X: [a:Int] + <Y:[]>
-            var xy = X.Y [10]
+            data X.*: [a:Int]
+            data X.Y.*: []
+            var xy: X = X.Y [10]
             var x = xy.a    ;; 10
             var y = xy!Y    ;; ()
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "data X: [a:Int] + <Y:[]>\n" +
-                "var xy: X.Y\n" +
+                "data X.*: [a:Int]\n" +
+                "data X.Y.*: []\n" +
+                "var xy: X\n" +
                 "set xy = (X.Y(([10]:[a:Int])))\n" +
                 "var x: Int\n" +
                 "set x = (xy.a)\n" +
@@ -1040,67 +1041,85 @@ class Static {
     fun dg_02_hier_extd_err () {
         val out = static("""
             data X: [Int]
-            data X.Y: []
+            data X.Y.*: []
         """)
         assert(out == "anon : (lin 3, col 13) : type error : data \"X\" is not extendable") { out!! }
     }
     @Test
     fun dg_02x_hier_extd_err () {
         val out = static("""
-            data X: [a:Int] + <Y:[]>
-            data Y.Z: [c:Int]
+            data X.*: [a:Int]
+            data X.Y.*: []
+            data Y.Z.*: [c:Int]
         """)
-        assert(out == "anon : (lin 3, col 13) : type error : data \"Y\" is not declared") { out!! }
+        assert(out == "anon : (lin 4, col 13) : type error : data \"Y\" is not declared") { out!! }
     }
     @Test
     fun dg_03_hier_extd_err () {
         val out = static("""
-            data X: [a:Int] + <Y:[]>
-            data X.A.B: [b:Int]
+            data X.*: [a:Int]
+            data X.Y.*: []
+            data X.A.B.*: [b:Int]
         """)
-        assert(out == "anon : (lin 3, col 13) : type error : data \"X.A\" is invalid") { out!! }
+        assert(out == "anon : (lin 4, col 13) : type error : data \"X.A\" is not declared") { out!! }
     }
     @Test
     fun dg_04_hier_extd_err () {
         val out = static("""
-            data X: [a:Int] + <Y:[]>
-            data X.Y: [b:Int]
+            data X.*: [a:Int]
+            data X.Y.*: []
+            data X.Y.*: [b:Int]
         """)
-        assert(out == "anon : (lin 3, col 13) : type error : data \"X.Y\" is already declared") { out!! }
+        assert(out == "anon : (lin 4, col 13) : type error : data \"X.Y\" is already declared") { out!! }
     }
     @Test
     fun dg_05_hier_extd () {
         val out = static("""
-            data X: [x:Int] + <Y:[]+<>>
-            data X.Z: [z:Int] + <>
-            data X.Z.A: ()
-            data X.Y.A: [a:Int]
+            data X.*: [x:Int]
+            data X.Y.* :[]
+            data X.Z.*: [z:Int]
+            data X.Z.A.*: []
+            data X.Y.A.*: [a:Int]
             var xza = X.Z.A [10,20]
             var xya = X.Y.A [10,20]
          """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
-                "data X: Int + <Y:<A:Int>,Z:Int + <A:()>>\n" +
-                "data X.Z: Int + <A:()>\n" +
-                "data X.Z.A: ()\n" +
-                "data X.Y.A: Int\n" +
+                "data X.*: [x:Int]\n" +
+                "data X.Y.*: []\n" +
+                "data X.Z.*: [z:Int]\n" +
+                "data X.Z.A.*: []\n" +
+                "data X.Y.A.*: [a:Int]\n" +
                 "var xza: X.Z.A\n" +
-                "set xza = (X.Z.A(10,20,()))\n" +
+                "set xza = (X.Z.A(([10,20]:[x:Int,z:Int])))\n" +
                 "var xya: X.Y.A\n" +
-                "set xya = (X.Y.A(10,20))\n" +
+                "set xya = (X.Y.A(([10,20]:[x:Int,a:Int])))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
     fun dg_05x_hier_extd_err () {
         val out = static("""
-            data X: Int + <Y:()>
-            data X.Z: Int + <>
-            data X.Z.A: ()
-            data X.Y.A: Int
-            var xza = X.Z.A(10)
-            var xya = X.Y.A(10,20)
+            data X.*: [Int]
+            data X.Y.*: []
+            data X.Z.*: [Int]
+            data X.Z.A.*: []
+            data X.Y.A.*: [Int]
+            var xza = X.Z.A [10,20]
+            var xya = X.Y.A [10,20]
          """)
-        assert(out == "anon : (lin 5, col 13) : type error : data \"X.Y\" is not extendable") { out!! }
+        //assert(out == "anon : (lin 5, col 13) : type error : data \"X.Y\" is not extendable") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X.*: [Int]\n" +
+                "data X.Y.*: []\n" +
+                "data X.Z.*: [Int]\n" +
+                "data X.Z.A.*: []\n" +
+                "data X.Y.A.*: [Int]\n" +
+                "var xza: X.Z.A\n" +
+                "set xza = (X.Z.A(([10,20]:[])))\n" +
+                "var xya: X.Y.A\n" +
+                "set xya = (X.Y.A(([10,20]:[])))\n" +
+                "}") { G.outer!!.to_str() }
     }
     @Test
     fun dg_05y_hier_extd_err () {
