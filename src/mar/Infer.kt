@@ -23,8 +23,8 @@ fun Expr.infer (): Type? {
         is Expr.Tuple -> up.typex().let {
             if (it == null) null else {
                 it as Type.Tuple
-                val i = up.vs.indexOfFirst { it.n==this.n }
-                it.ts[i]
+                val i = up.vs.indexOfFirst { (_,e) -> e.n==this.n }
+                it.ts[i].second
             }
         }
         is Expr.Union -> up.typex().let {
@@ -84,8 +84,8 @@ fun infer_types () {
                         }
                     }
                     if (me.xtp == null) {
-                        val tps = me.vs.map { it.type() }
-                        me.xtp = Type.Tuple(me.tk, tps, me.ids)
+                        val tps = me.vs.map { (id,v) -> Pair(id,v.type()) }
+                        me.xtp = Type.Tuple(me.tk, tps)
                     }
                 }
             }

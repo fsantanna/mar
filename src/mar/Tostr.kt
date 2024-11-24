@@ -37,20 +37,8 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Data -> this.ts.to_str(pre)
         is Type.Unit -> "()"
         is Type.Pointer -> "\\" + this.ptr.to_str(pre)
-        is Type.Tuple -> {
-            if (this.ids == null) {
-                "[" + this.ts.map { it.to_str(pre) }.joinToString(",") + "]"
-            } else {
-                "[" + this.ids.zip(this.ts).map { (id,tp) -> id.str + ":" + tp.to_str(pre) }.joinToString(",") + "]"
-            }
-        }
-        is Type.Union -> {
-            if (this.ids == null) {
-                "<" + this.ts.map { it.to_str(pre) }.joinToString(",") + ">"
-            } else {
-                "<" + this.ids.zip(this.ts).map { (id,tp) -> id.str + ":" + tp.to_str(pre) }.joinToString(",") + ">"
-            }
-        }
+        is Type.Tuple -> "[" + this.ts.map { (id,tp) -> id.cond { it.str+":" } + tp.to_str(pre) }.joinToString(",") + "]"
+        is Type.Union -> "<" + this.ts.map { (id,tp) -> id.cond { it.str+":" } + tp.to_str(pre) }.joinToString(",") + ">"
         is Type.Proto -> {
             val inps = when (this) {
                 is Type.Proto.Func.Vars -> this.inps_.map { it.to_str(pre) }.joinToString(",")
@@ -91,12 +79,7 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Unit   -> "()"
 
         is Expr.Tuple  -> {
-            "(" + if (this.ids == null) {
-                "[" + this.vs.map { it.to_str(pre) }.joinToString(",") + "]"
-            } else {
-                "[" + this.ids.zip(this.vs).map { (id,v) -> "."+id.str+"="+v.to_str(pre) }.joinToString(",") + "]"
-
-            } + this.xtp.cond { ":${it.to_str()}" } + ")"
+            "(" + "[" + this.vs.map { (id,v) -> "."+id!!.str+"="+v.to_str(pre) }.joinToString(",") + "]" + this.xtp.cond { ":${it.to_str()}" } + ")"
         }
         is Expr.Field  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"
         is Expr.Union  -> "<." + this.idx + "=" + this.v.to_str(pre) + ">" + this.xtp.cond { ":${it.to_str()}" }

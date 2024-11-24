@@ -211,41 +211,31 @@ fun parser_type (pre: Tk?, fr_proto: Boolean): Type {
             val tk0 = G.tk0 as Tk.Fix
             val ids = mutableListOf<Tk.Var>()
             val ts = parser_list(",", "]") {
-                if (accept_enu("Var")) {
-                    ids.add(G.tk0 as Tk.Var)
+                val id = if (!accept_enu("Var")) null else {
+                    val xid = G.tk0 as Tk.Var
                     accept_fix_err(":")
+                    xid
                 }
-                parser_type(null, false)
+                Pair(id, parser_type(null, false))
             }
             when {
-                ids.isEmpty() -> Type.Tuple(tk0, ts, null)
+                ids.isEmpty() -> Type.Tuple(tk0, ts)
                 (ts.size != ids.size) -> err(tk0, "tuple error : missing field identifier")
-                else -> Type.Tuple(tk0, ts, ids)
+                else -> Type.Tuple(tk0, ts)
             }
         }
         accept_op("<") -> {
             val tk0 = G.tk0 as Tk.Op
-            val ids = mutableListOf<Tk.Type>()
             val ts = parser_list(",", ">") {
                 val tk1 = G.tk1
                 val has_id = accept_enu("Type") && accept_fix(":")
                 when {
-                    has_id -> {
-                        ids.add(tk1 as Tk.Type)
-                        parser_type(null, false)
-                    }
-                    (tk1 is Tk.Type) -> parser_type(tk1, false)
-                    else -> parser_type(null, false)
+                    has_id -> Pair(tk1 as Tk.Type, parser_type(null, false))
+                    (tk1 is Tk.Type) -> Pair(null, parser_type(tk1, false))
+                    else -> Pair(null, parser_type(null, false))
                 }
             }
-            if (ids.isEmpty() && ts.size>0) {
-                Type.Union(tk0, true, ts.toMutableList(), null)
-            } else {
-                if (ts.size != ids.size) {
-                    err(tk0, "union error : missing type identifier")
-                }
-                Type.Union(tk0, true, ts.toMutableList(), ids)
-            }
+            Type.Union(tk0, true, ts)
         }
         else -> err_expected(G.tk1!!, "type")
     }
@@ -287,19 +277,11 @@ fun parser_expr_4_prim (): Expr {
                 val e = parser_expr()
                 Pair(x, e)
             }
-            val (ids,vs) = l.unzip()
-            val xids = ids.filter { it!=null }.let {
-                when {
-                    (it.size == 0) -> null
-                    (it.size != vs.size) -> err(tk0, "tuple error : missing field identifier")
-                    else -> it as List<Tk.Var>
-                }
-            }
             val tp = if (!accept_fix(":")) null else {
                 check_fix_err("[")
                 parser_type(null, false) as Type.Tuple
             }
-            Expr.Tuple(tk0, tp, vs, xids)
+            Expr.Tuple(tk0, tp, l)
         }
         accept_op("<")      -> {
             val tk0 = G.tk0 as Tk.Op

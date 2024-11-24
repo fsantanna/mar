@@ -110,7 +110,7 @@ fun cache_ups () {
                 if (me.xtp != null) {
                     G.ups[me.xtp!!.n] = me.n
                 }
-                me.vs.forEach { G.ups[it.n] = me.n }
+                me.vs.forEach { (_,tp) -> G.ups[tp.n] = me.n }
             }
             is Expr.Union -> {
                 if (me.xtp != null) {
@@ -153,12 +153,12 @@ fun cache_ups () {
     fun ft (me: Type) {
         when (me) {
             is Type.Pointer -> G.ups[me.ptr.n] = me.n
-            is Type.Tuple -> me.ts.forEach {
-                G.ups[it.n] = me.n
+            is Type.Tuple -> me.ts.forEach { (_,tp) ->
+                G.ups[tp.n] = me.n
             }
             is Type.Union -> {
-                me.ts.forEach {
-                    G.ups[it.n] = me.n
+                me.ts.forEach { (_,tp) ->
+                    G.ups[tp.n] = me.n
                 }
             }
             is Type.Exec -> {

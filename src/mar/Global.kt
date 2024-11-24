@@ -68,8 +68,8 @@ sealed class Type (var n: Int, val tk: Tk) {
     class Prim    (val tk_: Tk.Type): Type(G.N++, tk_)
     class Data    (tk: Tk, val ts: List<Tk.Type>): Type(G.N++, tk)
     class Pointer (tk: Tk, val ptr: Type): Type(G.N++, tk)
-    class Tuple   (tk: Tk, val ts: List<Type>, val ids: List<Tk.Var>?): Type(G.N++, tk)
-    class Union   (tk: Tk, val tagged: Boolean, val ts: MutableList<Type>, val ids: MutableList<Tk.Type>?): Type(G.N++, tk)
+    class Tuple   (tk: Tk, val ts: List<Pair<Tk.Var?,Type>>): Type(G.N++, tk)
+    class Union   (tk: Tk, val tagged: Boolean, val ts: List<Pair<Tk.Type?,Type>>): Type(G.N++, tk)
 
     sealed class Proto (tk: Tk, val inps: List<Type>, val out: Type): Type(G.N++, tk) {
         open class Func (tk: Tk, inps: List<Type>, out: Type): Proto(tk, inps, out) {
@@ -93,7 +93,7 @@ sealed class Expr (var n: Int, val tk: Tk) {
     class Null (tk_: Tk): Expr(G.N++, tk_)
     class Unit (tk_: Tk): Expr(G.N++, tk_)
 
-    class Tuple (tk: Tk, var xtp: Type.Tuple?, val vs: List<Expr>, val ids: List<Tk.Var>?): Expr(G.N++, tk)
+    class Tuple (tk: Tk, var xtp: Type.Tuple?, val vs: List<Pair<Tk.Var?,Expr>>): Expr(G.N++, tk)
     class Field (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)
     class Union (tk: Tk, var xtp: Type.Union?, val idx: String, val v: Expr): Expr(G.N++, tk)
     class Pred  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, tk)

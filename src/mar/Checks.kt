@@ -93,11 +93,9 @@ fun check_vars () {
 
                 l.add(me.tp)
 
-                me.xtp = Type.Tuple (
-                    me.tk,
-                    l.map { it.ts }.flatten(),
-                    l.map { it.ids ?: emptyList() }.flatten()
-                )
+                me.xtp = Type.Tuple(me.tk, l.map { it.ts }.flatten())
+
+                //println(listOf(me.ts.to_str(), me.tp.to_str(), me.xtp!!.to_str(), l.map { it.ts }.flatten()))
             }
             is Stmt.Block -> {
                 val ids2 = me.to_dcls()
@@ -176,7 +174,7 @@ fun check_types () {
     fun fe (me: Expr) {
         when (me) {
             is Expr.Tuple -> {
-                val tp = Type.Tuple(me.tk, me.vs.map { it.type() }, me.ids)
+                val tp = Type.Tuple(me.tk, me.vs.map { (id,v) -> Pair(id, v.type()) })
                 if (!me.xtp!!.is_sup_of(tp)) {
                     //println(me.xtp!!.to_str())
                     //println(tp.to_str())

@@ -15,11 +15,11 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str)
         (this is Type.Data       && other is Type.Data)       -> (this.ts.size<=other.ts.size && this.ts.zip(other.ts).all { (thi,oth) -> thi.str==oth.str })
         (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
-        (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.is_sup_of(oth) } && (this.ids==null || other.ids==null || this.ids.zip(other.ids).all { (thi,oth) -> thi.str==oth.str })
-        (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.is_sup_of(oth) }
+        (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.first==oth.first && thi.second.is_sup_of(oth.second) }
+        (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.second.is_sup_of(oth.second) }
         (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
         (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
-        (this is Type.Exec       && other is Type.Exec)        -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
+        (this is Type.Exec       && other is Type.Exec)       -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
         else -> false
     }
 }
@@ -99,12 +99,12 @@ fun Type.no_data (): Type? {
 fun Type.Tuple.index (idx: String): Type? {
     val v = idx.toIntOrNull().let {
         if (it == null) {
-            this.ids!!.indexOfFirst { it.str==idx }
+            this.ts.map { it.first }.indexOfFirst { it?.str==idx }
         } else {
             it - 1
         }
     }
-    return this.ts.getOrNull(v)
+    return this.ts.getOrNull(v)?.second
 }
 
 fun Type.discx (idx: String): Pair<Int, Type>? {
@@ -140,20 +140,16 @@ fun Type.Union.disc (idx: String): Pair<Int, Type>? {
     val num = idx.toIntOrNull()
     return when {
         (num == null) -> {
-            if (this.ids == null) {
-                null
-            } else {
-                this.ids.indexOfFirst { it.str == idx }.let {
-                    if (it == -1) {
-                        null
-                    } else {
-                        Pair(it, this.ts[it])
-                    }
+            this.ts.map { it.first }.indexOfFirst { it?.str == idx }.let {
+                if (it == -1) {
+                    null
+                } else {
+                    Pair(it, this.ts[it].second)
                 }
             }
         }
         (num<=0 || num>this.ts.size) -> null
-        else -> Pair(num-1, this.ts[num-1])
+        else -> Pair(num-1, this.ts[num-1].second)
     }
 }
 
@@ -196,10 +192,10 @@ fun Expr.type (): Type {
             Type.Exec(co.tk, co.inps, co.res, co.yld, co.out)
         }
         is Expr.Start -> (this.exe.type() as Type.Exec).let {
-            Type.Union(this.tk, true, mutableListOf(it.yld, it.out), null)
+            Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
         }
         is Expr.Resume -> (this.exe.type() as Type.Exec).let {
-            Type.Union(this.tk, true, mutableListOf(it.yld, it.out), null)
+            Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
         }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
     }
