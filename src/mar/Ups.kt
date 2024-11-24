@@ -20,6 +20,7 @@ fun Any.up_first (cnd: (Any)->Any?): Any? {
         (v!=false && v!=null) -> v
         (this is Stmt) -> this.fup()?.up_first(cnd)
         (this is Expr) -> this.fup()?.up_first(cnd)
+        (this is Type) -> this.fup()?.up_first(cnd)
         else -> error("impossible case")
     }
 }

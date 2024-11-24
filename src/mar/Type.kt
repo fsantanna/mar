@@ -53,24 +53,28 @@ fun Tk.Var.type (fr: Any): Type? {
 }
 
 fun Type.Data.to_stmt (): Stmt? {
-    val flats = G.outer!!.dn_filter_pre({ it is Stmt.Flat }, {null}, {null})
-        .let { it as List<Stmt.Flat> }
-        .find { it.t.str == this.ts.first().str }
-    val hiers = G.outer!!.dn_filter_pre({ it is Stmt.Hier }, {null}, {null})
-        .let { it as List<Stmt.Hier> }
-        .find { it.to_str() == this.to_str() }
-    return flats ?: hiers
+    return this.up_first { blk ->
+        if (blk !is Stmt.Block) null else {
+            blk.to_dats().find { s ->
+                when (s) {
+                    is Stmt.Flat -> (s.t.str == this.ts.first().str)
+                    is Stmt.Hier -> (s.to_str() == this.to_str())
+                    else -> error("impossible case")
+                }
+            }
+        }
+    } as Stmt?
 }
 
 fun Type.no_data (): Type? {
     return when (this) {
         !is Type.Data -> this
         else -> {
-            val stmt = this.to_stmt()
-            when (stmt) {
+            val s = this.to_stmt()
+            when (s) {
                 null -> null
                 is Stmt.Flat -> {
-                    var tp: Type? = stmt.tp
+                    var tp: Type? = s.tp
                     for (id in this.ts.drop(1)) {
                         if (tp !is Type.Union) {
                             tp = null
@@ -108,8 +112,8 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
 }
 
 fun Type.Data.disc (idx: String): Pair<Int, Type>? {
-    val stmt = this.to_stmt()
-    return when (stmt) {
+    val s = this.to_stmt()
+    return when (s) {
         is Stmt.Flat -> {
             val tp2 = this.no_data()
             if (tp2 is Type.Union) {

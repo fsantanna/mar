@@ -44,6 +44,21 @@ fun Stmt.Block.to_dcls (): List<XDcl> {
         }
 }
 
+fun Stmt.Block.to_dats (): List<Stmt> {
+    return this.dn_filter_pre(
+        {
+            when (it) {
+                is Stmt.Flat -> true
+                is Stmt.Hier -> true
+                is Stmt.Block -> if (it === this) false else null
+                else -> false
+            }
+        },
+        {null},
+        {null}
+    ) as List<Stmt>
+}
+
 fun check_vars () {
     fun fs (me: Stmt) {
         when (me) {

@@ -838,7 +838,7 @@ class Static {
         assert(out == null) { out!! }
     }
     @Test
-    fun de_14_subs () {
+    fun TODO_de_14_subs () {    // TODO: anonymous reuse (+)
         val out = static("""
             data X: [Int, [a:Int]+<[],[]>]
         """)
@@ -862,8 +862,9 @@ class Static {
     @Test
     fun df_01_hier_err () {
         val out = static("""
-            data X: [a:Int] + <Y:[]>
-            var y = X.Y()   ;; missing Int
+            data X.*: [a:Int]
+            data X.Y.*: []
+            var y = X.Y []   ;; missing Int
         """)
         assert(out == "anon : (lin 3, col 24) : constructor error : types mismatch") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
