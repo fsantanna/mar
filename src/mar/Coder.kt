@@ -106,7 +106,7 @@ fun coder_types (pre: Boolean): String {
                             """
                             union {
                                 ${tp.coder()} _${i+1};
-                                ${id.cond { "${tp.coder()} ${it.str};" }
+                                ${id.cond { "${tp.coder()} ${it.str};" }}
                             };                                    
                             """
                         }.joinToString("")}
