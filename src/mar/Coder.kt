@@ -152,7 +152,7 @@ fun coder_types (pre: Boolean): String {
                         listOf(
                             """
                             typedef enum MAR_TAGS_$SS {
-                                MAR_TAG_${SS}_${s.last().uppercase()},
+                                __MAR_TAG_${SS}__,
                                 ${
                                     tp.ids.map {
                                         """
@@ -372,7 +372,7 @@ fun Stmt.coder (pre: Boolean = false): String {
                     }
                     is Type.Data -> {
                         val tpx = tp.no_data()!!
-                        val par = (tpx !is Type.Tuple) && (tpx !is Type.Union)
+                        val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
                         """
                         printf("${tp.ts.first().str}");
                         ${par.cond2({ "printf(\"(\");" }, { "printf(\" \");" })}

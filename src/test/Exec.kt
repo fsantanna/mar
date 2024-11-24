@@ -519,7 +519,7 @@ class Exec  {
     fun hi_05_data () {
         val out = test("""
             data A: <B: <C: Int>>
-            var c = A.B.C(10)
+            var c: A = A.B.C(10)
             var v = c!B!C
             `printf("%d\n", v);`
         """)
@@ -628,6 +628,15 @@ class Exec  {
         assert(out == "true\n" +
                 "Maybe <.2=10>\n" +
                 "Meter(10)\n") { out }
+    }
+    @Test
+    fun hi_10x_data_sub_print () {
+        val out = test("""
+            data V: <Z:(), V:Int>
+            var v: V.V = V.V(10)
+            print(v)
+        """)
+        assert(out == "V.V(10)\n") { out }
     }
     @Test
     fun TODO_hi_11_data () {
