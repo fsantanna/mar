@@ -209,7 +209,6 @@ fun parser_type (pre: Tk?, fr_proto: Boolean): Type {
         }
         accept_fix("[") -> {
             val tk0 = G.tk0 as Tk.Fix
-            val ids = mutableListOf<Tk.Var>()
             val ts = parser_list(",", "]") {
                 val id = if (!accept_enu("Var")) null else {
                     val xid = G.tk0 as Tk.Var
@@ -218,11 +217,7 @@ fun parser_type (pre: Tk?, fr_proto: Boolean): Type {
                 }
                 Pair(id, parser_type(null, false))
             }
-            when {
-                ids.isEmpty() -> Type.Tuple(tk0, ts)
-                (ts.size != ids.size) -> err(tk0, "tuple error : missing field identifier")
-                else -> Type.Tuple(tk0, ts)
-            }
+            Type.Tuple(tk0, ts)
         }
         accept_op("<") -> {
             val tk0 = G.tk0 as Tk.Op

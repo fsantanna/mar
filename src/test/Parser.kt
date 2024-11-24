@@ -570,7 +570,9 @@ class Parser {
             var pos: [x:Int, Int]
         """).lexer()
         parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 2, col 22) : tuple error : missing field identifier")
+        //assert(trap { parser_stmt() } == "anon : (lin 2, col 22) : tuple error : missing field identifier")
+        val s = parser_stmt().first()
+        assert(s.to_str() == "var pos: [x:Int,Int]") { s.to_str() }
     }
     @Test
     fun jj_06_tuple_id () {
@@ -595,7 +597,9 @@ class Parser {
             set `x` = [.x=10,20]
         """).lexer()
         parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 2, col 23) : tuple error : missing field identifier")
+        //assert(trap { parser_stmt() } == "anon : (lin 2, col 23) : tuple error : missing field identifier")
+        val s = parser_stmt().first()
+        assert(s.to_str() == "set ```x``` = ([.x=10,20])") { s.to_str() }
     }
 
     // UNION

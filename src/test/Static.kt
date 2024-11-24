@@ -1024,7 +1024,7 @@ class Static {
         assert(G.outer!!.to_str() == "do {\n" +
                 "data X.*: [Int]\n" +
                 "var x: X\n" +
-                "set x = (X(([10]:[])))\n" +
+                "set x = (X(([10]:[Int])))\n" +
                 "print((x.1))\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -1131,9 +1131,9 @@ class Static {
                 "data X.Z.A.*: []\n" +
                 "data X.Y.A.*: [Int]\n" +
                 "var xza: X.Z.A\n" +
-                "set xza = (X.Z.A(([10,20]:[])))\n" +
+                "set xza = (X.Z.A(([10,20]:[Int,Int])))\n" +
                 "var xya: X.Y.A\n" +
-                "set xya = (X.Y.A(([10,20]:[])))\n" +
+                "set xya = (X.Y.A(([10,20]:[Int,Int])))\n" +
                 "}") { G.outer!!.to_str() }
     }
 
