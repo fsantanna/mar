@@ -156,7 +156,7 @@ fun coder_types (pre: Boolean): String {
                             } MAR_TAGS_$SS;
                             """
                         ) + tp.ts.map { (id,t) ->
-                            f(t,s+ listOfNotNull(id?.str))
+                            if (id == null) emptyList() else f(t,s+listOf(id.str))
                         }.flatten()
                     }
                     return listOf(x1) + x2
