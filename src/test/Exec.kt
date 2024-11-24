@@ -423,8 +423,9 @@ class Exec  {
     fun hh_09_data () {
         val out = test("""
             data K: <None:()>
-            data X: Int + <Y:()>
-            var xy = X.Y(10,())
+            data X.*: [Int]
+            data X.Y.*: []
+            var xy = X.Y [10]
             var y = xy    ;; ()
             print(y)
         """)
@@ -444,6 +445,17 @@ class Exec  {
 
     // DATA / HIER
 
+    @Test
+    fun hi_00_data () {
+        val out = test("""
+            data A.*: [Int]
+            var a: A = A [100]
+            print(a)
+            print(a.1)
+        """)
+        assert(out == "A 100 + <.0=>\n" +
+                "100\n") { out }
+    }
     @Test
     fun hi_01_data () {
         val out = test("""
