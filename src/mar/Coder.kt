@@ -372,12 +372,13 @@ fun Stmt.coder (pre: Boolean = false): String {
                         """
                     }
                     is Type.Data -> {
+                        val s = tp.to_flat_hier()
                         val tpx = tp.no_data()!!
                         val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
                         """
-                        printf("${tp.ts.first().str}");
+                        printf("${tp.ts.to_str(pre)}");
                         ${par.cond2({ "printf(\"(\");" }, { "printf(\" \");" })}
-                        ${aux(tpx, v)}
+                        ${aux(tpx, v + (s is Stmt.Hier).cond { ".tup" })}
                         ${par.cond { "printf(\")\");" }}
                     """
                     }
@@ -425,15 +426,19 @@ fun Expr.coder (pre: Boolean = false): String {
                 if (it == null) this.idx else "_"+it
             }
             val tp = this.col.type()
-            //println(tp.to_str())
-            val sub = when {
-                (tp !is Type.Data) -> ""
-                (tp.ts.size == 1)  -> ""
-                else -> {
-                    tp.ts.drop(1).map { it.str }.joinToString(".") + "."
+            if (tp !is Type.Data) {
+                "(${this.col.coder(pre)}.$idx)"
+            } else {
+                val s = tp.to_flat_hier()
+                when (s) {
+                    is Stmt.Flat -> {
+                        val sub = tp.ts.drop(1).map { it.str + "." }.joinToString("")
+                        "(${this.col.coder(pre)}.$sub$idx)"
+                    }
+                    is Stmt.Hier -> "(${this.col.coder(pre)}.tup.$idx)"
+                    else -> error("impossible case")
                 }
             }
-            "(${this.col.coder(pre)}.$sub$idx)"
         }
         is Expr.Disc  -> {
             val (i,_) = this.col.type().discx(this.idx)!!

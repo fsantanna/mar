@@ -429,7 +429,7 @@ class Exec  {
             var y = xy    ;; ()
             print(y)
         """)
-        assert(out == "()\n") { out }
+        assert(out == "X.Y [10]\n") { out }
     }
     @Test
     fun hh_10_data () {
@@ -453,7 +453,7 @@ class Exec  {
             print(a)
             print(a.1)
         """)
-        assert(out == "A 100 + <.0=>\n" +
+        assert(out == "A [100]\n" +
                 "100\n") { out }
     }
     @Test
@@ -465,7 +465,7 @@ class Exec  {
             print(x0)
             print(x0.1)
         """)
-        assert(out == "A 100 + <.0=>\n" +
+        assert(out == "A [100]\n" +
                 "100\n") { out }
     }
     @Test
