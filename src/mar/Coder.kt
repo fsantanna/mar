@@ -47,15 +47,21 @@ fun Type.Exec.x_inp_uni (pre: Boolean): Pair<String, Type.Union> {
     return Pair(id, tp)
 }
 
-fun Var_Type.coder (pre: Boolean = false): String {
+fun Var_Type.coder (pre: Boolean): String {
     val (id,tp) = this
     return tp.coder(pre) + " " + id.str
 }
-fun Type.coder (pre: Boolean = false): String {
+fun Type.coder (pre: Boolean): String {
     return when (this) {
         is Type.Any        -> TODO()
         is Type.Prim      -> this.tk.str
-        is Type.Data      -> this.tk.str
+        is Type.Data      -> {
+            if (this.to_flat_hier() is Stmt.Flat) {
+                this.ts.first().str
+            } else {
+                this.ts.coder(pre)
+            }
+        }
         is Type.Unit       -> "_VOID_"
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "MAR_Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
@@ -66,13 +72,13 @@ fun Type.coder (pre: Boolean = false): String {
     }
 }
 
-fun List<Tk.Type>.coder (pre: Boolean = false): String {
+fun List<Tk.Type>.coder (pre: Boolean): String {
     return this.map { it.str }.joinToString("_")
 }
 
 fun coder_types (pre: Boolean): String {
     fun ft (me: Type): List<String> {
-        me.coder().let {
+        me.coder(pre).let {
             if (G.types.contains(it)) {
                 return emptyList()
             } else {
@@ -105,8 +111,8 @@ fun coder_types (pre: Boolean): String {
                             val (id,tp) = id_tp
                             """
                             union {
-                                ${tp.coder()} _${i+1};
-                                ${id.cond { "${tp.coder()} ${it.str};" }}
+                                ${tp.coder(pre)} _${i+1};
+                                ${id.cond { "${tp.coder(pre)} ${it.str};" }}
                             };                                    
                             """
                         }.joinToString("")}
@@ -122,7 +128,7 @@ fun coder_types (pre: Boolean): String {
                             ${me.ts.mapIndexed { i,id_tp ->
                                 val (id,tp) = id_tp
                                 id.cond { tp.coder(pre) + " " + it.str + ";\n" } +
-                                tp.coder() + " _" + (i+1) + ";\n"
+                                tp.coder(pre) + " _" + (i+1) + ";\n"
                             }.joinToString("")}
                         };
                     } $x;
@@ -200,7 +206,7 @@ fun coder_types (pre: Boolean): String {
     return ts.joinToString("")
 }
 
-fun Stmt.coder (pre: Boolean = false): String {
+fun Stmt.coder (pre: Boolean): String {
     return when (this) {
         is Stmt.Flat, is Stmt.Hier -> ""
         is Stmt.Proto -> {
@@ -403,7 +409,7 @@ fun Tk.Var.coder (fr: Any, pre: Boolean): String {
 
 }
 
-fun Expr.coder (pre: Boolean = false): String {
+fun Expr.coder (pre: Boolean): String {
     fun String.op_mar_to_c (): String {
         return when (this) {
             "ref" -> "&"
@@ -461,16 +467,16 @@ fun Expr.coder (pre: Boolean = false): String {
                         ret = ret + "$tp ceu_$i = " +
                                 if (i == this.dat.ts.size - 1) {
                                     """
-                            ((${tp}) ${this.e.coder(pre)});
-                            """
+                                    ((${tp}) ${this.e.coder(pre)});
+                                    """
                                 } else {
                                     val nxt = this.dat.ts[i + 1].str
                                     """
-                            {
-                                .tag = MAR_TAG_${tp.uppercase()}_${nxt.uppercase()},
-                                { .$nxt = ceu_${i + 1} }
-                            };
-                            """
+                                    {
+                                        .tag = MAR_TAG_${tp.uppercase()}_${nxt.uppercase()},
+                                        { .$nxt = ceu_${i + 1} }
+                                    };
+                                    """
                                 }
                     }
                     ret + " ceu_0; })"

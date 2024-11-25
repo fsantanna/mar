@@ -471,8 +471,21 @@ class Exec  {
     @Test
     fun hi_01x_data () {
         val out = test("""
-            data A: Int + <B: Int + <C: Int>>
-            var x0: A = A.B.B(100,100)  ;; ignore subsubtype C
+            data A.*: []
+            data A.B.*: [Int]
+            var x0: A = A.B [10]
+            print(x0)
+        """)
+        assert(out == "A 100 + <.1=100 + <.0=>>\n" +
+                "100 + <.0=>\n") { out }
+    }
+    @Test
+    fun hi_01y_data () {
+        val out = test("""
+            data A.*: [Int]
+            data A.B.*: [Int]
+            data A.B.C.*: [Int]
+            var x0: A = A.B[100,100]  ;; ignore subsubtype C
             print(x0)
             print(x0!B)
         """)
