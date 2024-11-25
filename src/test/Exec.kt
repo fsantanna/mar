@@ -473,8 +473,8 @@ class Exec  {
         val out = test("""
             data A.*: []
             data A.B.*: [Int]
-            var x0: A = A.B [10]
-            print(x0)
+            var a: A = A.B [10]
+            print(a)
         """)
         assert(out == "A 100 + <.1=100 + <.0=>>\n" +
                 "100 + <.0=>\n") { out }

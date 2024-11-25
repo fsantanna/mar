@@ -278,7 +278,12 @@ fun Stmt.coder (pre: Boolean): String {
             if (this.src is Expr.Yield) {
                 this.src.coder(pre)
             } else {
-                this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
+                val dst = this.dst.type()
+                if (this.src.type().is_sup_of(dst)) {
+                    this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
+                } else {
+                    this.dst.coder(pre) + " = MAR_CAST(${dst.coder(pre)}, " + this.src.coder(pre) + ");"
+                }
             }
         }
 
