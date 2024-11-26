@@ -129,7 +129,9 @@ fun Type.Data.disc (idx: String): Pair<Int, Type>? {
         is Stmt.Hier -> {
             val i = s.xsubs.indexOfFirst { it.ts.to_str() == this.to_str()+"."+idx }
             if (i == -1) null else {
-                Pair(i, s.xsubs[i].xtp!!)
+                val dat = Type.Data(this.tk, this.ts + listOf(Tk.Type(idx,this.tk.pos.copy())))
+                dat.xup = this
+                Pair(i, dat)
             }
         }
         else -> error("impossible case")

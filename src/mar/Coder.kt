@@ -427,7 +427,7 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_mar_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
-        is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> tp.coder(pre) }.joinToString(",") } })"
+        is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
         is Expr.Union -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
             "((${this.type().coder(pre)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"

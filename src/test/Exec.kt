@@ -482,14 +482,13 @@ class Exec  {
     fun hi_01y_data () {
         val out = test("""
             data A.*: []
-            data A.B.*: [Int]
-            var a: A = A.B [10]
-            var i = 100
+            data A.B.*: [Int,Int,Int,Int]
+            var a: A = A.B [10,20,30,40]
             `printf("%ld\n", sizeof(A));`
             `printf("%ld\n", sizeof(A_B));`
-            print(a!B.1)
+            print(a!B)
         """)
-        assert(out == "A []\n") { out }
+        assert(out == "20\n20\nA.B [10,20,30,40]\n") { out }
     }
     @Test
     fun hi_01z_data () {
