@@ -119,7 +119,7 @@ fun cache_ups () {
         when (me) {
             is Type.Pointer -> me.ptr.xup = me
             is Type.Tuple -> me.ts.forEach { (_,tp) ->
-                tp.xup = me.n
+                tp.xup = me
             }
             is Type.Union -> {
                 me.ts.forEach { (_,tp) ->

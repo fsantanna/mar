@@ -16,14 +16,14 @@ fun Expr.infer (): Type? {
     val up = this.xup!!
     return when (up) {
         is Stmt.Set -> {
-            assert(up.src.n == this.n)
+            assert(up.src == this)
             up.dst.typex()
         }
         is Expr.Cons -> up.dat.no_data()
         is Expr.Tuple -> up.typex().let {
             if (it == null) null else {
                 it as Type.Tuple
-                val i = up.vs.indexOfFirst { (_,e) -> e.n==this.n }
+                val i = up.vs.indexOfFirst { (_,e) -> e==this }
                 it.ts[i].second
             }
         }
@@ -35,23 +35,23 @@ fun Expr.infer (): Type? {
             }
         }
         is Expr.Call -> {
-            val i = up.args.indexOfFirst { it.n == this.n }
+            val i = up.args.indexOfFirst { it == this }
             (up.f.type() as Type.Proto.Func).inps[i]
         }
         is Stmt.Return -> {
-            assert(up.e.n == this.n)
+            assert(up.e == this)
             (up.up_first { it is Stmt.Proto.Func } as Stmt.Proto.Func).tp.out
         }
         is Expr.Start -> {
-            val i = up.args.indexOfFirst { it.n == this.n }
+            val i = up.args.indexOfFirst { it == this }
             (up.exe.type() as Type.Exec).inps[i]
         }
         is Expr.Resume -> {
-            assert(up.arg.n == this.n)
+            assert(up.arg == this)
             (up.exe.type() as Type.Exec).res
         }
         is Expr.Yield -> {
-            assert(up.arg.n == this.n)
+            assert(up.arg == this)
             (up.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_.yld
         }
         is Expr.Bin -> {
@@ -104,8 +104,8 @@ fun infer_types () {
                 if (me.xtp == null) {
                     val up = me.xup!!
                     me.xtp = when {
-                        (up is Expr.Call && up.f.n==me.n)   -> null
-                        (up is Stmt.Set  && up.dst.n==me.n) -> null
+                        (up is Expr.Call && up.f==me)   -> null
+                        (up is Stmt.Set  && up.dst==me) -> null
                         else -> me.infer().let {
                             when (it) {
                                 null -> err(me.tk, "inference error : unknown type")

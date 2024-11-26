@@ -50,15 +50,15 @@ val PRIMS = setOf(
 typealias XDcl = Triple<Stmt,Tk.Var,Type?>
 typealias Var_Type = Pair<Tk.Var,Type>
 
-sealed class Tk (var n: Int, val str: String, val pos: Pos) {
-    class Eof  (pos: Pos): Tk(G.N++, "", pos)
-    class Fix  (str: String, pos: Pos): Tk(G.N++, str, pos)
-    class Type (str: String, pos: Pos): Tk(G.N++, str, pos)
-    class Op   (str: String, pos: Pos): Tk(G.N++, str, pos)
-    class Var  (str: String, pos: Pos): Tk(G.N++, str, pos)  // up: 0=var, 1=upvar, 2=upref
-    class Num  (str: String, pos: Pos): Tk(G.N++, str, pos)
-    class Chr  (str: String, pos: Pos): Tk(G.N++, str, pos)
-    class Nat  (str: String, pos: Pos): Tk(G.N++, str, pos)
+sealed class Tk (val str: String, val pos: Pos) {
+    class Eof  (pos: Pos): Tk("", pos)
+    class Fix  (str: String, pos: Pos): Tk(str, pos)
+    class Type (str: String, pos: Pos): Tk(str, pos)
+    class Op   (str: String, pos: Pos): Tk(str, pos)
+    class Var  (str: String, pos: Pos): Tk(str, pos)  // up: 0=var, 1=upvar, 2=upref
+    class Num  (str: String, pos: Pos): Tk(str, pos)
+    class Chr  (str: String, pos: Pos): Tk(str, pos)
+    class Nat  (str: String, pos: Pos): Tk(str, pos)
 }
 
 sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
