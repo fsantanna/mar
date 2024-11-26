@@ -3,8 +3,8 @@ package mar
 fun Any.ups_until (cnd: (Any)->Boolean): List<Any> {
     return listOf(this) + when {
         cnd(this) -> emptyList()
-        (this is Stmt) -> this.fup()?.ups_until(cnd) ?: emptyList()
-        (this is Expr) -> this.fup()?.ups_until(cnd) ?: emptyList()
+        (this is Stmt) -> this.xup?.ups_until(cnd) ?: emptyList()
+        (this is Expr) -> this.xup?.ups_until(cnd) ?: emptyList()
         else -> error("impossible case")
     }
 }
@@ -18,9 +18,9 @@ fun Any.up_first (cnd: (Any)->Any?): Any? {
     return when {
         (v == true) -> this
         (v!=false && v!=null) -> v
-        (this is Stmt) -> this.fup()?.up_first(cnd)
-        (this is Expr) -> this.fup()?.up_first(cnd)
-        (this is Type) -> this.fup()?.up_first(cnd)
+        (this is Stmt) -> this.xup?.up_first(cnd)
+        (this is Expr) -> this.xup?.up_first(cnd)
+        (this is Type) -> this.xup?.up_first(cnd)
         else -> error("impossible case")
     }
 }

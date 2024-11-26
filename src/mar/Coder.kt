@@ -523,7 +523,7 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Null, is Expr.Num -> this.to_str(pre)
 
         is Expr.Create -> {
-            val xtp = (this.fupx() as Stmt.Set).dst.type().coder(pre)
+            val xtp = (this.xup as Stmt.Set).dst.type().coder(pre)
             """
             ($xtp) { 0, ${this.co.coder(pre)}, {} };
             """
@@ -557,7 +557,7 @@ fun Expr.coder (pre: Boolean): String {
             mar_exe->pc = ${this.n};
             return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
         case ${this.n}:
-            ${(this.fupx().let { if (it is Stmt.Set) it.dst else null }).cond { """
+            ${(this.xup.let { if (it is Stmt.Set) it.dst else null }).cond { """
                 ${it.coder(pre)} = mar_arg._2;
             """ }}
         """

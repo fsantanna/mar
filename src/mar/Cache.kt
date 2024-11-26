@@ -1,29 +1,5 @@
 package mar
 
-fun Node.fnex (): Any {
-    return G.ns[this]!!
-}
-
-fun Stmt.fup (): Stmt? {
-    return G.ups[this.n]?.fnex() as Stmt?
-}
-fun Expr.fup (): Any? {
-    return G.ups[this.n]?.fnex()
-}
-fun Type.fup (): Any? {
-    return G.ups[this.n]?.fnex()
-}
-
-fun Stmt.fupx (): Stmt {
-    return this.fup()!!
-}
-fun Expr.fupx (): Any {
-    return this.fup()!!
-}
-fun Type.fupx (): Any {
-    return this.fup()!!
-}
-
 fun cache_ns () {
     G.outer!!.dn_visit_pre (
         {G.ns[it.n] = it ; Unit},
@@ -36,158 +12,155 @@ fun cache_ups () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Flat   -> {
-                G.ups[me.t.n] = me.n
-                G.ups[me.tp.n] = me.n
+                me.tp.xup = me
             }
             is Stmt.Hier   -> {
-                me.ts.forEach {
-                    G.ups[it.n] = me.n
-                }
-                G.ups[me.tp.n] = me.n
+                me.tp.xup = me
+                assert(me.xtp == null)
             }
             is Stmt.Proto  -> {
-                G.ups[me.tp.n] = me.n
-                G.ups[me.blk.n] = me.n
+                me.tp.xup = me
+                me.blk.xup = me
                 when (me) {
-                    is Stmt.Proto.Func -> G.ups[me.tp_.n] = me.n
-                    is Stmt.Proto.Coro -> G.ups[me.tp_.n] = me.n
+                    is Stmt.Proto.Func -> me.tp_.xup = me
+                    is Stmt.Proto.Coro -> me.tp_.xup = me
                 }
             }
-            is Stmt.Return -> G.ups[me.e.n] = me.n
+            is Stmt.Return -> me.e.xup = me
 
-            is Stmt.Block -> me.ss.forEach { G.ups[it.n] = me.n }
+            is Stmt.Block -> me.ss.forEach { it.xup = me }
             is Stmt.Dcl -> {
                 if (me.xtp != null) {
-                    G.ups[me.xtp!!.n] = me.n
+                    me.xtp!!.xup = me
                 }
             }
             is Stmt.Set -> {
-                G.ups[me.dst.n] = me.n
-                G.ups[me.src.n] = me.n
+                me.dst.xup = me
+                me.src.xup = me
             }
 
             is Stmt.Defer -> {
-                G.ups[me.blk.n] = me.n
+                me.blk.xup = me
             }
             is Stmt.Catch -> {
                 if (me.xtp != null) {
-                    G.ups[me.xtp.n] = me.n
+                    me.xtp.xup = me
                 }
-                G.ups[me.blk.n] = me.n
+                me.blk.xup = me
             }
             is Stmt.Throw -> {
-                G.ups[me.e.n] = me.n
+                me.e.xup = me
             }
 
             is Stmt.If -> {
-                G.ups[me.cnd.n] = me.n
-                G.ups[me.t.n] = me.n
-                G.ups[me.f.n] = me.n
+                me.cnd.xup = me
+                me.t.xup = me
+                me.f.xup = me
             }
             is Stmt.Loop -> {
-                G.ups[me.blk.n] = me.n
+                me.blk.xup = me
             }
             is Stmt.Break -> {}
 
-            is Stmt.Print -> G.ups[me.e.n] = me.n
-            is Stmt.XExpr -> G.ups[me.e.n] = me.n
+            is Stmt.Print -> me.e.xup = me
+            is Stmt.XExpr -> me.e.xup = me
             is Stmt.Nat -> {}
         }
     }
     fun fe (me: Expr) {
         when (me) {
-            is Expr.Uno -> G.ups[me.e.n] = me.n
+            is Expr.Uno -> me.e.xup = me
             is Expr.Bin -> {
-                G.ups[me.e1.n] = me.n
-                G.ups[me.e2.n] = me.n
+                me.e1.xup = me
+                me.e2.xup = me
             }
             is Expr.Call -> {
-                G.ups[me.f.n] = me.n
-                me.args.forEach { G.ups[it.n] = me.n }
+                me.f.xup = me
+                me.args.forEach { it.xup = me }
             }
 
             is Expr.Tuple -> {
                 if (me.xtp != null) {
-                    G.ups[me.xtp!!.n] = me.n
+                    me.xtp!!.xup = me
                 }
-                me.vs.forEach { (_,tp) -> G.ups[tp.n] = me.n }
+                me.vs.forEach { (_,e) -> e.xup = me }
             }
             is Expr.Union -> {
                 if (me.xtp != null) {
-                    G.ups[me.xtp!!.n] = me.n
+                    me.xtp!!.xup = me
                 }
-                G.ups[me.v.n] = me.n
+                me.v.xup = me
             }
-            is Expr.Field -> G.ups[me.col.n] = me.n
-            is Expr.Disc  -> G.ups[me.col.n] = me.n
-            is Expr.Pred  -> G.ups[me.col.n] = me.n
+            is Expr.Field -> me.col.xup = me
+            is Expr.Disc  -> me.col.xup = me
+            is Expr.Pred  -> me.col.xup = me
             is Expr.Cons  -> {
-                G.ups[me.dat.n] = me.n
-                G.ups[me.e.n] = me.n
+                me.dat.xup = me
+                me.e.xup = me
             }
             is Expr.Nat -> {
                 if (me.xtp != null) {
-                    G.ups[me.xtp!!.n] = me.n
+                    me.xtp!!.xup = me
                 }
             }
 
             is Expr.Acc, is Expr.Bool, is Expr.Char,
             is Expr.Null, is Expr.Num, is Expr.Unit -> {}
 
-            is Expr.Create -> G.ups[me.co.n] = me.n
+            is Expr.Create -> me.co.xup = me
             is Expr.Start -> {
-                G.ups[me.exe.n] = me.n
+                me.exe.xup = me
                 me.args.forEach {
-                    G.ups[it.n] = me.n
+                    it.xup = me
                 }
             }
             is Expr.Resume -> {
-                G.ups[me.exe.n] = me.n
-                G.ups[me.arg.n] = me.n
+                me.exe.xup = me
+                me.arg.xup = me
             }
             is Expr.Yield -> {
-                G.ups[me.arg.n] = me.n
+                me.arg.xup = me
             }
         }
     }
     fun ft (me: Type) {
         when (me) {
-            is Type.Pointer -> G.ups[me.ptr.n] = me.n
+            is Type.Pointer -> me.ptr.xup = me
             is Type.Tuple -> me.ts.forEach { (_,tp) ->
-                G.ups[tp.n] = me.n
+                tp.xup = me.n
             }
             is Type.Union -> {
                 me.ts.forEach { (_,tp) ->
-                    G.ups[tp.n] = me.n
+                    tp.xup = me
                 }
             }
             is Type.Exec -> {
                 me.inps.forEach {
-                    G.ups[it.n] = me.n
+                    it.xup = me
                 }
-                G.ups[me.res.n] = me.n
-                G.ups[me.yld.n] = me.n
-                G.ups[me.out.n] = me.n
+                me.res.xup = me
+                me.yld.xup = me
+                me.out.xup = me
             }
             is Type.Proto -> {
                 me.inps.forEach {
-                    G.ups[it.n] = me.n
+                    it.xup = me
                 }
-                G.ups[me.out.n] = me.n
+                me.out.xup = me
                 when (me) {
                     is Type.Proto.Func -> {
                         if (me is Type.Proto.Func.Vars) {
                             me.inps_.forEach { (_,tp) ->
-                                G.ups[tp.n] = me.n
+                                tp.xup = me
                             }
                         }
                     }
                     is Type.Proto.Coro -> {
-                        G.ups[me.res.n] = me.n
-                        G.ups[me.yld.n] = me.n
+                        me.res.xup = me
+                        me.yld.xup = me
                         if (me is Type.Proto.Coro.Vars) {
                             me.inps_.forEach { (_,tp) ->
-                                G.ups[tp.n] = me.n
+                                tp.xup = me
                             }
                         }
                     }

@@ -13,7 +13,7 @@ fun Expr.typex (): Type? {
 }
 
 fun Expr.infer (): Type? {
-    val up = this.fupx()
+    val up = this.xup!!
     return when (up) {
         is Stmt.Set -> {
             assert(up.src.n == this.n)
@@ -102,7 +102,7 @@ fun infer_types () {
             }
             is Expr.Nat -> {
                 if (me.xtp == null) {
-                    val up = me.fupx()
+                    val up = me.xup!!
                     me.xtp = when {
                         (up is Expr.Call && up.f.n==me.n)   -> null
                         (up is Stmt.Set  && up.dst.n==me.n) -> null

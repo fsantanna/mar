@@ -16,7 +16,7 @@ fun XDcl.to_dcl (): Stmt.Dcl? {
 }
 
 fun Stmt.Block.to_dcls (): List<XDcl> {
-    return this.fup().let {
+    return this.xup.let {
         when {
             (it is Stmt.Proto.Func) -> it.tp_.inps_.map { Triple(this.n, it.first, it.second) }
             (it is Stmt.Proto.Coro) -> it.tp_.inps_.map { Triple(this.n, it.first, it.second) }
@@ -63,13 +63,13 @@ fun check_vars () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Flat -> {
-                val s = me.fupx().to_flat_hier(listOf(me.t))
+                val s = me.xup!!.to_flat_hier(listOf(me.t))
                 if (s!=null && s!=me) {
                     err(me.tk, "type error : data \"${me.t.str}\" is already declared")
                 }
             }
             is Stmt.Hier -> {
-                val s1 = me.fupx().to_flat_hier(me.ts)
+                val s1 = me.xup!!.to_flat_hier(me.ts)
                 if (s1 is Stmt.Hier && s1!=me) {
                     err(me.tk, "type error : data \"${me.ts.to_str()}\" is already declared")
                 }
@@ -78,14 +78,14 @@ fun check_vars () {
 
                 if (me.ts.size >= 2) {
                     val top = me.ts.dropLast(1)
-                    val s2 = me.fupx().to_flat_hier(top)
+                    val s2 = me.xup!!.to_flat_hier(top)
                     when {
                         (s2 == null) -> err(me.tk, "type error : data \"${top.to_str()}\" is not declared")
                         (s2 !is Stmt.Hier) -> err(me.tk, "type error : data \"${top.to_str()}\" is not extendable")
                     }
                     for (n in 1..me.ts.size-1) {
                         val sup = me.ts.take(n)
-                        val s = me.fupx().to_flat_hier(sup) as Stmt.Hier
+                        val s = me.xup!!.to_flat_hier(sup) as Stmt.Hier
                         s.xsubs.add(me)
                         l.add(s.tp)
                     }
@@ -94,6 +94,7 @@ fun check_vars () {
                 l.add(me.tp)
 
                 me.xtp = Type.Tuple(me.tk, l.map { it.ts }.flatten())
+                me.xtp!!.xup = me
 
                 //println(listOf(me.ts.to_str(), me.tp.to_str(), me.xtp!!.to_str(), l.map { it.ts }.flatten()))
             }
