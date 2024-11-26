@@ -452,11 +452,32 @@ fun Expr.coder (pre: Boolean): String {
             }
         }
         is Expr.Disc  -> {
-            val (i,_) = this.col.type().discx(this.idx)!!
-            """
-            // DISC | ${this.dump()}
-            (${this.col.coder(pre)}._${i+1})
-            """
+            val tp = this.col.type()
+            if (tp !is Type.Data) {
+                val (i,_) = tp.discx(this.idx)!!
+                """
+                // DISC | ${this.dump()}
+                (${this.col.coder(pre)}._${i+1})
+                """
+            } else {
+                val s = tp.to_flat_hier()
+                when (s) {
+                    is Stmt.Flat -> {
+                        val (i,_) = tp.discx(this.idx)!!
+                        """
+                        // DISC | ${this.dump()}
+                        (${this.col.coder(pre)}._${i+1})
+                        """
+                    }
+                    is Stmt.Hier -> {
+                        """
+                        // DISC | ${this.dump()}
+                        MAR_CAST(${tp.coder(pre)}_${this.idx}, ${this.col.coder(pre)})
+                        """
+                    }
+                    else -> error("impossible case")
+                }
+            }
         }
         is Expr.Pred  -> {
             val (i,_) = this.col.type().discx(this.idx)!!

@@ -476,11 +476,23 @@ class Exec  {
             var a: A = A.B [10]
             print(a)
         """)
-        assert(out == "A 100 + <.1=100 + <.0=>>\n" +
-                "100 + <.0=>\n") { out }
+        assert(out == "A []\n") { out }
     }
     @Test
     fun hi_01y_data () {
+        val out = test("""
+            data A.*: []
+            data A.B.*: [Int]
+            var a: A = A.B [10]
+            var i = 100
+            `printf("%ld\n", sizeof(A));`
+            `printf("%ld\n", sizeof(A_B));`
+            print(a!B.1)
+        """)
+        assert(out == "A []\n") { out }
+    }
+    @Test
+    fun hi_01z_data () {
         val out = test("""
             data A.*: [Int]
             data A.B.*: [Int]

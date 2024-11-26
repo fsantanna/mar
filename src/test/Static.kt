@@ -936,7 +936,7 @@ class Static {
                 "data X.Y.*: []\n" +
                 "var xy: X\n" +
                 "set xy = (X.Y(([10]:[a:Int])))\n" +
-                "var y: [a:Int]\n" +
+                "var y: X.Y\n" +
                 "set y = (xy!Y)\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -987,7 +987,7 @@ class Static {
                 "set xy = (X.Y(([10]:[a:Int])))\n" +
                 "var x: Int\n" +
                 "set x = (xy.a)\n" +
-                "var y: [a:Int]\n" +
+                "var y: X.Y\n" +
                 "set y = (xy!Y)\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -1135,6 +1135,16 @@ class Static {
                 "var xya: X.Y.A\n" +
                 "set xya = (X.Y.A(([10,20]:[Int,Int])))\n" +
                 "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun dg_06_hier_extd_field () {
+        val out = test("""
+            data A.*: []
+            data A.B.*: [Int]
+            var a: A = A.B [10]
+            print(a!B.1)
+        """)
+        assert(out == "10\n") { out }
     }
 
     // INFER
