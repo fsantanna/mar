@@ -47,7 +47,7 @@ val PRIMS = setOf(
     "Bool", "Char", "Int"
 )
 
-typealias XDcl = Triple<Node,Tk.Var,Type?>
+typealias XDcl = Triple<Stmt,Tk.Var,Type?>
 typealias Var_Type = Pair<Tk.Var,Type>
 
 sealed class Tk (var n: Int, val str: String, val pos: Pos) {
@@ -136,8 +136,6 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Nat    (tk: Tk.Nat): Stmt(G.N++, null, tk)
 }
 
-typealias Node = Int
-
 object G {
     var N: Int = 1
 
@@ -146,12 +144,11 @@ object G {
     var tk1: Tk? = null
 
     var outer: Stmt.Block? = null
-    var ns: MutableMap<Node,Any> = mutableMapOf()
 
     //val cons  = mutableMapOf<Node,Type.Tuple>()     // resolve sub types
     val types = mutableSetOf<String>()              // for C generation
 
-    val defers: MutableMap<Node, Triple<MutableList<Int>,String,String>> = mutableMapOf()
+    val defers: MutableMap<Any, Triple<MutableList<Int>,String,String>> = mutableMapOf()
 
     /*
     var tags: MutableMap<String,Tk.Type> = mutableMapOf()
@@ -169,7 +166,6 @@ object G {
         tk1 = null
 
         outer = null
-        ns.clear()
 
         //cons.clear()
         types.clear()
@@ -219,7 +215,6 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String, Int, Int
             parser_stmt()
         }).flatten()
         G.outer = Stmt.Block(tk0, ss)
-        cache_ns()
         cache_ups()
         check_vars()
         infer_types()

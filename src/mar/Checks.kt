@@ -10,7 +10,7 @@ fun Expr.Acc.to_xdcl (): XDcl? {
 
 fun XDcl.to_dcl (): Stmt.Dcl? {
     val (n,_,_) = this
-    return G.ns[n]!!.let {
+    return n.let {
         if (it is Stmt.Dcl) it else null
     }
 }
@@ -18,8 +18,8 @@ fun XDcl.to_dcl (): Stmt.Dcl? {
 fun Stmt.Block.to_dcls (): List<XDcl> {
     return this.xup.let {
         when {
-            (it is Stmt.Proto.Func) -> it.tp_.inps_.map { Triple(this.n, it.first, it.second) }
-            (it is Stmt.Proto.Coro) -> it.tp_.inps_.map { Triple(this.n, it.first, it.second) }
+            (it is Stmt.Proto.Func) -> it.tp_.inps_.map { Triple(this, it.first, it.second) }
+            (it is Stmt.Proto.Coro) -> it.tp_.inps_.map { Triple(this, it.first, it.second) }
             else -> emptyList()
         }
     } + this.dn_filter_pre(
@@ -37,8 +37,8 @@ fun Stmt.Block.to_dcls (): List<XDcl> {
         .let { it as List<Stmt> }
         .map {
             when (it) {
-                is Stmt.Dcl -> Triple(it.n, it.id, it.xtp)
-                is Stmt.Proto -> Triple(it.n, it.id, it.tp)
+                is Stmt.Dcl -> Triple(it, it.id, it.xtp)
+                is Stmt.Proto -> Triple(it, it.id, it.tp)
                 else -> error("impossible case")
             }
         }

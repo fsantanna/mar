@@ -15,7 +15,6 @@ fun static (me: String): String? {
             parser_stmt()
         }).flatten()
         G.outer = Stmt.Block(tk0, ss)
-        cache_ns()
         cache_ups()
         check_vars()
         infer_types()

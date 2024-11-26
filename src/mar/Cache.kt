@@ -1,13 +1,5 @@
 package mar
 
-fun cache_ns () {
-    G.outer!!.dn_visit_pre (
-        {G.ns[it.n] = it ; Unit},
-        {G.ns[it.n] = it ; Unit},
-        {G.ns[it.n] = it ; Unit},
-    )
-}
-
 fun cache_ups () {
     fun fs (me: Stmt) {
         when (me) {
