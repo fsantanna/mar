@@ -8,13 +8,6 @@ fun Expr.Acc.to_xdcl (): XDcl? {
     } as XDcl?
 }
 
-fun XDcl.to_dcl (): Stmt.Dcl? {
-    val (n,_,_) = this
-    return n.let {
-        if (it is Stmt.Dcl) it else null
-    }
-}
-
 fun Stmt.Block.to_dcls (): List<XDcl> {
     return this.xup.let {
         when {
