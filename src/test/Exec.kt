@@ -479,7 +479,7 @@ class Exec  {
         assert(out == "A []\n") { out }
     }
     @Test
-    fun hi_01y_data () {
+    fun TODO_hi_01y_data () {   // sizeof
         val out = test("""
             data A.*: []
             data A.B.*: [Int,Int,Int,Int]
@@ -496,44 +496,46 @@ class Exec  {
             data A.*: [Int]
             data A.B.*: [Int]
             data A.B.C.*: [Int]
-            var x0: A = A.B[100,100]  ;; ignore subsubtype C
+            var x0: A = A.B[10,20]  ;; ignore subsubtype C
             print(x0)
             print(x0!B)
         """)
-        assert(out == "A 100 + <.1=100 + <.0=>>\n" +
-                "100 + <.0=>\n") { out }
+        assert(out == "A [10]\n" +
+                "A.B [10,20]\n") { out }
     }
     @Test
     fun hi_02_data () {
         val out = test("""
-            data A: [a:Int] + <B: [b:Int]>
-            var x0 = A.A([100])  ;; ignore subtype
+            data A.*: [a:Int]
+            data A.B.*: [b:Int]
+            var x0 = A([100])  ;; ignore subtype
             print(x0)
-            print(x0!A.a)
+            print(x0.a)
         """)
-        assert(out == "A [100] + <.0=>\n" +
+        assert(out == "A [100]\n" +
                 "100\n") { out }
     }
     @Test
     fun hi_03_data () {
         val out = test("""
-            data A: [a:Int] + <B: [b:Int]>
-            var x0: A   = A.A([100])
-            var xa: A   = A.B([10],[20])
-            var xb: A.B = A.B([30],[40])
+            data A.*: [a:Int]
+            data A.B.*: [b:Int]
+            var x0: A   = A([100])
+            var xa: A   = A.B([10,20])
+            var xb: A.B = A.B([30,40])
             print(x0)
             print(xa)
             print(xb)
             
-            print(x0!A.a)
-            print(xa!A.a)
+            print(x0.a)
+            print(xa.a)
             print(xa!B.b)
-            print(xb!A.a)
-            print(xb!B.b)
+            print(xb.a)
+            print(xb.b)
         """)
-        assert(out == "A [100] + <.0=>\n" +
-                "A [10] + <.1=[20]>\n" +
-                "A [30] + <.1=[40]>\n" +
+        assert(out == "A [100]\n" +
+                "A [10]\n" +
+                "A.B [30,40]\n" +
                 "100\n" +
                 "10\n" +
                 "20\n" +
@@ -543,14 +545,18 @@ class Exec  {
     @Test
     fun TODO_hi_04_data () {
         val out = test("""
-            data A: [a:Int] + <B: [b:Int] + <C: [c:Int]>>
-            var c = A.B.C ([1],[2],[3])
+            data A.*: [a:Int]
+            data A.B.*: [b:Int]
+            data A.B.C.*: [c:Int]
+            var c: A = A.B.C ([1,2,3])
             var v = c
             print(c)
             print(c!B!C)
+            print(c!B!C.c)
         """)
-        assert(out == "A [1] + <.1=[2] + <.1=[3]>>\n" +
-                "[3]\n") { out }
+        assert(out == "A [1]\n" +
+                "A.B.C [1,2,3]\n" +
+                "3\n") { out }
     }
     @Test
     fun hi_05_data () {
@@ -695,13 +701,16 @@ class Exec  {
     @Test
     fun hj_01_hier_extd () {
         val out = test("""
-            data X: Int + <Y:()>
-            data X.Z: Int
-            var xz = X.Z(10,20)
-            var x = xz!X    ;; 10
+            data X.*: [Int]
+            data X.Y.*: []
+            data X.Z.*: [Int]
+            var xz: X = X.Z [10,20]
+            var x = xz    ;; 10
             var y = xz!Z    ;; 20
+            print(x)
+            print(y.2)
         """)
-        assert(out == "10\n20\n") { out }
+        assert(out == "X [10]\n20\n") { out }
     }
 
     // INFER

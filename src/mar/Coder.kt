@@ -170,11 +170,19 @@ fun coder_types (pre: Boolean): String {
                 f(me.tp, listOf(me.t.str))
             }
             is Stmt.Hier -> {
+                val id = me.ts.coder(pre)
                 listOf("""
+                    #define __MAR_TAG_${id.uppercase()}__ 0
+                    #define MAR_TAG_${id.uppercase()} 99
                     typedef struct ${me.ts.coder(pre)} {
-                        int tag;
-                        ${me.xtp!!.coder(pre)} tup;
-                    } ${me.ts.coder(pre)};
+                        union {
+                            struct {
+                                int tag;
+                                ${me.xtp!!.coder(pre)} tup;
+                            };
+                            char _ [100];   // TODO: MAR_SIZE_$id
+                        };
+                    } $id;
                 """)
             }
             is Stmt.Proto.Coro -> {
@@ -311,10 +319,10 @@ fun Stmt.coder (pre: Boolean): String {
                 do {
                     ${this.blk.coder(pre)}
                 } while (0);
-                if (MAR_EXCEPTION.tag == MAR_TAG_EXCEPTION_NONE) {
+                if (MAR_EXCEPTION.tag == __MAR_TAG_EXCEPTION__) {
                     // no escape
-                } else if (MAR_EXCEPTION.tag == MAR_TAG_EXCEPTION_${this.xtp!!.coder(pre).uppercase()}) {
-                    MAR_EXCEPTION.tag = MAR_TAG_EXCEPTION_NONE;
+                } else if (MAR_EXCEPTION.tag == MAR_TAG_${this.xtp!!.coder(pre).uppercase()}) {
+                    MAR_EXCEPTION.tag = __MAR_TAG_EXCEPTION__;
                 } else {
                     continue;
                 }
@@ -508,7 +516,7 @@ fun Expr.coder (pre: Boolean): String {
                     ret + " ceu_0; })"
                 }
                 is Stmt.Hier -> {
-                    "((${this.dat.coder(pre)}) { 99, ${this.e.coder(pre)} })"
+                    "((${this.dat.coder(pre)}) { MAR_TAG_${this.dat.coder(pre)}, ${this.e.coder(pre)} })"
                 }
                 else -> error("impossible case")
             }
@@ -588,7 +596,7 @@ fun coder_main (pre: Boolean): String {
         
         ${coder_types(pre)}
         
-        Exception MAR_EXCEPTION = { MAR_TAG_EXCEPTION_NONE, {} };
+        Exception MAR_EXCEPTION = { __MAR_TAG_EXCEPTION__, {} };
 
         int main (void) {
             ${G.outer!!.coder(pre)}
