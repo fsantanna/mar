@@ -3,12 +3,11 @@ package mar
 fun cache_ups () {
     fun fs (me: Stmt) {
         when (me) {
-            is Stmt.Flat   -> {
+            is Stmt.Data   -> {
                 me.tp.xup = me
-            }
-            is Stmt.Hier   -> {
-                me.tp.xup = me
-                assert(me.xtp == null)
+                me.subs.forEach {
+                    it.xup = me
+                }
             }
             is Stmt.Proto  -> {
                 me.tp.xup = me

@@ -41,8 +41,7 @@ fun Stmt.Block.to_flat_hier (): List<Stmt> {
     return this.dn_filter_pre(
         {
             when (it) {
-                is Stmt.Flat -> true
-                is Stmt.Hier -> true
+                is Stmt.Data -> true
                 is Stmt.Block -> if (it === this) false else null
                 else -> false
             }
@@ -55,41 +54,11 @@ fun Stmt.Block.to_flat_hier (): List<Stmt> {
 fun check_vars () {
     fun fs (me: Stmt) {
         when (me) {
-            is Stmt.Flat -> {
+            is Stmt.Data -> {
                 val s = me.xup!!.to_flat_hier(listOf(me.t))
                 if (s!=null && s!=me) {
                     err(me.tk, "type error : data \"${me.t.str}\" is already declared")
                 }
-            }
-            is Stmt.Hier -> {
-                val s1 = me.xup!!.to_flat_hier(me.ts)
-                if (s1 is Stmt.Hier && s1!=me) {
-                    err(me.tk, "type error : data \"${me.ts.to_str()}\" is already declared")
-                }
-
-                val l: MutableList<Type.Tuple> = mutableListOf()
-
-                if (me.ts.size >= 2) {
-                    val top = me.ts.dropLast(1)
-                    val s2 = me.xup!!.to_flat_hier(top)
-                    when {
-                        (s2 == null) -> err(me.tk, "type error : data \"${top.to_str()}\" is not declared")
-                        (s2 !is Stmt.Hier) -> err(me.tk, "type error : data \"${top.to_str()}\" is not extendable")
-                    }
-                    for (n in 1..me.ts.size-1) {
-                        val sup = me.ts.take(n)
-                        val s = me.xup!!.to_flat_hier(sup) as Stmt.Hier
-                        s.xsubs.add(me)
-                        l.add(s.tp)
-                    }
-                }
-
-                l.add(me.tp)
-
-                me.xtp = Type.Tuple(me.tk, l.map { it.ts }.flatten())
-                me.xtp!!.xup = me
-
-                //println(listOf(me.ts.to_str(), me.tp.to_str(), me.xtp!!.to_str(), l.map { it.ts }.flatten()))
             }
             is Stmt.Block -> {
                 val ids2 = me.to_dcls()

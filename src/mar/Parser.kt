@@ -575,18 +575,21 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             if (!accept_fix(".")) {
                 accept_fix_err(":")
                 val tp = parser_type(null, false)
-                listOf(Stmt.Flat(tk0, t1, tp))
+                listOf(Stmt.Data(tk0, t1, tp, emptyList()))
             } else {
-                val ts = mutableListOf(t1)
-                while (!accept_op("*")) {
-                    accept_enu_err("Type")
-                    ts.add(G.tk0 as Tk.Type)
-                    accept_fix_err(".")
-                }
+                accept_op_err("*")
                 accept_fix_err(":")
-                check_fix_err("[")
-                val tp = parser_type(null, false) as Type.Tuple
-                listOf(Stmt.Hier(tk0, ts, tp, null, mutableListOf()))
+                val base = if (!check_fix_err("[")) {
+                    Type.Tuple(G.tk0!!, emptyList())
+                } else {
+                    val tup = parser_type(null, false) as Type.Tuple
+                    accept_op_err("+")
+                    tup
+                }
+                check_fix_err("<")
+                //val uni = parser_type(null, false) as Type.Hier
+                //listOf(Stmt.Hier(tk0, ts, tp, null, mutableListOf()))
+                TODO()
             }
         }
         accept_fix("print") -> {

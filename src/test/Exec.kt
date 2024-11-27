@@ -423,8 +423,10 @@ class Exec  {
     fun hh_09_data () {
         val out = test("""
             data K: <None:()>
-            data X.*: [Int]
-            data X.Y.*: []
+            data X: <
+                Base: [Int],
+                Y: [Int],
+            >
             var xy = X.Y [10]
             var y = xy    ;; ()
             print(y)

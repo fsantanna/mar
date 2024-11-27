@@ -56,7 +56,7 @@ fun Type.coder (pre: Boolean): String {
         is Type.Any        -> TODO()
         is Type.Prim      -> this.tk.str
         is Type.Data      -> {
-            if (this.to_flat_hier() is Stmt.Flat) {
+            if (this.to_flat_hier() is Stmt.Data) {
                 this.ts.first().str
             } else {
                 this.ts.coder(pre)
@@ -139,7 +139,7 @@ fun coder_types (pre: Boolean): String {
     }
     fun fs (me: Stmt): List<String> {
         return when (me) {
-            is Stmt.Flat -> {
+            is Stmt.Data -> {
                 fun f (tp: Type, s: List<String>): List<String> {
                     val ss = s.joinToString("_")
                     val SS = ss.uppercase()
@@ -169,6 +169,7 @@ fun coder_types (pre: Boolean): String {
                 }
                 f(me.tp, listOf(me.t.str))
             }
+            /*
             is Stmt.Hier -> {
                 val id = me.ts.coder(pre)
                 listOf("""
@@ -185,6 +186,7 @@ fun coder_types (pre: Boolean): String {
                     } $id;
                 """)
             }
+             */
             is Stmt.Proto.Coro -> {
                 fun mem (): String {
                     val blks = me.dn_collect_pre({
@@ -216,7 +218,7 @@ fun coder_types (pre: Boolean): String {
 
 fun Stmt.coder (pre: Boolean): String {
     return when (this) {
-        is Stmt.Flat, is Stmt.Hier -> ""
+        is Stmt.Data -> ""
         is Stmt.Proto -> {
             when (this) {
                 is Stmt.Proto.Func ->
@@ -397,7 +399,7 @@ fun Stmt.coder (pre: Boolean): String {
                         """
                         printf("${tp.ts.to_str(pre)}");
                         ${par.cond2({ "printf(\"(\");" }, { "printf(\" \");" })}
-                        ${aux(tpx, v + (s is Stmt.Hier).cond { ".tup" })}
+                        ${aux(tpx, v /*+ (s is Stmt.Hier).cond { ".tup" }*/)}
                         ${par.cond { "printf(\")\");" }}
                     """
                     }
@@ -450,11 +452,11 @@ fun Expr.coder (pre: Boolean): String {
             } else {
                 val s = tp.to_flat_hier()
                 when (s) {
-                    is Stmt.Flat -> {
+                    is Stmt.Data -> {
                         val sub = tp.ts.drop(1).map { it.str + "." }.joinToString("")
                         "(${this.col.coder(pre)}.$sub$idx)"
                     }
-                    is Stmt.Hier -> "(${this.col.coder(pre)}.tup.$idx)"
+                    //is Stmt.Hier -> "(${this.col.coder(pre)}.tup.$idx)"
                     else -> error("impossible case")
                 }
             }
@@ -470,19 +472,21 @@ fun Expr.coder (pre: Boolean): String {
             } else {
                 val s = tp.to_flat_hier()
                 when (s) {
-                    is Stmt.Flat -> {
+                    is Stmt.Data -> {
                         val (i,_) = tp.discx(this.idx)!!
                         """
                         // DISC | ${this.dump()}
                         (${this.col.coder(pre)}._${i+1})
                         """
                     }
+                    /*
                     is Stmt.Hier -> {
                         """
                         // DISC | ${this.dump()}
                         MAR_CAST(${tp.coder(pre)}_${this.idx}, ${this.col.coder(pre)})
                         """
                     }
+                     */
                     else -> error("impossible case")
                 }
             }
@@ -494,7 +498,7 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Cons  -> {
             val st = this.dat.to_flat_hier()
             when (st) {
-                is Stmt.Flat -> {
+                is Stmt.Data -> {
                     var ret = "({"
                     for (i in this.dat.ts.size - 1 downTo 0) {
                         val tp = this.dat.ts.take(i + 1).coder(pre)
@@ -515,9 +519,11 @@ fun Expr.coder (pre: Boolean): String {
                     }
                     ret + " ceu_0; })"
                 }
+                /*
                 is Stmt.Hier -> {
                     "((${this.dat.coder(pre)}) { MAR_TAG_${this.dat.coder(pre)}, ${this.e.coder(pre)} })"
                 }
+                 */
                 else -> error("impossible case")
             }
         }

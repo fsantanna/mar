@@ -61,8 +61,8 @@ fun Any.to_flat_hier (ts: List<Tk.Type>): Stmt? {
         if (blk !is Stmt.Block) null else {
             blk.to_flat_hier().find { s ->
                 when (s) {
-                    is Stmt.Flat -> (s.t.str == ts.first().str)
-                    is Stmt.Hier -> (s.ts.to_str() == ts.to_str())
+                    is Stmt.Data -> (s.t.str == ts.first().str)
+                    //is Stmt.Hier -> (s.ts.to_str() == ts.to_str())
                     else -> error("impossible case")
                 }
             }
@@ -77,7 +77,7 @@ fun Type.no_data (): Type? {
             val s = this.to_flat_hier()
             when (s) {
                 null -> null
-                is Stmt.Flat -> {
+                is Stmt.Data -> {
                     var tp: Type? = s.tp
                     for (id in this.ts.drop(1)) {
                         if (tp !is Type.Union) {
@@ -89,7 +89,7 @@ fun Type.no_data (): Type? {
                     }
                     tp
                 }
-                is Stmt.Hier -> s.xtp!!
+                //is Stmt.Hier -> s.xtp!!
                 else -> error("impossible case")
             }
         }
@@ -118,7 +118,7 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
 fun Type.Data.disc (idx: String): Pair<Int, Type>? {
     val s = this.to_flat_hier()
     return when (s) {
-        is Stmt.Flat -> {
+        is Stmt.Data -> {
             val tp2 = this.no_data()
             if (tp2 is Type.Union) {
                 tp2.disc(idx)
@@ -126,6 +126,7 @@ fun Type.Data.disc (idx: String): Pair<Int, Type>? {
                 null
             }
         }
+        /*
         is Stmt.Hier -> {
             val i = s.xsubs.indexOfFirst { it.ts.to_str() == this.to_str()+"."+idx }
             if (i == -1) null else {
@@ -134,6 +135,7 @@ fun Type.Data.disc (idx: String): Pair<Int, Type>? {
                 Pair(i, dat)
             }
         }
+         */
         else -> error("impossible case")
     }
 }
