@@ -119,10 +119,10 @@ fun Stmt.to_str (pre: Boolean = false): String {
             if (this.subs == null) {
                 "data " + this.t.str + ": " + this.tp.to_str(pre)
             } else {
-                fun f (l: List<Stmt.Data>) {
-                    l.map { it.t.str + ": " + it.tp.to_str(pre) + "{\b" }
+                fun f (l: List<Stmt.Data>): String {
+                    return l.map { it.t.str + ": " + it.tp.to_str(pre) + " {\n" + f(it.subs!!) + "}\n" }.joinToString("")
                 }
-                "data " + this.t.str + ".*: " + this.tp.to_str(pre) + "{\n" + xxx + "}"
+                "data " + this.t.str + ".*: " + this.tp.to_str(pre) + " {\n" + f(this.subs) + "}"
             }
         }
         is Stmt.Proto.Func -> "func " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"

@@ -718,35 +718,31 @@ class Parser {
         """).lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s.to_str() == "data Event.*: [a:Int]") { s.to_str() }
+        assert(s.to_str() == "data Event.*: [a:Int] {\n}") { s.to_str() }
         //assert(trap { parser_stmt() } == "anon : (lin 4, col 20) : expected \"<\" : have \"Int\"")
     }
     @Test
     fun kj_06_data_hier_err () {
         G.tks = ("""
-            do {
-                data Event.*:    []
-                data Event.Dn.*: ()
+            data Event.*: [] {
+                Dn: ()
             }
         """).lexer()
         parser_lexer()
-        //val s = parser_stmt().first()
-        //assert(s.to_str() == "data Event: [] + <Dn:()>") { s.to_str() }
-        assert(trap { parser_stmt() } == "anon : (lin 4, col 34) : expected \"[\" : have \"(\"")
+        assert(trap { parser_stmt() } == "anon : (lin 3, col 21) : expected \"[\" : have \"(\"")
     }
     @Test
     fun kj_07_data_hier_err () {
         G.tks = ("""
-            do {
-                data Event.*: [ts: Int]
-                data Event.Dn.*: [Int]   ;; x:Int
+            data Event.*: [ts: Int] {
+                Dn: [Int]   ;; x:Int
             }
         """).lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s.to_str() == "do {\n" +
-                "data Event.*: [ts:Int]\n" +
-                "data Event.Dn.*: [Int]\n" +
+        assert(s.to_str() == "data Event.*: [ts:Int] {\n" +
+                "Dn: [Int] {\n" +
+                "}\n" +
                 "}") { s.to_str() }
         //assert(trap { parser_stmt() } == "anon : (lin 3, col 21) : data error : missing field identifier")
         //assert(trap { parser_stmt() } == "anon : (lin 3, col 21) : union error : missing type identifiers")
@@ -754,57 +750,61 @@ class Parser {
     @Test
     fun kj_08_data_hier () {
         G.tks = ("""
-            do {
-                data Event.*: [ts: Int]
-                data Event.Dn.*: []
-                data Event.Up.*: []
+            data Event.*: [ts: Int] {
+                Dn: []
+                Up: []
             }
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "do {\n" +
-                "data Event.*: [ts:Int]\n" +
-                "data Event.Dn.*: []\n" +
-                "data Event.Up.*: []\n" +
+        assert(ss.to_str() == "data Event.*: [ts:Int] {\n" +
+                "Dn: [] {\n" +
+                "}\n" +
+                "Up: [] {\n" +
+                "}\n" +
                 "}\n") { ss.to_str() }
     }
     @Test
     fun kj_09_data_hier () {
         G.tks = ("""
-            do {
-                data A.*: []
-                data A.B.*: []
+            data A.*: [] {
+                B: []
             }
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "do {\n" +
-                "data A.*: []\n" +
-                "data A.B.*: []\n" +
+        assert(ss.to_str() == "data A.*: [] {\n" +
+                "B: [] {\n" +
+                "}\n" +
                 "}\n") { ss.to_str() }
     }
     @Test
     fun kj_10_data_hier () {
         G.tks = ("""
             do {
-                data Event1.*: [ts:Int]
-                data Event1.Quit.*: []
-                data Event1.Frame.*: [ms:Int]
-                data Event1.Key.*: [key:Int]
-                data Event1.Key.Dn.*: []
-                data Event1.Key.Up.*: []
+                data Event1.*: [ts:Int] {
+                    Quit: []
+                    Frame: [ms:Int]
+                    Key: [key:Int] {
+                        Dn: []
+                        Up: []
+                    }
+                }
                     
-                data Event2.*: []
-                data Event2.Quit.*: [ts:Int]
-                data Event2.Frame.*: [ts:Int, ms:Int]
-                data Event2.Key.*: []
-                data Event2.Key.Dn.*: [ts:Int, key:Int]
-                data Event2.Key.Up.*: [ts:Int, key:Int]
+                data Event2.*: [] {
+                    Quit: [ts:Int]
+                    Frame: [ts:Int, ms:Int]
+                    Key: [] {
+                        Dn: [ts:Int, key:Int]
+                        Up: [ts:Int, key:Int]
+                    }
+                }
                 
-                data Mouse.*: []
-                data Mouse.Left.*: []
-                data Mouse.Middle.*: []
-                data Mouse.Right.*: []
+                data Mouse.*: [] {
+                    Left: []
+                    Middle: []
+                    Right: []
+                }
             }
         """).lexer()
         parser_lexer()
@@ -821,16 +821,15 @@ class Parser {
     @Test
     fun kj_12_data_hier_err () {
         G.tks = ("""
-            do {
-                data E.*: [ts:Int]
-                data E.Quit.*:   [Int]
+            data E.*: [ts:Int] {
+                Quit: [Int]
             }
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "do {\n" +
-                "data E.*: [ts:Int]\n" +
-                "data E.Quit.*: [Int]\n" +
+        assert(ss.to_str() == "data E.*: [ts:Int] {\n" +
+                "Quit: [Int] {\n" +
+                "}\n" +
                 "}\n") { ss.to_str() }
         //assert(trap { parser_stmt() } == "anon : (lin 3, col 25) : union error : missing type identifiers")
     }
@@ -843,30 +842,31 @@ class Parser {
             data X.Y: ()
         """).lexer()
         parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 2, col 21) : expected \".\" : have \":\"")
+        assert(trap { parser_stmt() } == "anon : (lin 2, col 20) : expected \"*\" : have \"Y\"")
+        //assert(trap { parser_stmt() } == "anon : (lin 2, col 21) : expected \".\" : have \":\"")
     }
     @Test
     fun kl_01_data_hier_extd_err () {
         G.tks = ("""
-            data X.Y.*: ()
+            data X.*: ()
         """).lexer()
         parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 2, col 25) : expected \"[\" : have \"(\"")
+        assert(trap { parser_stmt() } == "anon : (lin 2, col 23) : expected \"[\" : have \"(\"")
     }
     @Test
     fun kl_02_data_hier_extd_err () {
-        G.tks = ("data X.Y.*: [Int]").lexer()
+        G.tks = ("data X.*: [Int]").lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "data X.Y.*: [Int]\n") { ss.to_str() }
+        assert(ss.to_str() == "data X.*: [Int] {\n}\n") { ss.to_str() }
         //assert(trap { parser_stmt() } == "anon : (lin 1, col 11) : tuple error : missing field identifier")
     }
     @Test
     fun kl_03_data_hier_extd () {
-        G.tks = ("data X.Y.*: [y:Int]").lexer()
+        G.tks = ("data X.*: [y:Int]").lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "data X.Y.*: [y:Int]\n") { ss.to_str() }
+        assert(ss.to_str() == "data X.*: [y:Int] {\n}\n") { ss.to_str() }
     }
 
     // CATCH / THROW

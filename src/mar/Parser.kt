@@ -589,16 +589,15 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 fun f (): List<Stmt.Data> {
                     return if (!accept_fix("{")) emptyList() else {
                         parser_list(null, "}") {
-                            val tk0 = G.tk0!!
                             accept_enu_err("Type")
-                            val t = G.tk0 as Tk.Type
+                            val xt = G.tk0 as Tk.Type
                             accept_fix_err(":")
-                            val tp = if (!check_fix_err("[")) {
+                            val xtp = if (!check_fix_err("[")) {
                                 Type.Tuple(G.tk0!!, emptyList())
                             } else {
                                 parser_type(null, false) as Type.Tuple
                             }
-                            Stmt.Data(tk0, t, tp, f())
+                            Stmt.Data(xt, xt, xtp, f())
                         }
                     }
                 }

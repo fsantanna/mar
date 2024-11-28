@@ -37,27 +37,21 @@ fun Stmt.Block.to_dcls (): List<XDcl> {
         }
 }
 
-fun Stmt.Block.to_flat_hier (): List<Stmt> {
-    return this.dn_filter_pre(
-        {
-            when (it) {
-                is Stmt.Data -> true
-                is Stmt.Block -> if (it === this) false else null
-                else -> false
-            }
-        },
-        {null},
-        {null}
-    ) as List<Stmt>
-}
-
 fun check_vars () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Data -> {
-                val s = me.xup!!.walk(listOf(me.t))
+                val s = me.xup!!.walk(listOf(me.t))?.first
                 if (s!=null && s!=me) {
                     err(me.tk, "type error : data \"${me.t.str}\" is already declared")
+                }
+                if (me.subs != null) {
+                    for (sub in me.subs) {
+                        val x = me.subs.find { sub.t.str==it.t.str && sub!=it }
+                        if (x != null) {
+                            err(x.tk, "type error : data \"${x.t.str}\" is already declared")
+                        }
+                    }
                 }
             }
             is Stmt.Block -> {

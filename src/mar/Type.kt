@@ -145,7 +145,7 @@ fun Type.Data.disc (idx: String): Pair<Int, Type>? {
             null
         }
     } else {
-        val i = -1 //s.subs.indexOfFirst { it.ts.to_str() == this.to_str()+"."+idx }
+        val i = s.subs.indexOfFirst { it.t.str == idx }
         if (i == -1) null else {
             val dat = Type.Data(this.tk, this.ts + listOf(Tk.Type(idx,this.tk.pos.copy())))
             dat.xup = this
