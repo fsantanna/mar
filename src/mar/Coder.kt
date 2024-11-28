@@ -54,14 +54,8 @@ fun Var_Type.coder (pre: Boolean): String {
 fun Type.coder (pre: Boolean): String {
     return when (this) {
         is Type.Any        -> TODO()
-        is Type.Prim      -> this.tk.str
-        is Type.Data      -> {
-            if (this.to_flat_hier() is Stmt.Data) {
-                this.ts.first().str
-            } else {
-                this.ts.coder(pre)
-            }
-        }
+        is Type.Prim       -> this.tk.str
+        is Type.Data       -> if (this.walk()!!.first.subs == null) this.ts.first().str else this.ts.coder(pre)
         is Type.Unit       -> "_VOID_"
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "MAR_Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
@@ -393,8 +387,7 @@ fun Stmt.coder (pre: Boolean): String {
                         """
                     }
                     is Type.Data -> {
-                        val s = tp.to_flat_hier()
-                        val tpx = tp.no_data()!!
+                        val tpx = tp.walk()!!.third
                         val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
                         """
                         printf("${tp.ts.to_str(pre)}");
@@ -450,14 +443,12 @@ fun Expr.coder (pre: Boolean): String {
             if (tp !is Type.Data) {
                 "(${this.col.coder(pre)}.$idx)"
             } else {
-                val s = tp.to_flat_hier()
-                when (s) {
-                    is Stmt.Data -> {
-                        val sub = tp.ts.drop(1).map { it.str + "." }.joinToString("")
-                        "(${this.col.coder(pre)}.$sub$idx)"
-                    }
-                    //is Stmt.Hier -> "(${this.col.coder(pre)}.tup.$idx)"
-                    else -> error("impossible case")
+                val s = tp.walk()!!.first
+                if (s.subs == null) {
+                    val sub = tp.ts.drop(1).map { it.str + "." }.joinToString("")
+                    "(${this.col.coder(pre)}.$sub$idx)"
+                } else {
+                    "(${this.col.coder(pre)}.tup.$idx)"
                 }
             }
         }
@@ -470,24 +461,18 @@ fun Expr.coder (pre: Boolean): String {
                 (${this.col.coder(pre)}._${i+1})
                 """
             } else {
-                val s = tp.to_flat_hier()
-                when (s) {
-                    is Stmt.Data -> {
-                        val (i,_) = tp.discx(this.idx)!!
-                        """
-                        // DISC | ${this.dump()}
-                        (${this.col.coder(pre)}._${i+1})
-                        """
-                    }
-                    /*
-                    is Stmt.Hier -> {
-                        """
-                        // DISC | ${this.dump()}
-                        MAR_CAST(${tp.coder(pre)}_${this.idx}, ${this.col.coder(pre)})
-                        """
-                    }
-                     */
-                    else -> error("impossible case")
+                val s = tp.walk()!!.first
+                if (s.subs == null) {
+                    val (i,_) = tp.discx(this.idx)!!
+                    """
+                    // DISC | ${this.dump()}
+                    (${this.col.coder(pre)}._${i+1})
+                    """
+                } else {
+                    """
+                    // DISC | ${this.dump()}
+                    MAR_CAST(${tp.coder(pre)}_${this.idx}, ${this.col.coder(pre)})
+                    """
                 }
             }
         }
@@ -496,35 +481,29 @@ fun Expr.coder (pre: Boolean): String {
             "(${this.col.coder(pre)}.tag==${i+1})"
         }
         is Expr.Cons  -> {
-            val st = this.dat.to_flat_hier()
-            when (st) {
-                is Stmt.Data -> {
-                    var ret = "({"
-                    for (i in this.dat.ts.size - 1 downTo 0) {
-                        val tp = this.dat.ts.take(i + 1).coder(pre)
-                        ret = ret + "$tp ceu_$i = " +
-                                if (i == this.dat.ts.size - 1) {
-                                    """
-                                    ((${tp}) ${this.e.coder(pre)});
-                                    """
-                                } else {
-                                    val nxt = this.dat.ts[i + 1].str
-                                    """
-                                    {
-                                        .tag = MAR_TAG_${tp.uppercase()}_${nxt.uppercase()},
-                                        { .$nxt = ceu_${i + 1} }
-                                    };
-                                    """
-                                }
-                    }
-                    ret + " ceu_0; })"
+            val s = this.dat.walk()!!.first
+            if (s.subs == null) {
+                var ret = "({"
+                for (i in this.dat.ts.size - 1 downTo 0) {
+                    val tp = this.dat.ts.take(i + 1).coder(pre)
+                    ret = ret + "$tp ceu_$i = " +
+                            if (i == this.dat.ts.size - 1) {
+                                """
+                                ((${tp}) ${this.e.coder(pre)});
+                                """
+                            } else {
+                                val nxt = this.dat.ts[i + 1].str
+                                """
+                                {
+                                    .tag = MAR_TAG_${tp.uppercase()}_${nxt.uppercase()},
+                                    { .$nxt = ceu_${i + 1} }
+                                };
+                                """
+                            }
                 }
-                /*
-                is Stmt.Hier -> {
-                    "((${this.dat.coder(pre)}) { MAR_TAG_${this.dat.coder(pre)}, ${this.e.coder(pre)} })"
-                }
-                 */
-                else -> error("impossible case")
+                ret + " ceu_0; })"
+            } else {
+                "((${this.dat.coder(pre)}) { MAR_TAG_${this.dat.coder(pre)}, ${this.e.coder(pre)} })"
             }
         }
 

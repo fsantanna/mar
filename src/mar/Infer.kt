@@ -19,7 +19,7 @@ fun Expr.infer (): Type? {
             assert(up.src == this)
             up.dst.typex()
         }
-        is Expr.Cons -> up.dat.no_data()
+        is Expr.Cons -> up.dat.walk()!!.third
         is Expr.Tuple -> up.typex().let {
             if (it == null) null else {
                 it as Type.Tuple

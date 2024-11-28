@@ -111,7 +111,7 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
 }
 
 sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
-    class Data   (tk: Tk, val t: Tk.Type, val tp: Type, val subs: List<Stmt.Data>): Stmt(G.N++, null, tk)
+    class Data   (tk: Tk, val t: Tk.Type, val tp: Type, val subs: List<Stmt.Data>?): Stmt(G.N++, null, tk)
     class Return (tk: Tk, val e: Expr) : Stmt(G.N++, null, tk)
     sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, null, tk) {
         class Func (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)

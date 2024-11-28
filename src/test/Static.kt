@@ -881,8 +881,9 @@ class Static {
     @Test
     fun df_01_hier_err () {
         val out = static("""
-            data X.*: [a:Int]
-            data X.Y.*: []
+            data X.*: [a:Int] {
+                Y: []
+            }
             var y = X.Y []   ;; missing Int
         """)
         assert(out == "anon : (lin 4, col 25) : tuple error : types mismatch") { out!! }

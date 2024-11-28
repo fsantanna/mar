@@ -1,5 +1,7 @@
 package mar
 
+import javax.xml.crypto.Data
+
 fun check_fix (str: String): Boolean {
     return (G.tk1.let { it is Tk.Fix && it.str == str })
 }
@@ -571,25 +573,36 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
         accept_fix("data") -> {
             val tk0 = G.tk0!!
             accept_enu_err("Type")
-            val t1 = G.tk0 as Tk.Type
+            val t = G.tk0 as Tk.Type
             if (!accept_fix(".")) {
                 accept_fix_err(":")
                 val tp = parser_type(null, false)
-                listOf(Stmt.Data(tk0, t1, tp, emptyList()))
+                listOf(Stmt.Data(tk0, t, tp, null))
             } else {
                 accept_op_err("*")
                 accept_fix_err(":")
-                val base = if (!check_fix_err("[")) {
+                val tp = if (!check_fix_err("[")) {
                     Type.Tuple(G.tk0!!, emptyList())
                 } else {
-                    val tup = parser_type(null, false) as Type.Tuple
-                    accept_op_err("+")
-                    tup
+                    parser_type(null, false) as Type.Tuple
                 }
-                check_fix_err("<")
-                //val uni = parser_type(null, false) as Type.Hier
-                //listOf(Stmt.Hier(tk0, ts, tp, null, mutableListOf()))
-                TODO()
+                fun f (): List<Stmt.Data> {
+                    return if (!accept_fix("{")) emptyList() else {
+                        parser_list(null, "}") {
+                            val tk0 = G.tk0!!
+                            accept_enu_err("Type")
+                            val t = G.tk0 as Tk.Type
+                            accept_fix_err(":")
+                            val tp = if (!check_fix_err("[")) {
+                                Type.Tuple(G.tk0!!, emptyList())
+                            } else {
+                                parser_type(null, false) as Type.Tuple
+                            }
+                            Stmt.Data(tk0, t, tp, f())
+                        }
+                    }
+                }
+                listOf(Stmt.Data(tk0, t, tp, f()))
             }
         }
         accept_fix("print") -> {

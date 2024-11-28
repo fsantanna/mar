@@ -2,7 +2,7 @@ package mar
 
 fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> {
     return when (this) {
-        is Stmt.Data   -> this.tp.dn_collect_pos(ft) + this.subs.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
+        is Stmt.Data   -> this.tp.dn_collect_pos(ft) + (this.subs?.map { it.dn_collect_pos(fs,fe,ft) }?.flatten() ?: emptyList())
         is Stmt.Proto  -> this.blk.dn_collect_pos(fs,fe,ft) + this.tp.dn_collect_pos(ft)
         is Stmt.Return -> this.e.dn_collect_pos(fe,ft)
 

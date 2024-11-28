@@ -5,7 +5,7 @@ fun cache_ups () {
         when (me) {
             is Stmt.Data   -> {
                 me.tp.xup = me
-                me.subs.forEach {
+                me.subs?.forEach {
                     it.xup = me
                 }
             }

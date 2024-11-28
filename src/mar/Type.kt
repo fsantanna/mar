@@ -52,48 +52,68 @@ fun Tk.Var.type (fr: Any): Type? {
     } as Type?
 }
 
-fun Type.Data.to_flat_hier (): Stmt? {
-    return this.to_flat_hier(this.ts)
-}
-
-fun Any.to_flat_hier (ts: List<Tk.Type>): Stmt? {
-    return this.up_first { blk ->
+fun Any.walk (ts: List<Tk.Type>): Triple<Stmt.Data,List<Int>,Type>? {
+    val s = this.up_first { blk ->
         if (blk !is Stmt.Block) null else {
-            blk.to_flat_hier().find { s ->
-                when (s) {
-                    is Stmt.Data -> (s.t.str == ts.first().str)
-                    //is Stmt.Hier -> (s.ts.to_str() == ts.to_str())
-                    else -> error("impossible case")
-                }
+            blk.dn_filter_pre(
+                {
+                    when (it) {
+                        is Stmt.Data -> true
+                        is Stmt.Block -> if (it == blk) false else null
+                        else -> false
+                    }
+                },
+                {null},
+                {null}
+            ).let {
+                it as List<Stmt.Data>
+            }.find {
+                it.t.str == ts.first().str
             }
         }
-    } as Stmt?
-}
-
-fun Type.no_data (): Type? {
-    return when (this) {
-        !is Type.Data -> this
-        else -> {
-            val s = this.to_flat_hier()
-            when (s) {
-                null -> null
-                is Stmt.Data -> {
-                    var tp: Type? = s.tp
-                    for (id in this.ts.drop(1)) {
-                        if (tp !is Type.Union) {
-                            tp = null
-                            break
-                        } else {
-                            tp = tp.disc(id.str)?.second
-                        }
-                    }
-                    tp
+    } as Stmt.Data?
+    return when {
+        (s == null) -> null
+        (s.subs == null) -> {
+            val l: MutableList<Int> = mutableListOf()
+            var tp = s.tp
+            for (sub in ts.drop(1)) {
+                if (tp !is Type.Union) {
+                    return null
                 }
-                //is Stmt.Hier -> s.xtp!!
-                else -> error("impossible case")
+                val i = tp.ts.indexOfFirst { it.first?.str == sub.str }
+                if (i == -1) {
+                    return null
+                }
+                l.add(i)
+                tp = tp.ts[i].second
             }
+            Triple(s, l, tp)
+        }
+        else -> {
+            val l: MutableList<Int> = mutableListOf()
+            var ss = s!!
+            val tup = (ss.tp as Type.Tuple).ts.toMutableList()
+            for (sub in ts.drop(1)) {
+                val i = ss.subs!!.indexOfFirst { it.t.str == sub.str }
+                if (i == -1) {
+                    return null
+                }
+                l.add(i)
+                ss = ss.subs!![i]
+                tup.addAll((ss.tp as Type.Tuple).ts)
+            }
+            Triple(ss, l, Type.Tuple(ss.tk, tup))
         }
     }
+}
+
+fun Type.Data.walk (): Triple<Stmt.Data,List<Int>,Type>? {
+    return this.walk(this.ts)
+}
+
+fun Type.no_data (): Type {
+    return if (this !is Type.Data) this else this.walk()!!.third
 }
 
 fun Type.Tuple.index (idx: String): Type? {
@@ -116,27 +136,21 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
 }
 
 fun Type.Data.disc (idx: String): Pair<Int, Type>? {
-    val s = this.to_flat_hier()
-    return when (s) {
-        is Stmt.Data -> {
-            val tp2 = this.no_data()
-            if (tp2 is Type.Union) {
-                tp2.disc(idx)
-            } else {
-                null
-            }
+    val s = this.walk()!!.first
+    return if (s.subs == null) {
+        val tp2 = this.no_data()
+        if (tp2 is Type.Union) {
+            tp2.disc(idx)
+        } else {
+            null
         }
-        /*
-        is Stmt.Hier -> {
-            val i = s.xsubs.indexOfFirst { it.ts.to_str() == this.to_str()+"."+idx }
-            if (i == -1) null else {
-                val dat = Type.Data(this.tk, this.ts + listOf(Tk.Type(idx,this.tk.pos.copy())))
-                dat.xup = this
-                Pair(i, dat)
-            }
+    } else {
+        val i = -1 //s.subs.indexOfFirst { it.ts.to_str() == this.to_str()+"."+idx }
+        if (i == -1) null else {
+            val dat = Type.Data(this.tk, this.ts + listOf(Tk.Type(idx,this.tk.pos.copy())))
+            dat.xup = this
+            Pair(i, dat)
         }
-         */
-        else -> error("impossible case")
     }
 }
 

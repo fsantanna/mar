@@ -55,7 +55,7 @@ fun check_vars () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Data -> {
-                val s = me.xup!!.to_flat_hier(listOf(me.t))
+                val s = me.xup!!.walk(listOf(me.t))
                 if (s!=null && s!=me) {
                     err(me.tk, "type error : data \"${me.t.str}\" is already declared")
                 }
@@ -92,7 +92,7 @@ fun check_vars () {
     fun ft (me: Type) {
         when (me) {
             is Type.Data -> {
-                if (me.no_data() == null) {
+                if (me.walk() == null) {
                     err(me.tk, "type error : data \"${me.to_str()}\" is not declared")
                 }
             }
@@ -169,7 +169,7 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val tp = me.dat.no_data()!!
+                val tp = me.dat.walk()!!.third
                 val te = me.e.type()
                 if (!tp.is_sup_of(te)) {
                     err(me.e.tk, "constructor error : types mismatch")
