@@ -85,10 +85,7 @@ fun cache_ups () {
             is Expr.Field -> me.col.xup = me
             is Expr.Disc  -> me.col.xup = me
             is Expr.Pred  -> me.col.xup = me
-            is Expr.Cons  -> {
-                me.dat.xup = me
-                me.e.xup = me
-            }
+            is Expr.Cons  -> me.e.xup = me
             is Expr.Nat -> {
                 if (me.xtp != null) {
                     me.xtp!!.xup = me

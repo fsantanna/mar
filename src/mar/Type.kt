@@ -195,8 +195,13 @@ fun Expr.type (): Type {
         is Expr.Field -> (this.col.type().no_data() as Type.Tuple).index(idx)!!
         is Expr.Disc  -> this.col.type().discx(this.idx)!!.second
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
-        is Expr.Cons  -> this.dat
-
+        is Expr.Cons  -> this.walk(ts)!!.let { (s,_,_) ->
+            if (s.subs == null) {
+                Type.Data(this.tk, this.ts.take(1))
+            } else {
+                Type.Data(this.tk, this.ts)
+            }
+        }
         is Expr.Acc -> this.tk_.type(this)!!
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
         is Expr.Char -> Type.Prim(Tk.Type( "Char", this.tk.pos.copy()))

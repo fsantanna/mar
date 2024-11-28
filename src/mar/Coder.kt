@@ -481,18 +481,18 @@ fun Expr.coder (pre: Boolean): String {
             "(${this.col.coder(pre)}.tag==${i+1})"
         }
         is Expr.Cons  -> {
-            val s = this.dat.walk()!!.first
+            val s = this.walk(this.ts)!!.first
             if (s.subs == null) {
                 var ret = "({"
-                for (i in this.dat.ts.size - 1 downTo 0) {
-                    val tp = this.dat.ts.take(i + 1).coder(pre)
+                for (i in this.ts.size - 1 downTo 0) {
+                    val tp = this.ts.take(i + 1).coder(pre)
                     ret = ret + "$tp ceu_$i = " +
-                            if (i == this.dat.ts.size - 1) {
+                            if (i == this.ts.size - 1) {
                                 """
                                 ((${tp}) ${this.e.coder(pre)});
                                 """
                             } else {
-                                val nxt = this.dat.ts[i + 1].str
+                                val nxt = this.ts[i + 1].str
                                 """
                                 {
                                     .tag = MAR_TAG_${tp.uppercase()}_${nxt.uppercase()},
@@ -503,7 +503,7 @@ fun Expr.coder (pre: Boolean): String {
                 }
                 ret + " ceu_0; })"
             } else {
-                "((${this.dat.coder(pre)}) { MAR_TAG_${this.dat.coder(pre)}, ${this.e.coder(pre)} })"
+                "((${this.ts.coder(pre)}) { MAR_TAG_${this.ts.coder(pre)}, ${this.e.coder(pre)} })"
             }
         }
 

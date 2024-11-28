@@ -80,13 +80,24 @@ fun check_vars () {
                     err(me.tk, "access error : variable \"${me.tk.str}\" is not declared")
                 }
             }
+            is Expr.Cons -> {
+                val v = me.walk(me.ts)
+                if (v == null) {
+                    err(me.tk, "constructor error : data \"${me.ts.to_str()}\" is not declared")
+                }
+            }
             else -> {}
         }
     }
     fun ft (me: Type) {
         when (me) {
             is Type.Data -> {
-                if (me.walk() == null) {
+                val v = me.walk()
+                if (v == null) {
+                    err(me.tk, "type error : data \"${me.to_str()}\" is not declared")
+                }
+                val (s,_,_) = v
+                if (s.subs==null && me.ts.size>1) {
                     err(me.tk, "type error : data \"${me.to_str()}\" is not declared")
                 }
             }
@@ -137,11 +148,17 @@ fun check_types () {
                 }
             }
             is Expr.Field -> {
-                val tp = me.col.type().no_data()
-                when (tp) {
+                val tp = me.col.type()
+                val tup = when (tp) {
+                    is Type.Any -> tp
+                    is Type.Tuple -> tp
+                    is Type.Data -> tp.walk()?.third
+                    else -> null
+                }
+                when (tup) {
                     is Type.Any -> {}
                     !is Type.Tuple -> err(me.tk, "field error : types mismatch")
-                    else -> if (tp.index(me.idx) == null) {
+                    else -> if (tup.index(me.idx) == null) {
                         err(me.tk, "field error : invalid index")
                     }
                 }
@@ -163,7 +180,7 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val tp = me.dat.walk()!!.third
+                val tp = me.walk(me.ts)!!.third
                 val te = me.e.type()
                 if (!tp.is_sup_of(te)) {
                     err(me.e.tk, "constructor error : types mismatch")

@@ -580,8 +580,8 @@ class Static {
         val out = static("""
             var p: Int = Pos ()
         """)
-        assert(out == "anon : (lin 2, col 26) : type error : data \"Pos\" is not declared") { out!! }
-        //assert(out == "anon : (lin 2, col 26) : constructor error : data \"Pos\" is not declared") { out!! }
+        //assert(out == "anon : (lin 2, col 26) : type error : data \"Pos\" is not declared") { out!! }
+        assert(out == "anon : (lin 2, col 26) : constructor error : data \"Pos\" is not declared") { out!! }
     }
     @Test
     fun dd_05_data_err () {
@@ -664,17 +664,25 @@ class Static {
     fun de_00b_subs_ee () {
         val out = static("""
             data B: <T:(), F:()>
-            var b: B.T
+            var b: B
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data B: <T:(),F:()>\n" +
-                "var b: B.T\n" +
+                "var b: B\n" +
                 "}") { G.outer!!.to_str() }
         //assert(out == "anon : (lin 3, col 20) : type error : data \"B\" is not hierarchic") { out!! }
     }
     @Test
-    fun de_00c_subs_ee_err () {
+    fun de_00c_subs_ee () {
+        val out = static("""
+            data B: <T:(), F:()>
+            var b: B.T
+        """)
+        assert(out == "anon : (lin 3, col 20) : type error : data \"B.T\" is not declared") { out!! }
+    }
+    @Test
+    fun de_00d_subs_ee_err () {
         val out = static("""
             data B: [<T:[],F:[]>]
             var b: B.X
@@ -688,11 +696,14 @@ class Static {
             data B: <T:[],F:[]>
             var b: B.F
         """)
+        assert(out == "anon : (lin 3, col 20) : type error : data \"B.F\" is not declared") { out!! }
+        /*
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data B: <T:[],F:[]>\n" +
                 "var b: B.F\n" +
                 "}") { G.outer!!.to_str() }
+         */
     }
     @Test
     fun de_01_subs_err () {
@@ -701,7 +712,8 @@ class Static {
             var b: B.T = B.F []
         """)
         //assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
-        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+        //assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 20) : type error : data \"B.T\" is not declared") { out!! }
     }
     @Test
     fun de_02_subs_err () {
@@ -710,15 +722,16 @@ class Static {
             var b: B = B.F []
             var c: B.T = b
         """)
-        assert(out == "anon : (lin 4, col 13) : set error : types mismatch") { out!! }
+        //assert(out == "anon : (lin 4, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 20) : type error : data \"B.T\" is not declared") { out!! }
     }
     @Test
     fun de_03_subs () {
         val out = static("""
             data B: <T:[],F:[]>
-            var b: B.F = B.F []
+            var b: B = B.F []
             var c: B = b
-            var d: B.F = b
+            var d: B = b
         """)
         assert(out == null) { out!! }
     }
@@ -728,9 +741,7 @@ class Static {
             data X: [()]
             var x = X.B () 
         """)
-        //assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
-        //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
-        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_05_subs_err () {
@@ -738,10 +749,7 @@ class Static {
             data X: []
             var x = X.B () 
         """)
-        //assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
-        //assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
-        //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
-        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_06_subs_err () {
@@ -749,10 +757,7 @@ class Static {
             data X: <A:[a:Int]>
             var x = X.B () 
         """)
-        //assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is invalid") { out!! }
-        //assert(out == "anon : (lin 3, col 21) : constructor error : invalid subtype \"B\"") { out!! }
-        //assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
-        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_07_subs () {
@@ -778,7 +783,8 @@ class Static {
         val out = static("""
             data X: <A:[a:Int]>
             var x = X.A [10]:[a:Int] 
-            var a = x.a
+            var xa: X = x!A
+            var a = x!A.a
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
@@ -788,6 +794,15 @@ class Static {
                 "var a: Int\n" +
                 "set a = (x.a)\n" +
                 "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun de_07y_subs () {
+        val out = static("""
+            data X: <A:[a:Int]>
+            var x = X.A [10]:[a:Int] 
+            var a: Int = x.a
+        """)
+        assert(out == "anon : (lin 4, col 27) : field error : types mismatch") { out!! }
     }
     @Test
     fun de_08_subs () {
@@ -846,7 +861,7 @@ class Static {
             data Res: <Err:(),Ok:Int>
             var r = Res.XXX(10)
         """)
-        assert(out == "anon : (lin 3, col 21) : type error : data \"Res.XXX\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : constructor error : data \"Res.XXX\" is not declared") { out!! }
     }
     @Test
     fun de_13_subs () {
@@ -947,6 +962,27 @@ class Static {
                 "set xy = (X.Y(([10]:[a:Int])))\n" +
                 "var y: X.Y\n" +
                 "set y = (xy!Y)\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun df_04x_hier () {
+        val out = static("""
+            data X.*: [a:Int] {
+                Y: []
+            }
+            var xy = X.Y [10]
+            var y = xy    ;; ()
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X.*: [a:Int] {\n" +
+                "Y: [] {\n" +
+                "}\n" +
+                "}\n" +
+                "var xy: X.Y\n" +
+                "set xy = (X.Y(([10]:[a:Int])))\n" +
+                "var y: X.Y\n" +
+                "set y = xy\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test

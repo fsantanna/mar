@@ -316,7 +316,7 @@ fun parser_expr_4_prim (): Expr {
                     x
                 }
             }
-            Expr.Cons(tp, Type.Data(tp, l), e)
+            Expr.Cons(tp, l, e)
         }
 
         else -> err_expected(G.tk1!!, "expression")
