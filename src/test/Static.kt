@@ -875,6 +875,29 @@ class Static {
         assert(out == "anon : (lin 4, col 20) : predicate error : types mismatch") { out!! }
         //assert(out == "anon : (lin 5, col 20) : discriminator error : types mismatch") { out!! }
     }
+    @Test
+    fun de_16_subs () {
+        val out = static("""
+            data K: <None:()>
+            data X: <
+                Base: [Int],
+                Y: [Int],
+            >
+            var xy = X.Y [10]
+            var y = xy    ;; ()
+            print(y)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data K: <None:()>\n" +
+                "data X: <Base:[Int],Y:[Int]>\n" +
+                "var xy: X.Y\n" +
+                "set xy = (X.Y(([10]:[Int])))\n" +
+                "var y: X.Y\n" +
+                "set y = xy\n" +
+                "print(y)\n" +
+                "}") { G.outer!!.to_str() }
+    }
 
     // DATA HIER
 

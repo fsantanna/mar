@@ -55,7 +55,7 @@ fun Type.coder (pre: Boolean): String {
     return when (this) {
         is Type.Any        -> TODO()
         is Type.Prim       -> this.tk.str
-        is Type.Data       -> if (this.walk()!!.first.subs == null) this.ts.first().str else this.ts.coder(pre)
+        is Type.Data       -> this.ts.coder(pre)
         is Type.Unit       -> "_VOID_"
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "MAR_Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
