@@ -143,7 +143,7 @@ fun check_types () {
         when (me) {
             is Expr.Tuple -> {
                 val tp = Type.Tuple(me.tk, me.vs.map { (id,v) -> Pair(id, v.type()) })
-                if (!me.xtp!!.is_sup_of(tp)) {
+                if (!tp.is_sup_of(me.xtp!!)) {  // tp=[10]: xtp=[a:Int], correct is xtp.sup(tp), but not for tuple cons
                     err(me.tk, "tuple error : types mismatch")
                 }
             }

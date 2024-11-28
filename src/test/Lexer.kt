@@ -195,10 +195,10 @@ class Lexer {
         assert(trap { tks.next() } == "anon : (lin 1, col 4) : char error : expected '")
     }
     @Test
-    fun ee_06_chr() {
+    fun TODO_ee_06_chr() {
         val tks = "\"\\\\\"".lexer()
         assert(tks.next().let { it.str=="#["})
-        println(tks.next().let { it.str=="\\" })
+        print(tks.next().let { it.str=="\\" })    // TODO: eh pra ser false ou true?
         assert(tks.next().let { it.str=="]"})
     }
     @Test
