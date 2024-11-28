@@ -783,8 +783,17 @@ class Static {
         val out = static("""
             data X: <A:[a:Int]>
             var x = X.A [10]:[a:Int] 
-            var xa: X = x!A
-            var a = x!A.a
+            var a: Int = x.a
+        """)
+        assert(out == "anon : (lin 4, col 27) : field error : types mismatch") { out!! }
+    }
+    @Test
+    fun de_07y_subs () {
+        val out = static("""
+            data X: <A:[a:Int]>
+            var x = X.A [10]:[a:Int] 
+            var xa: [Int] = x!A
+            var a = xa.1
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
@@ -796,13 +805,21 @@ class Static {
                 "}") { G.outer!!.to_str() }
     }
     @Test
-    fun de_07y_subs () {
+    fun de_07z_subs () {
         val out = static("""
             data X: <A:[a:Int]>
             var x = X.A [10]:[a:Int] 
-            var a: Int = x.a
+            var xa: X = x!A
+            var a = x!A.a
         """)
-        assert(out == "anon : (lin 4, col 27) : field error : types mismatch") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X: <A:[a:Int]>\n" +
+                "var x: X.A\n" +
+                "set x = (X.A(([10]:[a:Int])))\n" +
+                "var a: Int\n" +
+                "set a = (x.a)\n" +
+                "}") { G.outer!!.to_str() }
     }
     @Test
     fun de_08_subs () {

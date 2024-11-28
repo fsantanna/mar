@@ -52,7 +52,8 @@ fun Tk.Var.type (fr: Any): Type? {
     } as Type?
 }
 
-fun Any.walk (ts: List<Tk.Type>): Triple<Stmt.Data,List<Int>,Type>? {
+@JvmName("Any_walk_List_String")
+fun Any.walk (ts: List<String>): Triple<Stmt.Data,List<Int>,Type>? {
     val s = this.up_first { blk ->
         if (blk !is Stmt.Block) null else {
             blk.dn_filter_pre(
@@ -68,7 +69,7 @@ fun Any.walk (ts: List<Tk.Type>): Triple<Stmt.Data,List<Int>,Type>? {
             ).let {
                 it as List<Stmt.Data>
             }.find {
-                it.t.str == ts.first().str
+                it.t.str == ts.first()
             }
         }
     } as Stmt.Data?
@@ -81,7 +82,7 @@ fun Any.walk (ts: List<Tk.Type>): Triple<Stmt.Data,List<Int>,Type>? {
                 if (tp !is Type.Union) {
                     return null
                 }
-                val i = tp.ts.indexOfFirst { it.first?.str == sub.str }
+                val i = tp.ts.indexOfFirst { it.first?.str == sub }
                 if (i == -1) {
                     return null
                 }
@@ -95,7 +96,7 @@ fun Any.walk (ts: List<Tk.Type>): Triple<Stmt.Data,List<Int>,Type>? {
             var ss = s!!
             val tup = (ss.tp as Type.Tuple).ts.toMutableList()
             for (sub in ts.drop(1)) {
-                val i = ss.subs!!.indexOfFirst { it.t.str == sub.str }
+                val i = ss.subs!!.indexOfFirst { it.t.str == sub }
                 if (i == -1) {
                     return null
                 }
@@ -106,6 +107,10 @@ fun Any.walk (ts: List<Tk.Type>): Triple<Stmt.Data,List<Int>,Type>? {
             Triple(ss, l, Type.Tuple(ss.tk, tup))
         }
     }
+}
+
+fun Any.walk (ts: List<Tk.Type>): Triple<Stmt.Data,List<Int>,Type>? {
+    return this.walk(ts.map { it.str })
 }
 
 fun Type.Data.walk (): Triple<Stmt.Data,List<Int>,Type>? {
@@ -136,7 +141,11 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
 }
 
 fun Type.Data.disc (idx: String): Pair<Int, Type>? {
-    val s = this.walk()!!.first
+    println(this.to_str())
+    println(idx)
+    println(this.xup)
+    println("-=-=-")
+    val s = this.walk(this.ts.map { it.str } + listOf(idx))!!.first
     return if (s.subs == null) {
         val tp2 = this.no_data()
         if (tp2 is Type.Union) {
@@ -221,5 +230,10 @@ fun Expr.type (): Type {
             Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
         }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
+    }.let {
+        if (it.xup == null) {
+            it.xup = this
+        }
+        it
     }
 }

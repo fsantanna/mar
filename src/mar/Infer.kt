@@ -86,6 +86,7 @@ fun infer_types () {
                     if (me.xtp == null) {
                         val tps = me.vs.map { (id,v) -> Pair(id,v.type()) }
                         me.xtp = Type.Tuple(me.tk, tps)
+                        me.xtp!!.xup = me
                     }
                 }
             }
