@@ -714,7 +714,7 @@ class Parser {
     @Test
     fun kj_05_data_hier_err () {
         G.tks = ("""
-            data Event.*: [a:Int]
+            data Event.*: [a:Int] {}
         """).lexer()
         parser_lexer()
         val s = parser_stmt().first()
