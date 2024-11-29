@@ -134,30 +134,25 @@ fun Type.Tuple.index (idx: String): Type? {
 
 fun Type.discx (idx: String): Pair<Int, Type>? {
     return when (this) {
-        is Type.Union -> this.disc(idx)
-        is Type.Data -> this.disc(idx)
-        else -> null
-    }
-}
-
-fun Type.Data.disc (idx: String): Pair<Int, Type>? {
-    val xts = this.ts.map { it.str } + listOf(idx)
-    val s = this.walk(xts)?.first
-    return when {
-        (s == null) -> null
-        (s.subs == null) -> {
-            val tp2 = this.no_data()
-            if (tp2 is Type.Union) {
-                tp2.disc(idx)
-            } else {
-                null
+        is Type.Union -> {
+            this.disc(idx)
+        }
+        is Type.Data -> {
+            val xts = this.ts.map { it.str } + listOf(idx)
+            val xxx = this.walk(xts)
+            if (xxx == null) null else {
+                val (s,i,tp) = xxx
+                assert(i.size == 1)
+                if (s.subs == null) {
+                    Pair(i.first(),tp)
+                } else {
+                    val xtp = Type.Data(this.tk, xts.map { Tk.Type(it, this.tk.pos.copy()) })
+                    xtp.xup = this
+                    Pair(i.first(), xtp)
+                }
             }
         }
-        else -> {
-            val xtp = Type.Data(this.tk, xts.map { Tk.Type(it, this.tk.pos.copy()) })
-            xtp.xup = this
-            Pair(-1, xtp)
-        }
+        else -> null
     }
 }
 

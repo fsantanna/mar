@@ -1,7 +1,5 @@
 package mar
 
-import javax.xml.crypto.Data
-
 fun check_fix (str: String): Boolean {
     return (G.tk1.let { it is Tk.Fix && it.str == str })
 }
