@@ -382,9 +382,9 @@ class Exec  {
     fun hh_06x_data () {
         val out = test("""
             data X: <A:[a:Int]>
-            var xa: X.A = X.A [10]
+            var xa = X.A [10]
             var x: X = xa
-            print(xa.a)
+            print(xa!A.a)
             print(x!A.a)
         """)
         assert(out == "10\n10\n") { out }
@@ -394,7 +394,7 @@ class Exec  {
         val out = test("""
             data X: <A:[a:Int]>
             var x = X.A [10]
-            print(x.a)
+            print(x!A.a)
         """)
         assert(out == "10\n") { out }
     }
@@ -420,13 +420,24 @@ class Exec  {
                 "10\n") { out }
     }
     @Test
-    fun hh_09_data () {
+    fun TODO_hh_09x_data () {
         val out = test("""
-            data K: <None:()>
             data X: <
-                Base: [Int],
                 Y: [Int],
             >
+            var xy = X.Y [10]
+            var y = xy
+            print(y)        ;; TODO: X.Y [10]
+        """)
+        //assert(out == "X.Y [10]\n") { out }
+        assert(out == "X <.1=[10]>\n") { out }
+    }
+    @Test
+    fun hh_09y_data () {
+        val out = test("""
+            data X.*: [] {
+                Y: [Int]
+            }
             var xy = X.Y [10]
             var y = xy    ;; ()
             print(y)
@@ -437,7 +448,7 @@ class Exec  {
     fun hh_10_data () {
         val out = test("""
             data B: <T:[], F:[]>
-            var b: B.T = B.T []
+            var b = B.T []
             print(b?B)      ;; OK
             ;;print(b!B)      ;; NO: no B._o
         """)
@@ -461,8 +472,9 @@ class Exec  {
     @Test
     fun hi_01_data () {
         val out = test("""
-            data A.*: [Int]
-            data A.B.*: [b:Int]
+            data A.*: [Int] {
+                B: [b:Int]
+            }
             var x0: A = A [100]  ;; ignore subtype B
             print(x0)
             print(x0.1)

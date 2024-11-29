@@ -133,67 +133,76 @@ fun coder_types (pre: Boolean): String {
     }
     fun fs (me: Stmt): List<String> {
         return when (me) {
-            is Stmt.Data -> {
-                fun f (tp: Type, s: List<String>): List<String> {
-                    val ss = s.joinToString("_")
-                    val SS = ss.uppercase()
-                    //println(listOf(s, tp.to_str()))
-                    val x1 = "typedef ${tp.coder(pre)} $ss;\n"
-                    val x2 = if (tp !is Type.Union) {
-                        emptyList()
-                    } else {
-                        listOf(
-                            """
+            is Stmt.Data -> when {
+                (me.xup is Stmt.Data) -> emptyList()
+                (me.subs == null) -> {
+                    fun f(tp: Type, s: List<String>): List<String> {
+                        val ss = s.joinToString("_")
+                        val SS = ss.uppercase()
+                        //println(listOf(s, tp.to_str()))
+                        val x1 = "typedef ${tp.coder(pre)} $ss;\n"
+                        val x2 = if (tp !is Type.Union) {
+                            emptyList()
+                        } else {
+                            listOf(
+                                """
                             typedef enum MAR_TAGS_$SS {
                                 __MAR_TAG_${SS}__,
                                 ${
-                                    tp.ts.mapIndexed { i,(id,_) ->
+                                    tp.ts.mapIndexed { i, (id, _) ->
                                         """
-                                        MAR_TAG_${SS}_${if (id==null) i else id.str.uppercase()},
+                                        MAR_TAG_${SS}_${if (id == null) i else id.str.uppercase()},
                                         """
                                     }.joinToString("")
                                 }
                             } MAR_TAGS_$SS;
-                            """
-                        ) + tp.ts.map { (id,t) ->
-                            if (id == null) emptyList() else f(t,s+listOf(id.str))
-                        }.flatten()
-                    }
-                    return listOf(x1) + x2
-                }
-                f(me.tp, listOf(me.t.str))
-            }
-            /*
-            is Stmt.Hier -> {
-                val id = me.ts.coder(pre)
-                listOf("""
-                    #define __MAR_TAG_${id.uppercase()}__ 0
-                    #define MAR_TAG_${id.uppercase()} 99
-                    typedef struct ${me.ts.coder(pre)} {
-                        union {
-                            struct {
-                                int tag;
-                                ${me.xtp!!.coder(pre)} tup;
-                            };
-                            char _ [100];   // TODO: MAR_SIZE_$id
-                        };
-                    } $id;
-                """)
-            }
-             */
-            is Stmt.Proto.Coro -> {
-                fun mem (): String {
-                    val blks = me.dn_collect_pre({
-                        when (it) {
-                            is Stmt.Proto -> if (it == me) emptyList() else null
-                            is Stmt.Block -> listOf(it)
-                            else -> emptyList()
+                        """
+                            ) + tp.ts.map { (id, t) ->
+                                if (id == null) emptyList() else f(t, s + listOf(id.str))
+                            }.flatten()
                         }
-                    }, {null}, {null})
-                    return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(pre) + ";\n" } }.flatten().joinToString("")
+                        return listOf(x1) + x2
+                    }
+                    f(me.tp, listOf(me.t.str))
                 }
-                val (co,exe) = me.tp_.x_coro_exec(pre)
-                listOf("""
+                else -> {
+                    val sup = me.t.str
+                    val tup = me.tp as Type.Tuple
+                    listOf ("""
+                        #define __MAR_TAG_${sup.uppercase()}__ 0
+                        #define MAR_TAG_${sup.uppercase()} 99
+                        typedef struct ${sup} {
+                            union {
+                                struct {
+                                    int tag;
+                                    ${tup.ts.mapIndexed { i,id_tp ->
+                                        val (id,tp) = id_tp
+                                        """
+                                        union {
+                                            ${tp.coder(pre)} _${i+1};
+                                            ${id.cond { "${tp.coder(pre)} ${it.str};" }}
+                                        };                                    
+                                        """
+                                    }.joinToString("")}
+                                };
+                            };
+                        } $sup;                        
+                    """)
+                }
+            }
+            is Stmt.Proto.Coro -> {
+                    fun mem (): String {
+                        val blks = me.dn_collect_pre({
+                            when (it) {
+                                is Stmt.Proto -> if (it == me) emptyList() else null
+                                is Stmt.Block -> listOf(it)
+                                else -> emptyList()
+                            }
+                        }, {null}, {null})
+                        return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(pre) + ";\n" } }.flatten().joinToString("")
+                    }
+                    val (co,exe) = me.tp_.x_coro_exec(pre)
+                    listOf("""
                     typedef struct $exe {
                         int pc;
                         $co co;
@@ -202,7 +211,7 @@ fun coder_types (pre: Boolean): String {
                         } mem;
                     } $exe;
                 """)
-            }
+                }
             else -> emptyList()
         }
     }
@@ -392,7 +401,7 @@ fun Stmt.coder (pre: Boolean): String {
                         """
                         printf("${tp.ts.to_str(pre)}");
                         ${par.cond2({ "printf(\"(\");" }, { "printf(\" \");" })}
-                        ${aux(tpx, v /*+ (s is Stmt.Hier).cond { ".tup" }*/)}
+                        ${aux(tpx, v)}
                         ${par.cond { "printf(\")\");" }}
                     """
                     }
@@ -448,7 +457,7 @@ fun Expr.coder (pre: Boolean): String {
                     val sub = tp.ts.drop(1).map { it.str + "." }.joinToString("")
                     "(${this.col.coder(pre)}.$sub$idx)"
                 } else {
-                    "(${this.col.coder(pre)}.tup.$idx)"
+                    "(${this.col.coder(pre)}.$idx)"
                 }
             }
         }
@@ -503,7 +512,11 @@ fun Expr.coder (pre: Boolean): String {
                 }
                 ret + " ceu_0; })"
             } else {
-                "((${this.ts.coder(pre)}) { MAR_TAG_${this.ts.coder(pre)}, ${this.e.coder(pre)} })"
+                val tup = this.e as Expr.Tuple
+                val vs = tup.vs.mapIndexed { i,(id,v) ->
+                    "."+(id?.str ?: ("_"+(i+1))) + " = " + v.coder(pre)
+                }.joinToString(",")
+                "((${this.ts.coder(pre)}) { MAR_TAG_${this.ts.coder(pre)}, $vs })"
             }
         }
 
