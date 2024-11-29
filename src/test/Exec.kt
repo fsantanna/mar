@@ -485,8 +485,9 @@ class Exec  {
     @Test
     fun hi_01x_data () {
         val out = test("""
-            data A.*: []
-            data A.B.*: [Int]
+            data A.*: [] {
+                B: [Int]
+            }
             var a: A = A.B [10]
             print(a)
         """)

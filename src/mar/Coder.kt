@@ -167,26 +167,37 @@ fun coder_types (pre: Boolean): String {
                 }
                 else -> {
                     val sup = me.t.str
-                    val tup = me.tp as Type.Tuple
-                    listOf ("""
-                        #define __MAR_TAG_${sup.uppercase()}__ 0
-                        #define MAR_TAG_${sup.uppercase()} 99
+                    fun f (s: Stmt.Data, sup: String, n: Int): String {
+                        val id = sup + "_" + s.t.str.uppercase()
+                        return """
+                            #define MAR_TAG$id 0
+                        """ + s.subs!!.map {
+                            f(it, id, n)
+                        }.joinToString("")
+                    }
+                    fun g (s: Stmt.Data, I: Int): String {
+                        val tup = s.tp as Type.Tuple
+                        return tup.ts.mapIndexed { i,id_tp ->
+                            val (id,tp) = id_tp
+                            """
+                            union {
+                                ${tp.coder(pre)} _${I+i};
+                                ${id.cond { "${tp.coder(pre)} ${it.str};" }}
+                            };                                    
+                            """
+                        }.joinToString("") + s.subs!!.map {
+                            g(it, I+tup.ts.size)
+                        }.joinToString("")
+                    }
+                    listOf (f(me, "", 0) + """
                         typedef struct ${sup} {
                             union {
                                 struct {
                                     int tag;
-                                    ${tup.ts.mapIndexed { i,id_tp ->
-                                        val (id,tp) = id_tp
-                                        """
-                                        union {
-                                            ${tp.coder(pre)} _${i+1};
-                                            ${id.cond { "${tp.coder(pre)} ${it.str};" }}
-                                        };                                    
-                                        """
-                                    }.joinToString("")}
+                                    ${g(me, 1)}
                                 };
                             };
-                        } $sup;                        
+                        } $sup;
                     """)
                 }
             }
@@ -396,12 +407,25 @@ fun Stmt.coder (pre: Boolean): String {
                         """
                     }
                     is Type.Data -> {
-                        val tpx = tp.walk()!!.third
+                        val (s,_,tpx) = tp.walk()!!
                         val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
+                        val x = if (s.subs == null) aux(tpx, v) else {
+                            val tup = tpx as Type.Tuple
+                            """
+                            {
+                                printf("[");
+                                ${s.t.str} mar_${tp.n} = $v;
+                                ${tup.ts.mapIndexed { i,(_,t) ->
+                                    aux(t, "mar_${tp.n}._${i+1}")
+                                }.joinToString("printf(\",\");")}
+                                printf("]");
+                            }                                
+                            """
+                        }
                         """
                         printf("${tp.ts.to_str(pre)}");
                         ${par.cond2({ "printf(\"(\");" }, { "printf(\" \");" })}
-                        ${aux(tpx, v)}
+                        $x
                         ${par.cond { "printf(\")\");" }}
                     """
                     }
@@ -516,7 +540,7 @@ fun Expr.coder (pre: Boolean): String {
                 val vs = tup.vs.mapIndexed { i,(id,v) ->
                     "."+(id?.str ?: ("_"+(i+1))) + " = " + v.coder(pre)
                 }.joinToString(",")
-                "((${this.ts.coder(pre)}) { MAR_TAG_${this.ts.coder(pre)}, $vs })"
+                "((${this.ts.first().str}) { MAR_TAG_${this.ts.coder(pre)}, $vs })"
             }
         }
 
