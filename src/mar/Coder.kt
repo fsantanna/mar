@@ -55,7 +55,7 @@ fun Type.coder (pre: Boolean): String {
     return when (this) {
         is Type.Any        -> TODO()
         is Type.Prim       -> this.tk.str
-        is Type.Data       -> if (this.walk()!!.first.subs == null) this.ts.first().str else this.ts.coder(pre)
+        is Type.Data       -> this.ts.first().str
         is Type.Unit       -> "_VOID_"
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "MAR_Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
@@ -303,11 +303,7 @@ fun Stmt.coder (pre: Boolean): String {
                 this.src.coder(pre)
             } else {
                 val dst = this.dst.type()
-                if (this.src.type().is_sup_of(dst)) {
-                    this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
-                } else {
-                    this.dst.coder(pre) + " = MAR_CAST(${dst.coder(pre)}, " + this.src.coder(pre) + ");"
-                }
+                this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
             }
         }
 
@@ -414,7 +410,7 @@ fun Stmt.coder (pre: Boolean): String {
                             """
                             {
                                 printf("[");
-                                ${s.t.str} mar_${tp.n} = $v;
+                                ${tp.ts.first().str} mar_${tp.n} = $v;
                                 ${tup.ts.mapIndexed { i,(_,t) ->
                                     aux(t, "mar_${tp.n}._${i+1}")
                                 }.joinToString("printf(\",\");")}
@@ -487,27 +483,22 @@ fun Expr.coder (pre: Boolean): String {
         }
         is Expr.Disc  -> {
             val tp = this.col.type()
-            if (tp !is Type.Data) {
+            val ret = if (tp !is Type.Data) {
                 val (i,_) = tp.discx(this.idx)!!
-                """
-                // DISC | ${this.dump()}
-                (${this.col.coder(pre)}._${i+1})
-                """
+                "${this.col.coder(pre)}._${i+1}"
             } else {
                 val s = tp.walk()!!.first
                 if (s.subs == null) {
                     val (i,_) = tp.discx(this.idx)!!
-                    """
-                    // DISC | ${this.dump()}
-                    (${this.col.coder(pre)}._${i+1})
-                    """
+                    "${this.col.coder(pre)}._${i+1}"
                 } else {
-                    """
-                    // DISC | ${this.dump()}
-                    MAR_CAST(${tp.coder(pre)}_${this.idx}, ${this.col.coder(pre)})
-                    """
+                    this.col.coder(pre)
                 }
             }
+            """
+                // DISC | ${this.dump()}
+                ($ret)
+            """
         }
         is Expr.Pred  -> {
             val (i,_) = this.col.type().discx(this.idx)!!

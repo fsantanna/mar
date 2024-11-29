@@ -508,9 +508,11 @@ class Exec  {
     @Test
     fun hi_01z_data () {
         val out = test("""
-            data A.*: [Int]
-            data A.B.*: [Int]
-            data A.B.C.*: [Int]
+            data A.*: [Int] {
+                B: [Int] {
+                    C: [Int]
+                }
+            }
             var x0: A = A.B[10,20]  ;; ignore subsubtype C
             print(x0)
             print(x0!B)
