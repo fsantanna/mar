@@ -82,12 +82,13 @@ fun Any.walk (ts: List<String>): Triple<Stmt.Data,List<Int>,Type>? {
                 if (tp !is Type.Union) {
                     return null
                 }
-                val i = tp.ts.indexOfFirst { it.first?.str == sub }
-                if (i == -1) {
+                val xxx = tp.disc(sub)
+                if (xxx == null) {
                     return null
                 }
+                val (i,xtp) = xxx
                 l.add(i)
-                tp = tp.ts[i].second
+                tp = xtp
             }
             Triple(s, l, tp)
         }
