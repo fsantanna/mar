@@ -136,6 +136,14 @@ fun check_types () {
                     err(me.tk, "if error : expected boolean condition")
                 }
             }
+            is Stmt.Catch -> {
+                if (me.tp != null) {
+                    val xxx = me.tp.walk()
+                    if (xxx==null || xxx.first.subs==null) {
+                        err(me.tp.tk, "catch error : expected hierarchical data type")
+                    }
+                }
+            }
             else -> {}
         }
     }

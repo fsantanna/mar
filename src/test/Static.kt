@@ -1567,29 +1567,40 @@ class Static {
     @Test
     fun ff_01_catch_err () {
         val out = static("""
-            catch 10 {
-            }
-        """)
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
-    }
-    @Test
-    fun ff_02_catch_err () {
-        val out = static("""
             data X: Int
-            var x: X = 10
-            catch x {
+            catch X {
             }
         """)
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 3, col 19) : catch error : expected hierarchical data type") { out!! }
     }
     @Test
-    fun ff_03_catch () {
+    fun ff_02_catch () {
         val out = static("""
-            data X.*: []
-            var x: X = []
-            catch x {
+            data X.*: [] {
+                X: []
+            }
+            catch X.X {
             }
         """)
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X.*: [] {\n" +
+                "X: [] {\n" +
+                "}\n" +
+                "}\n" +
+                "catch X.X {\n" +
+                "}\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ff_03_catch_err () {
+        val out = static("""
+            data X.*: [] {
+                X: []
+            }
+            catch X.Y {
+            }
+        """)
+        assert(out == "anon : (lin 5, col 19) : type error : data \"X.Y\" is not declared") { out!! }
     }
 }
