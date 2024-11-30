@@ -469,10 +469,15 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
         }
         accept_fix("catch") -> {
             val tk0 = G.tk0!!
-            val tp = if (check_enu("Type")) {
-                parser_type(null, false) as Type.Data
-            } else {
+            val tp = if (check_fix("{")) {
                 null
+            } else {
+                check_enu_err("Type")
+                val tp = parser_type(null, false)
+                if (tp !is Type.Data) {
+                    err(tp.tk, "exception error : expected data type")
+                }
+                tp
             }
             accept_fix_err("{")
             val blk = parser_list(null, "}") {

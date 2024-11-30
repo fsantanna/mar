@@ -1561,4 +1561,35 @@ class Static {
                 "set x = ```10```: Int\n" +
                 "}") { G.outer!!.to_str() }
     }
+
+    // THROW / CATCH
+
+    @Test
+    fun ff_01_catch_err () {
+        val out = static("""
+            catch 10 {
+            }
+        """)
+        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+    }
+    @Test
+    fun ff_02_catch_err () {
+        val out = static("""
+            data X: Int
+            var x: X = 10
+            catch x {
+            }
+        """)
+        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+    }
+    @Test
+    fun ff_03_catch () {
+        val out = static("""
+            data X.*: []
+            var x: X = []
+            catch x {
+            }
+        """)
+        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+    }
 }

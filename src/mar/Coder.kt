@@ -331,10 +331,10 @@ fun Stmt.coder (pre: Boolean): String {
                 do {
                     ${this.blk.coder(pre)}
                 } while (0);
-                if (MAR_EXCEPTION.tag == __MAR_TAG_EXCEPTION__) {
+                if (MAR_EXCEPTION.tag == __MAR_EXCEPTION_NONE__) {
                     // no escape
-                } else if (MAR_EXCEPTION.tag == MAR_TAG_${this.xtp!!.coder(pre).uppercase()}) {
-                    MAR_EXCEPTION.tag = __MAR_TAG_EXCEPTION__;
+                } else if (MAR_EXCEPTION.tag == MAR_TAG_${this.tp!!.coder(pre).uppercase()}) {
+                    MAR_EXCEPTION.tag = __MAR_EXCEPTION_NONE__;
                 } else {
                     continue;
                 }
@@ -609,10 +609,12 @@ fun coder_main (pre: Boolean): String {
         
         ${coder_types(pre)}
         
-        Exception MAR_EXCEPTION = { __MAR_TAG_EXCEPTION__, {} };
+        #define __MAR_EXCEPTION_NONE__ -1
 
         int main (void) {
-            ${G.outer!!.coder(pre)}
+            do {
+                ${G.outer!!.coder(pre)}
+            } while (0);
         }
     """
 }

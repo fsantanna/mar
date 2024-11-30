@@ -123,7 +123,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Set    (tk: Tk, val dst: Expr, val src: Expr): Stmt(G.N++, null, tk)
 
     class Defer  (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, null, tk)
-    class Catch  (tk: Tk, val xtp: Type.Data?, val blk: Stmt.Block): Stmt(G.N++, null, tk)
+    class Catch  (tk: Tk, val tp: Type.Data?, val blk: Stmt.Block): Stmt(G.N++, null, tk)
     class Throw  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
 
     class If     (tk: Tk, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, null, tk)

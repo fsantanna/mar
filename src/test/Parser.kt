@@ -879,6 +879,27 @@ class Parser {
         assert(ss.to_str() == "catch {\n" +
                 "}\n") { ss.to_str() }
     }
+    @Test
+    fun ll_02_catch_err () {
+        G.tks = ("catch x { }").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : expected type : have \"x\"")
+    }
+    @Test
+    fun ll_03_catch_err () {
+        G.tks = ("catch Int { }").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : exception error : expected data type")
+    }
+    @Test
+    fun ll_04_catch () {
+        G.tks = ("catch X.Y.Z { print(x) }").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "catch X.Y.Z {\n" +
+                "print(x)\n" +
+                "}\n") { ss.to_str() }
+    }
 
     // DEFER
 

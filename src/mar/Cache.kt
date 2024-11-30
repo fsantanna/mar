@@ -34,8 +34,8 @@ fun cache_ups () {
                 me.blk.xup = me
             }
             is Stmt.Catch -> {
-                if (me.xtp != null) {
-                    me.xtp.xup = me
+                if (me.tp != null) {
+                    me.tp.xup = me
                 }
                 me.blk.xup = me
             }
