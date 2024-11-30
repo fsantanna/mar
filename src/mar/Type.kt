@@ -143,13 +143,12 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
             val xxx = this.walk(xts)
             if (xxx == null) null else {
                 val (s,i,tp) = xxx
-                assert(i.size == 1)
                 if (s.subs == null) {
-                    Pair(i.first(),tp)
+                    Pair(i.last(),tp)
                 } else {
                     val xtp = Type.Data(this.tk, xts.map { Tk.Type(it, this.tk.pos.copy()) })
                     xtp.xup = this
-                    Pair(i.first(), xtp)
+                    Pair(i.last(), xtp)
                 }
             }
         }

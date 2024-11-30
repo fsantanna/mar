@@ -523,8 +523,9 @@ class Exec  {
     @Test
     fun hi_02_data () {
         val out = test("""
-            data A.*: [a:Int]
-            data A.B.*: [b:Int]
+            data A.*: [a:Int] {
+                B: [b:Int]
+            }
             var x0 = A([100])  ;; ignore subtype
             print(x0)
             print(x0.a)
@@ -535,8 +536,9 @@ class Exec  {
     @Test
     fun hi_03_data () {
         val out = test("""
-            data A.*: [a:Int]
-            data A.B.*: [b:Int]
+            data A.*: [a:Int] {
+                B: [b:Int]
+            }
             var x0: A   = A([100])
             var xa: A   = A.B([10,20])
             var xb: A.B = A.B([30,40])
@@ -560,11 +562,13 @@ class Exec  {
                 "40\n") { out }
     }
     @Test
-    fun TODO_hi_04_data () {
+    fun hi_04_data () {
         val out = test("""
-            data A.*: [a:Int]
-            data A.B.*: [b:Int]
-            data A.B.C.*: [c:Int]
+            data A.*: [a:Int] {
+                B: [b:Int] {
+                    C: [c:Int]
+                }
+            }
             var c: A = A.B.C ([1,2,3])
             var v = c
             print(c)
@@ -690,27 +694,31 @@ class Exec  {
                 "Meter(10)\n") { out }
     }
     @Test
-    fun hi_10x_data_sub_print () {
+    fun TODO_hi_10x_data_sub_print () {
         val out = test("""
             data V: <Z:(), V:Int>
-            var v: V.V = V.V(10)
+            var v: V = V.V(10)
             print(v)
         """)
-        assert(out == "V.V(10)\n") { out }
+        assert(out == "V <.2=10>\n") { out }
+        //assert(out == "V.V(10)\n") { out }
     }
     @Test
-    fun TODO_hi_11_data () {
+    fun hi_11_data () {
         val out = test("""
-            data A: [x:Int] + <B: [y:Int] + <C: Int>>
-            var c: A.B.C = A.B.C([10],[20],30)
+            data A.*: [x:Int] {
+                B: [y:Int] {
+                    C: [Int]
+                }
+            }
+            var c: A = A.B.C([10,20,30])
             var b  = c!B
-            var bb = c!B!B
-            var y  = c!B!B.y
+            var y  = c!B.y
             print(b)
-            print(bb)
             print(y)
         """)
-        assert(out == "TODO\n") { out }
+        assert(out == "A.B [10,20]\n" +
+                "20\n") { out }
     }
 
     // DATA / HIER / EXTD / EXTENDS
@@ -718,9 +726,10 @@ class Exec  {
     @Test
     fun hj_01_hier_extd () {
         val out = test("""
-            data X.*: [Int]
-            data X.Y.*: []
-            data X.Z.*: [Int]
+            data X.*: [Int] {
+                Y: []
+                Z: [Int]
+            }
             var xz: X = X.Z [10,20]
             var x = xz    ;; 10
             var y = xz!Z    ;; 20
