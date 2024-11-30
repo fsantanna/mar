@@ -832,7 +832,8 @@ class Exec  {
     @Test
     fun kk_01_catch () {
         val out = test("""
-            catch Exception {
+            data X.*: []
+            catch X {
             }
             print(10)
         """)
@@ -842,9 +843,65 @@ class Exec  {
     @Test
     fun kk_02_throw () {
         val out = test("""
-            throw(Exception.X())
+            data X.*: []
+            catch {
+                throw(X [])
+                print(999)
+            }
+            print(10)
         """)
         //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun kk_03_throw_err () {
+        val out = test("""
+            data X.*: []
+            throw(X [])
+            print(10)
+        """)
+        assert(out == "ERRO\n") { out }
+    }
+    @Test
+    fun kk_04_throw_err () {
+        val out = test("""
+            data X.*: [] {
+                Y: []
+                Z: []
+            }
+            catch X.Y {
+                throw(X.Z [])
+            }
+            print(10)
+        """)
+        assert(out == "ERRO\n") { out }
+    }
+    @Test
+    fun kk_05_throw () {
+        val out = test("""
+            data X.*: [] {
+                Y: []
+                Z: []
+            }
+            catch X {
+                throw(X.Z [])
+            }
+            print(10)
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun kk_06_throw () {
+        val out = test("""
+            data X.*: [] {
+                Y: []
+                Z: []
+            }
+            catch X.Z {
+                throw(X.Z [])
+            }
+            print(10)
+        """)
         assert(out == "10\n") { out }
     }
 

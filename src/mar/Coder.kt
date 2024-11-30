@@ -341,7 +341,11 @@ fun Stmt.coder (pre: Boolean): String {
             }
             """
         }
-        is Stmt.Throw -> TODO()
+        is Stmt.Throw -> """
+            assert(sizeof(Exception) >= sizeof(${this.e.type().coder(pre)}));
+            MAR_EXCEPTION = MAR_CAST(Exception, ${this.e.coder(pre)});
+            continue;            
+        """
 
         is Stmt.If     -> """
             if (${this.cnd.coder(pre)}) {
@@ -610,6 +614,11 @@ fun coder_main (pre: Boolean): String {
         ${coder_types(pre)}
         
         #define __MAR_EXCEPTION_NONE__ -1
+        typedef struct Exception {
+            int tag;
+            char _[100];
+        } Exception;
+        Exception MAR_EXCEPTION = { __MAR_EXCEPTION_NONE__ };
 
         int main (void) {
             do {
