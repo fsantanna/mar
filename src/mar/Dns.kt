@@ -78,7 +78,7 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
         return emptyList()
     }
     return v + when (this) {
-        is Stmt.Data   -> this.tp.dn_collect_pre(ft)
+        is Stmt.Data   -> this.tp.dn_collect_pre(ft) + (this.subs?.map { it.dn_collect_pre(fs,fe,ft) }?.flatten() ?: emptyList())
         is Stmt.Proto  -> this.blk.dn_collect_pre(fs,fe,ft) + this.tp.dn_collect_pre(ft)
         is Stmt.Return -> this.e.dn_collect_pre(fe,ft)
 

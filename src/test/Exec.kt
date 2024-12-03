@@ -827,6 +827,65 @@ class Exec  {
         assert(out == "X <.2=10>\n") { out }
     }
 
+    // DATA / HIER / ENUM
+
+    @Test
+    fun jk_01_data_hier_enum () {
+        val out = test("""
+            data X.*: [] {
+                Y: []
+                Z: [] {
+                    A: []
+                }
+            }
+            data J.*: []
+            var x   = X []
+            var xy  = X.Y []
+            var xz  = X.Z []
+            var xza = X.Z.A []
+            var j   = J []
+            `printf("%X\n", x.tag)`
+            `printf("%X\n", xy.tag)`
+            `printf("%X\n", xz.tag)`
+            `printf("%X\n", xza.tag)`
+            `printf("%X\n", j.tag)`
+        """)
+        assert(out == "2000000\n" +
+                "2100000\n" +
+                "2200000\n" +
+                "2208000\n" +
+                "4000000\n") { out }
+    }
+    @Test
+    fun jk_02_data_hier_enum () {
+        val out = test("""
+            data X.*: [] {
+                Y: []
+                Z: [] {
+                    A: []
+                }
+            }
+            data J.*: []
+            var x   = X []
+            var xy  = X.Y []
+            var xz  = X.Z []
+            var xza = X.Z.A []
+            var j   = J []
+            `printf("%d\n", mar_sup(x.tag,  x.tag))`
+            `printf("%d\n", mar_sup(x.tag,  xy.tag))`
+            `printf("%d\n", mar_sup(xy.tag, x.tag))`
+            `printf("%d\n", mar_sup(xy.tag, xz.tag))`
+            `printf("%d\n", mar_sup(xz.tag, xza.tag))`
+            `printf("%d\n", mar_sup(j.tag,  x.tag))`
+        """)
+        assert(out == "1\n" +
+                "1\n" +
+                "0\n" +
+                "0\n" +
+                "1\n" +
+                "0\n") { out }
+    }
+
     // CATCH / THROW
 
     @Test
@@ -860,7 +919,7 @@ class Exec  {
             throw(X [])
             print(10)
         """)
-        assert(out == "ERRO\n") { out }
+        assert(out == "uncaught exception\n") { out }
     }
     @Test
     fun kk_04_throw_err () {
@@ -874,7 +933,7 @@ class Exec  {
             }
             print(10)
         """)
-        assert(out == "ERRO\n") { out }
+        assert(out == "uncaught exception\n") { out }
     }
     @Test
     fun kk_05_throw () {

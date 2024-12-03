@@ -167,12 +167,20 @@ fun coder_types (pre: Boolean): String {
                 }
                 else -> {
                     val sup = me.t.str
-                    fun f (s: Stmt.Data, sup: String, n: Int): String {
+                    fun f (s: Stmt.Data, sup: String, l: List<Int>): String {
                         val id = sup + "_" + s.t.str.uppercase()
+                        //println(listOf(me.tk.pos, me.to_str()))
+                        assert(l.size <= 6)
+                        var n = 0
+                        var k = 25
+                        for (i in 0..l.size-1) {
+                            n += l[i] shl k
+                            k -= 5
+                        }
                         return """
-                            #define MAR_TAG$id 0
-                        """ + s.subs!!.map {
-                            f(it, id, n)
+                            #define MAR_TAG$id $n
+                        """ + s.subs!!.mapIndexed { i,ss ->
+                            f(ss, id, l + listOf(i+1))
                         }.joinToString("")
                     }
                     fun g (s: Stmt.Data, I: Int): String {
@@ -189,7 +197,7 @@ fun coder_types (pre: Boolean): String {
                             g(it, I+tup.ts.size)
                         }.joinToString("")
                     }
-                    listOf (f(me, "", 0) + """
+                    listOf (f(me, "", listOf(G.datas++)) + """
                         typedef struct ${sup} {
                             union {
                                 struct {
@@ -333,7 +341,13 @@ fun Stmt.coder (pre: Boolean): String {
                 } while (0);
                 if (MAR_EXCEPTION.tag == __MAR_EXCEPTION_NONE__) {
                     // no escape
-                } else if (MAR_EXCEPTION.tag == MAR_TAG_${this.tp!!.coder(pre).uppercase()}) {
+                } else if (
+                    ${this.tp.cond2({
+                        "mar_sup(MAR_TAG_${it.ts.coder(pre).uppercase()}, MAR_EXCEPTION.tag)"
+                    },{
+                        "true"
+                    })}
+                ) {
                     MAR_EXCEPTION.tag = __MAR_EXCEPTION_NONE__;
                 } else {
                     continue;
@@ -539,7 +553,7 @@ fun Expr.coder (pre: Boolean): String {
             }
         }
 
-        is Expr.Nat -> if (this.xtp == null) this.tk.str else {
+        is Expr.Nat -> if (this.xtp==null || this.xtp is Type.Prim) this.tk.str else {
             "MAR_CAST(${this.xtp!!.coder(pre)}, ${this.tk.str})"
         }
         is Expr.Acc -> this.tk_.coder(this, pre)
@@ -611,6 +625,21 @@ fun coder_main (pre: Boolean): String {
         
         #define MAR_CAST(tp,v) (*(tp*)({typeof(v) x=v; &x;}))
         
+        int mar_sup (uint32_t sup, uint32_t sub) {
+            //printf(">>> %X vs %X\n", sup, sub);
+            for (int i=5; i>=0; i--) {
+                uint32_t xsup = (sup & (0b11111<<(i*5)));
+                uint32_t xsub = (sub & (0b11111<<(i*5)));
+                //printf("\t[%d/%X] %X vs %X\n", i, (0b11111<<(i*5)), xsup, xsub);
+                if (xsup==0 || xsup==xsub) {
+                    // ok
+                } else {
+                    return 0;
+                }
+            }
+            return 1;
+        }
+        
         ${coder_types(pre)}
         
         #define __MAR_EXCEPTION_NONE__ -1
@@ -624,6 +653,9 @@ fun coder_main (pre: Boolean): String {
             do {
                 ${G.outer!!.coder(pre)}
             } while (0);
+            if (MAR_EXCEPTION.tag != __MAR_EXCEPTION_NONE__) {
+                puts("uncaught exception");
+            }
         }
     """
 }

@@ -149,6 +149,8 @@ object G {
 
     val defers: MutableMap<Any, Triple<MutableList<Int>,String,String>> = mutableMapOf()
 
+    var datas = 1
+
     /*
     var tags: MutableMap<String,Tk.Type> = mutableMapOf()
     val datas = mutableMapOf<String,List<Var_Type>>()
@@ -169,6 +171,8 @@ object G {
         //cons.clear()
         types.clear()
         defers.clear()
+
+        datas = 1
 
         /*
         tags.clear()
