@@ -1005,4 +1005,25 @@ class Exec  {
         assert(out == "10\n" +
                 "uncaught exception\n") { out }
     }
+
+    // ESCAPE
+
+    @Test
+    fun mm_01_escape () {
+        val out = test("""
+            data X.*: [] {
+                Y: []
+                Z: []
+            }
+            do X.Z {
+                do X.Y {
+                    escape(X.Z [])
+                    print(99)
+                }
+                print(99)
+            }
+            print(10)
+        """)
+        assert(out == "10\n") { out }
+    }
 }

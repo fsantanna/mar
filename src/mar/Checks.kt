@@ -41,9 +41,12 @@ fun check_vars () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Data -> {
-                val s = me.xup!!.walk(listOf(me.t))?.first
-                if (s!=null && s!=me) {
-                    err(me.tk, "type error : data \"${me.t.str}\" is already declared")
+                val up = me.xup!!
+                if (up !is Stmt.Data) {
+                    val s = up.walk(listOf(me.t))?.first
+                    if (s!=null && s!=me) {
+                        err(me.tk, "type error : data \"${me.t.str}\" is already declared")
+                    }
                 }
                 if (me.subs != null) {
                     for (sub in me.subs) {
@@ -68,6 +71,20 @@ fun check_vars () {
                         val (_,id,_) = err
                         err(id, "declaration error : variable \"${id.str}\" is already declared")
                     }
+                }
+            }
+            is Stmt.Escape -> {
+                val dos = me.ups_until { it is Stmt.Proto }
+                    .filter {
+                        it is Stmt.Block && it.esc!=null && it.esc.ts.let {
+                            it.map { it.str }.zip(me.e.ts.map { it.str }).all { (a,b) ->
+                                a == b
+                            }
+                        }
+                    }
+                if (dos.size == 0) {
+                    err(me.tk, "escape error : expected matching enclosing block")
+
                 }
             }
             else -> {}
@@ -114,6 +131,14 @@ fun check_types () {
                 //if (me.tp.in)) {
                     //err(me.tk, "declaration error : types mismatch")
                 //}
+            }
+            is Stmt.Block -> {
+                if (me.esc != null) {
+                    val xxx = me.esc.walk()
+                    if (xxx==null || xxx.first.subs==null) {
+                        err(me.esc.tk, "block error : expected hierarchical data type")
+                    }
+                }
             }
             is Stmt.Return -> {
                 val out = me.up_first { it is Stmt.Proto.Func || it is Stmt.Proto.Coro}.let {

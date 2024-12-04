@@ -900,6 +900,15 @@ class Parser {
                 "print(x)\n" +
                 "}\n") { ss.to_str() }
     }
+    @Test
+    fun ll_05_catch () {
+        G.tks = ("catch X { throw(X[]) }").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "catch X {\n" +
+                "throw((X(([]))))\n" +
+                "}\n") { ss.to_str() }
+    }
 
     // DEFER
 
@@ -910,6 +919,18 @@ class Parser {
         val ss = parser_stmt()
         assert(ss.to_str() == "defer {\n" +
                 "print(1)\n" +
+                "}\n") { ss.to_str() }
+    }
+
+    // ESCAPE
+
+    @Test
+    fun nn_01_escaoe () {
+        G.tks = ("do X { escape(X[]) }").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "do X {\n" +
+                "escape((X(([]))))\n" +
                 "}\n") { ss.to_str() }
     }
 

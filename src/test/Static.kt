@@ -14,7 +14,7 @@ fun static (me: String): String? {
         val ss = parser_list(null, { accept_enu("Eof") }, {
             parser_stmt()
         }).flatten()
-        G.outer = Stmt.Block(tk0, ss)
+        G.outer = Stmt.Block(tk0, null, ss)
         cache_ups()
         check_vars()
         infer_types()
@@ -1602,5 +1602,96 @@ class Static {
             }
         """)
         assert(out == "anon : (lin 5, col 19) : type error : data \"X.Y\" is not declared") { out!! }
+    }
+
+    // ESCAPE
+
+    @Test
+    fun gg_01_escape_err () {
+        val out = static("""
+            data X: Int
+            do X {
+            }
+        """)
+        assert(out == "anon : (lin 3, col 16) : block error : expected hierarchical data type") { out!! }
+    }
+    @Test
+    fun gg_02_escape () {
+        val out = static("""
+            data X.*: [] {
+                X: []
+            }
+            do X.X {
+            }
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X.*: [] {\n" +
+                "X: [] {\n" +
+                "}\n" +
+                "}\n" +
+                "do X.X {\n" +
+                "}\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun gg_03_escape_err () {
+        val out = static("""
+            data X.*: [] {
+                X: []
+            }
+            do X.Y {
+            }
+        """)
+        assert(out == "anon : (lin 5, col 16) : type error : data \"X.Y\" is not declared") { out!! }
+    }
+    @Test
+    fun gg_04_escape_err () {
+        val out = static("""
+            data X.*: [] {
+                X: []
+            }
+            do X {
+                escape(X.Y[])
+            }
+        """)
+        assert(out == "anon : (lin 6, col 24) : constructor error : data \"X.Y\" is not declared") { out!! }
+    }
+    @Test
+    fun gg_05_escape_err () {
+        val out = static("""
+            data X.*: []
+            escape(X[])
+        """)
+        assert(out == "anon : (lin 3, col 13) : escape error : expected matching enclosing block") { out!! }
+    }
+    @Test
+    fun gg_06_escape_err () {
+        val out = static("""
+            data X.*: []
+            do X {
+                func f: () -> () {
+                    escape(X[])
+                }
+            }
+        """)
+        assert(out == "anon : (lin 5, col 21) : escape error : expected matching enclosing block") { out!! }
+    }
+    @Test
+    fun gg_07_escape () {
+        val out = static("""
+            data X.*: []
+            do X {
+                escape(X[])
+            }
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data X.*: [] {\n" +
+                "}\n" +
+                "do X {\n" +
+                "escape((X(([]:[]))))\n" +
+                "}\n" +
+                "}") { G.outer!!.to_str() }
     }
 }

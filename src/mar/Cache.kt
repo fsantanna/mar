@@ -19,7 +19,12 @@ fun cache_ups () {
             }
             is Stmt.Return -> me.e.xup = me
 
-            is Stmt.Block -> me.ss.forEach { it.xup = me }
+            is Stmt.Block -> {
+                if (me.esc != null) {
+                    me.esc.xup = me
+                }
+                me.ss.forEach { it.xup = me }
+            }
             is Stmt.Dcl -> {
                 if (me.xtp != null) {
                     me.xtp!!.xup = me
@@ -30,6 +35,9 @@ fun cache_ups () {
                 me.src.xup = me
             }
 
+            is Stmt.Escape -> {
+                me.e.xup = me
+            }
             is Stmt.Defer -> {
                 me.blk.xup = me
             }

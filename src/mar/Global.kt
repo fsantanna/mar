@@ -37,7 +37,7 @@ val BINS = listOf (
 val KEYWORDS: SortedSet<String> = (
     setOf (
         "break", "do", "catch", "coro", "create", "defer",
-        "data", "else", "exec", "false", "func", "if",
+        "data", "else", "escape", "exec", "false", "func", "if",
         "loop", "null", "print", "resume", "return", "set",
         "start", "throw", "true", "var", "yield",
     ).toSortedSet()
@@ -118,10 +118,11 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
         class Coro (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Coro.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
     }
 
-    class Block  (tk: Tk, val ss: List<Stmt>) : Stmt(G.N++, null, tk)
+    class Block  (tk: Tk, val esc: Type.Data?, val ss: List<Stmt>) : Stmt(G.N++, null, tk)
     class Dcl    (tk: Tk, val id: Tk.Var, var xtp: Type?) : Stmt(G.N++, null, tk)
     class Set    (tk: Tk, val dst: Expr, val src: Expr): Stmt(G.N++, null, tk)
 
+    class Escape (tk: Tk, val e: Expr.Cons): Stmt(G.N++, null, tk)
     class Defer  (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, null, tk)
     class Catch  (tk: Tk, val tp: Type.Data?, val blk: Stmt.Block): Stmt(G.N++, null, tk)
     class Throw  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
@@ -217,7 +218,7 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String, Int, Int
         val ss = parser_list(null, { accept_enu("Eof") }, {
             parser_stmt()
         }).flatten()
-        G.outer = Stmt.Block(tk0, ss)
+        G.outer = Stmt.Block(tk0, null, ss)
         cache_ups()
         check_vars()
         infer_types()

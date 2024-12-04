@@ -301,6 +301,17 @@ fun Stmt.coder (pre: Boolean): String {
                 ${G.defers[this.n].cond {
                     it.third
                 }}
+                if (MAR_EXCEPTION.tag != __MAR_EXCEPTION_NONE__) {
+                    continue;
+                }
+                // TODO: {this.check_aborted("continue")}
+                ${this.esc.cond { """
+                    if (mar_sup(MAR_TAG_${it.ts.coder(pre).uppercase()}, MAR_ESCAPE.tag)) {
+                        MAR_ESCAPE.tag = __MAR_ESCAPE_NONE__;   // caught escape: go ahead
+                    } else {
+                        continue;                               // uncaught escape: propagate up
+                    }
+                """ }}
             }
         """
         }
@@ -317,6 +328,11 @@ fun Stmt.coder (pre: Boolean): String {
             }
         }
 
+        is Stmt.Escape -> """
+            assert(sizeof(Escape) >= sizeof(${this.e.type().coder(pre)}));
+            MAR_ESCAPE = MAR_CAST(Escape, ${this.e.coder(pre)});
+            continue;            
+        """
         is Stmt.Defer -> {
             val bup = this.up_first { it is Stmt.Block } as Stmt.Block
             val (ns,ini,end) = G.defers.getOrDefault(bup.n, Triple(mutableListOf(),"",""))
@@ -642,7 +658,14 @@ fun coder_main (pre: Boolean): String {
         
         ${coder_types(pre)}
         
-        #define __MAR_EXCEPTION_NONE__ -1
+        #define __MAR_ESCAPE_NONE__ 0
+        typedef struct Escape {
+            int tag;
+            char _[100];
+        } Escape;
+        Escape MAR_ESCAPE = { __MAR_ESCAPE_NONE__ };
+
+        #define __MAR_EXCEPTION_NONE__ 0
         typedef struct Exception {
             int tag;
             char _[100];

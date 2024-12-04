@@ -6,10 +6,11 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
         is Stmt.Proto  -> this.blk.dn_collect_pos(fs,fe,ft) + this.tp.dn_collect_pos(ft)
         is Stmt.Return -> this.e.dn_collect_pos(fe,ft)
 
-        is Stmt.Block -> this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
+        is Stmt.Block -> (this.esc?.dn_collect_pos(ft) ?: emptyList()) + this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
         is Stmt.Dcl -> this.xtp?.dn_collect_pos(ft) ?: emptyList()
         is Stmt.Set -> this.src.dn_collect_pos(fe,ft) + this.dst.dn_collect_pos(fe,ft)
 
+        is Stmt.Escape -> this.e.dn_collect_pos(fe,ft)
         is Stmt.Defer -> this.blk.dn_collect_pos(fs,fe,ft)
         is Stmt.Catch -> (this.tp?.dn_collect_pos(ft) ?: emptyList()) + this.blk.dn_collect_pos(fs,fe,ft)
         is Stmt.Throw -> this.e.dn_collect_pos(fe,ft)
@@ -82,10 +83,11 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
         is Stmt.Proto  -> this.blk.dn_collect_pre(fs,fe,ft) + this.tp.dn_collect_pre(ft)
         is Stmt.Return -> this.e.dn_collect_pre(fe,ft)
 
-        is Stmt.Block -> this.ss.map { it.dn_collect_pre(fs,fe,ft) }.flatten()
+        is Stmt.Block -> (this.esc?.dn_collect_pre(ft) ?: emptyList()) + this.ss.map { it.dn_collect_pre(fs,fe,ft) }.flatten()
         is Stmt.Dcl -> this.xtp?.dn_collect_pre(ft) ?: emptyList()
         is Stmt.Set -> this.dst.dn_collect_pre(fe,ft) + this.src.dn_collect_pre(fe,ft)
 
+        is Stmt.Escape -> this.e.dn_collect_pre(fe,ft)
         is Stmt.Defer -> this.blk.dn_collect_pre(fs,fe,ft)
         is Stmt.Catch -> (this.tp?.dn_collect_pre(ft) ?: emptyList()) + this.blk.dn_collect_pre(fs,fe,ft)
         is Stmt.Throw -> this.e.dn_collect_pre(fe,ft)
