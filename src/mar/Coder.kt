@@ -285,17 +285,19 @@ fun Stmt.coder (pre: Boolean): String {
             }.joinToString("")
             """
             { // BLOCK | ${this.dump()}
-                ${this.to_dcls().map { (_,id,tp) ->
-                    when (tp) {
-                        is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inps.map { it.coder(pre) }.joinToString(",") + ");\n"
-                        is Type.Proto.Coro -> "auto ${tp.x_sig(pre, id.str)};\n"
-                        else -> ""
-                    }
-                }.joinToString("")}
                 ${G.defers[this.n].cond {
                     it.second
                 }}
-                $body
+                do {
+                    ${this.to_dcls().map { (_,id,tp) ->
+                        when (tp) {
+                            is Type.Proto.Func -> "auto " + tp.out.coder(pre) + " " + id.str + " (" + tp.inps.map { it.coder(pre) }.joinToString(",") + ");\n"
+                            is Type.Proto.Coro -> "auto ${tp.x_sig(pre, id.str)};\n"
+                            else -> ""
+                        }
+                    }.joinToString("")}
+                    $body
+                } while (0);
                 ${G.defers[this.n].cond {
                     it.third
                 }}
@@ -336,9 +338,7 @@ fun Stmt.coder (pre: Boolean): String {
         is Stmt.Catch -> {
             """
             { // CATCH | ${this.dump()}
-                do {
-                    ${this.blk.coder(pre)}
-                } while (0);
+                ${this.blk.coder(pre)}
                 if (MAR_EXCEPTION.tag == __MAR_EXCEPTION_NONE__) {
                     // no escape
                 } else if (

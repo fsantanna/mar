@@ -976,4 +976,33 @@ class Exec  {
         """)
         assert(out == "1\n4\n3\n2\n") { out }
     }
+    @Test
+    fun ll_02_defer () {
+        val out = test("""
+            print(1)
+            defer { print(2) }
+            do {
+                defer { print(3) }
+                defer { print(4) }
+            }
+            defer { print(5) }
+            print(6)
+        """)
+        assert(out == "1\n4\n3\n6\n5\n2\n") { out }
+    }
+    @Test
+    fun ll_03_defer () {
+        val out = test("""
+            data X.*: []
+            do {
+                defer {
+                    print(10)
+                }
+                throw(X[])
+                print(99)
+            }
+        """)
+        assert(out == "10\n" +
+                "uncaught exception\n") { out }
+    }
 }
