@@ -248,21 +248,23 @@ fun Stmt.coder (pre: Boolean): String {
                 is Stmt.Proto.Coro -> this.tp_.x_sig(pre, this.id.str)
             } + """
             {
-                ${(this is Stmt.Proto.Coro).cond {
-                    this as Stmt.Proto.Coro
-                    """                    
-                    switch (mar_exe->pc) {
-                        case 0:
-                            ${this.tp_.inps_.mapIndexed { i,vtp ->
-                                vtp.first.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n"
-                            }.joinToString("")}
-                """ }}
-                ${this.blk.ss.map {
-                    it.coder(pre) + "\n"
-                }.joinToString("")}
-                ${(this is Stmt.Proto.Coro).cond { """
-                    }
-                """ }}
+                do {
+                    ${(this is Stmt.Proto.Coro).cond {
+                        this as Stmt.Proto.Coro
+                        """                    
+                        switch (mar_exe->pc) {
+                            case 0:
+                                ${this.tp_.inps_.mapIndexed { i,vtp ->
+                                    vtp.first.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n"
+                                }.joinToString("")}
+                    """ }}
+                    ${this.blk.ss.map {
+                        it.coder(pre) + "\n"
+                    }.joinToString("")}
+                    ${(this is Stmt.Proto.Coro).cond { """
+                        }
+                    """ }}
+                } while (0);
             }
             """
         }
@@ -359,7 +361,9 @@ fun Stmt.coder (pre: Boolean): String {
         is Stmt.Catch -> {
             """
             { // CATCH | ${this.dump()}
-                ${this.blk.coder(pre)}
+                do {
+                    ${this.blk.coder(pre)}
+                } while (0);
                 if (MAR_EXCEPTION.tag == __MAR_EXCEPTION_NONE__) {
                     // no escape
                 } else if (
@@ -669,9 +673,9 @@ fun coder_main (pre: Boolean): String {
         
         ${coder_types(pre)}
         
-        #define __MAR_ESCAPE_NONE__   0
-        #define MAR_TAG__RETURN_    1
-        #define MAR_TAG__BREAK_     2
+        #define __MAR_ESCAPE_NONE__  0
+        #define MAR_TAG__RETURN_     1
+        #define MAR_TAG__BREAK_      2
         typedef struct Escape {
             int tag;
             char _[100];
