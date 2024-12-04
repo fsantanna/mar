@@ -534,7 +534,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val blk = parser_list(null, "}") {
                 parser_stmt()
             }.flatten()
-            listOf(Stmt.Loop(tk0, Stmt.Block(tk0, null, blk)))
+            listOf(Stmt.Loop(tk0, Stmt.Block(tk0, Type.Data(tk0, listOf(Tk.Type("_Break_",tk0.pos.copy()))), blk)))
         }
         accept_fix("break") -> listOf(Stmt.Break(G.tk0 as Tk.Fix))
 

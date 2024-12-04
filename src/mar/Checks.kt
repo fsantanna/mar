@@ -109,6 +109,9 @@ fun check_vars () {
     fun ft (me: Type) {
         when (me) {
             is Type.Data -> {
+                if (me.ts.first().str.let { it=="_Break_"||it=="_Escape_" }) {
+                    return
+                }
                 val v = me.walk()
                 if (v == null) {
                     err(me.tk, "type error : data \"${me.to_str()}\" is not declared")
@@ -134,6 +137,9 @@ fun check_types () {
             }
             is Stmt.Block -> {
                 if (me.esc != null) {
+                    if (me.esc.ts.first().str.let { it=="_Break_"||it=="_Escape_" }) {
+                        return
+                    }
                     val xxx = me.esc.walk()
                     if (xxx==null || xxx.first.subs==null) {
                         err(me.esc.tk, "block error : expected hierarchical data type")

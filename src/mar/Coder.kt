@@ -306,8 +306,13 @@ fun Stmt.coder (pre: Boolean): String {
                 }
                 // TODO: {this.check_aborted("continue")}
                 ${this.esc.cond { """
-                    if (mar_sup(MAR_TAG_${it.ts.coder(pre).uppercase()}, MAR_ESCAPE.tag)) {
+                    if (MAR_ESCAPE.tag == __MAR_ESCAPE_NONE__) {
+                        // no escape
+                    } else if (mar_sup(MAR_TAG_${it.ts.coder(pre).uppercase()}, MAR_ESCAPE.tag)) {
                         MAR_ESCAPE.tag = __MAR_ESCAPE_NONE__;   // caught escape: go ahead
+                        ${(it.ts.first().str == "_Break_").cond { """
+                            goto MAR_LOOP_STOP_${this.xup!!.n};
+                        """ }}
                     } else {
                         continue;                               // uncaught escape: propagate up
                     }
@@ -385,11 +390,17 @@ fun Stmt.coder (pre: Boolean): String {
             }
         """
         is Stmt.Loop   -> """
-            while (1) {
+            // LOOP | ${this.dump()}
+            MAR_LOOP_START_${this.n}:
                 ${this.blk.coder(pre)}
-            }
+                goto MAR_LOOP_START_${this.n};
+                MAR_LOOP_STOP_${this.n}:
         """
-        is Stmt.Break -> "break;"
+        is Stmt.Break -> """
+            // BREAK | ${this.dump()}
+            MAR_ESCAPE.tag = MAR_TAG__BREAK_;
+            continue;
+        """
 
         is Stmt.Print  -> {
             fun aux (tp: Type, v: String): String {
@@ -658,7 +669,9 @@ fun coder_main (pre: Boolean): String {
         
         ${coder_types(pre)}
         
-        #define __MAR_ESCAPE_NONE__ 0
+        #define __MAR_ESCAPE_NONE__   0
+        #define MAR_TAG__RETURN_    1
+        #define MAR_TAG__BREAK_     2
         typedef struct Escape {
             int tag;
             char _[100];
