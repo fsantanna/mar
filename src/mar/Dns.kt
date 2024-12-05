@@ -4,7 +4,6 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
     return when (this) {
         is Stmt.Data   -> this.tp.dn_collect_pos(ft) + (this.subs?.map { it.dn_collect_pos(fs,fe,ft) }?.flatten() ?: emptyList())
         is Stmt.Proto  -> this.blk.dn_collect_pos(fs,fe,ft) + this.tp.dn_collect_pos(ft)
-        is Stmt.Return -> this.e.dn_collect_pos(fe,ft)
 
         is Stmt.Block -> (this.esc?.dn_collect_pos(ft) ?: emptyList()) + this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
         is Stmt.Dcl -> this.xtp?.dn_collect_pos(ft) ?: emptyList()
@@ -17,7 +16,6 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
 
         is Stmt.If    -> this.cnd.dn_collect_pos(fe,ft) + this.t.dn_collect_pos(fs,fe,ft) + this.f.dn_collect_pos(fs,fe,ft)
         is Stmt.Loop  -> this.blk.dn_collect_pos(fs,fe,ft)
-        is Stmt.Break -> emptyList()
 
         is Stmt.Print -> this.e.dn_collect_pos(fe,ft)
         is Stmt.XExpr -> this.e.dn_collect_pos(fe,ft)
@@ -81,7 +79,6 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
     return v + when (this) {
         is Stmt.Data   -> this.tp.dn_collect_pre(ft) + (this.subs?.map { it.dn_collect_pre(fs,fe,ft) }?.flatten() ?: emptyList())
         is Stmt.Proto  -> this.blk.dn_collect_pre(fs,fe,ft) + this.tp.dn_collect_pre(ft)
-        is Stmt.Return -> this.e.dn_collect_pre(fe,ft)
 
         is Stmt.Block -> (this.esc?.dn_collect_pre(ft) ?: emptyList()) + this.ss.map { it.dn_collect_pre(fs,fe,ft) }.flatten()
         is Stmt.Dcl -> this.xtp?.dn_collect_pre(ft) ?: emptyList()
@@ -94,7 +91,6 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
 
         is Stmt.If    -> this.cnd.dn_collect_pre(fe,ft) + this.t.dn_collect_pre(fs,fe,ft) + this.f.dn_collect_pre(fs,fe,ft)
         is Stmt.Loop  -> this.blk.dn_collect_pre(fs,fe,ft)
-        is Stmt.Break -> emptyList()
 
         is Stmt.Print -> this.e.dn_collect_pre(fe,ft)
         is Stmt.XExpr -> this.e.dn_collect_pre(fe,ft)

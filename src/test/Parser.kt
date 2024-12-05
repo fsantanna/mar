@@ -327,8 +327,9 @@ class Parser {
     fun ee_05_return() {
         G.tks = ("return(10)").lexer()
         parser_lexer()
-        val e = parser_stmt().first()
-        assert(e.to_str() == "return(10)") { e.to_str() }
+        val ss = parser_stmt()
+        assert(ss.to_str() == "set ```mar_ret``` = 10\n" +
+                "escape((Return(([]))))\n") { ss.to_str() }
     }
     @Test
     fun ee_06_return_Err() {
@@ -505,8 +506,8 @@ class Parser {
         G.tks = ("loop { break }").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Loop && s.blk.ss.size==1 && s.blk.ss.first() is Stmt.Break)
-        assert(s.to_str() == "loop {\nbreak\n}") { s.to_str() }
+        assert(s is Stmt.Loop && s.blk.ss.size==1 && s.blk.ss.first() is Stmt.Escape)
+        assert(s.to_str() == "loop {\nescape((Break(([]))))\n}") { s.to_str() }
     }
 
     // TUPLE

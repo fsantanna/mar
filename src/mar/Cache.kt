@@ -17,7 +17,6 @@ fun cache_ups () {
                     is Stmt.Proto.Coro -> me.tp_.xup = me
                 }
             }
-            is Stmt.Return -> me.e.xup = me
 
             is Stmt.Block -> {
                 if (me.esc != null) {
@@ -59,7 +58,6 @@ fun cache_ups () {
             is Stmt.Loop -> {
                 me.blk.xup = me
             }
-            is Stmt.Break -> {}
 
             is Stmt.Print -> me.e.xup = me
             is Stmt.XExpr -> me.e.xup = me

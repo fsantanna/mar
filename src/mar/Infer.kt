@@ -38,10 +38,6 @@ fun Expr.infer (): Type? {
             val i = up.args.indexOfFirst { it == this }
             (up.f.type() as Type.Proto.Func).inps[i]
         }
-        is Stmt.Return -> {
-            assert(up.e == this)
-            (up.up_first { it is Stmt.Proto.Func } as Stmt.Proto.Func).tp.out
-        }
         is Expr.Start -> {
             val i = up.args.indexOfFirst { it == this }
             (up.exe.type() as Type.Exec).inps[i]
@@ -105,6 +101,7 @@ fun infer_types () {
                 if (me.xtp == null) {
                     val up = me.xup!!
                     me.xtp = when {
+                        (me.tk.str == "mar_ret") -> (me.up_first { it is Stmt.Proto } as Stmt.Proto).tp.out
                         (up is Expr.Call && up.f==me)   -> null
                         (up is Stmt.Set  && up.dst==me) -> null
                         else -> me.infer().let {

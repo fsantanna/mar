@@ -112,7 +112,6 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
 
 sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Data   (tk: Tk, val t: Tk.Type, val tp: Type, val subs: List<Stmt.Data>?): Stmt(G.N++, null, tk)
-    class Return (tk: Tk, val e: Expr) : Stmt(G.N++, null, tk)
     sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, null, tk) {
         class Func (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
         class Coro (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Coro.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
@@ -129,7 +128,6 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
 
     class If     (tk: Tk, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, null, tk)
     class Loop   (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, null, tk)
-    class Break  (tk: Tk): Stmt(G.N++, null, tk)
 
     class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
     class XExpr  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
@@ -218,7 +216,10 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String, Int, Int
         val ss = parser_list(null, { accept_enu("Eof") }, {
             parser_stmt()
         }).flatten()
-        G.outer = Stmt.Block(tk0, null, ss)
+        G.outer = Stmt.Block(tk0, null, listOf(
+            Stmt.Data(tk0, Tk.Type("Return", tk0.pos.copy()), Type.Tuple(tk0, emptyList()), emptyList()),
+            Stmt.Data(tk0, Tk.Type("Break", tk0.pos.copy()), Type.Tuple(tk0, emptyList()), emptyList()),
+        ) + ss)
         cache_ups()
         check_vars()
         infer_types()

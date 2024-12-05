@@ -14,7 +14,10 @@ fun static (me: String): String? {
         val ss = parser_list(null, { accept_enu("Eof") }, {
             parser_stmt()
         }).flatten()
-        G.outer = Stmt.Block(tk0, null, ss)
+        G.outer = Stmt.Block(tk0, null, listOf(
+                Stmt.Data(tk0, Tk.Type("Return", tk0.pos.copy()), Type.Tuple(tk0, emptyList()), emptyList()),
+                Stmt.Data(tk0, Tk.Type("Break", tk0.pos.copy()), Type.Tuple(tk0, emptyList()), emptyList()),
+        ) + ss)
         cache_ups()
         check_vars()
         infer_types()
@@ -168,7 +171,7 @@ class Static {
                 }
             ;;}
         """)
-        assert(out == "anon : (lin 4, col 21) : return error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 21) : set error : types mismatch") { out!! }
     }
     @Test
     fun bb_05_func_nested_ok() {
@@ -644,6 +647,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data A: <B:<C:()>>\n" +
                 "var c: A\n" +
                 "set c = (A.B.C(()))\n" +
@@ -668,6 +675,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data B: <T:(),F:()>\n" +
                 "var b: B\n" +
                 "}") { G.outer!!.to_str() }
@@ -769,6 +780,10 @@ class Static {
         //assert(out == "anon : (lin 4, col 13) : inference error : unknown type") { out!! }
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X: <A:[a:Int]>\n" +
                 "var x: X\n" +
                 "set x = (X.A(([10]:[a:Int])))\n" +
@@ -795,6 +810,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X: <A:[a:Int]>\n" +
                 "var x: X\n" +
                 "set x = (X.A(([10]:[a:Int])))\n" +
@@ -812,6 +831,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X: <A:<B:Int>>\n" +
                 "var x: X\n" +
                 "set x = (X.A.B(10))\n" +
@@ -839,6 +862,10 @@ class Static {
         //assert(out == "anon : (lin 4, col 20) : predicate error : types mismatch") { out!! }
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data B: <T:[],F:[]>\n" +
                 "var b: B\n" +
                 "set b = (B.T(([]:[])))\n" +
@@ -926,6 +953,10 @@ class Static {
         //assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [a:Int] {\n" +
                 "Y: [] {\n" +
                 "}\n" +
@@ -944,6 +975,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [a:Int] {\n" +
                 "Y: [] {\n" +
                 "}\n" +
@@ -963,6 +998,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [a:Int] {\n" +
                 "Y: [] {\n" +
                 "}\n" +
@@ -984,6 +1023,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [a:Int] {\n" +
                 "Y: [] {\n" +
                 "}\n" +
@@ -1005,6 +1048,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [a:Int] {\n" +
                 "Y: [] {\n" +
                 "}\n" +
@@ -1050,6 +1097,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data A.*: [a:Bool] {\n" +
                 "B: [b:Int] {\n" +
                 "C: [c:Char] {\n" +
@@ -1074,6 +1125,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [a:Int] {\n" +
                 "Y: [] {\n" +
                 "}\n" +
@@ -1101,6 +1156,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data A.*: [x:Int] {\n" +
                 "B: [y:Int] {\n" +
                 "C: [Int] {\n" +
@@ -1122,6 +1181,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [Int] {\n" +
                 "}\n" +
                 "var x: X\n" +
@@ -1145,6 +1208,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [Int] {\n" +
                 "Y: [] {\n" +
                 "}\n" +
@@ -1185,6 +1252,10 @@ class Static {
          """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [x:Int] {\n" +
                 "Y: [] {\n" +
                 "A: [a:Int] {\n" +
@@ -1218,6 +1289,10 @@ class Static {
         //assert(out == "anon : (lin 5, col 13) : type error : data \"X.Y\" is not extendable") { out!! }
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [Int] {\n" +
                 "Y: [] {\n" +
                 "A: [Int] {\n" +
@@ -1245,6 +1320,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data A.*: [] {\n" +
                 "B: [Int] {\n" +
                 "}\n" +
@@ -1264,6 +1343,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "var r: Int\n" +
                 "set r = 10\n" +
                 "}") { G.outer!!.to_str() }
@@ -1282,6 +1365,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "var x: [Int,Int]\n" +
                 "set x = ([10,10]:[Int,Int])\n" +
                 "}") { G.outer!!.to_str() }
@@ -1293,6 +1380,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "var x: <Int,()>\n" +
                 "set x = <.1=10>:<Int,()>\n" +
                 "}") { G.outer!!.to_str() }
@@ -1305,6 +1396,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "coro genFunc: () -> () -> () -> () {\n" +
                 "}\n" +
                 "var genObj: exec () -> () -> () -> ()\n" +
@@ -1321,8 +1416,13 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "func f: (v: [Int,Int]) -> Int {\n" +
-                "return(((v.1) + (v.2)))\n" +
+                "set ```mar_ret```: Int = ((v.1) + (v.2))\n" +
+                "escape((Return(([]:[]))))\n" +
                 "}\n" +
                 "var x: Int\n" +
                 "set x = (f(([10,20]:[Int,Int])))\n" +
@@ -1337,6 +1437,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "func f: (v: <(),Int>) -> () {\n" +
                 "}\n" +
                 "var x: ()\n" +
@@ -1353,8 +1457,13 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "func f: () -> <(),Int> {\n" +
-                "return(<.1=()>:<(),Int>)\n" +
+                "set ```mar_ret```: <(),Int> = <.1=()>:<(),Int>\n" +
+                "escape((Return(([]:[]))))\n" +
                 "}\n" +
                 "var x: <(),Int>\n" +
                 "set x = (f())\n" +
@@ -1370,6 +1479,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "coro co: (v: <(),Int>) -> () -> () -> () {\n" +
                 "}\n" +
                 "var exe: exec (<(),Int>) -> () -> () -> ()\n" +
@@ -1388,6 +1501,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "coro co: () -> <(),Int> -> () -> () {\n" +
                 "}\n" +
                 "var exe: exec () -> <(),Int> -> () -> ()\n" +
@@ -1407,6 +1524,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "coro co: () -> () -> <(),Int> -> () {\n" +
                 "var x: ()\n" +
                 "set x = yield(<.1=()>:<(),Int>)\n" +
@@ -1432,6 +1553,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data A: Int\n" +
                 "data B: Int\n" +
                 "data C: Int\n" +
@@ -1485,6 +1610,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data Res: <Err:(),Ok:Int>\n" +
                 "var r: Res\n" +
                 "set r = (Res(<.Ok=10>:<Err:(),Ok:Int>))\n" +
@@ -1498,6 +1627,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data Pos: [x:Int,y:Int]\n" +
                 "var r: Pos\n" +
                 "set r = (Pos(([10,20]:[x:Int,y:Int])))\n" +
@@ -1520,6 +1653,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X: [x:[a:Int]]\n" +
                 "var x: X\n" +
                 "set x = (X(([([10]:[a:Int])]:[x:[a:Int]])))\n" +
@@ -1536,6 +1673,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X: <A:[a:Int]>\n" +
                 "var x: X\n" +
                 "set x = (X.A(([10]:[a:Int])))\n" +
@@ -1557,6 +1698,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "var x: Int\n" +
                 "set x = ```10```: Int\n" +
                 "}") { G.outer!!.to_str() }
@@ -1584,6 +1729,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [] {\n" +
                 "X: [] {\n" +
                 "}\n" +
@@ -1626,6 +1775,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [] {\n" +
                 "X: [] {\n" +
                 "}\n" +
@@ -1687,6 +1840,10 @@ class Static {
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
                 "data X.*: [] {\n" +
                 "}\n" +
                 "do X {\n" +

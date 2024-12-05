@@ -406,19 +406,27 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val ss = parser_list(null, "}") {
                 parser_stmt()
             }.flatten()
+            val esc = Type.Data(tk0, listOf(Tk.Type("Return",tk0.pos.copy())))
             when (tp) {
                 is Type.Proto.Func.Vars ->
-                    Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk, null, ss))
+                    Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk, esc, ss))
                 is Type.Proto.Coro.Vars ->
-                    Stmt.Proto.Coro(tk0, id, tp, Stmt.Block(tp.tk, null, ss))
+                    Stmt.Proto.Coro(tk0, id, tp, Stmt.Block(tp.tk, esc, ss))
                 else -> error("impossible case")
             }.let { listOf(it) }
         }
         accept_fix("return") -> {
-            val tk0 = G.tk0 as Tk.Fix
+            val tk0 = G.tk0!!
             check_fix_err("(")
             val e = parser_expr()
-            listOf(Stmt.Return(tk0, e))
+            listOf (
+                Stmt.Set(tk0,
+                    Expr.Nat(Tk.Nat("mar_ret", tk0.pos.copy()), null),
+                    e),
+                Stmt.Escape(tk0,
+                    Expr.Cons(tk0, listOf(Tk.Type("Return", tk0.pos.copy())),
+                        Expr.Tuple(tk0,null, emptyList())))
+            )
         }
 
         accept_fix("do") -> {
@@ -534,9 +542,16 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val blk = parser_list(null, "}") {
                 parser_stmt()
             }.flatten()
-            listOf(Stmt.Loop(tk0, Stmt.Block(tk0, Type.Data(tk0, listOf(Tk.Type("_Break_",tk0.pos.copy()))), blk)))
+            listOf(Stmt.Loop(tk0, Stmt.Block(tk0, Type.Data(tk0, listOf(Tk.Type("Break",tk0.pos.copy()))), blk)))
         }
-        accept_fix("break") -> listOf(Stmt.Break(G.tk0 as Tk.Fix))
+        accept_fix("break") -> {
+            val tk0 = G.tk0!!
+            listOf (
+                Stmt.Escape(tk0,
+                    Expr.Cons(tk0, listOf(Tk.Type("Break", tk0.pos.copy())),
+                        Expr.Tuple(tk0,null, emptyList())))
+            )
+        }
 
         (set!=null && accept_fix("create")) -> {
             val tk0 = G.tk0 as Tk.Fix

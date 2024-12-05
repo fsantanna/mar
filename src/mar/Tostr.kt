@@ -127,7 +127,6 @@ fun Stmt.to_str (pre: Boolean = false): String {
         }
         is Stmt.Proto.Func -> "func " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Proto.Coro -> "coro " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
-        is Stmt.Return -> "return(" + this.e.to_str(pre) + ")"
         is Stmt.Block  -> "do " + this.esc.cond { it.to_str(pre)+" " } + "{\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
         is Stmt.Dcl    -> "var ${this.id.str}" + this.xtp.cond { ": ${it.to_str()}" }
         is Stmt.Set    -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
@@ -137,7 +136,6 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Throw  -> "throw(" + this.e.to_str(pre) + ")"
         is Stmt.If     -> "if " + this.cnd.to_str(pre) + " {\n" + this.t.ss.to_str(pre) + "} else {\n" + this.f.ss.to_str(pre) + "}"
         is Stmt.Loop   -> "loop {\n" + this.blk.ss.to_str(pre) + "}"
-        is Stmt.Break  -> "break"
         is Stmt.Print  -> "print(" + this.e.to_str(pre) + ")"
         is Stmt.XExpr  -> this.e.to_str(pre)
         is Stmt.Nat    -> this.tk.str.let { if (it.contains("\n")) "```"+it+"```" else "`"+it+"`" }

@@ -248,6 +248,7 @@ fun Stmt.coder (pre: Boolean): String {
                 is Stmt.Proto.Coro -> this.tp_.x_sig(pre, this.id.str)
             } + """
             {
+                ${this.tp.out.coder(pre)} mar_ret;
                 do {
                     ${(this is Stmt.Proto.Coro).cond {
                         this as Stmt.Proto.Coro
@@ -265,20 +266,17 @@ fun Stmt.coder (pre: Boolean): String {
                         }
                     """ }}
                 } while (0);
-            }
-            """
-        }
-        is Stmt.Return -> {
-            this.up_first { it is Stmt.Proto.Func || it is Stmt.Proto.Coro}.let {
-                when {
-                    (it is Stmt.Proto.Func) -> "return (" + this.e.coder(pre) + ");"
-                    (it is Stmt.Proto.Coro) -> {
-                        val (xuni,_) = it.tp_.x_out_uni(pre)
-                        "return ($xuni) { .tag=2, ._2=${this.e.coder(pre)} };"
+                ${when {
+                    (this is Stmt.Proto.Func) -> "return mar_ret;"
+                    (this is Stmt.Proto.Coro) -> {
+                        val (xuni,_) = this.tp_.x_out_uni(pre)
+                        "return ($xuni) { .tag=2, ._2=mar_ret };"
                     }
                     else -> error("impossible case")
-                }
+                }}
+                
             }
+            """
         }
 
         is Stmt.Block  -> {
@@ -312,7 +310,7 @@ fun Stmt.coder (pre: Boolean): String {
                         // no escape
                     } else if (mar_sup(MAR_TAG_${it.ts.coder(pre).uppercase()}, MAR_ESCAPE.tag)) {
                         MAR_ESCAPE.tag = __MAR_ESCAPE_NONE__;   // caught escape: go ahead
-                        ${(it.ts.first().str == "_Break_").cond { """
+                        ${(it.ts.first().str == "Break").cond { """
                             goto MAR_LOOP_STOP_${this.xup!!.n};
                         """ }}
                     } else {
@@ -336,7 +334,6 @@ fun Stmt.coder (pre: Boolean): String {
         }
 
         is Stmt.Escape -> """
-            assert(sizeof(Escape) >= sizeof(${this.e.type().coder(pre)}));
             MAR_ESCAPE = MAR_CAST(Escape, ${this.e.coder(pre)});
             continue;            
         """
@@ -399,11 +396,6 @@ fun Stmt.coder (pre: Boolean): String {
                 ${this.blk.coder(pre)}
                 goto MAR_LOOP_START_${this.n};
                 MAR_LOOP_STOP_${this.n}:
-        """
-        is Stmt.Break -> """
-            // BREAK | ${this.dump()}
-            MAR_ESCAPE.tag = MAR_TAG__BREAK_;
-            continue;
         """
 
         is Stmt.Print  -> {
@@ -580,12 +572,15 @@ fun Expr.coder (pre: Boolean): String {
                 val vs = tup.vs.mapIndexed { i,(id,v) ->
                     "."+(id?.str ?: ("_"+(i+1))) + " = " + v.coder(pre)
                 }.joinToString(",")
-                "((${this.ts.first().str}) { MAR_TAG_${this.ts.coder(pre)}, $vs })"
+                "((${this.ts.first().str}) { .tag=MAR_TAG_${this.ts.coder(pre).uppercase()}, $vs })"
             }
         }
 
-        is Expr.Nat -> if (this.xtp==null || this.xtp is Type.Prim) this.tk.str else {
-            "MAR_CAST(${this.xtp!!.coder(pre)}, ${this.tk.str})"
+        is Expr.Nat -> when {
+            (this.xtp == null) -> this.tk.str
+            (this.xtp is Type.Prim) -> this.tk.str
+            (this.tk.str == "mar_ret") -> this.tk.str
+            else -> "MAR_CAST(${this.xtp!!.coder(pre)}, ${this.tk.str})"
         }
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> "_void_"
@@ -674,8 +669,6 @@ fun coder_main (pre: Boolean): String {
         ${coder_types(pre)}
         
         #define __MAR_ESCAPE_NONE__  0
-        #define MAR_TAG__RETURN_     1
-        #define MAR_TAG__BREAK_      2
         typedef struct Escape {
             int tag;
             char _[100];

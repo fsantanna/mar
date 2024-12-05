@@ -73,6 +73,11 @@ fun check_vars () {
                     }
                 }
             }
+            is Stmt.Set -> {
+                if (me.dst is Expr.Nat && me.dst.tk.str=="mar_ret") {
+                    me.dst.xtp = (me.up_first { it is Stmt.Proto } as Stmt.Proto).tp.out
+                }
+            }
             is Stmt.Escape -> {
                 val dos = me.ups_until { it is Stmt.Proto }
                     .filter {
@@ -84,7 +89,6 @@ fun check_vars () {
                     }
                 if (dos.size == 0) {
                     err(me.tk, "escape error : expected matching enclosing block")
-
                 }
             }
             else -> {}
@@ -109,9 +113,6 @@ fun check_vars () {
     fun ft (me: Type) {
         when (me) {
             is Type.Data -> {
-                if (me.ts.first().str.let { it=="_Break_"||it=="_Escape_" }) {
-                    return
-                }
                 val v = me.walk()
                 if (v == null) {
                     err(me.tk, "type error : data \"${me.to_str()}\" is not declared")
@@ -137,24 +138,10 @@ fun check_types () {
             }
             is Stmt.Block -> {
                 if (me.esc != null) {
-                    if (me.esc.ts.first().str.let { it=="_Break_"||it=="_Escape_" }) {
-                        return
-                    }
                     val xxx = me.esc.walk()
                     if (xxx==null || xxx.first.subs==null) {
                         err(me.esc.tk, "block error : expected hierarchical data type")
                     }
-                }
-            }
-            is Stmt.Return -> {
-                val out = me.up_first { it is Stmt.Proto.Func || it is Stmt.Proto.Coro}.let {
-                    when {
-                        (it is Stmt.Proto) -> it.tp.out
-                        else -> error("impossible case")
-                    }
-                }
-                if (!out.is_sup_of(me.e.type())) {
-                    err(me.tk, "return error : types mismatch")
                 }
             }
             is Stmt.Set -> {
