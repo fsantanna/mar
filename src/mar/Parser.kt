@@ -323,8 +323,10 @@ fun parser_expr_4_prim (): Expr {
 
 fun parser_expr_3_suf (xe: Expr? = null): Expr {
     val e = if (xe !== null) xe else parser_expr_4_prim()
-    val ok = listOf("[",".","(").any { accept_fix(it) } ||
-             listOf("\\","?","!").any { accept_op(it) }
+    val ok = G.tk0!!.pos.is_same_line(G.tk1!!.pos) && (
+        listOf("[",".","(").any { accept_fix(it) } ||
+        listOf("\\","?","!").any { accept_op(it) }
+    )
     if (!ok) {
         return e
     }
@@ -648,12 +650,11 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             listOf(Stmt.Print(tk0, e))
         }
 
-        accept_enu("Nat") -> listOf(Stmt.Nat(G.tk0 as Tk.Nat))
         else -> {
             val tk1 = G.tk1!!
-            val call = parser_expr_3_suf()
-            if (call is Expr.Call) {
-                listOf(Stmt.XExpr(call.tk, call))
+            val e = parser_expr_3_suf()
+            if (e is Expr.Nat || e is Expr.Call) {
+                listOf(Stmt.XExpr(e.tk, e))
             } else {
                 err_expected(tk1, "statement")
             }

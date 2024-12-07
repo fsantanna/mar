@@ -1421,7 +1421,7 @@ class Static {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "func f: (v: [Int,Int]) -> Int {\n" +
-                "set ```mar_ret```: Int = ((v.1) + (v.2))\n" +
+                "set `mar_ret`: Int = ((v.1) + (v.2))\n" +
                 "escape((Return(([]:[]))))\n" +
                 "}\n" +
                 "var x: Int\n" +
@@ -1462,7 +1462,7 @@ class Static {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "func f: () -> <(),Int> {\n" +
-                "set ```mar_ret```: <(),Int> = <.1=()>:<(),Int>\n" +
+                "set `mar_ret`: <(),Int> = <.1=()>:<(),Int>\n" +
                 "escape((Return(([]:[]))))\n" +
                 "}\n" +
                 "var x: <(),Int>\n" +
@@ -1563,14 +1563,14 @@ class Static {
                 "data D: Int\n" +
                 "coro co: (a: A) -> B -> C -> D {\n" +
                 "var x: B\n" +
-                "set x = yield(```x```: C)\n" +
+                "set x = yield(`x`: C)\n" +
                 "}\n" +
                 "var exe: exec (A) -> B -> C -> D\n" +
                 "set exe = create(co)\n" +
                 "var y: <C,D>\n" +
-                "set y = start exe(```x```: A)\n" +
+                "set y = start exe(`x`: A)\n" +
                 "var z: <C,D>\n" +
-                "set z = resume exe(```x```: B)\n" +
+                "set z = resume exe(`x`: B)\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -1703,7 +1703,7 @@ class Static {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "var x: Int\n" +
-                "set x = ```10```: Int\n" +
+                "set x = `10`: Int\n" +
                 "}") { G.outer!!.to_str() }
     }
 

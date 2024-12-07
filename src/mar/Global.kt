@@ -131,7 +131,6 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
 
     class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
     class XExpr  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
-    class Nat    (tk: Tk.Nat): Stmt(G.N++, null, tk)
 }
 
 object G {

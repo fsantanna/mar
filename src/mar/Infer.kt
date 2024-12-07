@@ -102,6 +102,7 @@ fun infer_types () {
                     val up = me.xup!!
                     me.xtp = when {
                         (me.tk.str == "mar_ret") -> (me.up_first { it is Stmt.Proto } as Stmt.Proto).tp.out
+                        (up is Stmt.XExpr) -> null
                         (up is Expr.Call && up.f==me)   -> null
                         (up is Stmt.Set  && up.dst==me) -> null
                         else -> me.infer().let {

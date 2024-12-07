@@ -328,7 +328,7 @@ class Parser {
         G.tks = ("return(10)").lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "set ```mar_ret``` = 10\n" +
+        assert(ss.to_str() == "set `mar_ret` = 10\n" +
                 "escape((Return(([]))))\n") { ss.to_str() }
     }
     @Test
@@ -600,7 +600,7 @@ class Parser {
         parser_lexer()
         //assert(trap { parser_stmt() } == "anon : (lin 2, col 23) : tuple error : missing field identifier")
         val s = parser_stmt().first()
-        assert(s.to_str() == "set ```x``` = ([.x=10,20])") { s.to_str() }
+        assert(s.to_str() == "set `x` = ([.x=10,20])") { s.to_str() }
     }
 
     // UNION
@@ -933,6 +933,23 @@ class Parser {
         assert(ss.to_str() == "do X {\n" +
                 "escape((X(([]))))\n" +
                 "}\n") { ss.to_str() }
+    }
+
+    // NAT
+
+    @Test
+    fun oo_01_nat () {
+        G.tks = ("`f`").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "`f`\n") { ss.to_str() }
+    }
+    @Test
+    fun oo_02_nat () {
+        G.tks = ("`f`([10])").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "(`f`(([10])))\n") { ss.to_str() }
     }
 
     // TEMPLATE

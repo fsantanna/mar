@@ -61,7 +61,6 @@ fun cache_ups () {
 
             is Stmt.Print -> me.e.xup = me
             is Stmt.XExpr -> me.e.xup = me
-            is Stmt.Nat -> {}
         }
     }
     fun fe (me: Expr) {

@@ -70,7 +70,9 @@ fun Tk.Op.to_str (pre: Boolean): String {
 
 fun Expr.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Expr.Nat    -> "```" + this.tk.str + "```" + this.xtp.cond { ": " + it.to_str(pre) }
+        is Expr.Nat    -> {
+            this.tk.str.let { if (it.contains("\n")) "```"+it+"```" else "`"+it+"`" } + this.xtp.cond { ": " + it.to_str(pre) }
+        }
         is Expr.Acc    -> this.ign.cond { "__" } + this.tk.str
         is Expr.Bool   -> this.tk.str
         is Expr.Char   -> this.tk.str
@@ -138,7 +140,6 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Loop   -> "loop {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Print  -> "print(" + this.e.to_str(pre) + ")"
         is Stmt.XExpr  -> this.e.to_str(pre)
-        is Stmt.Nat    -> this.tk.str.let { if (it.contains("\n")) "```"+it+"```" else "`"+it+"`" }
     }.let {
         when {
             !pre -> it
