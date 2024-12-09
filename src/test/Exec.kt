@@ -71,6 +71,23 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun bb_04_nat_infer() {
+        val out = test("""
+            ```
+            typedef struct T {
+                int v;
+            } T;
+            int f (T t) {
+                return t.v;
+            }
+            ```
+            data T: [Int]
+            var v: Int = `f`(T[10])
+            print(v)
+        """)
+        assert(out == "10\n") { out }
+    }
 
     // CALL / PRINT / IF / LOOP
 

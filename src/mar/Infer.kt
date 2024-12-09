@@ -9,6 +9,8 @@ fun Expr.typex (): Type? {
         } catch (e: Throwable) {
             null
         }
+    }.let {
+        if (it is Type.Any) null else it
     }
 }
 

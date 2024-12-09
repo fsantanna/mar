@@ -1723,6 +1723,13 @@ class Static {
                 "(`f`(([10]:[Int])))\n" +
                 "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun ef_04_infer_nat_err() {
+        val out = static("""
+            var v = `f`()
+        """)
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+    }
 
     // THROW / CATCH
 
