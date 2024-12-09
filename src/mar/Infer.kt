@@ -36,7 +36,10 @@ fun Expr.infer (): Type? {
         }
         is Expr.Call -> {
             val i = up.args.indexOfFirst { it == this }
-            (up.f.type() as Type.Proto.Func).inps[i]
+            val tp = up.f.type()
+            if (tp !is Type.Proto.Func) null else {
+                tp.inps[i]
+            }
         }
         is Expr.Start -> {
             val i = up.args.indexOfFirst { it == this }

@@ -1684,15 +1684,18 @@ class Static {
                 "set a = ((x!A).a)\n" +
                 "}") { G.outer!!.to_str() }
     }
+
+    // NAT
+
     @Test
-    fun ee_20_infer_nat_err () {
+    fun ef_01_infer_nat_err () {
         val out = static("""
             var x = `10`
         """)
         assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
     }
     @Test
-    fun ee_21_infer_nat () {
+    fun ef_02_infer_nat () {
         val out = static("""
             var x = `10`:Int
         """)
@@ -1704,6 +1707,20 @@ class Static {
                 "}\n" +
                 "var x: Int\n" +
                 "set x = `10`: Int\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ef_03_infer_nat () {
+        val out = static("""
+            `f`([10])
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "(`f`(([10]:[Int])))\n" +
                 "}") { G.outer!!.to_str() }
     }
 
