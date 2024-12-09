@@ -186,6 +186,22 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
             (x.isLetter() || x=='_') -> {
                 val id = x + read2While { a -> a.isLetterOrDigit() || a=='_' }
                 when {
+                    (id == "include") -> {
+                        val (_,x2) = read2()
+                        if (x2 != '(') {
+                            err(pos, "include error : expected \"(\"")
+                        }
+                        val f = read2Until(')')
+                        if (f == null) {
+                            err(pos, "include error : exoected \")\"")
+                        }
+                        val ff = f + ".mar"
+                        val h = FileX(ff)
+                        if (!h.exists()) {
+                            err(pos, "include error : file not found : $ff")
+                        }
+                        stack.addFirst(Lex(ff, 1, 1, 0, 0, PushbackReader(StringReader(h.readText()), 2)))
+                    }
                     KEYWORDS.contains(id) -> yield(Tk.Fix(id, pos))
                     x.isUpperCase() -> yield(Tk.Type(id, pos))
                     else -> yield(Tk.Var(id, pos))

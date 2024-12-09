@@ -230,4 +230,35 @@ class Lexer {
         assert(tks.next().let { it is Tk.Nat && it.pos.lin==3 && it.pos.col==1 && it.str==" {i\$jk} " })
         assert(trap { tks.next() } == "anon : (lin 4, col 1) : token error : unterminated \"`\"")
     }
+
+    // INCLUDE
+
+    @Test
+    fun hh_01_inc() {
+        val tks = """
+            before
+            include(test)
+            after
+        """.trimIndent().lexer()
+        assert(tks.next().let { it is Tk.Var && it.pos.file=="anon"     && it.pos.lin==1 && it.pos.col==1 && it.str == "before" })
+        assert(tks.next().let { it is Tk.Num && it.pos.file=="test.mar" && it.pos.lin==1 && it.pos.col==1 && it.str == "1" })
+        assert(tks.next().let { it is Tk.Num && it.pos.file=="test.mar" && it.pos.lin==2 && it.pos.col==1 && it.str == "2" })
+        assert(tks.next().let { it is Tk.Var && it.pos.file=="anon"     && it.pos.lin==3 && it.pos.col==1 && it.str == "after" })
+        assert(tks.next().let { it is Tk.Eof && it.pos.lin==3 && it.pos.col==6 })
+    }
+    @Test
+    fun hh_02_inc_err() {
+        val tks = ("include(").lexer()
+        assert(trap { tks.next() } == "anon : (lin 1, col 1) : include error : exoected \")\"")
+    }
+    @Test
+    fun hh_03_inc_err() {
+        val tks = ("include()").lexer()
+        assert(trap { tks.next() } == "anon : (lin 1, col 1) : include error : file not found : .mar")
+    }
+    @Test
+    fun hh_04_inc_err() {
+        val tks = ("include(\\x\\\\n)").lexer()
+        assert(trap { tks.next() } == "anon : (lin 1, col 1) : include error : file not found : \\x\\\\n.mar")
+    }
 }
