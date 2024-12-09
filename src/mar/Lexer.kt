@@ -68,26 +68,24 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
         }
     }
 
-    fun read2Until (f: (x: Char)->Boolean): String {
+    fun read2Until (f: (n: Int, x: Char)->Boolean): String? {
         var ret = ""
         while (true) {
             val (n,x) = read2()
             when {
-                iseof(n) -> {
-                    unread2(n)
-                    break
-                }
-                f(x) -> {
-                    ret += x
+                iseof(n) -> return null
+                f(n,x) -> {
+                    //ret += x
                     break
                 }
                 else -> ret += x
             }
+            assert(n != -1)
         }
         return ret
     }
-    fun read2Until (x: Char): String {
-        return read2Until { it == x }
+    fun read2Until (x: Char): String? {
+        return read2Until { _,c -> c == x }
     }
     fun read2While (f: (x: Char)->Boolean): String {
         var ret = ""
@@ -100,6 +98,7 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                     break
                 }
             }
+            assert(!iseof(n))
         }
         return ret
     }
@@ -119,7 +118,7 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                     if (x2 == ';') {
                         val x3 = ";;" + read2While(';')
                         if (x3 == ";;") {
-                            read2Until('\n')
+                            read2Until { n,c -> iseof(n) || c=='\n' }
                         } else {
                             var x4 = x3
                             outer@ while (true) {
@@ -132,7 +131,7 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                                     comms.addFirst(x4)
                                 }
                                 do {
-                                    if (read2Until(';').last() != ';') {
+                                    if (read2Until(';') == null) {
                                         break@outer
                                     }
                                     x4 = ";" + read2While(';')
@@ -203,18 +202,18 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
             (x == '`') -> {
                 val open = x + read2While('`')
                 var close = ""
-                val nat = read2Until {
-                    if (it == '`') {
-                        close = close + it
+                val nat = read2Until { _,c ->
+                    if (c == '`') {
+                        close = close + c
                     } else {
                         close = ""
                     }
                     (close == open)
                 }
-                if (open != close) {
+                if (nat == null) {
                     err(pos, "token error : unterminated \"$open\"")
                 }
-                yield(Tk.Nat(nat.dropLast(close.length), pos))
+                yield(Tk.Nat(nat.dropLast(close.length-1), pos))
             }
             (x == '\'') -> {
                 val (n2,x2) = read2()
@@ -237,12 +236,12 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
             (x == '"') -> {
                 var n = 0
                 var brk = false
-                val v = read2Until {
-                    brk = (it=='"' && n%2==0)
-                    n = if (it == '\\') n+1 else 0
+                val v = read2Until { _,c ->
+                    brk = (c=='"' && n%2==0)
+                    n = if (c == '\\') n+1 else 0
                     brk
                 }
-                if (!brk) {
+                if (v == null) {
                     err(pos, "token error : unterminated \"")
                 }
                 yield(Tk.Fix("#[", pos))

@@ -23,10 +23,9 @@ syn match   Type      '[A-Z][a-zA-Z0-9]\+'
 
 syn match   Statement '[\+\-\*\/\%\>\<\=\|\&\~]'
 
-syn keyword Statement break do coro create data defer else
-syn keyword Statement false func if loop null print resume
-syn keyword Statement return set start true var exec
-syn keyword Statement yield
+syn keyword Statement break do catch coro create data defer else exec
+syn keyword Statement escape false func if include loop null print
+syn keyword Statement resume return set start throw true var yield
 
 syn keyword Todo      TODO FIXME XXX
 syn region  String    start='"' end='"'
