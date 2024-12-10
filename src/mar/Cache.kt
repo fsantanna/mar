@@ -118,7 +118,7 @@ fun cache_ups () {
     }
     fun ft (me: Type) {
         when (me) {
-            is Type.Pointer -> me.ptr.xup = me
+            is Type.Pointer -> me.ptr?.xup = me
             is Type.Tuple -> me.ts.forEach { (_,tp) ->
                 tp.xup = me
             }

@@ -176,13 +176,13 @@ fun check_types () {
             is Expr.Field -> {
                 val tp = me.col.type()
                 val tup = when (tp) {
-                    is Type.Any -> tp
+                    //is Type.Any -> tp
                     is Type.Tuple -> tp
                     is Type.Data -> tp.walk()?.third
                     else -> null
                 }
                 when (tup) {
-                    is Type.Any -> {}
+                    //is Type.Any -> {}
                     !is Type.Tuple -> err(me.tk, "field error : types mismatch")
                     else -> if (tup.index(me.idx) == null) {
                         err(me.tk, "field error : invalid index")
@@ -218,7 +218,7 @@ fun check_types () {
             is Expr.Call -> {
                 val tp = me.f.type()
                 val ok = when {
-                    (tp is Type.Any) -> true
+                    //(tp is Type.Any) -> true
                     (tp !is Type.Proto.Func) -> false
                     (tp.inps.size != me.args.size) -> false
                     else -> tp.inps.zip(me.args).all { (par, arg) ->

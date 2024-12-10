@@ -10,11 +10,11 @@ fun List<Type>.to_void (): List<Type> {
 fun Type.is_sup_of (other: Type): Boolean {
     return when {
         //(this is Type.Top) -> true
-        (this is Type.Any || other is Type.Any) -> true
+        //(this is Type.Any || other is Type.Any) -> true
         (this is Type.Unit       && other is Type.Unit)       -> true
         (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str)
         (this is Type.Data       && other is Type.Data)       -> (this.ts.size<=other.ts.size && this.ts.zip(other.ts).all { (thi,oth) -> thi.str==oth.str })
-        (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
+        (this is Type.Pointer    && other is Type.Pointer)    -> (this.ptr==null || other.ptr==null || this.ptr.is_sup_of(other.ptr))
         (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> (thi.first==null||thi.first?.str==oth.first?.str) && thi.second.is_sup_of(oth.second) }
         (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.second.is_sup_of(oth.second) }
         (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
@@ -178,7 +178,7 @@ fun Expr.type (): Type {
         is Expr.Uno -> when (this.tk_.str) {
             "-" -> Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))
             "ref" -> Type.Pointer(this.tk, this.e.type())
-            "deref" -> (this.e.type() as Type.Pointer).ptr
+            "deref" -> (this.e.type() as Type.Pointer).ptr!!
             else -> error("impossible case")
         }
         is Expr.Bin -> when (this.tk_.str) {
@@ -189,7 +189,7 @@ fun Expr.type (): Type {
             else -> error("impossible case")
         }
         is Expr.Call -> this.f.type().let {
-            if (it is Type.Any) it else (it as Type.Proto.Func).out
+            /*if (it is Type.Any) it else*/ (it as Type.Proto.Func).out
         }
 
         is Expr.Tuple -> this.xtp!!
@@ -207,8 +207,8 @@ fun Expr.type (): Type {
         is Expr.Acc -> this.tk_.type(this)!!
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
         is Expr.Char -> Type.Prim(Tk.Type( "Char", this.tk.pos.copy()))
-        is Expr.Nat -> this.xtp ?: Type.Any(this.tk)
-        is Expr.Null -> Type.Pointer(this.tk, Type.Any(this.tk))
+        is Expr.Nat -> this.xtp!! // ?: Type.Any(this.tk)
+        is Expr.Null -> Type.Pointer(this.tk, null /*Type.Any(this.tk)*/)
         is Expr.Unit -> Type.Unit(this.tk)
         is Expr.Num -> Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))
 

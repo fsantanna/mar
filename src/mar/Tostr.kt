@@ -32,11 +32,11 @@ fun List<Tk.Type>.to_str (pre: Boolean=false): String {
 
 fun Type.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Type.Any -> "?"
+        //is Type.Any -> "?"
         is Type.Prim -> this.tk.str
         is Type.Data -> this.ts.to_str(pre)
         is Type.Unit -> "()"
-        is Type.Pointer -> "\\" + this.ptr.to_str(pre)
+        is Type.Pointer -> "\\" + this.ptr!!.to_str(pre)
         is Type.Tuple -> "[" + this.ts.map { (id,tp) -> id.cond { it.str+":" } + tp.to_str(pre) }.joinToString(",") + "]"
         is Type.Union -> "<" + this.ts.map { (id,tp) -> id.cond { it.str+":" } + tp.to_str(pre) }.joinToString(",") + ">"
         is Type.Proto -> {

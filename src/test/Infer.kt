@@ -389,9 +389,9 @@ class Infer {
                 "}") { G.outer!!.to_str() }
     }
     @Test
-    fun dd_07_tuple_err () {
-        val out = static("""
-            var x = `x`
+    fun dd_07_infer_tuple () {
+        val out = infer("""
+            print([1,[2]])
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
@@ -399,8 +399,11 @@ class Infer {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "var x: []\n" +
-                "set x = ([]:[])\n" +
+                "data X: [x:[a:Int]]\n" +
+                "var x: X\n" +
+                "set x = (X(([([10]:[a:Int])]:[x:[a:Int]])))\n" +
+                "var a: Int\n" +
+                "set a = ((x.x).a)\n" +
                 "}") { G.outer!!.to_str() }
     }
 
@@ -449,5 +452,11 @@ class Infer {
         """)
         assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
     }
-
+    @Test
+    fun ee_05_nat_err () {
+        val out = static("""
+            var x = `x`
+        """)
+        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+    }
 }

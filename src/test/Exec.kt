@@ -82,8 +82,8 @@ class Exec  {
                 return t.v;
             }
             ```
-            data T: [Int]
-            var v: Int = `f`(T[10])
+            data X: [Int]
+            var v: Int = `f`(X[10])
             print(v)
         """)
         assert(out == "10\n") { out }
