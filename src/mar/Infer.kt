@@ -1,35 +1,48 @@
 package mar
 
-fun Expr.typex (): Type? {
+fun Expr.type_infer (): Type? {
     return try {
         this.type()
     } catch (e: Throwable) {
         try {
             this.infer()
         } catch (e: Throwable) {
+            //println(e.message)
             null
         }
     }.let {
-        if (it is Type.Any) null else it
+        /*if (it is Type.Any) null else*/ it
+    }
+}
+
+fun Expr.type_null (): Type? {
+    return try {
+        this.type()
+    } catch (e: Throwable) {
+        null
+    }.let {
+        /*if (it is Type.Any) null else*/ it
     }
 }
 
 fun Expr.infer (): Type? {
     val up = this.xup!!
+    //println(listOf("infer",this.javaClass.name, this.to_str(), up.javaClass.name))
     return when (up) {
         is Stmt.Set -> {
             assert(up.src == this)
-            up.dst.typex()
+            up.dst.type_infer()
         }
+        is Stmt.XExpr -> Type.Unit(this.tk)
         is Expr.Cons -> up.walk(up.ts)!!.third
-        is Expr.Tuple -> up.typex().let {
+        is Expr.Tuple -> up.type_infer().let {
             if (it == null) null else {
                 it as Type.Tuple
                 val i = up.vs.indexOfFirst { (_,e) -> e==this }
                 it.ts[i].second
             }
         }
-        is Expr.Union -> up.typex().let {
+        is Expr.Union -> up.type_infer().let {
             if (it == null) null else {
                 it as Type.Union
                 val (_,tp) = it.disc(up.idx)!!
@@ -37,10 +50,29 @@ fun Expr.infer (): Type? {
             }
         }
         is Expr.Call -> {
-            val i = up.args.indexOfFirst { it == this }
-            val tp = up.f.type()
-            if (tp !is Type.Proto.Func) null else {
-                tp.inps[i]
+            if (up.f == this) {
+                val out = up.type_infer()
+                if (out == null) {
+                    null
+                } else {
+                    val inps = up.args.map { it.type_null() }
+                    //println(listOf(out, inps))
+                    if (inps.any { it == null }) {
+                        null
+                    } else {
+                        Type.Proto.Func(this.tk, inps.map { it!! }, out).let {
+                            it.xup = this
+                            it
+                        }
+                    }
+                }
+            } else {
+                val i = up.args.indexOfFirst { it == this }
+                assert(i != -1)
+                val tp = up.f.type_null()
+                if (tp !is Type.Proto.Func) null else {
+                    tp.inps[i]
+                }
             }
         }
         is Expr.Start -> {
@@ -104,12 +136,12 @@ fun infer_types () {
             }
             is Expr.Nat -> {
                 if (me.xtp == null) {
-                    val up = me.xup!!
+                    //val up = me.xup!!
                     me.xtp = when {
                         (me.tk.str == "mar_ret") -> (me.up_first { it is Stmt.Proto } as Stmt.Proto).tp.out
-                        (up is Stmt.XExpr) -> null
-                        (up is Expr.Call && up.f==me)   -> null
-                        (up is Stmt.Set  && up.dst==me) -> null
+                        //(up is Stmt.XExpr) -> null
+                        //(up is Expr.Call && up.f==me)   -> null
+                        //(up is Stmt.Set  && up.dst==me) -> null
                         else -> me.infer().let {
                             when (it) {
                                 null -> err(me.tk, "inference error : unknown type")
@@ -128,7 +160,7 @@ fun infer_types () {
                 if (me.dst is Expr.Acc) {
                     val dcl = me.dst.to_xdcl()!!.first
                     if (dcl is Stmt.Dcl && dcl.xtp==null) {
-                        dcl.xtp = me.src.typex()
+                        dcl.xtp = me.src.type_infer()
                     }
                 }
             }

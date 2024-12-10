@@ -399,11 +399,7 @@ class Infer {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "data X: [x:[a:Int]]\n" +
-                "var x: X\n" +
-                "set x = (X(([([10]:[a:Int])]:[x:[a:Int]])))\n" +
-                "var a: Int\n" +
-                "set a = ((x.x).a)\n" +
+                "print(([1,([2]:[Int])]:[Int,[Int]]))\n" +
                 "}") { G.outer!!.to_str() }
     }
 
@@ -436,14 +432,7 @@ class Infer {
         val out = infer("""
             `f`([10])
         """)
-        assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "do {\n" +
-                "data Return.*: [] {\n" +
-                "}\n" +
-                "data Break.*: [] {\n" +
-                "}\n" +
-                "(`f`(([10]:[Int])))\n" +
-                "}") { G.outer!!.to_str() }
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
     }
     @Test
     fun ee_04_infer_nat_err() {
