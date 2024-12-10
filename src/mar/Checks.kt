@@ -218,7 +218,7 @@ fun check_types () {
             is Expr.Call -> {
                 val tp = me.f.type()
                 val ok = when {
-                    //(tp is Type.Any) -> true
+                    (tp is Type.Nat) -> true
                     (tp !is Type.Proto.Func) -> false
                     (tp.inps.size != me.args.size) -> false
                     else -> tp.inps.zip(me.args).all { (par, arg) ->

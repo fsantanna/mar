@@ -44,6 +44,7 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
 fun <V> Type.dn_collect_pos (ft: (Type)->List<V>): List<V> {
     return when (this) {
         //is Type.Any -> emptyList()
+        is Type.Nat -> emptyList()
         is Type.Unit -> emptyList()
         is Type.Prim -> emptyList()
         is Type.Data -> emptyList()
@@ -126,6 +127,7 @@ fun <V> Type.dn_collect_pre (ft: (Type)->List<V>?): List<V> {
     }
     return v + when (this) {
         //is Type.Any -> emptyList()
+        is Type.Nat -> emptyList()
         is Type.Unit -> emptyList()
         is Type.Prim -> emptyList()
         is Type.Data -> emptyList()

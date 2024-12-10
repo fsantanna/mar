@@ -11,6 +11,7 @@ fun Type.is_sup_of (other: Type): Boolean {
     return when {
         //(this is Type.Top) -> true
         //(this is Type.Any || other is Type.Any) -> true
+        //(this is Type.Nat || other is Type.Nat) -> true
         (this is Type.Unit       && other is Type.Unit)       -> true
         (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str)
         (this is Type.Data       && other is Type.Data)       -> (this.ts.size<=other.ts.size && this.ts.zip(other.ts).all { (thi,oth) -> thi.str==oth.str })
@@ -207,7 +208,7 @@ fun Expr.type (): Type {
         is Expr.Acc -> this.tk_.type(this)!!
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
         is Expr.Char -> Type.Prim(Tk.Type( "Char", this.tk.pos.copy()))
-        is Expr.Nat -> this.xtp!! // ?: Type.Any(this.tk)
+        is Expr.Nat -> this.xtp ?: Type.Nat(this.tk)
         is Expr.Null -> Type.Pointer(this.tk, null /*Type.Any(this.tk)*/)
         is Expr.Unit -> Type.Unit(this.tk)
         is Expr.Num -> Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))

@@ -65,6 +65,13 @@ fun Expr.infer (): Type? {
                             it
                         }
                     }
+                }.let {
+                    val tp = up.f.type_null()
+                    when {
+                        (it != null) -> it
+                        (tp is Type.Nat) -> tp
+                        else -> null
+                    }
                 }
             } else {
                 val i = up.args.indexOfFirst { it == this }

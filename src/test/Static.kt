@@ -1493,4 +1493,21 @@ class Static {
                 "}\n" +
                 "}") { G.outer!!.to_str() }
     }
+
+    // NAT
+
+    @Test
+    fun hh_01_nat_call () {
+        val out = static("""
+            `f`([])
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "((`f`: ?)(([]:[])))\n" +
+                "}") { G.outer!!.to_str() }
+    }
 }

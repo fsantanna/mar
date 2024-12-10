@@ -54,6 +54,7 @@ fun Var_Type.coder (pre: Boolean): String {
 fun Type.coder (pre: Boolean): String {
     return when (this) {
         //is Type.Any        -> TODO()
+        is Type.Nat        -> TODO("1")
         is Type.Prim       -> this.tk.str
         is Type.Data       -> this.ts.first().str
         is Type.Unit       -> "_VOID_"
@@ -411,7 +412,7 @@ fun Stmt.coder (pre: Boolean): String {
                             }
                         """
                         "Int"  -> "printf(\"%d\", $v);"
-                        else -> TODO()
+                        else -> TODO("2")
                     }
                     is Type.Tuple -> {
                         """
@@ -466,7 +467,7 @@ fun Stmt.coder (pre: Boolean): String {
                         ${par.cond { "printf(\")\");" }}
                     """
                     }
-                    else -> TODO()
+                    else -> TODO("3")
                 }
             }
             aux(this.e.type(), this.e.coder(pre)) + """

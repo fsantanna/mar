@@ -432,14 +432,29 @@ class Infer {
         val out = infer("""
             `f`([10])
         """)
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "(`f`: ?(([10]:[Int])))\n" +
+                "}") { G.outer!!.to_str() }
     }
     @Test
     fun ee_04_infer_nat_err() {
         val out = infer("""
             `f`(`x`)
         """)
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "(`f`: func (?) -> ()(`x`: ?))\n" +
+                "}") { G.outer!!.to_str() }
     }
     @Test
     fun ee_05_nat_err () {
