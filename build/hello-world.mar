@@ -1,4 +1,4 @@
-val t = ["hello","world"]
+var t = ["hello","world"]
 loop v in t {
     println(v)
 }

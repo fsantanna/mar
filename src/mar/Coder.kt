@@ -497,7 +497,16 @@ fun Expr.coder (pre: Boolean): String {
     return when (this) {
         is Expr.Uno -> "(" + this.tk.str.op_mar_to_c() + this.e.coder(pre) + ")"
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_mar_to_c() + " " + this.e2.coder(pre) + ")"
-        is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
+        is Expr.Call -> {
+            val f = this.f.coder(pre).let {
+                //if (this.f.type() !is Type.Any) it else {
+                    val out = this.type().coder(pre)
+                    val inps = this.args.map { it.type().coder(pre) }.joinToString(",")
+                    "(($out(*)($inps)) $it)"
+                //}
+            }
+            f + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
+        }
 
         is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
         is Expr.Union -> {
@@ -576,10 +585,11 @@ fun Expr.coder (pre: Boolean): String {
         }
 
         is Expr.Nat -> when {
-            (this.xtp == null) -> this.tk.str
-            (this.xtp is Type.Prim) -> this.tk.str
             (this.tk.str == "mar_ret") -> this.tk.str
-            else -> "MAR_CAST(${this.xtp!!.coder(pre)}, ${this.tk.str})"
+            (this.xup is Stmt.XExpr) -> this.tk.str
+            (this.xtp is Type.Prim) -> this.tk.str
+            (this.xtp is Type.Data) -> "MAR_CAST(${this.xtp!!.coder(pre)}, ${this.tk.str})"
+            else -> "((${this.xtp!!.coder(pre)}) ${this.tk.str})"
         }
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> "_void_"
