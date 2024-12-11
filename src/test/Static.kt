@@ -1521,7 +1521,7 @@ class Static {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "((`f`: func (?) -> ?)((`x`: ?)))\n" +
+                "((`f`: ?)((`x`: ?)))\n" +
                 "}") { G.outer!!.to_str() }
     }
 }

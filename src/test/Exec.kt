@@ -93,21 +93,21 @@ class Exec  {
         val out = test("""
             `f`(`x`)
         """)
-        assert(out.contains("error: ‘f’ undeclared")) { out }
+        assert(out.contains("error: implicit declaration of function ‘f’")) { out }
     }
     @Test
     fun bb_06_nat_f() {
         val out = test("""
             `f`([])
         """)
-        assert(out.contains("error: ‘f’ undeclared")) { out }
+        assert(out.contains("error: implicit declaration of function ‘f’")) { out }
     }
     @Test
     fun bb_07_nat_f() {
         val out = test("""
             `f`([1])
         """)
-        assert(out.contains("error: ‘f’ undeclared")) { out }
+        assert(out.contains("error: implicit declaration of function ‘f’")) { out }
     }
 
     // CALL / PRINT / IF / LOOP

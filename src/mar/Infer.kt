@@ -33,7 +33,7 @@ fun Expr.infer (): Type? {
             assert(up.src == this)
             up.dst.type_infer()
         }
-        is Stmt.XExpr -> Type.Unit(this.tk)
+        //is Stmt.XExpr -> Type.Unit(this.tk)
         is Expr.Cons -> up.walk(up.ts)!!.third
         is Expr.Tuple -> up.type_infer().let {
             if (it == null) null else {
@@ -50,36 +50,11 @@ fun Expr.infer (): Type? {
             }
         }
         is Expr.Call -> {
-            if (up.f == this) {
-                val out = up.type_infer()
-                if (out == null) {
-                    null
-                } else {
-                    val inps = up.args.map { it.type_null() }
-                    //println(listOf(out, inps))
-                    if (inps.any { it == null }) {
-                        null
-                    } else {
-                        Type.Proto.Func(this.tk, inps.map { it!! }, out).let {
-                            it.xup = this
-                            it
-                        }
-                    }
-                }.let {
-                    val tp = up.f.type_null()
-                    when {
-                        (it != null) -> it
-                        (tp is Type.Nat) -> tp
-                        else -> null
-                    }
-                }
-            } else {
-                val i = up.args.indexOfFirst { it == this }
-                assert(i != -1)
-                val tp = up.f.type_null()
-                if (tp !is Type.Proto.Func) null else {
-                    tp.inps[i]
-                }
+            val i = up.args.indexOfFirst { it == this }
+            assert(i != -1)
+            val tp = up.f.type()
+            if (tp !is Type.Proto.Func) null else {
+                tp.inps[i]
             }
         }
         is Expr.Start -> {
@@ -143,18 +118,13 @@ fun infer_types () {
             }
             is Expr.Nat -> {
                 if (me.xtp == null) {
-                    //val up = me.xup!!
+                    val up = me.xup!!
                     me.xtp = when {
                         (me.tk.str == "mar_ret") -> (me.up_first { it is Stmt.Proto } as Stmt.Proto).tp.out
-                        //(up is Stmt.XExpr) -> null
-                        //(up is Expr.Call && up.f==me)   -> null
+                        //(up is Stmt.XExpr) -> Type.Nat(me.tk)
+                        (up is Expr.Call && up.f is Expr.Nat) -> Type.Nat(me.tk)
                         //(up is Stmt.Set  && up.dst==me) -> null
-                        else -> me.infer().let {
-                            when (it) {
-                                null -> err(me.tk, "inference error : unknown type")
-                                else -> it
-                            }
-                        }
+                        else -> me.infer() ?: Type.Nat(me.tk)
                     }
                 }
             }
