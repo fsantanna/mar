@@ -54,7 +54,7 @@ fun Var_Type.coder (pre: Boolean): String {
 fun Type.coder (pre: Boolean): String {
     return when (this) {
         //is Type.Any        -> TODO()
-        is Type.Nat        -> TODO("1")
+        is Type.Nat        -> "_VOID_" //TODO("1")
         is Type.Prim       -> this.tk.str
         is Type.Data       -> this.ts.first().str
         is Type.Unit       -> "_VOID_"
@@ -500,11 +500,11 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_mar_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> {
             val f = this.f.coder(pre).let {
-                //if (this.f.type() !is Type.Any) it else {
+                if (this.f.type() !is Type.Nat) it else {
                     val out = this.type().coder(pre)
                     val inps = this.args.map { it.type().coder(pre) }.joinToString(",")
                     "(($out(*)($inps)) $it)"
-                //}
+                }
             }
             f + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
         }

@@ -1510,4 +1510,18 @@ class Static {
                 "((`f`: ?)(([]:[])))\n" +
                 "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun hh_02_nat_call () {
+        val out = static("""
+            `f`(`x`)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "((`f`: func (?) -> ?)((`x`: ?)))\n" +
+                "}") { G.outer!!.to_str() }
+    }
 }

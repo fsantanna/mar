@@ -88,6 +88,27 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun bb_05_nat_f() {
+        val out = test("""
+            `f`(`x`)
+        """)
+        assert(out.contains("error: ‘f’ undeclared")) { out }
+    }
+    @Test
+    fun bb_06_nat_f() {
+        val out = test("""
+            `f`([])
+        """)
+        assert(out.contains("error: ‘f’ undeclared")) { out }
+    }
+    @Test
+    fun bb_07_nat_f() {
+        val out = test("""
+            `f`([1])
+        """)
+        assert(out.contains("error: ‘f’ undeclared")) { out }
+    }
 
     // CALL / PRINT / IF / LOOP
 
