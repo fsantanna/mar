@@ -411,7 +411,8 @@ fun Stmt.coder (pre: Boolean): String {
                                 printf("false");
                             }
                         """
-                        "Int"  -> "printf(\"%d\", $v);"
+                        "Int"   -> "printf(\"%d\", $v);"
+                        "Float" -> "printf(\"%f\", $v);"
                         else -> TODO("2")
                     }
                     is Type.Tuple -> {
@@ -643,6 +644,7 @@ fun coder_main (pre: Boolean): String {
         typedef int     _VOID_;
         typedef int     Bool;
         typedef char    Char;
+        typedef float   Float;
         typedef int     Int;
         typedef uint8_t U8;
         

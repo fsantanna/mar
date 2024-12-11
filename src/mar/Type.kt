@@ -7,13 +7,21 @@ fun List<Type>.to_void (): List<Type> {
     }
 }
 
+val nums = setOf("Char", "Float", "Int", "U8")
+fun Type.is_num (): Boolean {
+    return (this is Type.Prim) && nums.contains(this.tk.str)
+}
+fun Type.Prim.compat (other: Type.Prim): Boolean {
+    return (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
+}
+
 fun Type.is_sup_of (other: Type): Boolean {
     return when {
         //(this is Type.Top) -> true
         //(this is Type.Any || other is Type.Any) -> true
         (this is Type.Nat || other is Type.Nat) -> true
         (this is Type.Unit       && other is Type.Unit)       -> true
-        (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str)
+        (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
         (this is Type.Data       && other is Type.Data)       -> (this.ts.size<=other.ts.size && this.ts.zip(other.ts).all { (thi,oth) -> thi.str==oth.str })
         (this is Type.Pointer    && other is Type.Pointer)    -> (this.ptr==null || other.ptr==null || this.ptr.is_sup_of(other.ptr))
         (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> (thi.first==null||thi.first?.str==oth.first?.str) && thi.second.is_sup_of(oth.second) }
@@ -33,10 +41,7 @@ fun Expr.Bin.args (tp1: Type, tp2: Type): Boolean {
     return when (this.tk_.str) {
         "==", "!=" -> tp1.is_same_of(tp2)
         ">", "<", ">=", "<=",
-        "+", "-", "*", "/", "%" -> {
-            tp1.is_sup_of(Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))) &&
-            tp2.is_sup_of(Type.Prim(Tk.Type( "Int", this.tk.pos.copy())))
-        }
+        "+", "-", "*", "/", "%" -> (tp1.is_num() && tp2.is_num())
         "||", "&&" -> {
             tp1.is_sup_of(Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))) &&
             tp2.is_sup_of(Type.Prim(Tk.Type( "Bool", this.tk.pos.copy())))
@@ -186,7 +191,15 @@ fun Expr.type (): Type {
             "==", "!=",
             ">", "<", ">=", "<=",
             "||", "&&" -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
-            "+", "-", "*", "/", "%" -> Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))
+            "+", "-", "*", "/", "%" -> {
+                val t1 = (this.e1.type() as Type.Prim).tk.str
+                val t2 = (this.e2.type() as Type.Prim).tk.str
+                if (t1=="Float" || t2=="Float") {
+                    Type.Prim(Tk.Type("Float", this.tk.pos.copy()))
+                } else {
+                    Type.Prim(Tk.Type("Int", this.tk.pos.copy()))
+                }
+            }
             else -> error("impossible case")
         }
         is Expr.Call -> this.f.type().let {
@@ -211,7 +224,10 @@ fun Expr.type (): Type {
         is Expr.Nat -> this.xtp ?: Type.Nat(this.tk)
         is Expr.Null -> Type.Pointer(this.tk, null /*Type.Any(this.tk)*/)
         is Expr.Unit -> Type.Unit(this.tk)
-        is Expr.Num -> Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))
+        is Expr.Num -> {
+            val x = if (this.tk.str.contains(".")) "Float" else "Int"
+            Type.Prim(Tk.Type(x, this.tk.pos.copy()))
+        }
 
         is Expr.Create -> {
             val co = this.co.type() as Type.Proto.Coro

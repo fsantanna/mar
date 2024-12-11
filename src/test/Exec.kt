@@ -37,6 +37,20 @@ class Exec  {
         """)
         assert(out == "-10\n") { out }
     }
+    @Test
+    fun aa_04_float() {
+        val out = test_int("""
+            10 + 1.1
+        """)
+        assert(out == "11\n") { out }
+    }
+    @Test
+    fun aa_05_float() {
+        val out = test("""
+            print(10 + 1.1)
+        """)
+        assert(out == "11.100000\n") { out }
+    }
 
     // NAT
 

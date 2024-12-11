@@ -84,6 +84,39 @@ class Infer {
                 "}") { G.outer!!.to_str() }
     }
 
+    // NUMS
+
+    @Test
+    fun ab_01_int () {
+        val out = infer("""
+            var r = 10
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var r: Int\n" +
+                "set r = 10\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ab_02_float () {
+        val out = infer("""
+            var r = 1.0
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var r: Float\n" +
+                "set r = 1.0\n" +
+                "}") { G.outer!!.to_str() }
+    }
+
     // PROTO / CALL
 
     @Test

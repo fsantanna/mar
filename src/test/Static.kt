@@ -99,6 +99,25 @@ class Static {
         //assert(out == "anon : (lin 5, col 17) : implementation error : variable \"f\" is not declared") { out!! }
     }
 
+    // NUMS
+
+    @Test
+    fun ab_01_num() {
+        val out = static("""
+            print(0.5)
+        """
+        )
+        assert(out == null) { out!! }
+    }
+    @Test
+    fun ab_02_num() {
+        val out = static("""
+            print(1 + 0.5)
+        """
+        )
+        assert(out == null) { out!! }
+    }
+
     // FUNC
 
     @Test
