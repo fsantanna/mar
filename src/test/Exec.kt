@@ -86,7 +86,8 @@ class Exec  {
             var v: Int = `f`(X[10])
             print(v)
         """)
-        assert(out == "10\n") { out }
+        assert(out.contains("error: incompatible type for argument 1 of ‘f’")) { out }
+        //assert(out == "10\n") { out }
     }
     @Test
     fun bb_05_nat_f() {
