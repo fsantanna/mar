@@ -17,10 +17,10 @@ fun main (args: Array<String>) {
         )
         val xccs = run {
             val libs = G.libs.map {
-                File(PATH + "/" + ys["--lib"] + "/mar.lib")
+                File(it + "/mar.lib")
                     .readText()
                     .trim()
-                    .replace("@/",PATH+"/")
+                    .replace("@/",PATH+"/"+it+"/")
                     .split(" ")
             }.flatten()
             val cc = if (!ys.containsKey("--cc")) emptyList() else {
