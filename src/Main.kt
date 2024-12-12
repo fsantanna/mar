@@ -6,25 +6,28 @@ fun main (args: Array<String>) {
     val (xs, ys) = args.cmds_opts()
     try {
         val xinp = if (xs.size > 0) xs[0] else null
-        val xccs = (when {
-            !ys.containsKey("--cc") -> emptyList()
-            (ys["--cc"] == null) -> {
-                throw Exception("argument error : --cc : expected \"=\"")
+        G.libs.addAll(
+            when {
+                !ys.containsKey("--lib") -> emptyList()
+                (ys["--lib"]!!.size == 0) -> {
+                    throw Exception("argument error : --lib : expected \"=\"")
+                }
+                else -> ys["--lib"]!!.map { PATH + "/" + it }
             }
-            else -> ys["--cc"]!!.split(" ")
-        }) + (when {
-            !ys.containsKey("--lib") -> emptyList()
-            (ys["--lib"] == null) -> {
-                throw Exception("argument error : --lib : expected \"=\"")
-            }
-            else -> {
+        )
+        val xccs = run {
+            val libs = G.libs.map {
                 File(PATH + "/" + ys["--lib"] + "/mar.lib")
                     .readText()
                     .trim()
                     .replace("@/",PATH+"/")
                     .split(" ")
+            }.flatten()
+            val cc = if (!ys.containsKey("--cc")) emptyList() else {
+                ys["--cc"]!!.map { it.split(" ") }.flatten()
             }
-        })
+            libs + cc
+        }
 
         //TEST = ys.containsKey("--test")
         //DEBUG = ys.containsKey("--debug")
@@ -37,7 +40,7 @@ fun main (args: Array<String>) {
                 val f = File(xinp)
                 val inps = listOf(
                     Pair(Triple(xinp,1,1), f.reader()),
-                    Pair(Triple("prelude.mar",1,1), FileX("@/prelude.mar").reader())
+                    Pair(Triple("prelude.mar",1,1), FileX("prelude.mar")!!.reader())
                 )
                 val out = all(false, ys.containsKey("--verbose"), inps, f.nameWithoutExtension, xccs)
                 print(out)

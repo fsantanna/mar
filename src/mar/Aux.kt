@@ -66,7 +66,7 @@ fun err_expected (tk: Tk, str: String): Nothing {
     err(tk, "expected $str : have $have")
 }
 
-fun Array<String>.cmds_opts () : Pair<List<String>,Map<String,String?>> {
+fun Array<String>.cmds_opts () : Pair<List<String>,Map<String,List<String>>> {
     val cmds = this.filter { !it.startsWith("--") }
     val opts = this
         .filter { it.startsWith("--") }
@@ -78,6 +78,8 @@ fun Array<String>.cmds_opts () : Pair<List<String>,Map<String,String?>> {
                 Pair(it, null)
             }
         }
+        .groupBy { it.first }
+        .map { (k,vs) -> Pair(k, vs.map { it.second }.filter { !it.isNullOrBlank() }.let { it as List<String> }) }
         .toMap()
     return Pair(cmds,opts)
 }

@@ -138,6 +138,8 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
 object G {
     var N: Int = 1
 
+    val libs = mutableListOf<String>()
+
     var tks: Iterator<Tk>? = null
     var tk0: Tk? = null
     var tk1: Tk? = null
@@ -161,6 +163,8 @@ object G {
 
     fun reset () {
         N = 1
+
+        libs.clear()
 
         tks = null
         tk0 = null

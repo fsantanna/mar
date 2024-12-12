@@ -17,11 +17,15 @@ fun Lex.toPos (): Pos {
     return Pos(this.file, this.lin, this.col, this.brks)
 }
 
-fun FileX (path: String): File {
-    val xpath = if (path[0] != '@') path else {
-        PATH + "/" + path.drop(2)
+fun FileX (name: String): File? {
+    for (dir in (listOf(".",PATH) + G.libs)) {
+        val path = dir + "/" + name
+        val h = File(path)
+        if (h.exists()) {
+            return h
+        }
     }
-    return File(xpath)
+    return null
 }
 
 // TODO: reads 65535 after unreading -1
@@ -197,7 +201,7 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                         }
                         val ff = f + ".mar"
                         val h = FileX(ff)
-                        if (!h.exists()) {
+                        if (h == null) {
                             err(pos, "include error : file not found : $ff")
                         }
                         stack.addFirst(Lex(ff, 1, 1, 0, 0, PushbackReader(StringReader(h.readText()), 2)))
