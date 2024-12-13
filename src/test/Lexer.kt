@@ -4,6 +4,7 @@ import mar.*
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runners.MethodSorters
+import java.io.File
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class Lexer {
@@ -240,15 +241,20 @@ class Lexer {
     }
     @Test
     fun hh_01_inc() {
+        File("/tmp/x.tst").printWriter().use { out ->
+            out.println("1")
+            out.println("2")
+            out.println("")
+        }
         val tks = """
             before
-            ^include(test.mar)
+            ^include(/tmp/x.tst)
             after
         """.trimIndent().lexer()
-        assert(tks.next().let { it is Tk.Var && it.pos.file=="anon"     && it.pos.lin==1 && it.pos.col==1 && it.str == "before" })
-        assert(tks.next().let { it is Tk.Num && it.pos.file=="test.mar" && it.pos.lin==1 && it.pos.col==1 && it.str == "1" })
-        assert(tks.next().let { it is Tk.Num && it.pos.file=="test.mar" && it.pos.lin==2 && it.pos.col==1 && it.str == "2" })
-        assert(tks.next().let { it is Tk.Var && it.pos.file=="anon"     && it.pos.lin==3 && it.pos.col==1 && it.str == "after" })
+        assert(tks.next().let { it is Tk.Var && it.pos.file=="anon"       && it.pos.lin==1 && it.pos.col==1 && it.str == "before" })
+        assert(tks.next().let { it is Tk.Num && it.pos.file=="/tmp/x.tst" && it.pos.lin==1 && it.pos.col==1 && it.str == "1" })
+        assert(tks.next().let { it is Tk.Num && it.pos.file=="/tmp/x.tst" && it.pos.lin==2 && it.pos.col==1 && it.str == "2" })
+        assert(tks.next().let { it is Tk.Var && it.pos.file=="anon"       && it.pos.lin==3 && it.pos.col==1 && it.str == "after" })
         assert(tks.next().let { it is Tk.Eof && it.pos.lin==3 && it.pos.col==6 })
     }
     @Test

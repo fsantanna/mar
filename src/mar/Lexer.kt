@@ -18,13 +18,17 @@ fun Lex.toPos (): Pos {
 }
 
 fun FileX (name: String, cur: String?): File? {
-    val dirs = listOfNotNull(cur, ".", PATH)
-    for (dir in dirs) {
-        val path = dir + "/" + name
-        val h = File(path)
-        if (h.exists() && h.isFile) {
-            return h
-        }
+    val c = name.firstOrNull()
+    val path = when {
+        (c == null) -> return null
+        (c == '/') -> name
+        (c == '@') -> PATH + "/" + name.drop(1)
+        (cur != null) -> cur + "/" + name
+        else -> return null
+    }
+    val h = File(path)
+    if (h.exists() && h.isFile) {
+        return h
     }
     return null
 }

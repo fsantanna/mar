@@ -28,4 +28,19 @@ class Main  {
         assert(File("/x/x.txt").parentFile.toString() == "/x")
         assert(File("x/x.txt").parentFile.toString() == "x")
     }
+    @Test
+    fun aa_04_main() {
+        File("/tmp/x.tst").printWriter().use { out ->
+            out.println("xxx")
+        }
+        val f1 = FileX("test.mar", null)
+        assert(f1 == null)
+        val f2 = FileX("/tmp/x.tst", "xxx")
+        assert(f2.toString() == "/tmp/x.tst")
+        val f3 = FileX("x.tst", "/tmp")
+        assert(f3.toString() == "/tmp/x.tst")
+        PATH = "/tmp"
+        val f4 = FileX("@/x.tst", null)
+        assert(f4.toString() == "/tmp/x.tst")
+    }
 }

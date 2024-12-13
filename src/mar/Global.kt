@@ -7,7 +7,7 @@ import java.util.*
 val VALGRIND = ""
 val THROW = false
 var DUMP = true
-val PATH = File(File(System.getProperty("java.class.path")).absolutePath).parent
+var PATH = File(File(System.getProperty("java.class.path")).absolutePath).parent    // var b/c of test/Main/aa_04_main
 val D = "\$"
 
 // VERSION
