@@ -138,8 +138,6 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
 object G {
     var N: Int = 1
 
-    val libs = mutableListOf<String>()
-
     var tks: Iterator<Tk>? = null
     var tk0: Tk? = null
     var tk1: Tk? = null
@@ -163,8 +161,6 @@ object G {
 
     fun reset () {
         N = 1
-
-        libs.clear()
 
         tks = null
         tk0 = null
@@ -208,7 +204,7 @@ fun exec (hold: Boolean, cmd: String): Pair<Boolean,String> {
     return exec(hold, cmd.split(' '))
 }
 
-fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String, Int, Int>, Reader>>, out: String, args: List<String>): String {
+fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, Int>, Reader>>, out: String, args: List<String>): String {
     G.reset()
     G.tks = inps.lexer()
     parser_lexer()
@@ -265,7 +261,7 @@ fun test (inp: String): String {
     //println(inp)
     val prelude = "build/prelude.mar"
     val inps = listOf (
-        Pair(Triple("anon",1,1), inp.reader()),
+        Pair(Triple(null,1,1), inp.reader()),
         Pair(Triple(prelude,1,1), File(prelude).reader()),
     )
     return all(true, false, inps, "out", emptyList())

@@ -4,6 +4,7 @@ import mar.*
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runners.MethodSorters
+import java.io.File
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class Main  {
@@ -21,5 +22,10 @@ class Main  {
             xs.size==0 && ys.size==1 && ys.containsKey("--lib") &&
             ys["--lib"]!!.let { it.size==2 && it.contains("10") && it.contains("abc") }
         )
+    }
+    @Test
+    fun aa_03_cmds() {
+        assert(File("/x/x.txt").parentFile.toString() == "/x")
+        assert(File("x/x.txt").parentFile.toString() == "x")
     }
 }

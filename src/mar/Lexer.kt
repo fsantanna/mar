@@ -6,7 +6,7 @@ import java.io.Reader
 import java.io.StringReader
 
 data class Lex (
-    var file: String,
+    var file: String?,
     var lin: Int, var col: Int, var brks: Int,
     var prv: Int, // previous col before \n to restore on unread
     val reader: PushbackReader
@@ -14,14 +14,15 @@ data class Lex (
 data class Pos (val file: String, val lin: Int, val col: Int, val brks: Int)
 
 fun Lex.toPos (): Pos {
-    return Pos(this.file, this.lin, this.col, this.brks)
+    return Pos(this.file ?: "anon", this.lin, this.col, this.brks)
 }
 
-fun FileX (name: String): File? {
-    for (dir in (listOf(".",PATH) + G.libs)) {
+fun FileX (name: String, cur: String?): File? {
+    val dirs = listOfNotNull(cur, ".", PATH)
+    for (dir in dirs) {
         val path = dir + "/" + name
         val h = File(path)
-        if (h.exists()) {
+        if (h.exists() && h.isFile) {
             return h
         }
     }
@@ -33,10 +34,10 @@ fun iseof (n: Int): Boolean {
     return (n==-1 || n==65535)
 }
 
-typealias Lexer = List<Pair<Triple<String,Int,Int>,Reader>>
+typealias Lexer = List<Pair<Triple<String?,Int,Int>,Reader>>
 
 fun String.lexer (): Iterator<Tk> {
-    val lex: Lexer = listOf(Pair(Triple("anon",1,1), this.reader()))
+    val lex: Lexer = listOf(Pair(Triple(null,1,1), this.reader()))
     return lex.lexer()
 }
 
@@ -170,6 +171,27 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                 }
             }
             (x in listOf('{','}','(',')','[',']',',','\$','.',':')) -> yield(Tk.Fix(x.toString(), pos))
+            (x == '^') -> {
+                val id = read2While { a -> a.isLetter() }
+                when {
+                    (id == "include") -> {
+                        val (_, x2) = read2()
+                        if (x2 != '(') {
+                            err(pos, "include error : expected \"(\"")
+                        }
+                        val f = read2Until(')')
+                        if (f == null) {
+                            err(pos, "include error : exoected \")\"")
+                        }
+                        val h = FileX(f, stack.first().file.let { if (it==null) null else File(it).parentFile?.toString() })
+                        if (h == null) {
+                            err(pos, "include error : file not found : $f")
+                        }
+                        stack.addFirst(Lex(f, 1, 1, 0, 0, PushbackReader(StringReader(h.readText()), 2)))
+                    }
+                    else -> err(pos, "preprocessor error : unexoected \"$id\"")
+                }
+            }
             (x in OPERATORS.first) -> {
                 val op = x + read2While { it in OPERATORS.first }
                 when {
@@ -190,22 +212,6 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
             (x.isLetter() || x=='_') -> {
                 val id = x + read2While { a -> a.isLetterOrDigit() || a=='_' }
                 when {
-                    (id == "include") -> {
-                        val (_,x2) = read2()
-                        if (x2 != '(') {
-                            err(pos, "include error : expected \"(\"")
-                        }
-                        val f = read2Until(')')
-                        if (f == null) {
-                            err(pos, "include error : exoected \")\"")
-                        }
-                        val ff = f + ".mar"
-                        val h = FileX(ff)
-                        if (h == null) {
-                            err(pos, "include error : file not found : $ff")
-                        }
-                        stack.addFirst(Lex(ff, 1, 1, 0, 0, PushbackReader(StringReader(h.readText()), 2)))
-                    }
                     KEYWORDS.contains(id) -> yield(Tk.Fix(id, pos))
                     x.isUpperCase() -> yield(Tk.Type(id, pos))
                     else -> yield(Tk.Var(id, pos))
