@@ -177,8 +177,8 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
             (x in listOf('{','}','(',')','[',']',',','\$','.',':')) -> yield(Tk.Fix(x.toString(), pos))
             (x == '^') -> {
                 val id = read2While { a -> a.isLetter() }
-                when {
-                    (id == "include") -> {
+                when (id) {
+                     "include" -> {
                         val (_, x2) = read2()
                         if (x2 != '(') {
                             err(pos, "include error : expected \"(\"")
@@ -192,6 +192,17 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                             err(pos, "include error : file not found : $f")
                         }
                         stack.addFirst(Lex(f, 1, 1, 0, 0, PushbackReader(StringReader(h.readText()), 2)))
+                    }
+                    "compile" -> {
+                        val (_, x2) = read2()
+                        if (x2 != '(') {
+                            err(pos, "compile error : expected \"(\"")
+                        }
+                        val f = read2Until(')')
+                        if (f == null) {
+                            err(pos, "compile error : exoected \")\"")
+                        }
+                        G.ccs.addAll(f.split(" "))
                     }
                     else -> err(pos, "preprocessor error : unexoected \"$id\"")
                 }

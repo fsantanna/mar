@@ -138,6 +138,8 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
 object G {
     var N: Int = 1
 
+    val ccs: MutableList<String> = mutableListOf()
+
     var tks: Iterator<Tk>? = null
     var tk0: Tk? = null
     var tk1: Tk? = null
@@ -161,6 +163,8 @@ object G {
 
     fun reset () {
         N = 1
+
+        ccs.clear()
 
         tks = null
         tk0 = null
@@ -241,7 +245,10 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
         System.err.println("... c -> exe ...")
     }
     File("$out.c").writeText(c)
-    val cmd = listOf("gcc", "-Werror", "$out.c", "-l", "m", "-o", "$out.exe") + args
+    val xargs = (args + G.ccs).map {
+        it.replace("@/",PATH+"/")
+    }
+    val cmd = listOf("gcc", "-Werror", "$out.c", "-l", "m", "-o", "$out.exe") + xargs
     if (verbose) {
         System.err.println("\t" + cmd.joinToString(" "))
     }

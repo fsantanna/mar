@@ -21,7 +21,7 @@ fun main (args: Array<String>) {
                 val f = File(xinp)
                 val inps = listOf(
                     Pair(Triple(xinp,1,1), f.reader()),
-                    Pair(Triple("prelude.mar",1,1), FileX("prelude.mar", null)!!.reader())
+                    Pair(Triple("prelude.mar",1,1), FileX("@/prelude.mar", null)!!.reader())
                 )
                 val out = all(false, ys.containsKey("--verbose"), inps, f.nameWithoutExtension, xccs)
                 print(out)
