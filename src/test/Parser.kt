@@ -223,6 +223,15 @@ class Parser {
         assert(e.to_str() == "(println((2 * (3 - 1))))") { e.to_str() }
     }
 
+    // STRING
+
+    @Test
+    fun bc_01_str () {
+        G.tks = ("\"f\"").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e.to_str() == "\"f\"") { e.to_str() }
+    }
     // BINARY
 
     @Test
@@ -383,7 +392,7 @@ class Parser {
         G.tks = ("'x'").lexer()
         parser_lexer()
         val e = parser_expr_4_prim()
-        assert(e is Expr.Char && e.tk.str == "'x'")
+        assert(e is Expr.Chr && e.tk.str == "'x'")
     }
 
     // CALL

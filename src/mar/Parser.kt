@@ -30,6 +30,7 @@ fun check_enu (enu: String): Boolean {
         "Type" -> G.tk1 is Tk.Type
         "Op"   -> G.tk1 is Tk.Op
         "Var"  -> G.tk1 is Tk.Var
+        "Str"  -> G.tk1 is Tk.Str
         "Chr"  -> G.tk1 is Tk.Chr
         "Num"  -> G.tk1 is Tk.Num
         "Nat"  -> G.tk1 is Tk.Nat
@@ -248,7 +249,8 @@ fun parser_expr_4_prim (): Expr {
         accept_enu("Var")  -> Expr.Acc(G.tk0 as Tk.Var)
         accept_fix("false") -> Expr.Bool(G.tk0 as Tk.Fix)
         accept_fix("true")  -> Expr.Bool(G.tk0 as Tk.Fix)
-        accept_enu("Chr")  -> Expr.Char(G.tk0 as Tk.Chr)
+        accept_enu("Str")  -> Expr.Str(G.tk0 as Tk.Str)
+        accept_enu("Chr")  -> Expr.Chr(G.tk0 as Tk.Chr)
         accept_enu("Num")  -> Expr.Num(G.tk0 as Tk.Num)
         accept_fix("null")  -> Expr.Null(G.tk0 as Tk.Fix)
         accept_fix("(")     -> {

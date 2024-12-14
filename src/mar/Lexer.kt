@@ -283,14 +283,11 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                     brk
                 }
                 if (v == null) {
-                    err(pos, "token error : unterminated \"")
+                    err(pos, "string error : unterminated \"")
                 }
-                yield(Tk.Fix("#[", pos))
+                var str = "\""
                 var i = 0
-                while (i < v.length-1) {
-                    if (i > 0) {
-                        yield(Tk.Fix(",", pos))
-                    }
+                while (i < v.length) {
                     val z = v[i]
                     val zz = when {
                         (z == '\'') -> "\\'"
@@ -300,10 +297,10 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                             z.toString() + v[i]
                         }
                     }
-                    yield(Tk.Chr("'$zz'", pos))
+                    str += zz
                     i++
                 }
-                yield(Tk.Fix("]", pos))
+                yield(Tk.Str(str+'"', pos))
             }
             else -> {
                 err(pos, "token error : unexpected $x")

@@ -59,6 +59,7 @@ sealed class Tk (val str: String, val pos: Pos) {
     class Var  (str: String, pos: Pos): Tk(str, pos)  // up: 0=var, 1=upvar, 2=upref
     class Num  (str: String, pos: Pos): Tk(str, pos)
     class Chr  (str: String, pos: Pos): Tk(str, pos)
+    class Str  (str: String, pos: Pos): Tk(str, pos)
     class Nat  (str: String, pos: Pos): Tk(str, pos)
 }
 
@@ -87,13 +88,14 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
 }
 
 sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
-    class Nat  (val tk_: Tk.Nat, var xtp: Type?): Expr(G.N++, null, tk_)
-    class Acc  (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, null, tk_)
-    class Bool (val tk_: Tk.Fix): Expr(G.N++, null, tk_)
-    class Char (val tk_: Tk.Chr): Expr(G.N++, null, tk_)
-    class Num  (val tk_: Tk.Num): Expr(G.N++, null, tk_)
-    class Null (tk_: Tk): Expr(G.N++, null, tk_)
-    class Unit (tk_: Tk): Expr(G.N++, null, tk_)
+    class Nat    (val tk_: Tk.Nat, var xtp: Type?): Expr(G.N++, null, tk_)
+    class Acc    (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, null, tk_)
+    class Bool   (val tk_: Tk.Fix): Expr(G.N++, null, tk_)
+    class Str    (val tk_: Tk.Str): Expr(G.N++, null, tk_)
+    class Chr    (val tk_: Tk.Chr): Expr(G.N++, null, tk_)
+    class Num    (val tk_: Tk.Num): Expr(G.N++, null, tk_)
+    class Null   (tk_: Tk): Expr(G.N++, null, tk_)
+    class Unit   (tk_: Tk): Expr(G.N++, null, tk_)
 
     class Tuple (tk: Tk, var xtp: Type.Tuple?, val vs: List<Pair<Tk.Var?,Expr>>): Expr(G.N++, null, tk)
     class Field (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk)

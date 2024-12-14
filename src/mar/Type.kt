@@ -220,7 +220,8 @@ fun Expr.type (): Type {
         }
         is Expr.Acc -> this.tk_.type(this)!!
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
-        is Expr.Char -> Type.Prim(Tk.Type( "Char", this.tk.pos.copy()))
+        is Expr.Str -> Type.Pointer(this.tk, Type.Prim(Tk.Type( "Char", this.tk.pos.copy())))
+        is Expr.Chr -> Type.Prim(Tk.Type( "Char", this.tk.pos.copy()))
         is Expr.Nat -> this.xtp ?: Type.Nat(this.tk)
         is Expr.Null -> Type.Pointer(this.tk, null /*Type.Any(this.tk)*/)
         is Expr.Unit -> Type.Unit(this.tk)

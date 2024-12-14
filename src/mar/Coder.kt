@@ -329,7 +329,6 @@ fun Stmt.coder (pre: Boolean): String {
             if (this.src is Expr.Yield) {
                 this.src.coder(pre)
             } else {
-                val dst = this.dst.type()
                 this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
             }
         }
@@ -587,7 +586,7 @@ fun Expr.coder (pre: Boolean): String {
         }
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> "_void_"
-        is Expr.Bool, is Expr.Char,
+        is Expr.Bool, is Expr.Chr, is Expr.Str,
         is Expr.Null, is Expr.Num -> this.to_str(pre)
 
         is Expr.Create -> {
@@ -653,7 +652,7 @@ fun coder_main (pre: Boolean): String {
         #define true   1
         #define false  0
         
-        #define MAR_CAST(tp,v) (*(tp*)({typeof(v) x=v; &x;}))
+        #define MAR_CAST(tp,v) (*(tp*)({typeof(v) _mar_=(v); &_mar_;}))
         
         int mar_sup (uint32_t sup, uint32_t sub) {
             //printf(">>> %X vs %X\n", sup, sub);

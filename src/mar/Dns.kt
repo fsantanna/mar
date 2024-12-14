@@ -37,8 +37,8 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
         is Expr.Resume -> this.arg.dn_collect_pos(fe,ft) + this.exe.dn_collect_pos(fe,ft)
         is Expr.Yield  -> this.arg.dn_collect_pos(fe,ft)
         is Expr.Nat    -> (this.xtp?.dn_collect_pos(ft) ?: emptyList())
-        is Expr.Acc, is Expr.Null, is Expr.Unit,
-        is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()
+        is Expr.Acc, is Expr.Null, is Expr.Unit, is Expr.Str,
+        is Expr.Bool, is Expr.Chr, is Expr.Num -> emptyList()
     } + fe(this)
 }
 fun <V> Type.dn_collect_pos (ft: (Type)->List<V>): List<V> {
@@ -116,8 +116,8 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
         is Expr.Resume -> this.exe.dn_collect_pre(fe,ft) + this.arg.dn_collect_pre(fe,ft)
         is Expr.Yield  -> this.arg.dn_collect_pre(fe,ft)
         is Expr.Nat    -> (this.xtp?.dn_collect_pre(ft) ?: emptyList())
-        is Expr.Acc, is Expr.Null, is Expr.Unit,
-        is Expr.Bool, is Expr.Char, is Expr.Num -> emptyList()
+        is Expr.Acc, is Expr.Null, is Expr.Unit, is Expr.Str,
+        is Expr.Bool, is Expr.Chr, is Expr.Num -> emptyList()
     }
 }
 fun <V> Type.dn_collect_pre (ft: (Type)->List<V>?): List<V> {

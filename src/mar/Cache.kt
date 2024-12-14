@@ -97,7 +97,7 @@ fun cache_ups () {
                 }
             }
 
-            is Expr.Acc, is Expr.Bool, is Expr.Char,
+            is Expr.Acc, is Expr.Bool, is Expr.Chr, is Expr.Str,
             is Expr.Null, is Expr.Num, is Expr.Unit -> {}
 
             is Expr.Create -> me.co.xup = me

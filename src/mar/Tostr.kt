@@ -81,7 +81,8 @@ fun Expr.to_str (pre: Boolean = false): String {
         }
         is Expr.Acc    -> this.ign.cond { "__" } + this.tk.str
         is Expr.Bool   -> this.tk.str
-        is Expr.Char   -> this.tk.str
+        is Expr.Str    -> this.tk.str
+        is Expr.Chr    -> this.tk.str
         is Expr.Num    -> this.tk.str
         is Expr.Null   -> this.tk.str
         is Expr.Unit   -> "()"

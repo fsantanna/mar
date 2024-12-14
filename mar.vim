@@ -23,7 +23,7 @@ syn match   Type      '[A-Z][a-zA-Z0-9]\+'
 
 syn match   Statement '[\+\-\*\/\%\>\<\=\|\&\~]'
 
-syn keyword Statement break do catch coro create data defer else exec
+syn keyword Statement break do catch compile coro create data defer else exec
 syn keyword Statement escape false func if include loop null print
 syn keyword Statement resume return set start throw true var yield
 
