@@ -414,6 +414,13 @@ fun Stmt.coder (pre: Boolean): String {
                         "Float" -> "printf(\"%f\", $v);"
                         else -> TODO("2")
                     }
+                    is Type.Pointer -> {
+                        if (tp.ptr is Type.Prim && tp.ptr.tk.str=="Char") {
+                            "printf(\"%s\", $v);"
+                        } else {
+                            TODO("1")
+                        }
+                    }
                     is Type.Tuple -> {
                         """
                         {

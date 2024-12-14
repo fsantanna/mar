@@ -84,7 +84,7 @@ class Infer {
                 "}") { G.outer!!.to_str() }
     }
 
-    // NUMS
+    // NUMS / STRING
 
     @Test
     fun ab_01_int () {
@@ -114,6 +114,21 @@ class Infer {
                 "}\n" +
                 "var r: Float\n" +
                 "set r = 1.0\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ab_03_string () {
+        val out = infer("""
+            var r = "1.0"
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var r: \\Char\n" +
+                "set r = \"1.0\"\n" +
                 "}") { G.outer!!.to_str() }
     }
 

@@ -51,6 +51,14 @@ class Exec  {
         """)
         assert(out == "11.100000\n") { out }
     }
+    @Test
+    fun aa_06_string() {
+        val out = test("""
+            var s = "10 + 1.1"
+            print(s)
+        """)
+        assert(out == "10 + 1.1\n") { out }
+    }
 
     // NAT
 
