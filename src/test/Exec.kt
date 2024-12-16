@@ -132,6 +132,15 @@ class Exec  {
         """)
         assert(out.contains("error: implicit declaration of function ‘f’")) { out }
     }
+    @Test
+    fun bb_08_nat_type() {
+        val out = test("""
+            var x: `int` = 10
+            var y: Int = x
+            print(y)
+        """)
+        assert(out == "10\n") { out }
+    }
 
     // CALL / PRINT / IF / LOOP
 
@@ -1090,4 +1099,18 @@ class Exec  {
 
     // MISC
 
+    @Test
+    fun zz_01_data () {
+        val out = test("""
+            data X.*: [] {
+                A: [x: Char]
+                B: [x: Int]
+            }
+            var a = X.A ['a']
+            print(a.x)
+            var b = X.B [10]
+            print(b.x)
+        """)
+        assert(out == "a\n10\n") { out }
+    }
 }

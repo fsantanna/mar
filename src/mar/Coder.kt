@@ -184,26 +184,37 @@ fun coder_types (pre: Boolean): String {
                             f(ss, id, l + listOf(i+1))
                         }.joinToString("")
                     }
-                    fun g (s: Stmt.Data, I: Int): String {
+                    fun g (sup: Pair<String,String>?, s: Stmt.Data, I: Int): String {
+                        val cur = sup.cond { it.first+"_" } + s.t.str
                         val tup = s.tp as Type.Tuple
-                        return tup.ts.mapIndexed { i,id_tp ->
+                        val flds = sup.cond { it.second } + tup.ts.mapIndexed { i, id_tp ->
                             val (id,tp) = id_tp
                             """
                             union {
                                 ${tp.coder(pre)} _${I+i};
                                 ${id.cond { "${tp.coder(pre)} ${it.str};" }}
-                            };                                    
+                            };
                             """
-                        }.joinToString("") + s.subs!!.map {
-                            g(it, I+tup.ts.size)
                         }.joinToString("")
+                        val subs = s.subs!!.map {
+                            g(Pair(cur,flds), it, I+tup.ts.size)
+                        }.joinToString("")
+                        return """
+                            struct {
+                                
+                                $flds
+                            } $cur;
+                            $subs
+                        """
                     }
                     listOf (f(me, "", listOf(G.datas++)) + """
                         typedef struct ${sup} {
                             union {
                                 struct {
                                     int tag;
-                                    ${g(me, 1)}
+                                    union {
+                                        ${g(null, me, 1)}
+                                    };
                                 };
                             };
                         } $sup;
@@ -410,6 +421,7 @@ fun Stmt.coder (pre: Boolean): String {
                                 printf("false");
                             }
                         """
+                        "Char"  -> "printf(\"%c\", $v);"
                         "Int"   -> "printf(\"%d\", $v);"
                         "Float" -> "printf(\"%f\", $v);"
                         else -> TODO("2")
@@ -456,12 +468,13 @@ fun Stmt.coder (pre: Boolean): String {
                         val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
                         val x = if (s.subs == null) aux(tpx, v) else {
                             val tup = tpx as Type.Tuple
+                            val ts = tp.ts.coder(pre)
                             """
                             {
                                 printf("[");
                                 ${tp.ts.first().str} mar_${tp.n} = $v;
                                 ${tup.ts.mapIndexed { i,(_,t) ->
-                                    aux(t, "mar_${tp.n}._${i+1}")
+                                    aux(t, "mar_${tp.n}.$ts._${i+1}")
                                 }.joinToString("printf(\",\");")}
                                 printf("]");
                             }                                
@@ -525,7 +538,8 @@ fun Expr.coder (pre: Boolean): String {
                     val sub = tp.ts.drop(1).map { it.str + "." }.joinToString("")
                     "(${this.col.coder(pre)}.$sub$idx)"
                 } else {
-                    "(${this.col.coder(pre)}.$idx)"
+                    val ts = tp.ts.coder(pre)
+                    "(${this.col.coder(pre)}.$ts.$idx)"
                 }
             }
         }
@@ -579,7 +593,8 @@ fun Expr.coder (pre: Boolean): String {
                 val vs = tup.vs.mapIndexed { i,(id,v) ->
                     "."+(id?.str ?: ("_"+(i+1))) + " = " + v.coder(pre)
                 }.joinToString(",")
-                "((${this.ts.first().str}) { .tag=MAR_TAG_${this.ts.coder(pre).uppercase()}, $vs })"
+                val ts = this.ts.coder(pre)
+                "((${this.ts.first().str}) { .tag=MAR_TAG_${ts.uppercase()}, .$ts={$vs} })"
             }
         }
 
