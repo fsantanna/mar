@@ -135,6 +135,14 @@ class Parser {
         assert(tp is Type.Data && tp.ts.size==3)
         assert(tp.to_str() == "X.Y.Z")
     }
+    @Test
+    fun aj_13_nat () {
+        G.tks = ("`10`").lexer()
+        parser_lexer()
+        val tp = parser_type(null, false)
+        assert(tp is Type.Nat && tp.tk.str=="10")
+        assert(tp.to_str() == "`10`")
+    }
 
     // TUPLE / UNION
 

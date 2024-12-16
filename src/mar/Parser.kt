@@ -233,6 +233,7 @@ fun parser_type (pre: Tk?, fr_proto: Boolean): Type {
             }
             Type.Union(tk0, true, ts)
         }
+        accept_enu("Nat")  -> Type.Nat(G.tk0 as Tk.Nat)
         else -> err_expected(G.tk1!!, "type")
     }
 }

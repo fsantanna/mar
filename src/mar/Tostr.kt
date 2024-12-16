@@ -33,7 +33,7 @@ fun List<Tk.Type>.to_str (pre: Boolean=false): String {
 fun Type.to_str (pre: Boolean = false): String {
     return when (this) {
         //is Type.Any -> "?"
-        is Type.Nat -> "?"
+        is Type.Nat -> "`${this.tk.str}`"
         is Type.Prim -> this.tk.str
         is Type.Data -> this.ts.to_str(pre)
         is Type.Unit -> "()"

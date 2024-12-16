@@ -1090,24 +1090,4 @@ class Exec  {
 
     // MISC
 
-    @Test
-    fun zz_01() {
-        val out = test("""
-            func pm_set_image_crop: (crop: []) -> () {
-                `pico_set_image_crop(MAR_CAST(SDL_Rect,crop))`
-            }
-            pm_set_image_crop([[0,0],[24,24]])
-        """)
-        assert(out == "10 + 1.1\n") { out }
-    }
-    @Test
-    fun zz_02() {
-        val out = test("""
-            func pm_set_image_crop: (crop: [[Int,Int],[Int,Int]]) -> () {
-                `pico_set_image_crop(MAR_CAST(SDL_Rect,crop))`
-            }
-            pm_set_image_crop([[0,0],[24,24]])
-        """)
-        assert(out == "10 + 1.1\n") { out }
-    }
 }

@@ -1,6 +1,7 @@
 package test
 
 import mar.*
+import mar.test.infer
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runners.MethodSorters
@@ -499,6 +500,14 @@ class Static {
                 "var x: []\n" +
                 "set x = ([]:[])\n" +
                 "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun cc_13_tuple () {
+        val out = static("""
+            var x:[] = ([[0,0],[24,24]])
+        """)
+        assert(out == "anon : (lin 2, col 25) : tuple error : types mismatch") { out!! }
+        //assert(out == "anon : (lin 3, col 24) : inference error : incompatible types") { out!! }
     }
 
     // UNION
@@ -1526,7 +1535,7 @@ class Static {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "((`f`: ?)(([]:[])))\n" +
+                "((`f`: `TODO`)(([]:[])))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -1540,7 +1549,7 @@ class Static {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "((`f`: ?)((`x`: ?)))\n" +
+                "((`f`: `TODO`)((`x`: ?)))\n" +
                 "}") { G.outer!!.to_str() }
     }
 }

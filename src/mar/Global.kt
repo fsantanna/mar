@@ -66,7 +66,7 @@ sealed class Tk (val str: String, val pos: Pos) {
 sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
     //data class Top   (val tk_: Tk): Type(G.N++, tk_)
     //class Any     (tk: Tk): Type(G.N++, null, tk)
-    class Nat     (tk: Tk): Type(G.N++, null, tk)
+    class Nat     (val tk_: Tk.Nat): Type(G.N++, null, tk_)
     class Unit    (tk: Tk): Type(G.N++, null, tk)
     class Prim    (val tk_: Tk.Type): Type(G.N++, null, tk_)
     class Data    (tk: Tk, val ts: List<Tk.Type>): Type(G.N++, null, tk)

@@ -450,6 +450,37 @@ class Infer {
                 "print(([1,([2]:[Int])]:[Int,[Int]]))\n" +
                 "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun dd_08_infer_tuple () {
+        val out = infer("""
+            var x:[] = ([[0,0],[24,24]])
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var x: []\n" +
+                "set x = ([([0,0]:[Int,Int]),([24,24]:[Int,Int])]:[])\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun dd_09_infer_tuple () {
+        val out = infer("""
+            data T: []
+            var x: T = [[]]
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var x: []\n" +
+                "set x = ([([0,0]:[Int,Int]),([24,24]:[Int,Int])]:[])\n" +
+                "}") { G.outer!!.to_str() }
+    }
 
     // NAT
 
@@ -510,5 +541,22 @@ class Infer {
             var x = `x`
         """)
         assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+    }
+    @Test
+    fun ee_06_nat_type () {
+        val out = static("""
+            var x: `int` = 10
+            func f: (x: `int`) -> Int {
+                return x
+            }
+            print(f(`10`))
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "(`f`: ?(([10]:[Int])))\n" +
+                "}") { G.outer!!.to_str() }
     }
 }

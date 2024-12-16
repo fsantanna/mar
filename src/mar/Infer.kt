@@ -36,10 +36,18 @@ fun Expr.infer (): Type? {
         //is Stmt.XExpr -> Type.Unit(this.tk)
         is Expr.Cons -> up.walk(up.ts)!!.third
         is Expr.Tuple -> up.type_infer().let {
-            if (it == null) null else {
-                it as Type.Tuple
-                val i = up.vs.indexOfFirst { (_,e) -> e==this }
-                it.ts[i].second
+            when {
+                (it == null) -> null
+                (it !is Type.Tuple) -> null
+                else -> {
+                    val i = up.vs.indexOfFirst { (_, e) -> e == this }
+                    assert(i != -1)
+                    if (it.ts.size < i + 1) {
+                        null
+                    } else {
+                        it.ts[i].second
+                    }
+                }
             }
         }
         is Expr.Union -> up.type_infer().let {
@@ -122,9 +130,9 @@ fun infer_types () {
                     me.xtp = when {
                         (me.tk.str == "mar_ret") -> (me.up_first { it is Stmt.Proto } as Stmt.Proto).tp.out
                         //(up is Stmt.XExpr) -> Type.Nat(me.tk)
-                        (up is Expr.Call && up.f is Expr.Nat) -> Type.Nat(me.tk)
+                        (up is Expr.Call && up.f is Expr.Nat) -> Type.Nat(Tk.Nat("TODO",me.tk.pos.copy()))
                         //(up is Stmt.Set  && up.dst==me) -> null
-                        else -> me.infer() ?: Type.Nat(me.tk)
+                        else -> me.infer() ?: Type.Nat(Tk.Nat("TODO",me.tk.pos.copy()))
                     }
                 }
             }
