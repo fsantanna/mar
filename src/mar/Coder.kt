@@ -337,10 +337,11 @@ fun Stmt.coder (pre: Boolean): String {
             (!in_coro).cond { this.xtp!!.coder(pre) + " " + this.id.str + ";" }
         }
         is Stmt.Set    -> {
-            if (this.src is Expr.Yield) {
-                this.src.coder(pre)
-            } else {
-                this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
+            when (this.src) {
+                is Expr.Yield -> this.src.coder(pre) + """
+                    ${this.dst.coder(pre)} = mar_${this.src.n};
+                """
+                else -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
             }
         }
 
@@ -646,9 +647,7 @@ fun Expr.coder (pre: Boolean): String {
             mar_exe->pc = ${this.n};
             return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
         case ${this.n}:
-            ${(this.xup.let { if (it is Stmt.Set) it.dst else null }).cond { """
-                ${it.coder(pre)} = mar_arg._2;
-            """ }}
+            typeof(mar_arg._2) mar_$n = mar_arg._2;
         """
         }
     }
