@@ -1535,7 +1535,7 @@ class Static {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "((`f`: `TODO`)(([]:[])))\n" +
+                "do(((`f`: `TODO`)(([]:[]))))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -1549,7 +1549,7 @@ class Static {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "((`f`: `TODO`)((`x`: `TODO`)))\n" +
+                "do(((`f`: `TODO`)((`x`: `TODO`))))\n" +
                 "}") { G.outer!!.to_str() }
     }
 }

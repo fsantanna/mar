@@ -436,21 +436,26 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
 
         accept_fix("do") -> {
             val tk0 = G.tk0 as Tk.Fix
-            val esc = if (check_fix("{")) {
-                null
+            if (accept_fix("(")) {
+                val e = parser_expr()
+                listOf(Stmt.Pass(tk0, e))
             } else {
-                check_enu_err("Type")
-                val tp = parser_type(null, false)
-                if (tp !is Type.Data) {
-                    err(tp.tk, "exception error : expected data type")
+                val esc = if (check_fix("{")) {
+                    null
+                } else {
+                    check_enu_err("Type")
+                    val tp = parser_type(null, false)
+                    if (tp !is Type.Data) {
+                        err(tp.tk, "exception error : expected data type")
+                    }
+                    tp
                 }
-                tp
+                accept_fix_err("{")
+                val ss = parser_list(null, "}") {
+                    parser_stmt()
+                }.flatten()
+                listOf(Stmt.Block(tk0, esc, ss))
             }
-            accept_fix_err("{")
-            val ss = parser_list(null, "}") {
-                parser_stmt()
-            }.flatten()
-            listOf(Stmt.Block(tk0, esc, ss))
         }
         accept_fix("set") -> {
             val dst = parser_expr()
@@ -571,7 +576,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             accept_fix_err("(")
             val args = parser_list(",",")") { parser_expr() }
             if (set == null) {
-                listOf(Stmt.XExpr(tk0, Expr.Start(tk0, exe, args)))
+                listOf(Stmt.Pass(tk0, Expr.Start(tk0, exe, args)))
             } else {
                 listOf(Stmt.Set(set.first, set.second, Expr.Start(tk0, exe, args)))
 
@@ -588,7 +593,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             }
             accept_fix_err(")")
             if (set == null) {
-                listOf(Stmt.XExpr(tk0, Expr.Resume(tk0, exe, arg)))
+                listOf(Stmt.Pass(tk0, Expr.Resume(tk0, exe, arg)))
             } else {
                 listOf(Stmt.Set(set.first, set.second, Expr.Resume(tk0, exe, arg)))
 
@@ -604,7 +609,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             }
             accept_fix_err(")")
             if (set == null) {
-                listOf(Stmt.XExpr(tk0, Expr.Yield(tk0, arg)))
+                listOf(Stmt.Pass(tk0, Expr.Yield(tk0, arg)))
             } else {
                 listOf(Stmt.Set(set.first, set.second, Expr.Yield(tk0, arg)))
 
@@ -657,7 +662,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val tk1 = G.tk1!!
             val e = parser_expr_3_suf()
             if (e is Expr.Nat || e is Expr.Call) {
-                listOf(Stmt.XExpr(e.tk, e))
+                listOf(Stmt.Pass(e.tk, e))
             } else {
                 err_expected(tk1, "statement")
             }

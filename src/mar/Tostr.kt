@@ -146,7 +146,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.If     -> "if " + this.cnd.to_str(pre) + " {\n" + this.t.ss.to_str(pre) + "} else {\n" + this.f.ss.to_str(pre) + "}"
         is Stmt.Loop   -> "loop {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Print  -> "print(" + this.e.to_str(pre) + ")"
-        is Stmt.XExpr  -> this.e.to_str(pre)
+        is Stmt.Pass   -> "do(" + this.e.to_str(pre) + ")"
     }.let {
         when {
             !pre -> it

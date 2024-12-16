@@ -134,7 +134,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Loop   (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, null, tk)
 
     class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
-    class XExpr  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
+    class Pass  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
 }
 
 object G {

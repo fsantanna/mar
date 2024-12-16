@@ -300,6 +300,17 @@ class Parser {
                 "}") { s.to_str() }
     }
 
+    // PASS
+
+    @Test
+    fun de_01_do_pass() {
+        G.tks = "do(10)".lexer()
+        parser_lexer()
+        val s = parser_stmt().first()
+        assert(s is Stmt.Pass)
+        assert(s.to_str() == "do(10)") { s.to_str() }
+    }
+
     // DCL / SET
 
     @Test
@@ -453,16 +464,16 @@ class Parser {
         G.tks = ("resume xf()").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.XExpr && s.e is Expr.Resume && s.e.exe is Expr.Acc && s.e.arg is Expr.Unit)
-        assert(s.to_str() == "resume xf()") { s.to_str() }
+        assert(s is Stmt.Pass && s.e is Expr.Resume && s.e.exe is Expr.Acc && s.e.arg is Expr.Unit)
+        assert(s.to_str() == "do(resume xf())") { s.to_str() }
     }
     @Test
     fun hh_03_yield() {
         G.tks = ("yield()").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.XExpr && s.e is Expr.Yield && s.e.arg is Expr.Unit)
-        assert(s.to_str() == "yield()") { s.to_str() }
+        assert(s is Stmt.Pass && s.e is Expr.Yield && s.e.arg is Expr.Unit)
+        assert(s.to_str() == "do(yield())") { s.to_str() }
     }
     @Test
     fun hh_04_spawn() {
@@ -514,7 +525,7 @@ class Parser {
         val s = parser_stmt().first()
         assert(s is Stmt.If && s.cnd is Expr.Acc && s.t.ss.size==1 && s.f.ss.size==0)
         assert(s.to_str() == "if x {\n" +
-                "`.`\n" +
+                "do(`.`)\n" +
                 "} else {\n" +
                 "}") { s.to_str() }
     }
@@ -959,14 +970,14 @@ class Parser {
         G.tks = ("`f`").lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "`f`\n") { ss.to_str() }
+        assert(ss.to_str() == "do(`f`)\n") { ss.to_str() }
     }
     @Test
     fun oo_02_nat () {
         G.tks = ("`f`([10])").lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "(`f`(([10])))\n") { ss.to_str() }
+        assert(ss.to_str() == "do((`f`(([10]))))\n") { ss.to_str() }
     }
 
     // TEMPLATE

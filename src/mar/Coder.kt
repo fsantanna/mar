@@ -494,7 +494,7 @@ fun Stmt.coder (pre: Boolean): String {
                 puts("");
             """
         }
-        is Stmt.XExpr  -> this.e.coder(pre) + ";"
+        is Stmt.Pass  -> this.e.coder(pre) + ";"
     }
 }
 
@@ -600,7 +600,7 @@ fun Expr.coder (pre: Boolean): String {
 
         is Expr.Nat -> when {
             (this.tk.str == "mar_ret") -> this.tk.str
-            (this.xup is Stmt.XExpr)   -> this.tk.str
+            (this.xup is Stmt.Pass)   -> this.tk.str
             (this.xtp is Type.Nat)     -> this.tk.str
             (this.xtp is Type.Prim)    -> this.tk.str
             (this.xtp is Type.Data)    -> "MAR_CAST(${this.xtp!!.coder(pre)}, ${this.tk.str})"
