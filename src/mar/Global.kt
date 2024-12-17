@@ -112,6 +112,9 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
     class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Expr(G.N++, null, tk)
     class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Expr(G.N++, null, tk)
     class Yield   (tk: Tk, val arg: Expr): Expr(G.N++, null, tk)
+
+    class If      (tk: Tk, var xtp: Type?, val cnd: Expr, val t: Expr, val f: Expr): Expr(G.N++, null, tk)
+
 }
 
 sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {

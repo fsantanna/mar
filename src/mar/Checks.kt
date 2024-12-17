@@ -264,6 +264,18 @@ fun check_types () {
                     err(me.tk, "yield error : types mismatch")
                 }
             }
+            is Expr.If -> {
+                if (!me.cnd.type().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos.copy())))) {
+                    err(me.tk, "if error : expected boolean condition")
+                }
+                val tt = me.t.type()
+                val ft = me.f.type()
+                when {
+                    tt.is_sup_of(ft) -> {}
+                    ft.is_sup_of(tt) -> {}
+                    else -> err(me.tk, "if error : types mismatch")
+                }
+            }
             else -> {}
         }
     }

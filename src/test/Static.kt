@@ -1552,4 +1552,21 @@ class Static {
                 "do(((`f`: `TODO`)((`x`: `TODO`))))\n" +
                 "}") { G.outer!!.to_str() }
     }
+
+    // EXPR / IF
+
+    @Test
+    fun ii_01_if_err () {
+        val out = static("""
+            do(if true => 10 => true)
+        """)
+        assert(out == "anon : (lin 2, col 16) : if error : types mismatch") { out!! }
+    }
+    @Test
+    fun ii_02_if_err () {
+        val out = static("""
+            do(if 10 => 10 => 20)
+        """)
+        assert(out == "anon : (lin 2, col 16) : if error : expected boolean condition") { out!! }
+    }
 }

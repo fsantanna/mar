@@ -320,6 +320,15 @@ fun parser_expr_4_prim (): Expr {
             Expr.Cons(tp, l, e)
         }
 
+        accept_fix("if")    -> {
+            val tk0 = G.tk0!!
+            val cnd = parser_expr()
+            accept_fix_err("=>")
+            val t = parser_expr()
+            accept_fix_err("=>")
+            val f = parser_expr()
+            Expr.If(tk0, null, cnd, t, f)
+        }
         else -> err_expected(G.tk1!!, "expression")
     }
 }
@@ -438,6 +447,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val tk0 = G.tk0 as Tk.Fix
             if (accept_fix("(")) {
                 val e = parser_expr()
+                accept_fix_err(")")
                 listOf(Stmt.Pass(tk0, e))
             } else {
                 val esc = if (check_fix("{")) {
@@ -464,11 +474,12 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             }
             accept_fix_err("=")
             val tk0 = G.tk0 as Tk.Fix
-            if (check_stmt_is_expr()) {
-                parser_stmt(Pair(tk0,dst))
-            } else {
-                val src = parser_expr()
-                listOf(Stmt.Set(tk0, dst, src))
+            when {
+                check_stmt_is_expr() -> parser_stmt(Pair(tk0,dst))
+                else -> {
+                    val src = parser_expr()
+                    listOf(Stmt.Set(tk0, dst, src))
+                }
             }
         }
         accept_fix("var") -> {

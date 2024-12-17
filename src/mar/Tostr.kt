@@ -104,6 +104,8 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Start  -> "start " + this.exe.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
         is Expr.Resume -> "resume " + this.exe.to_str(pre) + "(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
         is Expr.Yield  -> "yield(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
+
+        is Expr.If     -> "if ${this.cnd.to_str(pre)} => ${this.t.to_str(pre)} => ${this.f.to_str(pre)}"
     }.let {
         when {
             !pre -> it

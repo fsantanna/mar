@@ -114,6 +114,12 @@ fun cache_ups () {
             is Expr.Yield -> {
                 me.arg.xup = me
             }
+
+            is Expr.If -> {
+                me.cnd.xup = me
+                me.t.xup = me
+                me.f.xup = me
+            }
         }
     }
     fun ft (me: Type) {

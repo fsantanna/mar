@@ -37,6 +37,14 @@ fun Type.is_same_of (other: Type): Boolean {
     return this.is_sup_of(other) && other.is_sup_of(this)
 }
 
+fun Type.sup_vs (other: Type): Type? {
+    return when {
+        this.is_sup_of(other) -> this
+        other.is_sup_of(this) -> other
+        else -> null
+    }
+}
+
 fun Expr.Bin.args (tp1: Type, tp2: Type): Boolean {
     return when (this.tk_.str) {
         "==", "!=" -> tp1.is_same_of(tp2)
@@ -241,6 +249,7 @@ fun Expr.type (): Type {
             Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
         }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
+        is Expr.If -> this.t.type()
     }.let {
         if (it.xup == null) {
             it.xup = this

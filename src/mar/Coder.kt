@@ -647,9 +647,11 @@ fun Expr.coder (pre: Boolean): String {
             mar_exe->pc = ${this.n};
             return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
         case ${this.n}:
-            typeof(mar_arg._2) mar_$n = mar_arg._2;
+            ${this.type().coder(pre)} mar_$n = mar_arg._2;
         """
         }
+
+        is Expr.If -> "((${this.cnd.coder(pre)}) ? (${this.t.coder(pre)}) : (${this.f.coder(pre)}))"
     }
 }
 

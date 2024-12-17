@@ -136,6 +136,16 @@ fun infer_types () {
                     }
                 }
             }
+            is Expr.If -> {
+                val tt = me.t.type_infer()
+                val tf = me.f.type_infer()
+                if (tt!=null && tf!=null) {
+                    me.xtp = tt.sup_vs(tf)
+                }
+                if (me.xtp == null) {
+                    me.xtp = me.infer()
+                }
+            }
             else -> {}
         }
     }

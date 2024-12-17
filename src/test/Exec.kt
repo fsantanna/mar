@@ -1097,6 +1097,16 @@ class Exec  {
         assert(out == "10\n") { out }
     }
 
+    // EXPR / IF
+
+    @Test
+    fun nn_01_if () {
+        val out = test("""
+            print(if true => 10 => 99)
+        """)
+        assert(out == "10\n") { out }
+    }
+
     // MISC
 
     @Test
