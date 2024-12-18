@@ -24,7 +24,7 @@ fun Expr.infer (tp: Type?): Type? {
                 }
             } else {
                 val vs = this.vs.mapIndexed { i,(tk,e) ->
-                    Pair(tk, e.infer(up.ts[i].second))
+                    Pair(tk, e.infer(if (up.ts.size<i+1) null else up.ts[i].second))
                 }
                 if (vs.any { it.second == null }) null else {
                     vs as List<Pair<Tk.Var?, Type>>
@@ -67,7 +67,10 @@ fun Expr.infer (tp: Type?): Type? {
             }
         }
         is Expr.Pred -> TODO()
-        is Expr.Disc -> TODO()
+        is Expr.Disc -> {
+            val col = this.col.infer(null)
+            col?.discx(this.idx)?.second
+        }
         is Expr.Cons -> {
             val e = this.e.infer(this.walk(this.ts)!!.third)
             if (e == null) null else {

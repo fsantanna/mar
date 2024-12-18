@@ -4,7 +4,6 @@ import mar.*
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runners.MethodSorters
-import test.static
 
 fun infer (me: String): String? {
     return trap {
@@ -366,7 +365,8 @@ class Infer {
         val out = infer("""
             var x = <.1=()>
         """)
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown types") { out!! }
+        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
     }
     @Test
     fun dd_02_infer_data_union () {
@@ -408,7 +408,7 @@ class Infer {
             var x: Int
             var ts = x.ts
         """)
-        assert(out == "anon : (lin 3, col 13) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 3, col 13) : inference error : unknown types") { out!! }
     }
     @Test
     fun dd_05_infer_tuple () {
@@ -485,7 +485,17 @@ class Infer {
             data T: []
             var x: T = [[]]
         """)
-        assert(out == "anon : (lin 3, col 24) : inference error : incompatible types") { out!! }
+        //assert(out == "anon : (lin 3, col 24) : inference error : incompatible types") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "data T: []\n" +
+                "var x: T\n" +
+                "set x = ([([]:[])]:[[]])\n" +
+                "}") { G.outer!!.to_str() }
     }
 
     // NAT
@@ -496,7 +506,7 @@ class Infer {
             var x = `10`
         """)
         //println(G.outer!!.to_str())
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown types") { out!! }
     }
     @Test
     fun ee_02_infer_nat () {
@@ -545,15 +555,15 @@ class Infer {
     }
     @Test
     fun ee_05_nat_err () {
-        val out = static("""
+        val out = infer("""
             var x = `x`
         """)
         //assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown types") { out!! }
     }
     @Test
     fun ee_06_nat_type () {
-        val out = static("""
+        val out = infer("""
             var y: `int` = 10
             func f: (x: `int`) -> Int {
                 return (x)
@@ -580,9 +590,9 @@ class Infer {
 
     @Test
     fun ff_01_if () {
-        val out = static("""
-            var x = if true => 10 => 10 
-        """)
+        val out = infer("""
+                var x = if true => 10 => 10 
+            """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data Return.*: [] {\n" +
@@ -595,16 +605,16 @@ class Infer {
     }
     @Test
     fun ff_02_if () {
-        val out = static("""
-            var x = if true => `10` => 10 
-        """)
+        val out = infer("""
+                var x = if true => `10` => 10 
+            """)
         assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
     }
     @Test
     fun ff_03_if () {
-        val out = static("""
-            var x: Int = if true => `10` => `10` 
-        """)
+        val out = infer("""
+                var x: Int = if true => `10` => `10` 
+            """)
         println(out)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
@@ -618,11 +628,11 @@ class Infer {
     }
     @Test
     fun ff_04_match () {
-        val out = static("""
-            var x = match true {
-                else => 10
-            }
-        """)
+        val out = infer("""
+                var x = match true {
+                    else => 10
+                }
+            """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data Return.*: [] {\n" +

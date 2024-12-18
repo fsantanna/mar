@@ -520,7 +520,15 @@ class Static {
         assert(out == "anon : (lin 2, col 25) : tuple error : types mismatch") { out!! }
         //assert(out == "anon : (lin 3, col 24) : inference error : incompatible types") { out!! }
     }
-
+    @Test
+    fun cc_14_infer_tuple () {
+        val out = check("""
+            data T: []
+            var x: T = [[]]
+        """)
+        TODO()
+        assert(out == "anon : (lin 3, col 24) : inference error : incompatible types") { out!! }
+    }
     // UNION
 
     @Test
