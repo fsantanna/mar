@@ -98,6 +98,18 @@ class Static {
         assert(out == null) { out!! }
         //assert(out == "anon : (lin 5, col 17) : implementation error : variable \"f\" is not declared") { out!! }
     }
+    @Test
+    fun aa_07_coro_err () {
+        val out = static("""
+            coro gen1: (v: Int) -> () -> () -> () {
+                `printf("%d\n", mar_exe->mem.v);`
+            }
+            var co1 = create(gen1)
+            start co1([])
+        """)
+        TODO()
+        assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
+    }
 
     // NUMS
 

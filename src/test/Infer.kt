@@ -331,7 +331,8 @@ class Infer {
             var co1 = create(gen1)
             start co1(<.1=1>)
         """)
-        assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
+        assert(out == "anon : (lin 6, col 13) : inference error : unknown types") { out!! }
+        //assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
     }
     @Test
     fun cc_06_infer_err () {
@@ -342,7 +343,20 @@ class Infer {
             var co1 = create(gen1)
             start co1([])
         """)
-        assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
+        //assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "coro gen1: (v: Int) -> () -> () -> () {\n" +
+                "do((`printf(\"%d\\n\", mar_exe->mem.v);`: ()))\n" +
+                "}\n" +
+                "var co1: exec (Int) -> () -> () -> ()\n" +
+                "set co1 = create(gen1)\n" +
+                "do(start co1(([]:[])))\n" +
+                "}") { G.outer!!.to_str() }
     }
 
     // DATA / TUPLE / UNION

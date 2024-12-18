@@ -2,7 +2,12 @@ package mar
 
 fun Expr.infer (tp: Type?): Type? {
     return when (this) {
-        is Expr.Nat -> this.xtp ?: tp
+        is Expr.Nat -> {
+            if (this.xtp == null) {
+                this.xtp = tp
+            }
+            this.xtp
+        }
         is Expr.Acc -> this.tk_.type(this)
 
         is Expr.Bool, is Expr.Str, is Expr.Chr,
@@ -30,10 +35,12 @@ fun Expr.infer (tp: Type?): Type? {
                     )
                 }
             }
-            if (this.xtp == null) {
-                this.xtp = dn
+            if (dn == null) null else {
+                if (this.xtp == null) {
+                    this.xtp = dn
+                }
+                this.xtp
             }
-            this.xtp
         }
         is Expr.Field -> {
             val col = this.col.infer(null)
@@ -46,22 +53,94 @@ fun Expr.infer (tp: Type?): Type? {
                 tup.index(this.idx)
             }
         }
-        is Expr.Union -> TODO()
+        is Expr.Union -> {
+            val up = this.xtp ?: tp
+            val sub = if (up !is Type.Union) null else {
+                up.disc(this.idx).nulls().second
+            }
+            val dn = this.v.infer(sub)
+            if (dn == null) null else {
+                if (this.xtp == null) {
+                    this.xtp = (if (up is Type.Union) up else null)
+                }
+                this.xtp
+            }
+        }
         is Expr.Pred -> TODO()
         is Expr.Disc -> TODO()
         is Expr.Cons -> {
-            this.e.infer(this.walk(this.ts)!!.third)
-            this.type()
+            val e = this.e.infer(this.walk(this.ts)!!.third)
+            if (e == null) null else {
+                this.type()
+            }
         }
 
-        is Expr.Uno -> TODO()
-        is Expr.Bin -> TODO()
-        is Expr.Call -> TODO()
+        is Expr.Uno -> {
+            val e = this.e.infer(null)
+            if (e == null) null else {
+                this.type()
+            }
+        }
+        is Expr.Bin -> {
+            val e1 = this.e1.infer(null)
+            val e2 = this.e2.infer(null)
+            if (e1==null || e2==null) null else {
+                this.type()
+            }
+        }
+        is Expr.Call -> {
+            val f = this.f.infer(null)
+            val args = if (f is Type.Proto) {
+                this.args.mapIndexed { i,e ->
+                    e.infer(f.inps[i])
+                }
+            } else {
+                this.args.map {
+                    it.infer(null)
+                }
+            }
+            if (f==null || args.any { it==null }) null else {
+                this.type()
+            }
+        }
 
-        is Expr.Create -> TODO()
-        is Expr.Start -> TODO()
-        is Expr.Resume -> TODO()
-        is Expr.Yield -> TODO()
+        is Expr.Create -> {
+            val co = this.co.infer(null)
+            if (co == null) null else {
+                this.type()
+            }
+        }
+        is Expr.Start -> {
+            val exe = this.exe.infer(null)
+            val args = if (exe is Type.Exec) {
+                this.args.mapIndexed { i,e ->
+                    e.infer(exe.inps[i])
+                }
+            } else {
+                this.args.map {
+                    it.infer(null)
+                }
+            }
+            if (exe==null || args.any { it==null }) null else {
+                this.type()
+            }
+        }
+        is Expr.Resume -> {
+            val exe = this.exe.infer(null)
+            if (exe is Type.Exec) {
+                this.arg.infer(exe.res)
+            }
+            if (exe == null) null else {
+                this.type()
+            }
+        }
+        is Expr.Yield -> {
+            val coro = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
+            val arg = this.arg.infer(coro.yld)
+            if (arg == null) null else {
+                coro.res
+            }
+        }
 
         is Expr.If -> TODO()
         is Expr.Match -> TODO()
@@ -103,7 +182,7 @@ fun infer_types () {
             is Stmt.Loop -> true
 
             is Stmt.Print -> (me.e.infer(null) != null)
-            is Stmt.Pass -> (me.e.infer(null) != null)
+            is Stmt.Pass -> (me.e.infer(Type.Unit(me.tk)) != null)
         }
         if (!ok) {
             //println(me.to_str())
