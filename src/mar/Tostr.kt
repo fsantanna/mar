@@ -32,7 +32,7 @@ fun List<Tk.Type>.to_str (pre: Boolean=false): String {
 
 fun Type.to_str (pre: Boolean = false): String {
     return when (this) {
-        //is Type.Any -> "?"
+        is Type.Any -> TODO()
         is Type.Nat -> "`${this.tk.str}`"
         is Type.Prim -> this.tk.str
         is Type.Data -> this.ts.to_str(pre)
@@ -73,7 +73,7 @@ fun Expr.to_str (pre: Boolean = false): String {
     return when (this) {
         is Expr.Nat    -> {
             val nat = this.tk.str.let { if (it.contains("\n")) "```"+it+"```" else "`"+it+"`" }
-            if (this.xtp == null) {
+            if (this.xtp==null || this.xtp is Type.Any) {
                 nat
             } else {
                 "(" + nat + ": " + this.xtp!!.to_str(pre) + ")"

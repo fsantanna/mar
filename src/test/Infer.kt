@@ -506,7 +506,7 @@ class Infer {
             var x = `10`
         """)
         //println(G.outer!!.to_str())
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown types") { out!! }
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
     }
     @Test
     fun ee_02_infer_nat () {
@@ -535,7 +535,7 @@ class Infer {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "do(((`f`: `TODO`)(([10]:[Int]))))\n" +
+                "do((`f`(([10]:[Int]))))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -550,7 +550,7 @@ class Infer {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "do(((`f`: `TODO`)((`x`: `TODO`))))\n" +
+                "do((`f`(`x`)))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -559,7 +559,7 @@ class Infer {
             var x = `x`
         """)
         //assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown types") { out!! }
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
     }
     @Test
     fun ee_06_nat_type () {
@@ -606,24 +606,23 @@ class Infer {
     @Test
     fun ff_02_if () {
         val out = infer("""
-                var x = if true => `10` => 10 
-            """)
+            var x = if true => `10` => 10 
+        """)
         assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
     }
     @Test
     fun ff_03_if () {
         val out = infer("""
-                var x: Int = if true => `10` => `10` 
-            """)
-        println(out)
+            var x: Int = if true => `10` => `10` 
+        """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data Return.*: [] {\n" +
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "var x: `TODO`\n" +
-                "set x = if true => (`10`: `TODO`) => 10\n" +
+                "var x: Int\n" +
+                "set x = if true => (`10`: Int) => (`10`: Int)\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test

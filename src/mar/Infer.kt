@@ -4,7 +4,7 @@ fun Expr.infer (tp: Type?): Type? {
     return when (this) {
         is Expr.Nat -> {
             if (this.xtp == null) {
-                this.xtp = tp
+                this.xtp = tp ?: Type.Any(this.tk)
             }
             this.xtp
         }
@@ -145,7 +145,14 @@ fun Expr.infer (tp: Type?): Type? {
             }
         }
 
-        is Expr.If -> TODO()
+        is Expr.If -> {
+            val cnd = this.cnd.infer(Type.Prim(Tk.Type("Bool",this.tk.pos.copy())))
+            val t = this.t.infer(tp)
+            val f = this.f.infer(tp)
+            if (cnd==null || t==null || f==null) null else {
+                t.sup_vs(f)
+            }
+        }
         is Expr.Match -> TODO()
     }
 }
@@ -196,7 +203,7 @@ fun infer_types () {
 
     G.outer!!.dn_visit_pre({
         if (it is Stmt.Dcl) {
-            if (it.xtp == null) {
+            if (it.xtp==null || it.xtp is Type.Any) {
                 err(it.tk, "inference error : unknown type")
             }
         }

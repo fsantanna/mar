@@ -18,7 +18,7 @@ fun Type.Prim.compat (other: Type.Prim): Boolean {
 fun Type.is_sup_of (other: Type): Boolean {
     return when {
         //(this is Type.Top) -> true
-        //(this is Type.Any || other is Type.Any) -> true
+        (this is Type.Any || other is Type.Any) -> true
         (this is Type.Nat || other is Type.Nat) -> true
         (this is Type.Unit       && other is Type.Unit)       -> true
         (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
@@ -211,7 +211,7 @@ fun Expr.type (): Type {
             else -> error("impossible case")
         }
         is Expr.Call -> this.f.type().let {
-            if (it is Type.Nat) it else (it as Type.Proto.Func).out
+            if (it is Type.Nat || it is Type.Any) it else (it as Type.Proto.Func).out
         }
 
         is Expr.Tuple -> this.xtp!!
