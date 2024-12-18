@@ -230,7 +230,7 @@ fun Expr.type (): Type {
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
         is Expr.Str -> Type.Pointer(this.tk, Type.Prim(Tk.Type( "Char", this.tk.pos.copy())))
         is Expr.Chr -> Type.Prim(Tk.Type( "Char", this.tk.pos.copy()))
-        is Expr.Nat -> this.xtp ?: Type.Nat(Tk.Nat("TODO",this.tk.pos.copy()))
+        is Expr.Nat -> this.xtp!! //?: Type.Nat(Tk.Nat("TODO",this.tk.pos.copy()))
         is Expr.Null -> Type.Pointer(this.tk, null /*Type.Any(this.tk)*/)
         is Expr.Unit -> Type.Unit(this.tk)
         is Expr.Num -> {
@@ -249,7 +249,8 @@ fun Expr.type (): Type {
             Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
         }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
-        is Expr.If -> this.t.type()
+        is Expr.If -> this.t.type().sup_vs(this.f.type())!!
+        is Expr.Match -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a.sup_vs(b)!!})
     }.let {
         if (it.xup == null) {
             it.xup = this

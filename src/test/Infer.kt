@@ -1,4 +1,4 @@
-package mar.test
+package test
 
 import mar.*
 import org.junit.FixMethodOrder
@@ -167,7 +167,7 @@ class Infer {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "func f: (v: [Int,Int]) -> Int {\n" +
-                "set `mar_ret`: Int = ((v.1) + (v.2))\n" +
+                "set (`mar_ret`: Int) = ((v.1) + (v.2))\n" +
                 "escape((Return(([]:[]))))\n" +
                 "}\n" +
                 "var x: Int\n" +
@@ -208,7 +208,7 @@ class Infer {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "func f: () -> <(),Int> {\n" +
-                "set `mar_ret`: <(),Int> = <.1=()>:<(),Int>\n" +
+                "set (`mar_ret`: <(),Int>) = <.1=()>:<(),Int>\n" +
                 "escape((Return(([]:[]))))\n" +
                 "}\n" +
                 "var x: <(),Int>\n" +
@@ -236,7 +236,7 @@ class Infer {
                 "}\n" +
                 "var exe: exec (<(),Int>) -> () -> () -> ()\n" +
                 "set exe = create(co)\n" +
-                "start exe(<.1=()>:<(),Int>)\n" +
+                "do(start exe(<.1=()>:<(),Int>))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -258,8 +258,8 @@ class Infer {
                 "}\n" +
                 "var exe: exec () -> <(),Int> -> () -> ()\n" +
                 "set exe = create(co)\n" +
-                "start exe()\n" +
-                "resume exe(<.1=()>:<(),Int>)\n" +
+                "do(start exe())\n" +
+                "do(resume exe(<.1=()>:<(),Int>))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -283,7 +283,7 @@ class Infer {
                 "}\n" +
                 "var exe: exec () -> () -> <(),Int> -> ()\n" +
                 "set exe = create(co)\n" +
-                "start exe()\n" +
+                "do(start exe())\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -312,14 +312,14 @@ class Infer {
                 "data D: Int\n" +
                 "coro co: (a: A) -> B -> C -> D {\n" +
                 "var x: B\n" +
-                "set x = yield(`x`: C)\n" +
+                "set x = yield((`x`: C))\n" +
                 "}\n" +
                 "var exe: exec (A) -> B -> C -> D\n" +
                 "set exe = create(co)\n" +
                 "var y: <C,D>\n" +
-                "set y = start exe(`x`: A)\n" +
+                "set y = start exe((`x`: A))\n" +
                 "var z: <C,D>\n" +
-                "set z = resume exe(`x`: B)\n" +
+                "set z = resume exe((`x`: B))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -471,15 +471,7 @@ class Infer {
             data T: []
             var x: T = [[]]
         """)
-        assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "do {\n" +
-                "data Return.*: [] {\n" +
-                "}\n" +
-                "data Break.*: [] {\n" +
-                "}\n" +
-                "var x: []\n" +
-                "set x = ([([0,0]:[Int,Int]),([24,24]:[Int,Int])]:[])\n" +
-                "}") { G.outer!!.to_str() }
+        assert(out == "anon : (lin 3, col 24) : inference error : incompatible types") { out!! }
     }
 
     // NAT
@@ -489,7 +481,8 @@ class Infer {
         val out = infer("""
             var x = `10`
         """)
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        //println(G.outer!!.to_str())
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
     }
     @Test
     fun ee_02_infer_nat () {
@@ -503,7 +496,7 @@ class Infer {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "var x: Int\n" +
-                "set x = `10`: Int\n" +
+                "set x = (`10`: Int)\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -513,11 +506,12 @@ class Infer {
         """)
         //assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "data Return.*: [] {\n" +
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "(`f`: ?(([10]:[Int])))\n" +
+                "do(((`f`: `TODO`)(([10]:[Int]))))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -532,7 +526,7 @@ class Infer {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "(`f`: func (?) -> ()(`x`: ?))\n" +
+                "do(((`f`: `TODO`)((`x`: `TODO`))))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -540,23 +534,89 @@ class Infer {
         val out = static("""
             var x = `x`
         """)
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
     }
     @Test
     fun ee_06_nat_type () {
         val out = static("""
-            var x: `int` = 10
+            var y: `int` = 10
             func f: (x: `int`) -> Int {
-                return x
+                return (x)
             }
             print(f(`10`))
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "data Return.*: [] {\n" +
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "(`f`: ?(([10]:[Int])))\n" +
+                "var y: `int`\n" +
+                "set y = 10\n" +
+                "func f: (x: `int`) -> Int {\n" +
+                "set (`mar_ret`: Int) = x\n" +
+                "escape((Return(([]:[]))))\n" +
+                "}\n" +
+                "print((f((`10`: `int`))))\n" +
+                "}") { G.outer!!.to_str() }
+    }
+
+    // EXPR / IF / MATCH
+
+    @Test
+    fun ff_01_if () {
+        val out = static("""
+            var x = if true => 10 => 10 
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var x: Int\n" +
+                "set x = if true => 10 => 10\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ff_02_if () {
+        val out = static("""
+            var x = if true => `10` => 10 
+        """)
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+    }
+    @Test
+    fun ff_03_if () {
+        val out = static("""
+            var x: Int = if true => `10` => `10` 
+        """)
+        println(out)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var x: `TODO`\n" +
+                "set x = if true => (`10`: `TODO`) => 10\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ff_04_match () {
+        val out = static("""
+            var x = match true {
+                else => 10
+            }
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var x: `TODO`\n" +
+                "set x = if true => (`10`: `TODO`) => 10\n" +
                 "}") { G.outer!!.to_str() }
     }
 }

@@ -652,6 +652,7 @@ fun Expr.coder (pre: Boolean): String {
         }
 
         is Expr.If -> "((${this.cnd.coder(pre)}) ? (${this.t.coder(pre)}) : (${this.f.coder(pre)}))"
+        is Expr.Match -> TODO("4")
     }
 }
 

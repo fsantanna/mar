@@ -980,6 +980,32 @@ class Parser {
         assert(ss.to_str() == "do((`f`(([10]))))\n") { ss.to_str() }
     }
 
+    // EXPR / IF / MATCH
+
+    @Test
+    fun pp_01_if () {
+        G.tks = ("do(if x => t => f)").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "do(if x => t => f)\n") { ss.to_str() }
+    }
+    @Test
+    fun pp_02_match () {
+        G.tks = ("var x = match x {}").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 18) : match error : unexpected \"}\"")
+    }
+    @Test
+    fun pp_04_match () {
+        G.tks = ("set y = match x { 1=>1 else=>x }").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "set y = match x {\n" +
+                "1 => 1\n" +
+                "else => x\n" +
+                "}\n") { ss.to_str() }
+    }
+
     // TEMPLATE
 
     @Test

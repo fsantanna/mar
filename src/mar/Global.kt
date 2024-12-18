@@ -38,8 +38,8 @@ val KEYWORDS: SortedSet<String> = (
     setOf (
         "break", "do", "catch", "coro", "create", "defer",
         "data", "else", "escape", "exec", "false", "func", "if",
-        "include", "loop", "null", "print", "resume", "return", "set",
-        "start", "throw", "true", "var", "yield",
+        "include", "loop", "match", "null", "print", "resume",
+        "return", "set", "start", "throw", "true", "var", "yield",
     ).toSortedSet()
 )
 
@@ -114,6 +114,7 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
     class Yield   (tk: Tk, val arg: Expr): Expr(G.N++, null, tk)
 
     class If      (tk: Tk, var xtp: Type?, val cnd: Expr, val t: Expr, val f: Expr): Expr(G.N++, null, tk)
+    class Match   (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Expr?,Expr>>): Expr(G.N++, null, tk)
 
 }
 

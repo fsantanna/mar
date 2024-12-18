@@ -106,6 +106,15 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Yield  -> "yield(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
 
         is Expr.If     -> "if ${this.cnd.to_str(pre)} => ${this.t.to_str(pre)} => ${this.f.to_str(pre)}"
+        is Expr.Match  -> {
+            val tst = this.tst.to_str(pre)
+            val cases = this.cases.map {
+                val cnd = if (it.first == null) "else" else it.first!!.to_str(pre)
+                val e = it.second.to_str(pre)
+                "$cnd => $e\n"
+            }.joinToString("")
+            "match $tst {\n$cases}"
+        }
     }.let {
         when {
             !pre -> it

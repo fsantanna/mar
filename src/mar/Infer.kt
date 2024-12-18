@@ -33,6 +33,14 @@ fun Expr.infer (): Type? {
             assert(up.src == this)
             up.dst.type_infer()
         }
+        is Expr.If -> {
+            if (up.cnd == this) {
+                Type.Prim(Tk.Type("Bool",up.tk.pos.copy()))
+            } else {
+                println(up.xtp?.to_str())
+                up.xtp
+            }
+        }
         //is Stmt.XExpr -> Type.Unit(this.tk)
         is Expr.Cons -> up.walk(up.ts)!!.third
         is Expr.Tuple -> up.type_infer().let {
@@ -132,18 +140,21 @@ fun infer_types () {
                         //(up is Stmt.XExpr) -> Type.Nat(me.tk)
                         (up is Expr.Call && up.f is Expr.Nat) -> Type.Nat(Tk.Nat("TODO",me.tk.pos.copy()))
                         //(up is Stmt.Set  && up.dst==me) -> null
-                        else -> me.infer() ?: Type.Nat(Tk.Nat("TODO",me.tk.pos.copy()))
+                        else -> {
+                            println(me.to_str())
+                            me.infer()
+                        } //?: Type.Nat(Tk.Nat("TODO",me.tk.pos.copy()))
                     }
                 }
             }
             is Expr.If -> {
-                val tt = me.t.type_infer()
-                val tf = me.f.type_infer()
-                if (tt!=null && tf!=null) {
-                    me.xtp = tt.sup_vs(tf)
-                }
+                me.xtp = me.infer()
                 if (me.xtp == null) {
-                    me.xtp = me.infer()
+                    val tt = me.t.type_infer()
+                    val tf = me.f.type_infer()
+                    if (tt != null && tf != null) {
+                        me.xtp = tt.sup_vs(tf)
+                    }
                 }
             }
             else -> {}

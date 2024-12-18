@@ -120,6 +120,13 @@ fun cache_ups () {
                 me.t.xup = me
                 me.f.xup = me
             }
+            is Expr.Match -> {
+                me.tst.xup = me
+                me.cases.forEach {
+                    it.first?.xup = me
+                    it.second.xup = me
+                }
+            }
         }
     }
     fun ft (me: Type) {

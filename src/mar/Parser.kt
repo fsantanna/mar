@@ -405,7 +405,7 @@ fun parser_expr (): Expr {
 }
 
 fun check_stmt_is_expr (): Boolean {
-    return (check_fix("create") || check_fix("start") || check_fix("resume") || check_fix("yield"))
+    return (check_fix("create") || check_fix("start") || check_fix("resume") || check_fix("yield") || check_fix("match"))
 }
 
 fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
@@ -625,6 +625,24 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 listOf(Stmt.Set(set.first, set.second, Expr.Yield(tk0, arg)))
 
             }
+        }
+
+        (set!=null && accept_fix("match")) -> {
+            val tk0 = G.tk0!!
+            val tst = parser_expr()
+            accept_fix_err("{")
+            if (check_fix("}")) {
+                err(G.tk1!!, "match error : unexpected \"}\"")
+            }
+            val cases = parser_list(null, "}") {
+                val cnd = if (accept_fix("else")) null else {
+                    parser_expr()
+                }
+                accept_fix_err("=>")
+                val e = parser_expr()
+                Pair(cnd, e)
+            }
+            listOf(Stmt.Set(set.first, set.second, Expr.Match(tk0, null, tst, cases)))
         }
 
         accept_fix("data") -> {

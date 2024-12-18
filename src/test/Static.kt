@@ -1,7 +1,6 @@
 package test
 
 import mar.*
-import mar.test.infer
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runners.MethodSorters
@@ -1553,7 +1552,7 @@ class Static {
                 "}") { G.outer!!.to_str() }
     }
 
-    // EXPR / IF
+    // EXPR / IF / MATCH
 
     @Test
     fun ii_01_if_err () {
@@ -1567,6 +1566,28 @@ class Static {
         val out = static("""
             do(if 10 => 10 => 20)
         """)
-        assert(out == "anon : (lin 2, col 16) : if error : expected boolean condition") { out!! }
+        assert(out == "anon : (lin 2, col 19) : if error : expected boolean condition") { out!! }
+    }
+    @Test
+    fun ii_03_match_err () {
+        val out = static("""
+            var x = match 10 { else => 10 }
+        """)
+        assert(out == "anon : (lin 2, col 27) : match error : expected boolean condition") { out!! }
+    }
+    @Test
+    fun ii_04_match_err () {
+        val out = static("""
+            var x: Int
+            set x = match true { 10 => 10 }
+        """)
+        assert(out == "anon : (lin 3, col 34) : match error : expected boolean condition") { out!! }
+    }
+    @Test
+    fun ii_05_match_err () {
+        val out = static("""
+            var x: Int = match true { true => 10 ; else => true}
+        """)
+        assert(out == "anon : (lin 2, col 26) : match error : types mismatch") { out!! }
     }
 }
