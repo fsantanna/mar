@@ -10,28 +10,49 @@ fun Expr.infer (tp: Type?): Type? {
 
         is Expr.Tuple -> {
             val up = this.xtp ?: tp
-            val dn = this.vs.mapIndexed { i,v ->
-                val xi = if (up !is Type.Tuple) null else {
-                    up.ts[i].second
+            val dn = if (up !is Type.Tuple) {
+                val vs = this.vs.map { (tk,e) ->
+                    Pair(tk, e.infer(null))
                 }
-                Pair(v.first, v.second.infer(xi))
-            }.let {
-                if (it.any { it.second == null }) null else {
-                    it as List<Pair<Tk.Var?, Type>>
-                    val tup = Type.Tuple(this.tk, it)
-                    if (this.xtp == null) {
-                        this.xtp = tup
-                    }
-                    tup
+                if (vs.any { it.second == null }) null else {
+                    Type.Tuple(this.tk, vs as List<Pair<Tk.Var?, Type>>)
+                }
+            } else {
+                val vs = this.vs.mapIndexed { i,(tk,e) ->
+                    Pair(tk, e.infer(up.ts[i].second))
+                }
+                if (vs.any { it.second == null }) null else {
+                    vs as List<Pair<Tk.Var?, Type>>
+                    Type.Tuple(this.tk,
+                        vs.zip(up.ts).map { (vs,ts) ->
+                            Pair(vs.first ?: ts.first, vs.second)
+                        }
+                    )
                 }
             }
-            dn ?: up
+            if (this.xtp == null) {
+                this.xtp = dn
+            }
+            this.xtp
         }
-        is Expr.Field -> TODO()
+        is Expr.Field -> {
+            val col = this.col.infer(null)
+            val tup = when (col) {
+                is Type.Tuple -> col
+                is Type.Data -> col.walk()?.third
+                else -> null
+            }
+            if (tup !is Type.Tuple) null else {
+                tup.index(this.idx)
+            }
+        }
         is Expr.Union -> TODO()
         is Expr.Pred -> TODO()
         is Expr.Disc -> TODO()
-        is Expr.Cons -> TODO()
+        is Expr.Cons -> {
+            this.e.infer(this.walk(this.ts)!!.third)
+            this.type()
+        }
 
         is Expr.Uno -> TODO()
         is Expr.Bin -> TODO()
@@ -85,6 +106,7 @@ fun infer_types () {
             is Stmt.Pass -> (me.e.infer(null) != null)
         }
         if (!ok) {
+            //println(me.to_str())
             err(me.tk, "inference error : unknown types")
         }
     }
