@@ -39,6 +39,14 @@ fun Type.is_same_of (other: Type): Boolean {
 
 fun Type.sup_vs (other: Type): Type? {
     return when {
+        (this is Type.Data && other is Type.Data) -> {
+            val l = this.ts.commonPrefix(other.ts) { x,y ->
+                (x.str == y.str)
+            }
+            if (l.size == 0) null else {
+                Type.Data(this.tk, l)
+            }
+        }
         this.is_sup_of(other) -> this
         other.is_sup_of(this) -> other
         else -> null

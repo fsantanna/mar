@@ -1,5 +1,19 @@
 package mar
 
+import kotlin.math.min
+
+fun <T> List<T>.commonPrefix (other: List<T>, fcmp: (T,T)->Boolean): List<T> {
+    val l = mutableListOf<T>()
+    for (i in 0..min(this.size,other.size) -1) {
+        if (fcmp(this[i], other[i])) {
+            l.add(this[i])
+        } else {
+            break
+        }
+    }
+    return l
+}
+
 fun <A,B> Pair<A,B>?.nulls (): Pair<A?,B?> {
     return if (this == null) Pair(null, null) else this
 }

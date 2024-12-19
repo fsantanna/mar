@@ -654,4 +654,47 @@ class Infer {
         """)
         assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
     }
+    @Test
+    fun ff_06_if_hier () {
+        val out = infer("""
+            data X.*: [] {
+                A: []
+                B: []
+            }
+            var x = if true => X.A [] => X.B [] 
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "data X.*: [] {\n" +
+                "A: [] {\n" +
+                "}\n" +
+                "B: [] {\n" +
+                "}\n" +
+                "}\n" +
+                "var x: X\n" +
+                "set x = if true => (X.A(([]:[]))) => (X.B(([]:[])))\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ff_07_if_throw () {
+        val out = infer("""
+            data Error.*: []
+            var x = if true => 10 => throw() 
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "data Error.*: [] {\n" +
+                "}\n" +
+                "var x: Int\n" +
+                "set x = if true => 10 => throw((Error(([]:[]))))\n" +
+                "}") { G.outer!!.to_str() }
+    }
 }
