@@ -408,7 +408,7 @@ class Infer {
             var x: Int
             var ts = x.ts
         """)
-        assert(out == "anon : (lin 3, col 13) : inference error : unknown types") { out!! }
+        assert(out == "anon : (lin 3, col 13) : inference error : unknown type") { out!! }
     }
     @Test
     fun dd_05_infer_tuple () {

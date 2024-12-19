@@ -386,7 +386,7 @@ class Check {
                 }
             }
         """)
-        assert(out == "anon : (lin 4, col 36) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 32) : set error : types mismatch") { out!! }
     }
     @Test
     fun bc_14_exe_yield_err () {

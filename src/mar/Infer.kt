@@ -49,8 +49,10 @@ fun Expr.infer (tp: Type?): Type? {
                 is Type.Data -> col.walk()?.third
                 else -> null
             }
-            if (tup !is Type.Tuple) null else {
-                tup.index(this.idx)
+            if (tup !is Type.Tuple) {
+                Type.Any(this.tk)
+            } else {
+                tup.index(this.idx) ?: Type.Any(this.tk)
             }
         }
         is Expr.Union -> {
@@ -69,7 +71,7 @@ fun Expr.infer (tp: Type?): Type? {
         is Expr.Pred -> TODO()
         is Expr.Disc -> {
             val col = this.col.infer(null)
-            col?.discx(this.idx)?.second
+            col?.discx(this.idx)?.second ?: Type.Any(this.tk)
         }
         is Expr.Cons -> {
             val e = this.e.infer(this.walk(this.ts)!!.third)
@@ -111,9 +113,9 @@ fun Expr.infer (tp: Type?): Type? {
 
         is Expr.Create -> {
             val co = this.co.infer(null)
-            when {
-                (co == null) -> null
-                (co !is Type.Proto.Coro) -> Type.Any(this.tk)
+            when (co) {
+                null -> null
+                !is Type.Proto.Coro -> Type.Any(this.tk)
                 else -> this.type()
             }
         }
@@ -139,9 +141,9 @@ fun Expr.infer (tp: Type?): Type? {
             if (exe is Type.Exec) {
                 this.arg.infer(exe.res)
             }
-            when {
-                (exe == null) -> null
-                (exe !is Type.Exec) -> Type.Any(this.tk)
+            when (exe) {
+                null -> null
+                !is Type.Exec -> Type.Any(this.tk)
                 else -> this.type()
             }
         }
