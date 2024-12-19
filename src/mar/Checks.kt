@@ -279,13 +279,18 @@ fun check_types () {
             is Expr.Match -> {
                 val fsts = listOf(me.tst.type()) + me.cases.map { it.first }.filterNotNull().map { it.type() }
                 val x: Type? = fsts.first()
-                if (fsts.fold(x, { a,b -> a?.sup_vs(b) }) == null) {
+                val xs = fsts.fold(x, { a,b -> a?.sup_vs(b) })
+                if (xs == null) {
+                    err(me.tk, "match error : types mismatch")
+                }
+                if (!me.tst.type().is_sup_of(xs)) {
                     err(me.tk, "match error : types mismatch")
                 }
 
                 val snds = me.cases.map { it.second.type() }
                 val y: Type? = me.cases.first().second.type()
-                if (snds.fold(y) {a,b -> a?.sup_vs(b) } == null) {
+                val ys = snds.fold(y) {a,b -> a?.sup_vs(b) }
+                if (ys == null) {
                     err(me.tk, "match error : types mismatch")
                 }
             }

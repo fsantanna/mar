@@ -341,7 +341,7 @@ fun Stmt.coder (pre: Boolean): String {
         }
         is Stmt.Set    -> {
             when (this.src) {
-                is Expr.Yield -> this.src.coder(pre) + """
+                is Expr.Yield, is Expr.Match -> this.src.coder(pre) + """
                     ${this.dst.coder(pre)} = mar_${this.src.n};
                 """
                 else -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
@@ -648,15 +648,24 @@ fun Expr.coder (pre: Boolean): String {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
             val (xuni,_) = tp.x_out_uni(pre)
             """
-            mar_exe->pc = ${this.n};
-            return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
-        case ${this.n}:
-            ${this.type().coder(pre)} mar_$n = mar_arg._2;
-        """
+                mar_exe->pc = ${this.n};
+                return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
+            case ${this.n}:
+                ${this.type().coder(pre)} mar_$n = mar_arg._2;
+            """
         }
 
         is Expr.If -> "((${this.cnd.coder(pre)}) ? (${this.t.coder(pre)}) : (${this.f.coder(pre)}))"
-        is Expr.Match -> TODO("4")
+        is Expr.Match -> """
+            ${this.type().coder(pre)} mar_$n;
+            switch (${this.tst.coder(pre)}) {
+                ${this.cases.map { (tst,e) -> """
+                    ${tst.cond2({"case ${it.coder(pre)}"},{"default"})}:
+                        mar_$n = ${e.coder(pre)};
+                    break;
+                """ }.joinToString("")}
+            }
+        """
     }
 }
 

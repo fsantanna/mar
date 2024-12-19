@@ -1592,7 +1592,17 @@ class Check {
         val out = check("""
             var x = match 10 { else => 10 }
         """)
-        assert(out == "anon : (lin 2, col 27) : match error : expected boolean condition") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "var x: Int\n"+
+           "set x = match 10 {\n"+
+           "else => 10\n"+
+           "}\n"+
+           "}") { G.outer!!.to_str() }
     }
     @Test
     fun ii_04_match_err () {
@@ -1600,7 +1610,7 @@ class Check {
             var x: Int
             set x = match true { 10 => 10 }
         """)
-        assert(out == "anon : (lin 3, col 34) : match error : expected boolean condition") { out!! }
+        assert(out == "anon : (lin 3, col 21) : match error : types mismatch") { out!! }
     }
     @Test
     fun ii_05_match_err () {

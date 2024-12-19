@@ -1112,7 +1112,7 @@ class Exec  {
             var x = match 10 { 10 => 20 ; else => 99 }
             print(x)
         """)
-        assert(out == "10\n") { out }
+        assert(out == "20\n") { out }
     }
     @Test
     fun nn_03_match () {
