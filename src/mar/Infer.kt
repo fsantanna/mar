@@ -167,14 +167,21 @@ fun Expr.infer (tp: Type?): Type? {
         }
 
         is Expr.If -> {
-            val cnd = this.cnd.infer(Type.Prim(Tk.Type("Bool",this.tk.pos.copy())))
+            val cnd = this.cnd.infer(null)
             val t = this.t.infer(tp)
             val f = this.f.infer(tp)
             if (cnd==null || t==null || f==null) null else {
                 t.sup_vs(f) ?: Type.Err(this.tk)
             }
         }
-        is Expr.Match -> TODO()
+        is Expr.Match -> {
+            val tst = this.tst.infer(tp)
+            val cases = this.cases.map { it.second.infer(tp) }
+            if (tst==null || cases.any { it==null }) null else {
+                cases as List<Type>
+                cases.fold(cases.first()) { a,b -> a.sup_vs(b) ?: Type.Err(this.tk) }
+            }
+        }
     }
 }
 

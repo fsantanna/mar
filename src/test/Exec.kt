@@ -1097,12 +1097,28 @@ class Exec  {
         assert(out == "10\n") { out }
     }
 
-    // EXPR / IF
+    // EXPR / IF / MATCH
 
     @Test
     fun nn_01_if () {
         val out = test("""
             print(if true => 10 => 99)
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun nn_02_match () {
+        val out = test("""
+            var x = match 10 { 10 => 20 ; else => 99 }
+            print(x)
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun nn_03_match () {
+        val out = test("""
+            var x = match 10 { 20 => 99 ; else => 10 }
+            print(x)
         """)
         assert(out == "10\n") { out }
     }

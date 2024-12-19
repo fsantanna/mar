@@ -277,19 +277,15 @@ fun check_types () {
                 }
             }
             is Expr.Match -> {
-                if (!me.tst.type().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos.copy())))) {
-                    err(me.tst.tk, "match error : expected boolean condition")
+                val fsts = listOf(me.tst.type()) + me.cases.map { it.first }.filterNotNull().map { it.type() }
+                val x: Type? = fsts.first()
+                if (fsts.fold(x, { a,b -> a?.sup_vs(b) }) == null) {
+                    err(me.tk, "match error : types mismatch")
                 }
 
-                val cnd = me.cases.firstOrNull { !(it.first?.type()?.is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos.copy()))) ?: true) }
-                if (cnd != null) {
-                    err(cnd.first!!.tk, "match error : expected boolean condition")
-                }
-
-                val ts = me.cases.map { it.second.type() }
-                val fst: Type? = me.cases.first().second.type()
-                val sup = ts.fold(fst, {a,b -> a?.sup_vs(b)})
-                if (sup == null) {
+                val snds = me.cases.map { it.second.type() }
+                val y: Type? = me.cases.first().second.type()
+                if (snds.fold(y) {a,b -> a?.sup_vs(b) } == null) {
                     err(me.tk, "match error : types mismatch")
                 }
             }
