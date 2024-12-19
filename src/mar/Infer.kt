@@ -121,6 +121,12 @@ fun Expr.infer (tp: Type?): Type? {
                 else -> Type.Err(this.tk)
             }
         }
+        is Expr.Throw -> {
+            val e = this.e.infer(null)
+            if (e == null) null else {
+                this.type()
+            }
+        }
 
         is Expr.Create -> {
             val co = this.co.infer(null)
@@ -214,7 +220,6 @@ fun infer_types () {
             is Stmt.Escape -> (me.e.infer(null) != null)
             is Stmt.Defer -> true
             is Stmt.Catch -> true
-            is Stmt.Throw -> (me.e.infer(null) != null)
 
             is Stmt.If -> (me.cnd.infer(Type.Prim(Tk.Type("Bool",me.tk.pos.copy()))) != null)
             is Stmt.Loop -> true

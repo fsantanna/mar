@@ -12,7 +12,6 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
         is Stmt.Escape -> this.e.dn_collect_pos(fe,ft)
         is Stmt.Defer -> this.blk.dn_collect_pos(fs,fe,ft)
         is Stmt.Catch -> (this.tp?.dn_collect_pos(ft) ?: emptyList()) + this.blk.dn_collect_pos(fs,fe,ft)
-        is Stmt.Throw -> this.e.dn_collect_pos(fe,ft)
 
         is Stmt.If    -> this.cnd.dn_collect_pos(fe,ft) + this.t.dn_collect_pos(fs,fe,ft) + this.f.dn_collect_pos(fs,fe,ft)
         is Stmt.Loop  -> this.blk.dn_collect_pos(fs,fe,ft)
@@ -32,6 +31,7 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
         is Expr.Pred  -> this.col.dn_collect_pos(fe,ft)
         is Expr.Cons  -> this.e.dn_collect_pos(fe,ft)
         is Expr.Call  -> this.f.dn_collect_pos(fe,ft) + this.args.map { it.dn_collect_pos(fe,ft) }.flatten()
+        is Expr.Throw -> this.e.dn_collect_pos(fe,ft)
         is Expr.Create -> this.co.dn_collect_pos(fe,ft)
         is Expr.Start  -> this.args.map { it.dn_collect_pos(fe,ft) }.flatten() + this.exe.dn_collect_pos(fe,ft)
         is Expr.Resume -> this.arg.dn_collect_pos(fe,ft) + this.exe.dn_collect_pos(fe,ft)
@@ -86,7 +86,6 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
         is Stmt.Escape -> this.e.dn_collect_pre(fe,ft)
         is Stmt.Defer -> this.blk.dn_collect_pre(fs,fe,ft)
         is Stmt.Catch -> (this.tp?.dn_collect_pre(ft) ?: emptyList()) + this.blk.dn_collect_pre(fs,fe,ft)
-        is Stmt.Throw -> this.e.dn_collect_pre(fe,ft)
 
         is Stmt.If    -> this.cnd.dn_collect_pre(fe,ft) + this.t.dn_collect_pre(fs,fe,ft) + this.f.dn_collect_pre(fs,fe,ft)
         is Stmt.Loop  -> this.blk.dn_collect_pre(fs,fe,ft)
@@ -110,6 +109,7 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
         is Expr.Pred  -> this.col.dn_collect_pre(fe,ft)
         is Expr.Cons  -> this.e.dn_collect_pre(fe,ft)
         is Expr.Call  -> this.f.dn_collect_pre(fe,ft) + this.args.map { it.dn_collect_pre(fe,ft) }.flatten()
+        is Expr.Throw -> this.e.dn_collect_pre(fe,ft)
         is Expr.Create -> this.co.dn_collect_pre(fe,ft)
         is Expr.Start  -> this.exe.dn_collect_pre(fe,ft) + this.args.map { it.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Resume -> this.exe.dn_collect_pre(fe,ft) + this.arg.dn_collect_pre(fe,ft)

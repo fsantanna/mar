@@ -46,9 +46,6 @@ fun cache_ups () {
                 }
                 me.blk.xup = me
             }
-            is Stmt.Throw -> {
-                me.e.xup = me
-            }
 
             is Stmt.If -> {
                 me.cnd.xup = me
@@ -100,6 +97,9 @@ fun cache_ups () {
             is Expr.Acc, is Expr.Bool, is Expr.Chr, is Expr.Str,
             is Expr.Null, is Expr.Num, is Expr.Unit -> {}
 
+            is Expr.Throw -> {
+                me.e.xup = me
+            }
             is Expr.Create -> me.co.xup = me
             is Expr.Start -> {
                 me.exe.xup = me

@@ -109,6 +109,8 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
     class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, null, tk_)
     class Call (tk: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, null, tk)
 
+    class Throw  (tk: Tk, val e: Expr): Expr(G.N++, null, tk)
+
     class Create  (tk: Tk, val co: Expr): Expr(G.N++, null, tk)
     class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Expr(G.N++, null, tk)
     class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Expr(G.N++, null, tk)
@@ -133,7 +135,6 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Escape (tk: Tk, val e: Expr.Cons): Stmt(G.N++, null, tk)
     class Defer  (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, null, tk)
     class Catch  (tk: Tk, val tp: Type.Data?, val blk: Stmt.Block): Stmt(G.N++, null, tk)
-    class Throw  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
 
     class If     (tk: Tk, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, null, tk)
     class Loop   (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, null, tk)

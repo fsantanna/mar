@@ -392,11 +392,6 @@ fun Stmt.coder (pre: Boolean): String {
             }
             """
         }
-        is Stmt.Throw -> """
-            assert(sizeof(Exception) >= sizeof(${this.e.type().coder(pre)}));
-            MAR_EXCEPTION = MAR_CAST(Exception, ${this.e.coder(pre)});
-            continue;            
-        """
 
         is Stmt.If     -> """
             if (${this.cnd.coder(pre)}) {
@@ -615,6 +610,14 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Unit -> "_void_"
         is Expr.Bool, is Expr.Chr, is Expr.Str,
         is Expr.Null, is Expr.Num -> this.to_str(pre)
+
+        is Expr.Throw -> """
+            ({
+                assert(sizeof(Exception) >= sizeof(${this.e.type().coder(pre)}));
+                MAR_EXCEPTION = MAR_CAST(Exception, ${this.e.coder(pre)});
+                continue;
+            })
+        """
 
         is Expr.Create -> {
             val xtp = (this.xup as Stmt.Set).dst.type().coder(pre)
