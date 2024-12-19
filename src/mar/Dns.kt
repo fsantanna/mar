@@ -18,7 +18,7 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
         is Stmt.Loop  -> this.blk.dn_collect_pos(fs,fe,ft)
 
         is Stmt.Print -> this.e.dn_collect_pos(fe,ft)
-        is Stmt.XExpr -> this.e.dn_collect_pos(fe,ft)
+        is Stmt.Pass -> this.e.dn_collect_pos(fe,ft)
     } + fs(this)
 }
 fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> {
@@ -36,6 +36,8 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
         is Expr.Start  -> this.args.map { it.dn_collect_pos(fe,ft) }.flatten() + this.exe.dn_collect_pos(fe,ft)
         is Expr.Resume -> this.arg.dn_collect_pos(fe,ft) + this.exe.dn_collect_pos(fe,ft)
         is Expr.Yield  -> this.arg.dn_collect_pos(fe,ft)
+        is Expr.If     -> this.cnd.dn_collect_pos(fe,ft) + this.t.dn_collect_pos(fe,ft) + this.f.dn_collect_pos(fe,ft)
+        is Expr.Match  -> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(fe,ft) ?: emptyList()) + it.second.dn_collect_pos(fe,ft) }.flatten()
         is Expr.Nat    -> (this.xtp?.dn_collect_pos(ft) ?: emptyList())
         is Expr.Acc, is Expr.Null, is Expr.Unit, is Expr.Str,
         is Expr.Bool, is Expr.Chr, is Expr.Num -> emptyList()
@@ -43,7 +45,7 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
 }
 fun <V> Type.dn_collect_pos (ft: (Type)->List<V>): List<V> {
     return when (this) {
-        //is Type.Any -> emptyList()
+        is Type.Any -> emptyList()
         is Type.Nat -> emptyList()
         is Type.Unit -> emptyList()
         is Type.Prim -> emptyList()
@@ -93,7 +95,7 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
         is Stmt.Loop  -> this.blk.dn_collect_pre(fs,fe,ft)
 
         is Stmt.Print -> this.e.dn_collect_pre(fe,ft)
-        is Stmt.XExpr -> this.e.dn_collect_pre(fe,ft)
+        is Stmt.Pass -> this.e.dn_collect_pre(fe,ft)
     }
 }
 fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V> {
@@ -115,6 +117,8 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
         is Expr.Start  -> this.exe.dn_collect_pre(fe,ft) + this.args.map { it.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Resume -> this.exe.dn_collect_pre(fe,ft) + this.arg.dn_collect_pre(fe,ft)
         is Expr.Yield  -> this.arg.dn_collect_pre(fe,ft)
+        is Expr.If     -> this.cnd.dn_collect_pre(fe,ft) + this.t.dn_collect_pre(fe,ft) + this.f.dn_collect_pre(fe,ft)
+        is Expr.Match  -> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(fe,ft) ?: emptyList()) + it.second.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Nat    -> (this.xtp?.dn_collect_pre(ft) ?: emptyList())
         is Expr.Acc, is Expr.Null, is Expr.Unit, is Expr.Str,
         is Expr.Bool, is Expr.Chr, is Expr.Num -> emptyList()
@@ -126,7 +130,7 @@ fun <V> Type.dn_collect_pre (ft: (Type)->List<V>?): List<V> {
         return emptyList()
     }
     return v + when (this) {
-        //is Type.Any -> emptyList()
+        is Type.Any -> emptyList()
         is Type.Nat -> emptyList()
         is Type.Unit -> emptyList()
         is Type.Prim -> emptyList()

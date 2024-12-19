@@ -32,7 +32,7 @@ fun List<Tk.Type>.to_str (pre: Boolean=false): String {
 
 fun Type.to_str (pre: Boolean = false): String {
     return when (this) {
-        //is Type.Any -> "?"
+        is Type.Any -> TODO()
         is Type.Nat -> "`${this.tk.str}`"
         is Type.Prim -> this.tk.str
         is Type.Data -> this.ts.to_str(pre)
@@ -73,7 +73,7 @@ fun Expr.to_str (pre: Boolean = false): String {
     return when (this) {
         is Expr.Nat    -> {
             val nat = this.tk.str.let { if (it.contains("\n")) "```"+it+"```" else "`"+it+"`" }
-            if (this.xtp == null) {
+            if (this.xtp==null || this.xtp is Type.Any) {
                 nat
             } else {
                 "(" + nat + ": " + this.xtp!!.to_str(pre) + ")"
@@ -104,6 +104,17 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Start  -> "start " + this.exe.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
         is Expr.Resume -> "resume " + this.exe.to_str(pre) + "(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
         is Expr.Yield  -> "yield(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
+
+        is Expr.If     -> "if ${this.cnd.to_str(pre)} => ${this.t.to_str(pre)} => ${this.f.to_str(pre)}"
+        is Expr.Match  -> {
+            val tst = this.tst.to_str(pre)
+            val cases = this.cases.map {
+                val cnd = if (it.first == null) "else" else it.first!!.to_str(pre)
+                val e = it.second.to_str(pre)
+                "$cnd => $e\n"
+            }.joinToString("")
+            "match $tst {\n$cases}"
+        }
     }.let {
         when {
             !pre -> it
@@ -146,7 +157,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.If     -> "if " + this.cnd.to_str(pre) + " {\n" + this.t.ss.to_str(pre) + "} else {\n" + this.f.ss.to_str(pre) + "}"
         is Stmt.Loop   -> "loop {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Print  -> "print(" + this.e.to_str(pre) + ")"
-        is Stmt.XExpr  -> this.e.to_str(pre)
+        is Stmt.Pass   -> "do(" + this.e.to_str(pre) + ")"
     }.let {
         when {
             !pre -> it

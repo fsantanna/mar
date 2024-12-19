@@ -38,8 +38,8 @@ val KEYWORDS: SortedSet<String> = (
     setOf (
         "break", "do", "catch", "coro", "create", "defer",
         "data", "else", "escape", "exec", "false", "func", "if",
-        "include", "loop", "null", "print", "resume", "return", "set",
-        "start", "throw", "true", "var", "yield",
+        "include", "loop", "match", "null", "print", "resume",
+        "return", "set", "start", "throw", "true", "var", "yield",
     ).toSortedSet()
 )
 
@@ -65,7 +65,7 @@ sealed class Tk (val str: String, val pos: Pos) {
 
 sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
     //data class Top   (val tk_: Tk): Type(G.N++, tk_)
-    //class Any     (tk: Tk): Type(G.N++, null, tk)
+    class Any     (tk: Tk): Type(G.N++, null, tk)
     class Nat     (val tk_: Tk.Nat): Type(G.N++, null, tk_)
     class Unit    (tk: Tk): Type(G.N++, null, tk)
     class Prim    (val tk_: Tk.Type): Type(G.N++, null, tk_)
@@ -112,6 +112,10 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
     class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Expr(G.N++, null, tk)
     class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Expr(G.N++, null, tk)
     class Yield   (tk: Tk, val arg: Expr): Expr(G.N++, null, tk)
+
+    class If      (tk: Tk, var xtp: Type?, val cnd: Expr, val t: Expr, val f: Expr): Expr(G.N++, null, tk)
+    class Match   (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Expr?,Expr>>): Expr(G.N++, null, tk)
+
 }
 
 sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
@@ -134,7 +138,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Loop   (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, null, tk)
 
     class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
-    class XExpr  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
+    class Pass  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
 }
 
 object G {

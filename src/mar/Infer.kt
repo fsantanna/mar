@@ -1,161 +1,209 @@
 package mar
 
-fun Expr.type_infer (): Type? {
-    return try {
-        this.type()
-    } catch (e: Throwable) {
-        try {
-            this.infer()
-        } catch (e: Throwable) {
-            //println(e.message)
-            null
+fun Expr.infer (tp: Type?): Type? {
+    return when (this) {
+        is Expr.Nat -> {
+            if (this.xtp == null) {
+                this.xtp = tp ?: Type.Any(this.tk)
+            }
+            this.xtp
         }
-    }.let {
-        /*if (it is Type.Any) null else*/ it
-    }
-}
+        is Expr.Acc -> this.tk_.type(this)
 
-fun Expr.type_null (): Type? {
-    return try {
-        this.type()
-    } catch (e: Throwable) {
-        null
-    }.let {
-        /*if (it is Type.Any) null else*/ it
-    }
-}
+        is Expr.Bool, is Expr.Str, is Expr.Chr,
+        is Expr.Num, is Expr.Null, is Expr.Unit -> this.type()
 
-fun Expr.infer (): Type? {
-    val up = this.xup!!
-    //println(listOf("infer",this.javaClass.name, this.to_str(), up.javaClass.name))
-    return when (up) {
-        is Stmt.Set -> {
-            assert(up.src == this)
-            up.dst.type_infer()
-        }
-        //is Stmt.XExpr -> Type.Unit(this.tk)
-        is Expr.Cons -> up.walk(up.ts)!!.third
-        is Expr.Tuple -> up.type_infer().let {
-            when {
-                (it == null) -> null
-                (it !is Type.Tuple) -> null
-                else -> {
-                    val i = up.vs.indexOfFirst { (_, e) -> e == this }
-                    assert(i != -1)
-                    if (it.ts.size < i + 1) {
-                        null
-                    } else {
-                        it.ts[i].second
-                    }
+        is Expr.Tuple -> {
+            val up = this.xtp ?: tp
+            val dn = if (up !is Type.Tuple) {
+                val vs = this.vs.map { (tk,e) ->
+                    Pair(tk, e.infer(null))
+                }
+                if (vs.any { it.second == null }) null else {
+                    Type.Tuple(this.tk, vs as List<Pair<Tk.Var?, Type>>)
+                }
+            } else {
+                val vs = this.vs.mapIndexed { i,(tk,e) ->
+                    Pair(tk, e.infer(if (up.ts.size<i+1) null else up.ts[i].second))
+                }
+                if (vs.any { it.second == null }) null else {
+                    vs as List<Pair<Tk.Var?, Type>>
+                    Type.Tuple(this.tk,
+                        vs.zip(up.ts).map { (vs,ts) ->
+                            Pair(vs.first ?: ts.first, vs.second)
+                        }
+                    )
                 }
             }
+            if (dn == null) null else {
+                if (this.xtp == null) {
+                    this.xtp = dn
+                }
+                this.xtp
+            }
         }
-        is Expr.Union -> up.type_infer().let {
-            if (it == null) null else {
-                it as Type.Union
-                val (_,tp) = it.disc(up.idx)!!
-                tp
+        is Expr.Field -> {
+            val col = this.col.infer(null)
+            val tup = when (col) {
+                is Type.Tuple -> col
+                is Type.Data -> col.walk()?.third
+                else -> null
+            }
+            if (tup !is Type.Tuple) null else {
+                tup.index(this.idx)
+            }
+        }
+        is Expr.Union -> {
+            val up = this.xtp ?: tp
+            val sub = if (up !is Type.Union) null else {
+                up.disc(this.idx).nulls().second
+            }
+            val dn = this.v.infer(sub)
+            if (dn == null) null else {
+                if (this.xtp == null) {
+                    this.xtp = (if (up is Type.Union) up else null)
+                }
+                this.xtp
+            }
+        }
+        is Expr.Pred -> TODO()
+        is Expr.Disc -> {
+            val col = this.col.infer(null)
+            col?.discx(this.idx)?.second
+        }
+        is Expr.Cons -> {
+            val e = this.e.infer(this.walk(this.ts)!!.third)
+            if (e == null) null else {
+                this.type()
+            }
+        }
+
+        is Expr.Uno -> {
+            val e = this.e.infer(null)
+            if (e == null) null else {
+                this.type()
+            }
+        }
+        is Expr.Bin -> {
+            val e1 = this.e1.infer(null)
+            val e2 = this.e2.infer(null)
+            if (e1==null || e2==null) null else {
+                this.type()
             }
         }
         is Expr.Call -> {
-            val i = up.args.indexOfFirst { it == this }
-            assert(i != -1)
-            val tp = up.f.type()
-            if (tp !is Type.Proto.Func) null else {
-                tp.inps[i]
+            val f = this.f.infer(null)
+            val args = if (f is Type.Proto) {
+                this.args.mapIndexed { i,e ->
+                    e.infer(f.inps[i])
+                }
+            } else {
+                this.args.map {
+                    it.infer(null)
+                }
+            }
+            if (f==null || args.any { it==null }) null else {
+                this.type()
+            }
+        }
+
+        is Expr.Create -> {
+            val co = this.co.infer(null)
+            if (co == null) null else {
+                this.type()
             }
         }
         is Expr.Start -> {
-            val i = up.args.indexOfFirst { it == this }
-            (up.exe.type() as Type.Exec).inps[i]
+            val exe = this.exe.infer(null)
+            val args = if (exe is Type.Exec) {
+                this.args.mapIndexed { i,e ->
+                    e.infer(exe.inps[i])
+                }
+            } else {
+                this.args.map {
+                    it.infer(null)
+                }
+            }
+            if (exe==null || args.any { it==null }) null else {
+                this.type()
+            }
         }
         is Expr.Resume -> {
-            assert(up.arg == this)
-            (up.exe.type() as Type.Exec).res
+            val exe = this.exe.infer(null)
+            if (exe is Type.Exec) {
+                this.arg.infer(exe.res)
+            }
+            if (exe == null) null else {
+                this.type()
+            }
         }
         is Expr.Yield -> {
-            assert(up.arg == this)
-            (up.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_.yld
-        }
-        is Expr.Bin -> {
-            when (up.tk_.str) {
-                in listOf(">", "<", ">=", "<=", "+", "-", "*", "/", "%") -> Type.Prim(Tk.Type("Int",up.tk.pos.copy()))
-                in listOf("||", "&&") -> Type.Prim(Tk.Type("Bool",up.tk.pos.copy()))
-                else -> null
+            val coro = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
+            val arg = this.arg.infer(coro.yld)
+            if (arg == null) null else {
+                coro.res
             }
         }
-        is Expr.Uno -> {
-            when (up.tk_.str) {
-                "-" -> Type.Prim(Tk.Type("Int",up.tk.pos.copy()))
-                else -> null
+
+        is Expr.If -> {
+            val cnd = this.cnd.infer(Type.Prim(Tk.Type("Bool",this.tk.pos.copy())))
+            val t = this.t.infer(tp)
+            val f = this.f.infer(tp)
+            if (cnd==null || t==null || f==null) null else {
+                t.sup_vs(f)
             }
         }
-        else -> null
+        is Expr.Match -> TODO()
     }
 }
 
 fun infer_types () {
-    fun fe (me: Expr) {
-        when (me) {
-            is Expr.Tuple -> {
-                if (me.xtp == null) {
-                    me.xtp = me.infer().let {
-                        when (it) {
-                            null -> null
-                            is Type.Tuple -> it
-                            else -> err(me.tk, "inference error : incompatible types")
-                        }
-                    }
-                    if (me.xtp == null) {
-                        val tps = me.vs.map { (id,v) -> Pair(id,v.type()) }
-                        me.xtp = Type.Tuple(me.tk, tps)
-                        me.xtp!!.xup = me
-                    }
-                }
-            }
-            is Expr.Union -> {
-                if (me.xtp == null) {
-                    me.xtp = me.infer().let {
-                        when (it) {
-                            null -> err(me.tk, "inference error : unknown type")
-                            !is Type.Union -> err(me.tk, "inference error : incompatible types")
-                            else -> it
-                        }
-                    }
-                }
-            }
-            is Expr.Nat -> {
-                if (me.xtp == null) {
-                    val up = me.xup!!
-                    me.xtp = when {
-                        (me.tk.str == "mar_ret") -> (me.up_first { it is Stmt.Proto } as Stmt.Proto).tp.out
-                        //(up is Stmt.XExpr) -> Type.Nat(me.tk)
-                        (up is Expr.Call && up.f is Expr.Nat) -> Type.Nat(Tk.Nat("TODO",me.tk.pos.copy()))
-                        //(up is Stmt.Set  && up.dst==me) -> null
-                        else -> me.infer() ?: Type.Nat(Tk.Nat("TODO",me.tk.pos.copy()))
-                    }
-                }
-            }
-            else -> {}
-        }
-    }
     fun fs (me: Stmt) {
-        when (me) {
+        val ok: Boolean = when (me) {
+            is Stmt.Data -> true
+            is Stmt.Proto -> true
+
+            is Stmt.Block -> true
+            is Stmt.Dcl -> true
             is Stmt.Set -> {
-                if (me.dst is Expr.Acc) {
-                    val dcl = me.dst.to_xdcl()!!.first
-                    if (dcl is Stmt.Dcl && dcl.xtp==null) {
-                        dcl.xtp = me.src.type_infer()
+                var tp1 = me.dst.infer(null)
+                val tp2 = me.src.infer(tp1)
+                if (tp2!=null && tp1==null) {
+                    if (me.dst is Expr.Acc) {
+                        val dcl = me.dst.to_xdcl()!!.first
+                        if (dcl is Stmt.Dcl) {
+                            assert(dcl.xtp == null)
+                            dcl.xtp = tp2
+                        }
+                        tp1 = tp2
+                    } else {
+                        tp1 = me.dst.infer(null)
                     }
                 }
+                (tp1!=null && tp2!=null)
             }
-            else -> {}
+
+            is Stmt.Escape -> (me.e.infer(null) != null)
+            is Stmt.Defer -> true
+            is Stmt.Catch -> true
+            is Stmt.Throw -> (me.e.infer(null) != null)
+
+            is Stmt.If -> (me.cnd.infer(Type.Prim(Tk.Type("Bool",me.tk.pos.copy()))) != null)
+            is Stmt.Loop -> true
+
+            is Stmt.Print -> (me.e.infer(null) != null)
+            is Stmt.Pass -> (me.e.infer(Type.Unit(me.tk)) != null)
+        }
+        if (!ok) {
+            //println(me.to_str())
+            err(me.tk, "inference error : unknown types")
         }
     }
-    G.outer!!.dn_visit_pos(::fs, ::fe, {})
+    G.outer!!.dn_visit_pos(::fs, {}, {})
+
     G.outer!!.dn_visit_pre({
         if (it is Stmt.Dcl) {
-            if (it.xtp == null) {
+            if (it.xtp==null || it.xtp is Type.Any) {
                 err(it.tk, "inference error : unknown type")
             }
         }

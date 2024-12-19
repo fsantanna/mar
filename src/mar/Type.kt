@@ -18,7 +18,7 @@ fun Type.Prim.compat (other: Type.Prim): Boolean {
 fun Type.is_sup_of (other: Type): Boolean {
     return when {
         //(this is Type.Top) -> true
-        //(this is Type.Any || other is Type.Any) -> true
+        (this is Type.Any || other is Type.Any) -> true
         (this is Type.Nat || other is Type.Nat) -> true
         (this is Type.Unit       && other is Type.Unit)       -> true
         (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
@@ -35,6 +35,14 @@ fun Type.is_sup_of (other: Type): Boolean {
 
 fun Type.is_same_of (other: Type): Boolean {
     return this.is_sup_of(other) && other.is_sup_of(this)
+}
+
+fun Type.sup_vs (other: Type): Type? {
+    return when {
+        this.is_sup_of(other) -> this
+        other.is_sup_of(this) -> other
+        else -> null
+    }
 }
 
 fun Expr.Bin.args (tp1: Type, tp2: Type): Boolean {
@@ -203,7 +211,7 @@ fun Expr.type (): Type {
             else -> error("impossible case")
         }
         is Expr.Call -> this.f.type().let {
-            if (it is Type.Nat) it else (it as Type.Proto.Func).out
+            if (it is Type.Nat || it is Type.Any) it else (it as Type.Proto.Func).out
         }
 
         is Expr.Tuple -> this.xtp!!
@@ -222,7 +230,7 @@ fun Expr.type (): Type {
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
         is Expr.Str -> Type.Pointer(this.tk, Type.Prim(Tk.Type( "Char", this.tk.pos.copy())))
         is Expr.Chr -> Type.Prim(Tk.Type( "Char", this.tk.pos.copy()))
-        is Expr.Nat -> this.xtp ?: Type.Nat(Tk.Nat("TODO",this.tk.pos.copy()))
+        is Expr.Nat -> this.xtp!! //?: Type.Nat(Tk.Nat("TODO",this.tk.pos.copy()))
         is Expr.Null -> Type.Pointer(this.tk, null /*Type.Any(this.tk)*/)
         is Expr.Unit -> Type.Unit(this.tk)
         is Expr.Num -> {
@@ -241,6 +249,8 @@ fun Expr.type (): Type {
             Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
         }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
+        is Expr.If -> this.t.type().sup_vs(this.f.type())!!
+        is Expr.Match -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a.sup_vs(b)!!})
     }.let {
         if (it.xup == null) {
             it.xup = this

@@ -1,10 +1,9 @@
-package mar.test
+package test
 
 import mar.*
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runners.MethodSorters
-import test.static
 
 fun infer (me: String): String? {
     return trap {
@@ -167,7 +166,7 @@ class Infer {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "func f: (v: [Int,Int]) -> Int {\n" +
-                "set `mar_ret`: Int = ((v.1) + (v.2))\n" +
+                "set (`mar_ret`: Int) = ((v.1) + (v.2))\n" +
                 "escape((Return(([]:[]))))\n" +
                 "}\n" +
                 "var x: Int\n" +
@@ -208,7 +207,7 @@ class Infer {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "func f: () -> <(),Int> {\n" +
-                "set `mar_ret`: <(),Int> = <.1=()>:<(),Int>\n" +
+                "set (`mar_ret`: <(),Int>) = <.1=()>:<(),Int>\n" +
                 "escape((Return(([]:[]))))\n" +
                 "}\n" +
                 "var x: <(),Int>\n" +
@@ -236,7 +235,7 @@ class Infer {
                 "}\n" +
                 "var exe: exec (<(),Int>) -> () -> () -> ()\n" +
                 "set exe = create(co)\n" +
-                "start exe(<.1=()>:<(),Int>)\n" +
+                "do(start exe(<.1=()>:<(),Int>))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -258,8 +257,8 @@ class Infer {
                 "}\n" +
                 "var exe: exec () -> <(),Int> -> () -> ()\n" +
                 "set exe = create(co)\n" +
-                "start exe()\n" +
-                "resume exe(<.1=()>:<(),Int>)\n" +
+                "do(start exe())\n" +
+                "do(resume exe(<.1=()>:<(),Int>))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -283,7 +282,7 @@ class Infer {
                 "}\n" +
                 "var exe: exec () -> () -> <(),Int> -> ()\n" +
                 "set exe = create(co)\n" +
-                "start exe()\n" +
+                "do(start exe())\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -312,14 +311,14 @@ class Infer {
                 "data D: Int\n" +
                 "coro co: (a: A) -> B -> C -> D {\n" +
                 "var x: B\n" +
-                "set x = yield(`x`: C)\n" +
+                "set x = yield((`x`: C))\n" +
                 "}\n" +
                 "var exe: exec (A) -> B -> C -> D\n" +
                 "set exe = create(co)\n" +
                 "var y: <C,D>\n" +
-                "set y = start exe(`x`: A)\n" +
+                "set y = start exe((`x`: A))\n" +
                 "var z: <C,D>\n" +
-                "set z = resume exe(`x`: B)\n" +
+                "set z = resume exe((`x`: B))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -331,7 +330,8 @@ class Infer {
             var co1 = create(gen1)
             start co1(<.1=1>)
         """)
-        assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
+        assert(out == "anon : (lin 6, col 13) : inference error : unknown types") { out!! }
+        //assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
     }
     @Test
     fun cc_06_infer_err () {
@@ -342,7 +342,20 @@ class Infer {
             var co1 = create(gen1)
             start co1([])
         """)
-        assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
+        //assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "coro gen1: (v: Int) -> () -> () -> () {\n" +
+                "do((`printf(\"%d\\n\", mar_exe->mem.v);`: ()))\n" +
+                "}\n" +
+                "var co1: exec (Int) -> () -> () -> ()\n" +
+                "set co1 = create(gen1)\n" +
+                "do(start co1(([]:[])))\n" +
+                "}") { G.outer!!.to_str() }
     }
 
     // DATA / TUPLE / UNION
@@ -352,7 +365,8 @@ class Infer {
         val out = infer("""
             var x = <.1=()>
         """)
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown types") { out!! }
+        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
     }
     @Test
     fun dd_02_infer_data_union () {
@@ -394,7 +408,7 @@ class Infer {
             var x: Int
             var ts = x.ts
         """)
-        assert(out == "anon : (lin 3, col 13) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 3, col 13) : inference error : unknown types") { out!! }
     }
     @Test
     fun dd_05_infer_tuple () {
@@ -471,14 +485,16 @@ class Infer {
             data T: []
             var x: T = [[]]
         """)
+        //assert(out == "anon : (lin 3, col 24) : inference error : incompatible types") { out!! }
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data Return.*: [] {\n" +
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "var x: []\n" +
-                "set x = ([([0,0]:[Int,Int]),([24,24]:[Int,Int])]:[])\n" +
+                "data T: []\n" +
+                "var x: T\n" +
+                "set x = ([([]:[])]:[[]])\n" +
                 "}") { G.outer!!.to_str() }
     }
 
@@ -489,7 +505,8 @@ class Infer {
         val out = infer("""
             var x = `10`
         """)
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        //println(G.outer!!.to_str())
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
     }
     @Test
     fun ee_02_infer_nat () {
@@ -503,7 +520,7 @@ class Infer {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "var x: Int\n" +
-                "set x = `10`: Int\n" +
+                "set x = (`10`: Int)\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -513,11 +530,12 @@ class Infer {
         """)
         //assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "data Return.*: [] {\n" +
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "(`f`: ?(([10]:[Int])))\n" +
+                "do((`f`(([10]:[Int]))))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -532,31 +550,96 @@ class Infer {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "(`f`: func (?) -> ()(`x`: ?))\n" +
+                "do((`f`(`x`)))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
     fun ee_05_nat_err () {
-        val out = static("""
+        val out = infer("""
             var x = `x`
         """)
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
     }
     @Test
     fun ee_06_nat_type () {
-        val out = static("""
-            var x: `int` = 10
+        val out = infer("""
+            var y: `int` = 10
             func f: (x: `int`) -> Int {
-                return x
+                return (x)
             }
             print(f(`10`))
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "data Return.*: [] {\n" +
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "(`f`: ?(([10]:[Int])))\n" +
+                "var y: `int`\n" +
+                "set y = 10\n" +
+                "func f: (x: `int`) -> Int {\n" +
+                "set (`mar_ret`: Int) = x\n" +
+                "escape((Return(([]:[]))))\n" +
+                "}\n" +
+                "print((f((`10`: `int`))))\n" +
+                "}") { G.outer!!.to_str() }
+    }
+
+    // EXPR / IF / MATCH
+
+    @Test
+    fun ff_01_if () {
+        val out = infer("""
+                var x = if true => 10 => 10 
+            """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var x: Int\n" +
+                "set x = if true => 10 => 10\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ff_02_if () {
+        val out = infer("""
+            var x = if true => `10` => 10 
+        """)
+        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+    }
+    @Test
+    fun ff_03_if () {
+        val out = infer("""
+            var x: Int = if true => `10` => `10` 
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var x: Int\n" +
+                "set x = if true => (`10`: Int) => (`10`: Int)\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ff_04_match () {
+        val out = infer("""
+                var x = match true {
+                    else => 10
+                }
+            """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var x: `TODO`\n" +
+                "set x = if true => (`10`: `TODO`) => 10\n" +
                 "}") { G.outer!!.to_str() }
     }
 }
