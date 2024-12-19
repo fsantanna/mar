@@ -1623,15 +1623,26 @@ class Check {
     fun ii_06_match () {
         val out = check("""
             data Error.*: []
-            func pm_input_sdl_to_mar: (sdl: `SDL_Event`) -> () {
-                var ret = match sdl {
-                    `SDL_QUIT` =>
-                        10
-                    else => throw()
-                }
-                return(ret)
+            var v: `T`
+            var ret = match v {
+                `SDL_QUIT` => 10
+                else => throw()
             }
         """)
-        assert(out == "anon : (lin 2, col 26) : match error : types mismatch") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "data Error.*: [] {\n"+
+           "}\n"+
+           "var v: `T`\n"+
+           "var ret: Int\n"+
+           "set ret = match v {\n"+
+           "(`SDL_QUIT`: `T`) => 10\n"+
+           "else => throw((Error(([]:[]))))\n"+
+           "}\n"+
+           "}") { G.outer!!.to_str() }
     }
 }

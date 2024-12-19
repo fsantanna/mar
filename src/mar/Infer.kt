@@ -182,10 +182,13 @@ fun Expr.infer (tp: Type?): Type? {
         }
         is Expr.Match -> {
             val tst = this.tst.infer(tp)
-            val cases = this.cases.map { it.second.infer(tp) }
-            if (tst==null || cases.any { it==null }) null else {
-                cases as List<Type>
-                cases.fold(cases.first()) { a,b -> a.sup_vs(b) ?: Type.Err(this.tk) }
+            val cases = this.cases.map {
+                val fst = if (it.first == null) Type.Err(this.tk) else it.first!!.infer(tst)
+                Pair(fst, it.second.infer(tp))
+            }
+            if (tst==null || cases.any { (a,b) -> a==null||b==null }) null else {
+                val es = cases.map { it.second } as List<Type>
+                es.fold(es.first()) { a,b -> a.sup_vs(b) ?: Type.Err(this.tk) }
             }
         }
     }
