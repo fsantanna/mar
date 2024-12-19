@@ -102,15 +102,19 @@ fun Expr.infer (tp: Type?): Type? {
                     it.infer(null)
                 }
             }
-            if (f==null || args.any { it==null }) null else {
-                this.type()
+            when {
+                (f==null || args.any { it==null }) -> null
+                (f is Type.Nat || f is Type.Any || f is Type.Proto) -> this.type()
+                else -> Type.Any(this.tk)
             }
         }
 
         is Expr.Create -> {
             val co = this.co.infer(null)
-            if (co == null) null else {
-                this.type()
+            when {
+                (co == null) -> null
+                (co !is Type.Proto.Coro) -> Type.Any(this.tk)
+                else -> this.type()
             }
         }
         is Expr.Start -> {
@@ -124,8 +128,10 @@ fun Expr.infer (tp: Type?): Type? {
                     it.infer(null)
                 }
             }
-            if (exe==null || args.any { it==null }) null else {
-                this.type()
+            when {
+                (exe==null || args.any { it==null }) -> null
+                (exe !is Type.Exec) -> Type.Any(this.tk)
+                else -> this.type()
             }
         }
         is Expr.Resume -> {
@@ -133,8 +139,10 @@ fun Expr.infer (tp: Type?): Type? {
             if (exe is Type.Exec) {
                 this.arg.infer(exe.res)
             }
-            if (exe == null) null else {
-                this.type()
+            when {
+                (exe == null) -> null
+                (exe !is Type.Exec) -> Type.Any(this.tk)
+                else -> this.type()
             }
         }
         is Expr.Yield -> {

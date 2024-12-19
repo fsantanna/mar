@@ -211,7 +211,11 @@ fun Expr.type (): Type {
             else -> error("impossible case")
         }
         is Expr.Call -> this.f.type().let {
-            if (it is Type.Nat || it is Type.Any) it else (it as Type.Proto.Func).out
+            when (it) {
+                is Type.Nat, is Type.Any -> it
+                is Type.Proto.Func -> it.out
+                else -> error("impossible case")
+            }
         }
 
         is Expr.Tuple -> this.xtp!!
