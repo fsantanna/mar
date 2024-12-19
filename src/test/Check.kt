@@ -1619,4 +1619,19 @@ class Check {
         """)
         assert(out == "anon : (lin 2, col 26) : match error : types mismatch") { out!! }
     }
+    @Test
+    fun ii_06_match () {
+        val out = check("""
+            data Error.*: []
+            func pm_input_sdl_to_mar: (sdl: `SDL_Event`) -> () {
+                var ret = match sdl {
+                    `SDL_QUIT` =>
+                        10
+                    else => throw()
+                }
+                return(ret)
+            }
+        """)
+        assert(out == "anon : (lin 2, col 26) : match error : types mismatch") { out!! }
+    }
 }
