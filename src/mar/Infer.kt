@@ -49,10 +49,10 @@ fun Expr.infer (tp: Type?): Type? {
                 is Type.Data -> col.walk()?.third
                 else -> null
             }
-            if (tup !is Type.Tuple) {
-                Type.Any(this.tk)
-            } else {
-                tup.index(this.idx) ?: Type.Any(this.tk)
+            when {
+                (col == null) -> null
+                (tup !is Type.Tuple) -> Type.Err(this.tk)
+                else -> tup.index(this.idx) ?: Type.Err(this.tk)
             }
         }
         is Expr.Union -> {
@@ -68,10 +68,21 @@ fun Expr.infer (tp: Type?): Type? {
                 this.xtp
             }
         }
-        is Expr.Pred -> TODO()
+        is Expr.Pred -> {
+            val col = this.col.infer(null)
+            if (col == null) null else {
+                if (col.discx(this.idx)?.second == null) {
+                    Type.Err(this.tk)
+                } else {
+                    Type.Prim(Tk.Type("Bool",this.tk.pos.copy()))
+                }
+            }
+        }
         is Expr.Disc -> {
             val col = this.col.infer(null)
-            col?.discx(this.idx)?.second ?: Type.Any(this.tk)
+            if (col == null) null else {
+                col.discx(this.idx)?.second ?: Type.Err(this.tk)
+            }
         }
         is Expr.Cons -> {
             val e = this.e.infer(this.walk(this.ts)!!.third)
@@ -107,7 +118,7 @@ fun Expr.infer (tp: Type?): Type? {
             when {
                 (f==null || args.any { it==null }) -> null
                 (f is Type.Nat || f is Type.Any || f is Type.Proto) -> this.type()
-                else -> Type.Any(this.tk)
+                else -> Type.Err(this.tk)
             }
         }
 
@@ -115,7 +126,7 @@ fun Expr.infer (tp: Type?): Type? {
             val co = this.co.infer(null)
             when (co) {
                 null -> null
-                !is Type.Proto.Coro -> Type.Any(this.tk)
+                !is Type.Proto.Coro -> Type.Err(this.tk)
                 else -> this.type()
             }
         }
@@ -132,7 +143,7 @@ fun Expr.infer (tp: Type?): Type? {
             }
             when {
                 (exe==null || args.any { it==null }) -> null
-                (exe !is Type.Exec) -> Type.Any(this.tk)
+                (exe !is Type.Exec) -> Type.Err(this.tk)
                 else -> this.type()
             }
         }
@@ -143,7 +154,7 @@ fun Expr.infer (tp: Type?): Type? {
             }
             when (exe) {
                 null -> null
-                !is Type.Exec -> Type.Any(this.tk)
+                !is Type.Exec -> Type.Err(this.tk)
                 else -> this.type()
             }
         }
@@ -160,7 +171,7 @@ fun Expr.infer (tp: Type?): Type? {
             val t = this.t.infer(tp)
             val f = this.f.infer(tp)
             if (cnd==null || t==null || f==null) null else {
-                t.sup_vs(f)
+                t.sup_vs(f) ?: Type.Err(this.tk)
             }
         }
         is Expr.Match -> TODO()
@@ -213,7 +224,7 @@ fun infer_types () {
 
     G.outer!!.dn_visit_pre({
         if (it is Stmt.Dcl) {
-            if (it.xtp==null || it.xtp is Type.Any) {
+            if (it.xtp==null || it.xtp is Type.Any || it.xtp is Type.Err) {
                 err(it.tk, "inference error : unknown type")
             }
         }

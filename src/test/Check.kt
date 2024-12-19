@@ -526,8 +526,7 @@ class Check {
             data T: []
             var x: T = [[]]
         """)
-        TODO()
-        assert(out == "anon : (lin 3, col 24) : inference error : incompatible types") { out!! }
+        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
     }
     // UNION
 
@@ -999,8 +998,8 @@ class Check {
             }
             var y = X.Y []   ;; missing Int
         """)
-        assert(out == "anon : (lin 5, col 25) : tuple error : types mismatch") { out!! }
-        //assert(out == "anon : (lin 3, col 24) : constructor error : types mismatch") { out!! }
+        //assert(out == "anon : (lin 5, col 25) : tuple error : types mismatch") { out!! }
+        assert(out == "anon : (lin 5, col 25) : constructor error : types mismatch") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
     }
     @Test
@@ -1554,7 +1553,7 @@ class Check {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "do(((`f`: `TODO`)(([]:[]))))\n" +
+                "do((`f`(([]:[]))))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -1568,7 +1567,7 @@ class Check {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "do(((`f`: `TODO`)((`x`: `TODO`))))\n" +
+                "do((`f`(`x`)))\n" +
                 "}") { G.outer!!.to_str() }
     }
 

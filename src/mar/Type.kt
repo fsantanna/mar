@@ -9,7 +9,7 @@ fun List<Type>.to_void (): List<Type> {
 
 val nums = setOf("Char", "Float", "Int", "U8")
 fun Type.is_num (): Boolean {
-    return (this is Type.Prim) && nums.contains(this.tk.str)
+    return (this is Type.Nat || this is Type.Any || (this is Type.Prim && nums.contains(this.tk.str)))
 }
 fun Type.Prim.compat (other: Type.Prim): Boolean {
     return (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
@@ -200,8 +200,8 @@ fun Expr.type (): Type {
             ">", "<", ">=", "<=",
             "||", "&&" -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
             "+", "-", "*", "/", "%" -> {
-                val t1 = (this.e1.type() as Type.Prim).tk.str
-                val t2 = (this.e2.type() as Type.Prim).tk.str
+                val t1 = this.e1.type().let { if (it is Type.Prim) it.tk.str else null }
+                val t2 = this.e2.type().let { if (it is Type.Prim) it.tk.str else null }
                 if (t1=="Float" || t2=="Float") {
                     Type.Prim(Tk.Type("Float", this.tk.pos.copy()))
                 } else {

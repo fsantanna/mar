@@ -53,7 +53,7 @@ fun Var_Type.coder (pre: Boolean): String {
 }
 fun Type.coder (pre: Boolean): String {
     return when (this) {
-        is Type.Any        -> TODO()
+        is Type.Err, is Type.Any -> TODO()
         is Type.Nat        -> "_VOID_" //TODO("1")
         is Type.Prim       -> this.tk.str
         is Type.Data       -> this.ts.first().str
@@ -73,6 +73,9 @@ fun List<Tk.Type>.coder (pre: Boolean): String {
 
 fun coder_types (pre: Boolean): String {
     fun ft (me: Type): List<String> {
+        if (me is Type.Any) {
+            return emptyList()
+        }
         me.coder(pre).let {
             if (G.types.contains(it)) {
                 return emptyList()
@@ -601,7 +604,8 @@ fun Expr.coder (pre: Boolean): String {
 
         is Expr.Nat -> when {
             (this.tk.str == "mar_ret") -> this.tk.str
-            (this.xup is Stmt.Pass)   -> this.tk.str
+            (this.xup is Stmt.Pass)    -> this.tk.str
+            (this.xtp is Type.Any)     -> this.tk.str
             (this.xtp is Type.Nat)     -> this.tk.str
             (this.xtp is Type.Prim)    -> this.tk.str
             (this.xtp is Type.Data)    -> "MAR_CAST(${this.xtp!!.coder(pre)}, ${this.tk.str})"
