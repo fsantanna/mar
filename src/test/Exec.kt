@@ -1033,6 +1033,13 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun kk_07_throw () {
+        val out = test("""
+            var x: Int = throw()
+        """)
+        assert(out == "uncaught exception\n") { out }
+    }
 
     // DEFER
 

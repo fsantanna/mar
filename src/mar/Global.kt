@@ -109,7 +109,7 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
     class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, null, tk_)
     class Call (tk: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, null, tk)
 
-    class Throw  (tk: Tk, val e: Expr): Expr(G.N++, null, tk)
+    class Throw  (tk: Tk, var xtp: Type?, val e: Expr): Expr(G.N++, null, tk)
 
     class Create  (tk: Tk, val co: Expr): Expr(G.N++, null, tk)
     class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Expr(G.N++, null, tk)

@@ -697,4 +697,33 @@ class Infer {
                 "set x = if true => 10 => throw((Error(([]:[]))))\n" +
                 "}") { G.outer!!.to_str() }
     }
+
+    // THROW
+
+    @Test
+    fun gg_01_throw_err () {
+        val out = infer("""
+            data Error.*: []
+            var x = throw() 
+        """)
+        assert(out == "anon : (lin 3, col 13) : inference error : unknown type") { out!! }
+    }
+    @Test
+    fun gg_02_throw_err () {
+        val out = infer("""
+            data Error.*: []
+            var x: Int = throw() 
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "data Error.*: [] {\n"+
+           "}\n"+
+           "var x: Int\n"+
+           "set x = throw((Error(([]:[]))))\n"+
+           "}") { G.outer!!.to_str() }
+    }
 }

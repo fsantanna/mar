@@ -616,6 +616,7 @@ fun Expr.coder (pre: Boolean): String {
                 assert(sizeof(Exception) >= sizeof(${this.e.type().coder(pre)}));
                 MAR_EXCEPTION = MAR_CAST(Exception, ${this.e.coder(pre)});
                 continue;
+                ${this.xtp!!.coder(pre)} mar_$n ; mar_$n;
             })
         """
 

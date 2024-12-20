@@ -329,7 +329,7 @@ fun parser_expr_4_prim (): Expr {
                 parser_expr()
             }
             accept_fix_err(")")
-            Expr.Throw(tk0, e)
+            Expr.Throw(tk0, null, e)
         }
         accept_fix("if")    -> {
             val tk0 = G.tk0!!
