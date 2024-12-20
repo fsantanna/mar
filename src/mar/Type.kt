@@ -140,10 +140,6 @@ fun Type.Data.walk (): Triple<Stmt.Data,List<Int>,Type>? {
     return this.walk(this.ts)
 }
 
-fun Type.no_data (): Type {
-    return if (this !is Type.Data) this else this.walk()!!.third
-}
-
 fun Type.Tuple.index (idx: String): Type? {
     val v = idx.toIntOrNull().let {
         if (it == null) {
@@ -229,7 +225,17 @@ fun Expr.type (): Type {
 
         is Expr.Tuple -> this.xtp!!
         is Expr.Union -> this.xtp!!
-        is Expr.Field -> (this.col.type().no_data() as Type.Tuple).index(idx)!!
+        is Expr.Field -> {
+            val tup = this.col.type().let {
+                when (it) {
+                    is Type.Tuple -> it
+                    is Type.Data  -> it.walk()!!.third
+                    else -> error("impossible case")
+                }
+            }
+            tup as Type.Tuple
+            tup.index(idx)!!
+        }
         is Expr.Disc  -> this.col.type().discx(this.idx)!!.second
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
         is Expr.Cons  -> this.walk(ts)!!.let { (s,_,_) ->

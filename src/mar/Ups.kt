@@ -13,6 +13,10 @@ fun Any.ups (): List<Any> {
     return this.ups_until { false }
 }
 
+fun Any.ups_depth (): Int {
+    return this.ups().count()
+}
+
 fun Any.up_first (cnd: (Any)->Any?): Any? {
     val v = cnd(this)
     return when {

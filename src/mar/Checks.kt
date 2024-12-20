@@ -58,13 +58,16 @@ fun check_vars () {
                 }
             }
             is Stmt.Block -> {
-                val ids2 = me.to_dcls()
+                val ids1 = me.to_dcls()
                 me.ups().filter { it is Stmt.Block }.forEach {
                     it as Stmt.Block
-                    val ids1 = it.to_dcls()
-                    val err = ids2.find { (n2,id2,_) ->
-                        ids1.find { (n1,id1,_) ->
-                            (n1 != n2) && (id1.str == id2.str)
+                    val ids2 = it.to_dcls()
+                    val err = ids1.find { (n1,id1,_) ->
+                        ids2.find { (n2,id2,_) ->
+                            (n2 != n1) && (id2.str == id1.str) && (
+                                n2.ups_depth() == n1.ups_depth() ||
+                                n2.n < n1.n
+                            )
                         } != null
                     }
                     if (err != null) {

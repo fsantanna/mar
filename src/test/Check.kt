@@ -109,6 +109,29 @@ class Check {
         //assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
         assert(out == "anon : (lin 6, col 13) : start error : types mismatch") { out!! }
     }
+    @Test
+    fun aa_08_var_dup_no() {
+        val out = check("""
+            do {
+                do {
+                    var x: Int
+                }
+                var x: Int
+            }
+        """
+        )
+        assert(out == null) { out!! }
+    }
+    @Test
+    fun aa_09_var_dup_no() {
+        val out = check("""
+            func f: (x:Int) -> () {
+            }
+            var x:Int
+        """
+        )
+        assert(out == null) { out!! }
+    }
 
     // NUMS
 
