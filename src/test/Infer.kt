@@ -408,7 +408,7 @@ class Infer {
             var x: Int
             var ts = x.ts
         """)
-        assert(out == "anon : (lin 3, col 13) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 3, col 13) : inference error : unknown types") { out!! }
     }
     @Test
     fun dd_05_infer_tuple () {
@@ -496,6 +496,15 @@ class Infer {
                 "var x: T\n" +
                 "set x = ([([]:[])]:[[]])\n" +
                 "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun dd_10_infer_data_field () {
+        val out = infer("""
+            data WH: [w:Int, h:Int]
+            var log: WH
+            var x = log.y*0.9
+        """)
+        assert(out == "anon : (lin 4, col 13) : inference error : unknown types") { out!! }
     }
 
     // NAT
@@ -628,10 +637,10 @@ class Infer {
     @Test
     fun ff_04_match () {
         val out = infer("""
-                var x = match true {
-                    else => 10
-                }
-            """)
+            var x = match true {
+                else => 10
+            }
+        """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n"+
            "data Return.*: [] {\n"+

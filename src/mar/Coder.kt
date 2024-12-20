@@ -53,7 +53,8 @@ fun Var_Type.coder (pre: Boolean): String {
 }
 fun Type.coder (pre: Boolean): String {
     return when (this) {
-        is Type.Err, is Type.Any -> TODO()
+        //is Type.Err,
+        is Type.Any -> TODO()
         is Type.Nat        -> this.tk.str
         is Type.Prim       -> this.tk.str
         is Type.Data       -> this.ts.first().str
