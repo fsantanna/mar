@@ -125,7 +125,7 @@ fun Expr.infer (tp: Type?): Type? {
             this.xtp = tp
             val e = this.e.infer(null)
             if (e == null) null else {
-                this.type()
+                this.xtp
             }
         }
 

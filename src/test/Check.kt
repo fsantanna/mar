@@ -1624,7 +1624,7 @@ class Check {
         val out = check("""
             data Error.*: []
             var v: `T`
-            var ret = match v {
+            var ret: Int = match v {
                 `SDL_QUIT` => 10
                 else => throw()
             }

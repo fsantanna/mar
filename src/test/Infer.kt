@@ -680,10 +680,18 @@ class Infer {
                 "}") { G.outer!!.to_str() }
     }
     @Test
-    fun ff_07_if_throw () {
+    fun ff_07_if_throw_err () {
         val out = infer("""
             data Error.*: []
             var x = if true => 10 => throw() 
+        """)
+        assert(out == "anon : (lin 3, col 13) : inference error : unknown types") { out!! }
+    }
+    @Test
+    fun ff_07_if_throw () {
+        val out = infer("""
+            data Error.*: []
+            var x: Int = if true => 10 => throw() 
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
@@ -706,7 +714,7 @@ class Infer {
             data Error.*: []
             var x = throw() 
         """)
-        assert(out == "anon : (lin 3, col 13) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 3, col 13) : inference error : unknown types") { out!! }
     }
     @Test
     fun gg_02_throw_err () {

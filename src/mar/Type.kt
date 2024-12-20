@@ -225,7 +225,7 @@ fun Expr.type (): Type {
                 else -> error("impossible case")
             }
         }
-        is Expr.Throw -> Type.Any(this.tk)
+        is Expr.Throw -> this.xtp!!
 
         is Expr.Tuple -> this.xtp!!
         is Expr.Union -> this.xtp!!

@@ -1129,6 +1129,14 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun nn_04_match () {
+        val out = test("""
+            var x: Int = match 10 { 10 => 10 ; else => throw() }
+            print(x)
+        """)
+        assert(out == "10\n") { out }
+    }
 
     // MISC
 
