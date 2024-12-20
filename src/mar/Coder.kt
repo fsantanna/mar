@@ -693,7 +693,7 @@ fun coder_main (pre: Boolean): String {
         #define true   1
         #define false  0
         
-        #define MAR_CAST(tp,v) (*(tp*)({typeof(v) _mar_=(v); &_mar_;}))
+        #define MAR_CAST(tp,v) ({ ((union { tp a; typeof(v) b; }) {.b=v}).a; })
         
         int mar_sup (uint32_t sup, uint32_t sub) {
             //printf(">>> %X vs %X\n", sup, sub);

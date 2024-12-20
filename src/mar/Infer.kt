@@ -182,7 +182,7 @@ fun Expr.infer (tp: Type?): Type? {
             }
         }
         is Expr.Match -> {
-            val tst = this.tst.infer(tp)
+            val tst = this.tst.infer(null)
             val cases = this.cases.map {
                 val fst = if (it.first == null) Type.Err(this.tk) else it.first!!.infer(tst)
                 Pair(fst, it.second.infer(tp))
