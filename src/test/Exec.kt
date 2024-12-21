@@ -392,6 +392,14 @@ class Exec  {
         """)
         assert(out == "[20,10]\n") { out }
     }
+    @Test
+    fun gg_06_tuple () {
+        val out = test("""
+            var v: [x:Int] = [10*0.3]
+            print(v)
+        """)
+        assert(out == "[3]\n") { out }
+    }
 
     // DATA
 

@@ -615,6 +615,24 @@ class Check {
         """)
         assert(out == "anon : (lin 3, col 27) : predicate error : types mismatch") { out!! }
     }
+    @Test
+    fun cd_10_field_err () {
+        val out = check("""
+            var x: Int
+            var ts = x.ts
+        """)
+        assert(out == "anon : (lin 3, col 23) : field error : types mismatch") { out!! }
+        //assert(out == "anon : (lin 3, col 13) : inference error : unknown types") { out!! }
+    }
+    @Test
+    fun cd_11_field_err () {
+        val out = check("""
+            data WH: [w:Int, h:Int]
+            var log: WH
+            var x = log.y*0.9
+        """)
+        assert(out == "anon : (lin 4, col 24) : field error : invalid index") { out!! }
+    }
 
     // DATA
 

@@ -21,6 +21,7 @@ fun infer (me: String): String? {
         cache_ups()
         check_vars()
         infer_types()
+        //check_types()
     }
     //return null
 }
@@ -50,7 +51,7 @@ class Infer {
         val out = infer("""
             var x
         """)
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun aa_03_infer_dcl () {
@@ -330,7 +331,7 @@ class Infer {
             var co1 = create(gen1)
             start co1(<.1=1>)
         """)
-        assert(out == "anon : (lin 6, col 13) : inference error : unknown types") { out!! }
+        assert(out == "anon : (lin 6, col 23) : inference error : unknown type") { out!! }
         //assert(out == "anon : (lin 6, col 23) : inference error : incompatible types") { out!! }
     }
     @Test
@@ -365,8 +366,9 @@ class Infer {
         val out = infer("""
             var x = <.1=()>
         """)
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown types") { out!! }
+        //assert(out == "anon : (lin 2, col 13) : inference error : unknown types") { out!! }
         //assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun dd_02_infer_data_union () {
@@ -401,14 +403,6 @@ class Infer {
                 "var r: Pos\n" +
                 "set r = (Pos(([10,20]:[x:Int,y:Int])))\n" +
                 "}") { G.outer!!.to_str() }
-    }
-    @Test
-    fun dd_04_infer_err () {
-        val out = infer("""
-            var x: Int
-            var ts = x.ts
-        """)
-        assert(out == "anon : (lin 3, col 13) : inference error : unknown types") { out!! }
     }
     @Test
     fun dd_05_infer_tuple () {
@@ -497,15 +491,6 @@ class Infer {
                 "set x = ([([]:[])]:[[]])\n" +
                 "}") { G.outer!!.to_str() }
     }
-    @Test
-    fun dd_10_infer_data_field () {
-        val out = infer("""
-            data WH: [w:Int, h:Int]
-            var log: WH
-            var x = log.y*0.9
-        """)
-        assert(out == "anon : (lin 4, col 13) : inference error : unknown types") { out!! }
-    }
 
     // NAT
 
@@ -515,7 +500,7 @@ class Infer {
             var x = `10`
         """)
         //println(G.outer!!.to_str())
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun ee_02_infer_nat () {
@@ -568,7 +553,7 @@ class Infer {
             var x = `x`
         """)
         //assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun ee_06_nat_type () {
@@ -617,7 +602,7 @@ class Infer {
         val out = infer("""
             var x = if true => `10` => 10 
         """)
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun ff_03_if () {
@@ -661,7 +646,7 @@ class Infer {
                 else => 10
             }
         """)
-        assert(out == "anon : (lin 2, col 13) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun ff_06_if_hier () {
@@ -694,7 +679,7 @@ class Infer {
             data Error.*: []
             var x = if true => 10 => throw() 
         """)
-        assert(out == "anon : (lin 3, col 13) : inference error : unknown types") { out!! }
+        assert(out == "anon : (lin 3, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun ff_07_if_throw () {
@@ -723,7 +708,7 @@ class Infer {
             data Error.*: []
             var x = throw() 
         """)
-        assert(out == "anon : (lin 3, col 13) : inference error : unknown types") { out!! }
+        assert(out == "anon : (lin 3, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun gg_02_throw_err () {

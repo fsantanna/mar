@@ -192,7 +192,9 @@ fun check_types () {
                 }
                 when (tup) {
                     //is Type.Any -> {}
-                    !is Type.Tuple -> err(me.tk, "field error : types mismatch")
+                    !is Type.Tuple -> {
+                        err(me.tk, "field error : types mismatch")
+                    }
                     else -> if (tup.index(me.idx) == null) {
                         err(me.tk, "field error : invalid index")
                     }
