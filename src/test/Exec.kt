@@ -78,6 +78,25 @@ class Exec  {
         """)
         assert(out == "-1.000000\n") { out }
     }
+    @Test
+    fun ab_03_float() {
+        val out = test("""
+            var dy: Float = (10 - 9) / (3 - 1)
+            print(dy)
+        """)
+        assert(out == "0.500000\n") { out }
+    }
+    @Test
+    fun ab_04_field_float() {
+        val out = test("""
+            data X: [x:Int]
+            var x1: X = X [1]
+            var x2: X = X [2]
+            var dy: Float = x1.x / x2.x
+            print(dy)
+        """)
+        assert(out == "0.500000\n") { out }
+    }
 
     // NAT
 

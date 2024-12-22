@@ -100,14 +100,14 @@ fun Expr.infer (tp: Type?): Type? {
         is Expr.Uno -> {
             val e = this.e.infer(tp)
             if (e == null) null else {
-                this.type().num_cast(tp)
+                this.type()
             }
         }
         is Expr.Bin -> {
             val e1 = this.e1.infer(tp)
             val e2 = this.e2.infer(tp)
             if (e1==null || e2==null) null else {
-                this.type().num_cast(tp)
+                this.type()
             }
         }
         is Expr.Call -> {
@@ -207,7 +207,13 @@ fun Expr.infer (tp: Type?): Type? {
                 this.xtp
             }
         }
-    }
+    }.let {
+        println("-=-=-")
+        println(this.to_str())
+        println(it?.to_str())
+        println(it?.num_cast(tp)?.to_str())
+        it?.num_cast(tp)
+     }
 }
 
 fun infer_types () {
