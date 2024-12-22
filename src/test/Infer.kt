@@ -602,7 +602,16 @@ class Infer {
         val out = infer("""
             var x = if true => `10` => 10 
         """)
-        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "var x: Int\n"+
+           "set x = if true => `10` => 10\n"+
+           "}") { G.outer!!.to_str() }
     }
     @Test
     fun ff_03_if () {
@@ -646,7 +655,19 @@ class Infer {
                 else => 10
             }
         """)
-        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "var x: Int\n"+
+           "set x = match true {\n"+
+           "true => `10`\n"+
+           "else => 10\n"+
+           "}\n"+
+           "}") { G.outer!!.to_str() }
     }
     @Test
     fun ff_06_if_hier () {

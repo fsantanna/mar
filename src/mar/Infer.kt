@@ -14,7 +14,10 @@ fun Expr.infer (tp: Type?): Type? {
 
         is Expr.Bool, is Expr.Str, is Expr.Chr,
         is Expr.Null, is Expr.Unit -> this.type()
-        is Expr.Num -> this.type().num_cast(tp)
+        is Expr.Num -> {
+            this.xtp = this.type().let { it.num_cast(tp).sup_vs(it)!! }
+            this.xtp
+        }
 
         is Expr.Tuple -> {
             val up = this.xtp ?: tp
@@ -95,14 +98,14 @@ fun Expr.infer (tp: Type?): Type? {
         }
 
         is Expr.Uno -> {
-            val e = this.e.infer(null)
+            val e = this.e.infer(tp)
             if (e == null) null else {
                 this.type().num_cast(tp)
             }
         }
         is Expr.Bin -> {
-            val e1 = this.e1.infer(null)
-            val e2 = this.e2.infer(null)
+            val e1 = this.e1.infer(tp)
+            val e2 = this.e2.infer(tp)
             if (e1==null || e2==null) null else {
                 this.type().num_cast(tp)
             }

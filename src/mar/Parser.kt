@@ -252,7 +252,7 @@ fun parser_expr_4_prim (): Expr {
         accept_fix("true")  -> Expr.Bool(G.tk0 as Tk.Fix)
         accept_enu("Str")  -> Expr.Str(G.tk0 as Tk.Str)
         accept_enu("Chr")  -> Expr.Chr(G.tk0 as Tk.Chr)
-        accept_enu("Num")  -> Expr.Num(G.tk0 as Tk.Num)
+        accept_enu("Num")  -> Expr.Num(G.tk0 as Tk.Num, null)
         accept_fix("null")  -> Expr.Null(G.tk0 as Tk.Fix)
         accept_fix("(")     -> {
             val tk0 = G.tk0 as Tk.Fix

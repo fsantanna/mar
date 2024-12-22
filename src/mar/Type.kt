@@ -7,7 +7,7 @@ fun List<Type>.to_void (): List<Type> {
     }
 }
 
-val nums = setOf("Char", "Float", "Int", "U8")
+val nums = setOf("Float", "Int", "U8")
 fun Type.is_num (): Boolean {
     return (this is Type.Nat || this is Type.Any || (this is Type.Prim && nums.contains(this.tk.str)))
 }
@@ -48,6 +48,16 @@ fun Type.sup_vs (other: Type): Type? {
             }
             if (l.size == 0) null else {
                 Type.Data(this.tk, l)
+            }
+        }
+        (this.is_num() && other.is_num()) -> {
+            when {
+                // TODO: complete with other num types
+                (this.tk.str == "Float") -> this
+                (other.tk.str == "Float") -> other
+                (this.tk.str == "Int") -> this
+                (other.tk.str == "Int") -> other
+                else -> this
             }
         }
         this.is_sup_of(other) -> this

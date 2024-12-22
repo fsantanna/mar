@@ -94,7 +94,7 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
     class Bool   (val tk_: Tk.Fix): Expr(G.N++, null, tk_)
     class Str    (val tk_: Tk.Str): Expr(G.N++, null, tk_)
     class Chr    (val tk_: Tk.Chr): Expr(G.N++, null, tk_)
-    class Num    (val tk_: Tk.Num): Expr(G.N++, null, tk_)
+    class Num    (val tk_: Tk.Num, var xtp: Type?): Expr(G.N++, null, tk_)
     class Null   (tk_: Tk): Expr(G.N++, null, tk_)
     class Unit   (tk_: Tk): Expr(G.N++, null, tk_)
 

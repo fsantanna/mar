@@ -60,6 +60,25 @@ class Exec  {
         assert(out == "10 + 1.1\n") { out }
     }
 
+    // EXPR / BIN / UNO
+
+    @Test
+    fun ab_01_float() {
+        val out = test("""
+            var x: Float = 1/2
+            print(x)
+        """)
+        assert(out == "0.500000\n") { out }
+    }
+    @Test
+    fun ab_02_float() {
+        val out = test("""
+            var x: Float = -1
+            print(x)
+        """)
+        assert(out == "-1.000000\n") { out }
+    }
+
     // NAT
 
     @Test
