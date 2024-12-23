@@ -610,7 +610,16 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> "_void_"
         is Expr.Bool, is Expr.Chr, is Expr.Str,
-        is Expr.Null, is Expr.Num -> this.to_str(pre)
+        is Expr.Null -> this.to_str(pre)
+        is Expr.Num -> this.to_str(pre).let {
+            if (this.xnum == null) it else {
+                val tp = this.type()
+                val sup = tp.sup_vs(this.xnum!!)
+                if (sup == tp) it else {
+                    "((" + sup!!.coder(pre) + ")" + it + ")"
+                }
+            }
+        }
 
         is Expr.Throw -> """
             ({
@@ -672,9 +681,21 @@ fun Expr.coder (pre: Boolean): String {
             }
         """
     }.let {
-        val tp = this.type()
-        if (!tp.is_num()) it else {
-            "((" + tp.coder(pre) + ")" + it + ")"
+        when (this) {
+            is Expr.Num, is Expr.Match, is Expr.Yield -> it
+            else -> {
+                val tp = this.type()
+                when {
+                    (this.xnum == null) -> it
+                    (this.xnum!!.tk.str == tp.tk.str) -> it
+                    else -> {
+                        val sup = tp.sup_vs(this.xnum!!)
+                        if (sup == tp) it else {
+                            "((" + sup!!.coder(pre) + ")" + it + ")"
+                        }
+                    }
+                }
+            }
         }
      }
 }

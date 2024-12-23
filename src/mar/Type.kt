@@ -14,9 +14,6 @@ fun Type.is_num (): Boolean {
 fun Type.Prim.compat (other: Type.Prim): Boolean {
     return (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
 }
-fun Type.num_cast (to: Type?): Type {
-    return if (this.is_num() && to!=null && to.is_num()) to else this
-}
 
 fun Type.is_sup_of (other: Type): Boolean {
     return when {

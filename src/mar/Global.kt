@@ -88,36 +88,36 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
     class Exec (tk: Tk, val inps: List<Type>, val res: Type, val yld: Type, val out: Type): Type(G.N++, null, tk)
 }
 
-sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
-    class Nat    (val tk_: Tk.Nat, var xtp: Type?): Expr(G.N++, null, tk_)
-    class Acc    (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, null, tk_)
-    class Bool   (val tk_: Tk.Fix): Expr(G.N++, null, tk_)
-    class Str    (val tk_: Tk.Str): Expr(G.N++, null, tk_)
-    class Chr    (val tk_: Tk.Chr): Expr(G.N++, null, tk_)
-    class Num    (val tk_: Tk.Num, var xtp: Type?): Expr(G.N++, null, tk_)
-    class Null   (tk_: Tk): Expr(G.N++, null, tk_)
-    class Unit   (tk_: Tk): Expr(G.N++, null, tk_)
+sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
+    class Nat    (val tk_: Tk.Nat, var xtp: Type?): Expr(G.N++, null, tk_, null)
+    class Acc    (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, null, tk_, null)
+    class Bool   (val tk_: Tk.Fix): Expr(G.N++, null, tk_, null)
+    class Str    (val tk_: Tk.Str): Expr(G.N++, null, tk_, null)
+    class Chr    (val tk_: Tk.Chr): Expr(G.N++, null, tk_, null)
+    class Num    (val tk_: Tk.Num): Expr(G.N++, null, tk_, null)
+    class Null   (tk_: Tk): Expr(G.N++, null, tk_, null)
+    class Unit   (tk_: Tk): Expr(G.N++, null, tk_, null)
 
-    class Tuple (tk: Tk, var xtp: Type.Tuple?, val vs: List<Pair<Tk.Var?,Expr>>): Expr(G.N++, null, tk)
-    class Field (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk)
-    class Union (tk: Tk, var xtp: Type.Union?, val idx: String, val v: Expr): Expr(G.N++, null, tk)
-    class Pred  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk)
-    class Disc  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk)
-    class Cons  (tk: Tk, val ts: List<Tk.Type>, val e: Expr): Expr(G.N++, null, tk)
+    class Tuple (tk: Tk, var xtp: Type.Tuple?, val vs: List<Pair<Tk.Var?,Expr>>): Expr(G.N++, null, tk, null)
+    class Field (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)
+    class Union (tk: Tk, var xtp: Type.Union?, val idx: String, val v: Expr): Expr(G.N++, null, tk, null)
+    class Pred  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)
+    class Disc  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)
+    class Cons  (tk: Tk, val ts: List<Tk.Type>, val e: Expr): Expr(G.N++, null, tk, null)
 
-    class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, null, tk_)
-    class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, null, tk_)
-    class Call (tk: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, null, tk)
+    class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, null, tk_, null)
+    class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, null, tk_, null)
+    class Call (tk: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, null, tk, null)
 
-    class Throw  (tk: Tk, var xtp: Type?, val e: Expr): Expr(G.N++, null, tk)
+    class Throw  (tk: Tk, var xtp: Type?, val e: Expr): Expr(G.N++, null, tk, null)
 
-    class Create  (tk: Tk, val co: Expr): Expr(G.N++, null, tk)
-    class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Expr(G.N++, null, tk)
-    class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Expr(G.N++, null, tk)
-    class Yield   (tk: Tk, val arg: Expr): Expr(G.N++, null, tk)
+    class Create  (tk: Tk, val co: Expr): Expr(G.N++, null, tk, null)
+    class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Expr(G.N++, null, tk, null)
+    class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Expr(G.N++, null, tk, null)
+    class Yield   (tk: Tk, val arg: Expr): Expr(G.N++, null, tk, null)
 
-    class If      (tk: Tk, var xtp: Type?, val cnd: Expr, val t: Expr, val f: Expr): Expr(G.N++, null, tk)
-    class Match   (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Expr?,Expr>>): Expr(G.N++, null, tk)
+    class If      (tk: Tk, var xtp: Type?, val cnd: Expr, val t: Expr, val f: Expr): Expr(G.N++, null, tk, null)
+    class Match   (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Expr?,Expr>>): Expr(G.N++, null, tk, null)
 
 }
 

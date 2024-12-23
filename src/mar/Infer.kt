@@ -14,10 +14,7 @@ fun Expr.infer (tp: Type?): Type? {
 
         is Expr.Bool, is Expr.Str, is Expr.Chr,
         is Expr.Null, is Expr.Unit -> this.type()
-        is Expr.Num -> {
-            this.xtp = this.type().let { it.num_cast(tp).sup_vs(it)!! }
-            this.xtp
-        }
+        is Expr.Num -> this.type() //.let { it.num_cast(tp).sup_vs(it)!! }
 
         is Expr.Tuple -> {
             val up = this.xtp ?: tp
@@ -43,7 +40,7 @@ fun Expr.infer (tp: Type?): Type? {
             }
             if (dn == null) null else {
                 if (this.xtp == null) {
-                    this.xtp = dn
+                    this.xtp = if (tp is Type.Tuple) tp else dn
                 }
                 this.xtp
             }
@@ -208,12 +205,15 @@ fun Expr.infer (tp: Type?): Type? {
             }
         }
     }.let {
-        println("-=-=-")
-        println(this.to_str())
-        println(it?.to_str())
-        println(it?.num_cast(tp)?.to_str())
-        it?.num_cast(tp)
-     }
+        this.xnum = when {
+            (it == null) -> null
+            (tp == null) -> null
+            !it.is_num() -> null
+            !tp.is_num() -> null
+            else -> tp
+        }
+        it
+    }
 }
 
 fun infer_types () {
