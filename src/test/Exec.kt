@@ -1149,6 +1149,19 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun mm_02_return () {
+        val out = test("""
+            func f: () -> Int {
+                return(10)
+            }
+            `printf("%d\n", MAR_ESCAPE.tag)`
+            var x: Int = f()
+            `printf("%d\n", MAR_ESCAPE.tag)`
+            print(x)
+        """)
+        assert(out == "0\n0\n10\n") { out }
+    }
 
     // EXPR / IF / MATCH
 

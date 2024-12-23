@@ -275,9 +275,7 @@ fun Stmt.coder (pre: Boolean): String {
                                     vtp.first.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n"
                                 }.joinToString("")}
                     """ }}
-                    ${this.blk.ss.map {
-                        it.coder(pre) + "\n"
-                    }.joinToString("")}
+                    ${this.blk.coder(pre)}
                     ${(this is Stmt.Proto.Coro).cond { """
                         }
                     """ }}
