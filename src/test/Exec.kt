@@ -247,6 +247,21 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun cc_07_match () {
+        val out = test("""
+            data X.*: [] {
+                A: [Int]
+                B: []
+            }
+            var x = X.A [10]
+            match x {
+                X.A  { print(x) }
+                else { throw()  }
+            }
+        """)
+        assert(out == "X.A [10]\n") { out }
+    }
 
     // FUNC
 

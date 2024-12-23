@@ -408,9 +408,9 @@ fun Stmt.coder (pre: Boolean): String {
         """
         is Stmt.MatchT -> """
             // MATCH | ${this.dump()}
-            switch (${this.tst.coder(pre)}) {
+            switch (${this.tst.coder(pre)}.tag) {
                 ${this.cases.map { (tst,e) -> """
-                    ${tst.cond2({"case ${it.coder(pre)}"},{"default"})}:
+                    ${tst.cond2({"case MAR_TAG_${it.ts.coder(pre).uppercase()}"},{"default"})}:
                         ${e.coder(pre)};
                     break;
                 """ }.joinToString("")}
@@ -690,9 +690,9 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.If -> "((${this.cnd.coder(pre)}) ? (${this.t.coder(pre)}) : (${this.f.coder(pre)}))"
         is Expr.MatchT -> """
             ${this.type().coder(pre)} mar_$n;
-            switch (${this.tst.coder(pre)}) {
+            switch (${this.tst.coder(pre)}.tag) {
                 ${this.cases.map { (tst,e) -> """
-                    ${tst.cond2({"case ${it.coder(pre)}"},{"default"})}:
+                    ${tst.cond2({"case MAR_TAG_${it.ts.coder(pre).uppercase()}"},{"default"})}:
                         mar_$n = ${e.coder(pre)};
                     break;
                 """ }.joinToString("")}
