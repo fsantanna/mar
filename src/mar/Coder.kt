@@ -406,6 +406,16 @@ fun Stmt.coder (pre: Boolean): String {
                 goto MAR_LOOP_START_${this.n};
                 MAR_LOOP_STOP_${this.n}:
         """
+        is Stmt.Match -> """
+            // MATCH | ${this.dump()}
+            switch (${this.tst.coder(pre)}) {
+                ${this.cases.map { (tst,e) -> """
+                    ${tst.cond2({"case ${it.coder(pre)}"},{"default"})}:
+                        ${e.coder(pre)};
+                    break;
+                """ }.joinToString("")}
+            }
+        """
 
         is Stmt.Print  -> {
             fun aux (tp: Type, v: String): String {

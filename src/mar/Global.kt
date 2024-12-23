@@ -138,6 +138,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
 
     class If     (tk: Tk, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, null, tk)
     class Loop   (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, null, tk)
+    class Match  (tk: Tk, val tst: Expr, val cases: List<Pair<Expr?,Stmt.Block>>): Stmt(G.N++, null, tk)
 
     class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
     class Pass  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)

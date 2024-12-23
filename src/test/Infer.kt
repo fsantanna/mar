@@ -749,4 +749,46 @@ class Infer {
            "set x = throw((Error(([]:[]))))\n"+
            "}") { G.outer!!.to_str() }
     }
+
+    // STMT / MATCH
+
+    @Test
+    fun hh_01_match () {
+        val out = infer("""
+            match true {
+                else {do(10)}
+            }
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "match true {\n"+
+           "else { do(10) }\n"+
+           "}\n"+
+           "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun hh_02_match () {
+        val out = infer("""
+            match true {
+                true {`10`}
+                else {do(10)}
+            }
+        """)
+        //assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "match true {\n"+
+           "true { do((`10`: ())) }\n"+
+           "else { do(10) }\n"+
+           "}\n"+
+           "}") { G.outer!!.to_str() }
+    }
 }

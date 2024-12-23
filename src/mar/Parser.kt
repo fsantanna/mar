@@ -636,7 +636,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             }
         }
 
-        (set!=null && accept_fix("match")) -> {
+        (accept_fix("match")) -> {
             val tk0 = G.tk0!!
             val tst = parser_expr()
             accept_fix_err("{")
@@ -647,11 +647,22 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 val cnd = if (accept_fix("else")) null else {
                     parser_expr()
                 }
-                accept_fix_err("=>")
-                val e = parser_expr()
-                Pair(cnd, e)
+                val se = if (set == null) {
+                    accept_fix_err("{")
+                    Stmt.Block(G.tk0!!, null, parser_list(null, "}") {
+                        parser_stmt()
+                    }.flatten())
+                } else {
+                    accept_fix_err("=>")
+                    parser_expr()
+                }
+                Pair(cnd, se)
             }
-            listOf(Stmt.Set(set.first, set.second, Expr.Match(tk0, null, tst, cases)))
+            if (set == null) {
+                listOf(Stmt.Match(tk0, tst, cases as List<Pair<Expr?,Stmt.Block>>))
+            } else {
+                listOf(Stmt.Set(set.first, set.second, Expr.Match(tk0, null, tst, cases as List<Pair<Expr?,Expr>>)))
+            }
         }
 
         accept_fix("data") -> {

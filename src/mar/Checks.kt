@@ -163,6 +163,14 @@ fun check_types () {
                     err(me.tk, "if error : expected boolean condition")
                 }
             }
+            is Stmt.Match -> {
+                val fsts = listOf(me.tst.type()) + me.cases.map { it.first }.filterNotNull().map { it.type() }
+                val x: Type? = fsts.first()
+                val xs = fsts.fold(x, { a,b -> a?.sup_vs(b) })
+                if (xs == null) {
+                    err(me.tk, "match error : types mismatch")
+                }
+            }
             is Stmt.Catch -> {
                 if (me.tp != null) {
                     val xxx = me.tp.walk()
@@ -286,9 +294,6 @@ fun check_types () {
                 val x: Type? = fsts.first()
                 val xs = fsts.fold(x, { a,b -> a?.sup_vs(b) })
                 if (xs == null) {
-                    err(me.tk, "match error : types mismatch")
-                }
-                if (!me.tst.type().is_sup_of(xs)) {
                     err(me.tk, "match error : types mismatch")
                 }
 

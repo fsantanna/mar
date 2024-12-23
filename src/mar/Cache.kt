@@ -55,6 +55,13 @@ fun cache_ups () {
             is Stmt.Loop -> {
                 me.blk.xup = me
             }
+            is Stmt.Match -> {
+                me.tst.xup = me
+                me.cases.forEach {
+                    it.first?.xup = me
+                    it.second.xup = me
+                }
+            }
 
             is Stmt.Print -> me.e.xup = me
             is Stmt.Pass -> me.e.xup = me

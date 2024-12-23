@@ -180,7 +180,7 @@ class Exec  {
         assert(out == "10\n") { out }
     }
 
-    // CALL / PRINT / IF / LOOP
+    // CALL / PRINT / IF / LOOP / MATCH
 
     @Test
     fun cc_01_print() {
@@ -225,6 +225,27 @@ class Exec  {
             `printf("%d\n", n);`
         """)
         assert(out == "15\n") { out }
+    }
+    @Test
+    fun cc_04_match () {
+        val out = test("""
+            match 10 { 10 {print(20)} ; else {print(99)} }
+        """)
+        assert(out == "20\n") { out }
+    }
+    @Test
+    fun cc_05_match () {
+        val out = test("""
+            match 10 { 20 {print(99)} ; else {print(10)} }
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun cc_06_match () {
+        val out = test("""
+            match 10 { 10 {print(10)} ; else {throw()} }
+        """)
+        assert(out == "10\n") { out }
     }
 
     // FUNC

@@ -15,6 +15,7 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
 
         is Stmt.If    -> this.cnd.dn_collect_pos(fe,ft) + this.t.dn_collect_pos(fs,fe,ft) + this.f.dn_collect_pos(fs,fe,ft)
         is Stmt.Loop  -> this.blk.dn_collect_pos(fs,fe,ft)
+        is Stmt.Match -> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(fe,ft) ?: emptyList()) + it.second.dn_collect_pos(fs,fe,ft) }.flatten()
 
         is Stmt.Print -> this.e.dn_collect_pos(fe,ft)
         is Stmt.Pass -> this.e.dn_collect_pos(fe,ft)
@@ -90,6 +91,7 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
 
         is Stmt.If    -> this.cnd.dn_collect_pre(fe,ft) + this.t.dn_collect_pre(fs,fe,ft) + this.f.dn_collect_pre(fs,fe,ft)
         is Stmt.Loop  -> this.blk.dn_collect_pre(fs,fe,ft)
+        is Stmt.Match -> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(fe,ft) ?: emptyList()) + it.second.dn_collect_pre(fs,fe,ft) }.flatten()
 
         is Stmt.Print -> this.e.dn_collect_pre(fe,ft)
         is Stmt.Pass -> this.e.dn_collect_pre(fe,ft)

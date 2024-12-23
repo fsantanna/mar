@@ -1686,4 +1686,57 @@ class Check {
            "}\n"+
            "}") { G.outer!!.to_str() }
     }
+
+    // STMT / MATCH
+
+    @Test
+    fun jj_01_match_err () {
+        val out = check("""
+            match 10 { else { do(10) } }
+        """)
+        println(out)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "match 10 {\n"+
+           "else { do(10) }\n"+
+           "}\n"+
+           "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun jj_02_match_err () {
+        val out = check("""
+            match true { 10 { do(10) } }
+        """)
+        assert(out == "anon : (lin 2, col 13) : match error : types mismatch") { out!! }
+    }
+    @Test
+    fun jj_03_match () {
+        val out = check("""
+            data Error.*: []
+            var v: `T`
+            match v {
+                `SDL_QUIT`{}
+                else {throw()}
+            }
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "data Error.*: [] {\n"+
+           "}\n"+
+           "var v: `T`\n"+
+           "match v {\n"+
+           "(`SDL_QUIT`: `T`) {  }\n"+
+           "else { do(throw((Error(([]:[]))))) }\n"+
+           "}\n"+
+           "}") { G.outer!!.to_str() }
+    }
+
 }

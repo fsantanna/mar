@@ -516,7 +516,7 @@ class Parser {
         assert(s.to_str() == "coro co: (x: ()) -> () -> () -> () {\n}") { s.to_str() }
     }
 
-    // IF / LOOP
+    // IF / LOOP / MATCH
 
     @Test
     fun ii_01_if() {
@@ -536,6 +536,16 @@ class Parser {
         val s = parser_stmt().first()
         assert(s is Stmt.Loop && s.blk.ss.size==1 && s.blk.ss.first() is Stmt.Escape)
         assert(s.to_str() == "loop {\nescape((Break(([]))))\n}") { s.to_str() }
+    }
+    @Test
+    fun ii_03_match () {
+        G.tks = ("match x { 1 {} else {pass(x)} }").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "match x {\n"+
+                                "1 {  }\n"+
+                                "else { do((pass(x))) }\n"+
+                                "}\n") { ss.to_str() }
     }
 
     // TUPLE

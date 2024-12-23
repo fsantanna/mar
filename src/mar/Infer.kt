@@ -247,6 +247,12 @@ fun infer_types () {
 
             is Stmt.If -> me.cnd.infer(Type.Prim(Tk.Type("Bool",me.tk.pos.copy())))
             is Stmt.Loop -> {}
+            is Stmt.Match -> {
+                val tst = me.tst.infer(null)
+                me.cases.forEach {
+                    it.first?.infer(tst)
+                }
+            }
 
             is Stmt.Print -> me.e.infer(null)
             is Stmt.Pass -> me.e.infer(Type.Unit(me.tk))
