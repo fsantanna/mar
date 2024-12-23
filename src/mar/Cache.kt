@@ -55,7 +55,14 @@ fun cache_ups () {
             is Stmt.Loop -> {
                 me.blk.xup = me
             }
-            is Stmt.Match -> {
+            is Stmt.MatchT -> {
+                me.tst.xup = me
+                me.cases.forEach {
+                    it.first?.xup = me
+                    it.second.xup = me
+                }
+            }
+            is Stmt.MatchE -> {
                 me.tst.xup = me
                 me.cases.forEach {
                     it.first?.xup = me
@@ -127,7 +134,14 @@ fun cache_ups () {
                 me.t.xup = me
                 me.f.xup = me
             }
-            is Expr.Match -> {
+            is Expr.MatchT -> {
+                me.tst.xup = me
+                me.cases.forEach {
+                    it.first?.xup = me
+                    it.second.xup = me
+                }
+            }
+            is Expr.MatchE -> {
                 me.tst.xup = me
                 me.cases.forEach {
                     it.first?.xup = me

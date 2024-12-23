@@ -643,9 +643,23 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             if (check_fix("}")) {
                 err(G.tk1!!, "match error : unexpected \"}\"")
             }
+            var tt: Boolean? = null
             val cases = parser_list(null, "}") {
                 val cnd = if (accept_fix("else")) null else {
-                    parser_expr()
+                    if (tt == true) {
+                        check_enu_err("Type")
+                    }
+                    if (tt!=false && check_enu("Type")) {
+                        val tp = parser_type(null, false)
+                        if (tp !is Type.Data) {
+                            err(tp.tk, "exception error : expected data type")
+                        }
+                        tt = true
+                        tp
+                    } else {
+                        tt = false
+                        parser_expr()
+                    }
                 }
                 val se = if (set == null) {
                     accept_fix_err("{")
@@ -658,10 +672,12 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 }
                 Pair(cnd, se)
             }
-            if (set == null) {
-                listOf(Stmt.Match(tk0, tst, cases as List<Pair<Expr?,Stmt.Block>>))
-            } else {
-                listOf(Stmt.Set(set.first, set.second, Expr.Match(tk0, null, tst, cases as List<Pair<Expr?,Expr>>)))
+            when {
+                (set==null && tt==true) -> listOf(Stmt.MatchT(tk0, tst, cases as List<Pair<Type.Data?,Stmt.Block>>))
+                (set==null && tt!=true) -> listOf(Stmt.MatchE(tk0, tst, cases as List<Pair<Expr?,Stmt.Block>>))
+                (set!=null && tt==true) -> listOf(Stmt.Set(set.first, set.second, Expr.MatchT(tk0, null, tst, cases as List<Pair<Type.Data?,Expr>>)))
+                (set!=null && tt!=true) -> listOf(Stmt.Set(set.first, set.second, Expr.MatchE(tk0, null, tst, cases as List<Pair<Expr?,Expr>>)))
+                else -> error("impossible case")
             }
         }
 

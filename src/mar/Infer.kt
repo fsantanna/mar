@@ -188,7 +188,23 @@ fun Expr.infer (tp: Type?): Type? {
                 this.xtp
             }
         }
-        is Expr.Match -> {
+        is Expr.MatchT -> {
+            val tst = this.tst.infer(null)
+            val cases = this.cases.map {
+                val fst = if (it.first == null) Type.Any(this.tk) else it.first!!
+                Pair(fst, it.second.infer(tp))
+            }
+            if (tst==null || cases.any { (a,b) -> a==null||b==null }) null else {
+                val es = cases.map { it.second } as List<Type>
+                val fst: Type? = es.first()
+                this.xtp = es.fold(fst) { a,b -> a?.sup_vs(b) }
+                if (this.xtp == null) {
+                    throw InferException()
+                }
+                this.xtp
+            }
+        }
+        is Expr.MatchE -> {
             val tst = this.tst.infer(null)
             val cases = this.cases.map {
                 val fst = if (it.first == null) Type.Any(this.tk) else it.first!!.infer(tst)
@@ -247,7 +263,8 @@ fun infer_types () {
 
             is Stmt.If -> me.cnd.infer(Type.Prim(Tk.Type("Bool",me.tk.pos.copy())))
             is Stmt.Loop -> {}
-            is Stmt.Match -> {
+            is Stmt.MatchT -> me.tst.infer(null)
+            is Stmt.MatchE -> {
                 val tst = me.tst.infer(null)
                 me.cases.forEach {
                     it.first?.infer(tst)
@@ -278,11 +295,12 @@ fun infer_types () {
             }
         }, {
             val xtp = when (it) {
-                is Expr.Tuple -> it.xtp
-                is Expr.Union -> it.xtp
-                is Expr.Throw -> it.xtp
-                is Expr.If    -> it.xtp
-                is Expr.Match -> it.xtp
+                is Expr.Tuple  -> it.xtp
+                is Expr.Union  -> it.xtp
+                is Expr.Throw  -> it.xtp
+                is Expr.If     -> it.xtp
+                is Expr.MatchT -> it.xtp
+                is Expr.MatchE -> it.xtp
                 else -> Unit
             }
             if (xtp == null) {

@@ -543,9 +543,31 @@ class Parser {
         parser_lexer()
         val ss = parser_stmt()
         assert(ss.to_str() == "match x {\n"+
-                                "1 {  }\n"+
+            "1 {  }\n"+
+            "else { do((pass(x))) }\n"+
+            "}\n") { ss.to_str() }
+    }
+    @Test
+    fun ii_04_match () {
+        G.tks = ("match x { X.Y {} else {pass(x)} }").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "match x {\n"+
+                                "X.Y {  }\n"+
                                 "else { do((pass(x))) }\n"+
                                 "}\n") { ss.to_str() }
+    }
+    @Test
+    fun ii_04_match_err () {
+        G.tks = ("match x { X.Y {} ; 1 {} ; else {pass(x)} }").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 20) : expected type : have \"1\"")
+    }
+    @Test
+    fun ii_05_match_err () {
+        G.tks = ("match x { 1 {} ; X.Y {} ; else {pass(x)} }").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 22) : expected \"(\" : have \"{\"")
     }
 
     // TUPLE

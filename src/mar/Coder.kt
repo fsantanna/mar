@@ -340,7 +340,7 @@ fun Stmt.coder (pre: Boolean): String {
         }
         is Stmt.Set    -> {
             when (this.src) {
-                is Expr.Yield, is Expr.Match -> this.src.coder(pre) + """
+                is Expr.Yield, is Expr.MatchT, is Expr.MatchE -> this.src.coder(pre) + """
                     ${this.dst.coder(pre)} = mar_${this.src.n};
                 """
                 else -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
@@ -406,7 +406,17 @@ fun Stmt.coder (pre: Boolean): String {
                 goto MAR_LOOP_START_${this.n};
                 MAR_LOOP_STOP_${this.n}:
         """
-        is Stmt.Match -> """
+        is Stmt.MatchT -> """
+            // MATCH | ${this.dump()}
+            switch (${this.tst.coder(pre)}) {
+                ${this.cases.map { (tst,e) -> """
+                    ${tst.cond2({"case ${it.coder(pre)}"},{"default"})}:
+                        ${e.coder(pre)};
+                    break;
+                """ }.joinToString("")}
+            }
+        """
+        is Stmt.MatchE -> """
             // MATCH | ${this.dump()}
             switch (${this.tst.coder(pre)}) {
                 ${this.cases.map { (tst,e) -> """
@@ -678,7 +688,17 @@ fun Expr.coder (pre: Boolean): String {
         }
 
         is Expr.If -> "((${this.cnd.coder(pre)}) ? (${this.t.coder(pre)}) : (${this.f.coder(pre)}))"
-        is Expr.Match -> """
+        is Expr.MatchT -> """
+            ${this.type().coder(pre)} mar_$n;
+            switch (${this.tst.coder(pre)}) {
+                ${this.cases.map { (tst,e) -> """
+                    ${tst.cond2({"case ${it.coder(pre)}"},{"default"})}:
+                        mar_$n = ${e.coder(pre)};
+                    break;
+                """ }.joinToString("")}
+            }
+        """
+        is Expr.MatchE -> """
             ${this.type().coder(pre)} mar_$n;
             switch (${this.tst.coder(pre)}) {
                 ${this.cases.map { (tst,e) -> """
@@ -690,7 +710,7 @@ fun Expr.coder (pre: Boolean): String {
         """
     }.let {
         when (this) {
-            is Expr.Num, is Expr.Match, is Expr.Yield -> it
+            is Expr.Num, is Expr.MatchT, is Expr.MatchE, is Expr.Yield -> it
             else -> {
                 val tp = this.type()
                 when {

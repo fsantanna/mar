@@ -117,8 +117,8 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
     class Yield   (tk: Tk, val arg: Expr): Expr(G.N++, null, tk, null)
 
     class If      (tk: Tk, var xtp: Type?, val cnd: Expr, val t: Expr, val f: Expr): Expr(G.N++, null, tk, null)
-    class Match   (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Expr?,Expr>>): Expr(G.N++, null, tk, null)
-
+    class MatchT  (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Type.Data?,Expr>>): Expr(G.N++, null, tk, null)
+    class MatchE  (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Expr?,Expr>>): Expr(G.N++, null, tk, null)
 }
 
 sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
@@ -138,7 +138,8 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
 
     class If     (tk: Tk, val cnd: Expr, val t: Stmt.Block, val f: Stmt.Block): Stmt(G.N++, null, tk)
     class Loop   (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, null, tk)
-    class Match  (tk: Tk, val tst: Expr, val cases: List<Pair<Expr?,Stmt.Block>>): Stmt(G.N++, null, tk)
+    class MatchT (tk: Tk, val tst: Expr, val cases: List<Pair<Type.Data?,Stmt.Block>>): Stmt(G.N++, null, tk)
+    class MatchE (tk: Tk, val tst: Expr, val cases: List<Pair<Expr?,Stmt.Block>>): Stmt(G.N++, null, tk)
 
     class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
     class Pass  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)

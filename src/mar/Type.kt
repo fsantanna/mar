@@ -279,7 +279,8 @@ fun Expr.type (): Type {
         }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
         is Expr.If -> this.t.type().sup_vs(this.f.type())!!
-        is Expr.Match -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a.sup_vs(b)!!})
+        is Expr.MatchT -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a.sup_vs(b)!!})
+        is Expr.MatchE -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a.sup_vs(b)!!})
     }.let {
         if (it.xup == null) {
             it.xup = this

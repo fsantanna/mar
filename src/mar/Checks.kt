@@ -163,7 +163,15 @@ fun check_types () {
                     err(me.tk, "if error : expected boolean condition")
                 }
             }
-            is Stmt.Match -> {
+            is Stmt.MatchT -> {
+                val fsts = listOf(me.tst.type()) + me.cases.map { it.first }.filterNotNull()
+                val x: Type? = fsts.first()
+                val xs = fsts.fold(x, { a,b -> a?.sup_vs(b) })
+                if (xs == null) {
+                    err(me.tk, "match error : types mismatch")
+                }
+            }
+            is Stmt.MatchE -> {
                 val fsts = listOf(me.tst.type()) + me.cases.map { it.first }.filterNotNull().map { it.type() }
                 val x: Type? = fsts.first()
                 val xs = fsts.fold(x, { a,b -> a?.sup_vs(b) })
@@ -289,7 +297,22 @@ fun check_types () {
                     err(me.tk, "if error : types mismatch")
                 }
             }
-            is Expr.Match -> {
+            is Expr.MatchT -> {
+                val fsts = listOf(me.tst.type()) + me.cases.map { it.first }.filterNotNull()
+                val x: Type? = fsts.first()
+                val xs = fsts.fold(x, { a,b -> a?.sup_vs(b) })
+                if (xs == null) {
+                    err(me.tk, "match error : types mismatch")
+                }
+
+                val snds = me.cases.map { it.second.type() }
+                val y: Type? = me.cases.first().second.type()
+                val ys = snds.fold(y) {a,b -> a?.sup_vs(b) }
+                if (ys == null) {
+                    err(me.tk, "match error : types mismatch")
+                }
+            }
+            is Expr.MatchE -> {
                 val fsts = listOf(me.tst.type()) + me.cases.map { it.first }.filterNotNull().map { it.type() }
                 val x: Type? = fsts.first()
                 val xs = fsts.fold(x, { a,b -> a?.sup_vs(b) })
