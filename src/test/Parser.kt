@@ -569,6 +569,16 @@ class Parser {
         parser_lexer()
         assert(trap { parser_stmt() } == "anon : (lin 1, col 22) : expected \"(\" : have \"{\"")
     }
+    @Test
+    fun ii_06_loop_n () {
+        G.tks = ("loop i in 10 {}").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "match x {\n"+
+            "X.Y {  }\n"+
+            "else { do((pass(x))) }\n"+
+            "}\n") { ss.to_str() }
+    }
 
     // TUPLE
 

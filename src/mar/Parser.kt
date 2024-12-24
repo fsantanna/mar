@@ -324,7 +324,7 @@ fun parser_expr_4_prim (): Expr {
             val tk0 = G.tk0!!
             accept_fix_err("(")
             val e = if (check_fix(")")) {
-                Expr.Cons(tk0, listOf(Tk.Type("Error",tk0.pos.copy())), Expr.Tuple(tk0, null, emptyList()))
+                Expr.Cons(tk0, listOf(Tk.Type("Error",tk0.pos)), Expr.Tuple(tk0, null, emptyList()))
             } else {
                 parser_expr()
             }
@@ -360,7 +360,7 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
                 val args = parser_list(",",")") { parser_expr() }
                 Expr.Call(e.tk, e, args)
             }
-            "\\" -> Expr.Uno(Tk.Op("deref", G.tk0!!.pos.copy()), e)
+            "\\" -> Expr.Uno(Tk.Op("deref", G.tk0!!.pos), e)
             "." -> {
                 val dot = G.tk0 as Tk.Fix
                 (accept_enu("Var") || accept_enu_err("Num"))
@@ -386,7 +386,7 @@ fun parser_expr_2_pre (): Expr {
         accept_op("-") || accept_op("\\") -> {
             val op = (G.tk0 as Tk.Op).let {
                 if (it.str != "\\") it else {
-                    Tk.Op("ref", it.pos.copy())
+                    Tk.Op("ref", it.pos)
                 }
             }
             val e = parser_expr_2_pre()
@@ -431,7 +431,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val ss = parser_list(null, "}") {
                 parser_stmt()
             }.flatten()
-            val esc = Type.Data(tk0, listOf(Tk.Type("Return",tk0.pos.copy())))
+            val esc = Type.Data(tk0, listOf(Tk.Type("Return",tk0.pos)))
             when (tp) {
                 is Type.Proto.Func.Vars ->
                     Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk, esc, ss))
@@ -446,10 +446,10 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val e = parser_expr()
             listOf (
                 Stmt.Set(tk0,
-                    Expr.Nat(Tk.Nat("mar_ret", tk0.pos.copy()), null),
+                    Expr.Nat(Tk.Nat("mar_ret", tk0.pos), null),
                     e),
                 Stmt.Escape(tk0,
-                    Expr.Cons(tk0, listOf(Tk.Type("Return", tk0.pos.copy())),
+                    Expr.Cons(tk0, listOf(Tk.Type("Return", tk0.pos)),
                         Expr.Tuple(tk0,null, emptyList())))
             )
         }
@@ -578,7 +578,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val tk0 = G.tk0!!
             listOf (
                 Stmt.Escape(tk0,
-                    Expr.Cons(tk0, listOf(Tk.Type("Break", tk0.pos.copy())),
+                    Expr.Cons(tk0, listOf(Tk.Type("Break", tk0.pos)),
                         Expr.Tuple(tk0,null, emptyList())))
             )
         }

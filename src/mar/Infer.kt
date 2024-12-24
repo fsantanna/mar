@@ -77,7 +77,7 @@ fun Expr.infer (tp: Type?): Type? {
                 if (col.discx(this.idx)?.second == null) {
                     throw InferException()
                 } else {
-                    Type.Prim(Tk.Type("Bool",this.tk.pos.copy()))
+                    Type.Prim(Tk.Type("Bool",this.tk.pos))
                 }
             }
         }
@@ -263,7 +263,7 @@ fun infer_types () {
             is Stmt.Defer -> {}
             is Stmt.Catch -> {}
 
-            is Stmt.If -> me.cnd.infer(Type.Prim(Tk.Type("Bool",me.tk.pos.copy())))
+            is Stmt.If -> me.cnd.infer(Type.Prim(Tk.Type("Bool",me.tk.pos)))
             is Stmt.Loop -> {}
             is Stmt.MatchT -> me.tst.infer(null)
             is Stmt.MatchE -> {

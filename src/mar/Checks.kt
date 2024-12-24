@@ -163,7 +163,7 @@ fun check_types () {
                 }
             }
             is Stmt.If -> {
-                if (!me.cnd.type().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos.copy())))) {
+                if (!me.cnd.type().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos)))) {
                     err(me.tk, "if error : expected boolean condition")
                 }
             }
@@ -294,7 +294,7 @@ fun check_types () {
                 }
             }
             is Expr.If -> {
-                if (!me.cnd.type().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos.copy())))) {
+                if (!me.cnd.type().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos)))) {
                     err(me.cnd.tk, "if error : expected boolean condition")
                 }
                 if (me.t.type().sup_vs(me.f.type()) == null) {

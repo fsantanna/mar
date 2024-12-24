@@ -69,8 +69,8 @@ fun Expr.Bin.args (tp1: Type, tp2: Type): Boolean {
         ">", "<", ">=", "<=",
         "+", "-", "*", "/", "%" -> (tp1.is_num() && tp2.is_num())
         "||", "&&" -> {
-            tp1.is_sup_of(Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))) &&
-            tp2.is_sup_of(Type.Prim(Tk.Type( "Bool", this.tk.pos.copy())))
+            tp1.is_sup_of(Type.Prim(Tk.Type( "Bool", this.tk.pos))) &&
+            tp2.is_sup_of(Type.Prim(Tk.Type( "Bool", this.tk.pos)))
         }
         else -> error("impossible case")
     }
@@ -174,7 +174,7 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
                 if (s.subs == null) {
                     Pair(i.last(),tp)
                 } else {
-                    val xtp = Type.Data(this.tk, xts.map { Tk.Type(it, this.tk.pos.copy()) })
+                    val xtp = Type.Data(this.tk, xts.map { Tk.Type(it, this.tk.pos) })
                     xtp.xup = this
                     Pair(i.last(), xtp)
                 }
@@ -204,7 +204,7 @@ fun Type.Union.disc (idx: String): Pair<Int, Type>? {
 fun Expr.type (): Type {
     return when (this) {
         is Expr.Uno -> when (this.tk_.str) {
-            "-" -> Type.Prim(Tk.Type( "Int", this.tk.pos.copy()))
+            "-" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
             "ref" -> Type.Pointer(this.tk, this.e.type())
             "deref" -> (this.e.type() as Type.Pointer).ptr!!
             else -> error("impossible case")
@@ -212,14 +212,14 @@ fun Expr.type (): Type {
         is Expr.Bin -> when (this.tk_.str) {
             "==", "!=",
             ">", "<", ">=", "<=",
-            "||", "&&" -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
+            "||", "&&" -> Type.Prim(Tk.Type( "Bool", this.tk.pos))
             "+", "-", "*", "/", "%" -> {
                 val t1 = this.e1.type().let { if (it is Type.Prim) it.tk.str else null }
                 val t2 = this.e2.type().let { if (it is Type.Prim) it.tk.str else null }
                 if (t1=="Float" || t2=="Float") {
-                    Type.Prim(Tk.Type("Float", this.tk.pos.copy()))
+                    Type.Prim(Tk.Type("Float", this.tk.pos))
                 } else {
-                    Type.Prim(Tk.Type("Int", this.tk.pos.copy()))
+                    Type.Prim(Tk.Type("Int", this.tk.pos))
                 }
             }
             else -> error("impossible case")
@@ -247,7 +247,7 @@ fun Expr.type (): Type {
             tup.index(idx)!!
         }
         is Expr.Disc  -> this.col.type().discx(this.idx)!!.second
-        is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos.copy()))
+        is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos))
         is Expr.Cons  -> this.walk(ts)!!.let { (s,_,_) ->
             if (s.subs == null) {
                 Type.Data(this.tk, this.ts.take(1))
@@ -256,15 +256,15 @@ fun Expr.type (): Type {
             }
         }
         is Expr.Acc -> this.tk_.type(this)!!
-        is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos.copy()))
-        is Expr.Str -> Type.Pointer(this.tk, Type.Prim(Tk.Type( "Char", this.tk.pos.copy())))
-        is Expr.Chr -> Type.Prim(Tk.Type( "Char", this.tk.pos.copy()))
-        is Expr.Nat -> this.xtp!! //?: Type.Nat(Tk.Nat("TODO",this.tk.pos.copy()))
+        is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos))
+        is Expr.Str -> Type.Pointer(this.tk, Type.Prim(Tk.Type( "Char", this.tk.pos)))
+        is Expr.Chr -> Type.Prim(Tk.Type( "Char", this.tk.pos))
+        is Expr.Nat -> this.xtp!! //?: Type.Nat(Tk.Nat("TODO",this.tk.pos))
         is Expr.Null -> Type.Pointer(this.tk, Type.Any(this.tk))
         is Expr.Unit -> Type.Unit(this.tk)
         is Expr.Num -> {
             val x = if (this.tk.str.contains(".")) "Float" else "Int"
-            Type.Prim(Tk.Type(x, this.tk.pos.copy()))
+            Type.Prim(Tk.Type(x, this.tk.pos))
         }
 
         is Expr.Create -> {
