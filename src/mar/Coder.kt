@@ -522,7 +522,6 @@ fun Tk.Var.coder (fr: Any, pre: Boolean): String {
     } else {
         this.str
     }
-
 }
 
 fun Expr.coder (pre: Boolean): String {

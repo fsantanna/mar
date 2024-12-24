@@ -215,6 +215,25 @@ class Infer {
                 "set x = (f())\n" +
                 "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun bb_05_infer_call () {
+        val out = infer("""
+            func f: (v: <(),Int>) -> () {
+            }
+            var x = f(<.1=()>, null)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "func f: (v: <(),Int>) -> () {\n"+
+           "}\n"+
+           "var x: ()\n"+
+           "set x = (f(<.1=()>:<(),Int>,null))\n"+
+           "}") { G.outer!!.to_str() }
+    }
 
     // CORO
 

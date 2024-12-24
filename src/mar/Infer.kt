@@ -111,7 +111,9 @@ fun Expr.infer (tp: Type?): Type? {
             val f = this.f.infer(null)
             val args = if (f is Type.Proto) {
                 this.args.mapIndexed { i,e ->
-                    e.infer(f.inps[i])
+                    if (i < f.inps.size) {
+                        e.infer(f.inps[i])
+                    }
                 }
             } else {
                 this.args.map {
