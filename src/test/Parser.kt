@@ -574,9 +574,16 @@ class Parser {
         G.tks = ("loop i in 10 {}").lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "match x {\n"+
-            "X.Y {  }\n"+
-            "else { do((pass(x))) }\n"+
+        assert(ss.to_str() == "var i: Int\n"+
+            "set i = 0\n"+
+            "var mar_lim_3: Int\n"+
+            "set mar_lim_3 = 10\n"+
+            "loop {\n"+
+            "set i = (i + 1)\n"+
+            "if (i == mar_lim_3) {\n"+
+            "escape((Break(([]))))\n"+
+            "} else {\n"+
+            "}\n"+
             "}\n") { ss.to_str() }
     }
 

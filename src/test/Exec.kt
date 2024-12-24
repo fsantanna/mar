@@ -262,6 +262,15 @@ class Exec  {
         """)
         assert(out == "X.A [10]\n") { out }
     }
+    @Test
+    fun cc_08_loop_num () {
+        val out = test("""
+            loop n in 2 {
+                print(n)
+            }
+        """)
+        assert(out == "0\n1\n") { out }
+    }
 
     // FUNC
 

@@ -568,11 +568,44 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
         }
         accept_fix("loop") -> {
             val tk0 = G.tk0!!
+            val num = if (check_fix("{")) null else {
+                accept_enu_err("Var")
+                val a = G.tk0 as Tk.Var
+                accept_fix_err("in")
+                val b = parser_expr()
+                Pair(a,b)
+            }
             accept_fix_err("{")
             val blk = parser_list(null, "}") {
                 parser_stmt()
             }.flatten()
-            listOf(Stmt.Loop(tk0, Stmt.Block(tk0, Type.Data(tk0, listOf(Tk.Type("Break",tk0.pos.copy()))), blk)))
+
+            val brk = Type.Data(tk0, listOf(Tk.Type("Break",tk0.pos)))
+            if (num == null) {
+                listOf(Stmt.Loop(tk0, Stmt.Block(tk0, brk, blk)))
+            } else {
+                val (id,n) = num
+                val lim = Tk.Var("mar_lim_${G.N}", n.tk.pos)
+                listOf (
+                    Stmt.Dcl(tk0, id, Type.Prim(Tk.Type("Int",id.pos))),
+                    Stmt.Set(tk0, Expr.Acc(id), Expr.Num(Tk.Num("0",id.pos))),
+                    Stmt.Dcl(tk0, lim, Type.Prim(Tk.Type("Int",id.pos))),
+                    Stmt.Set(tk0, Expr.Acc(lim), n),
+                    Stmt.Loop(tk0,
+                        Stmt.Block(tk0, brk,blk + listOf(
+                            Stmt.Set(tk0, Expr.Acc(id), Expr.Bin(Tk.Op("+",id.pos), Expr.Acc(id), Expr.Num(Tk.Num("1",id.pos)))),
+                            Stmt.If(tk0, Expr.Bin(Tk.Op("==",id.pos), Expr.Acc(id), Expr.Acc(lim)),
+                                Stmt.Block(tk0, null, listOf(
+                                    Stmt.Escape(tk0,
+                                        Expr.Cons(tk0, listOf(Tk.Type("Break", tk0.pos)),
+                                        Expr.Tuple(tk0,null, emptyList())))
+                                    )
+                                ),
+                                Stmt.Block(tk0, null, emptyList()))
+                        ))
+                    )
+                )
+            }
         }
         accept_fix("break") -> {
             val tk0 = G.tk0!!

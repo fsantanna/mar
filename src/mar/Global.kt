@@ -36,8 +36,8 @@ val BINS = listOf (
 
 val KEYWORDS: SortedSet<String> = (
     setOf (
-        "break", "do", "catch", "coro", "create", "defer",
-        "data", "else", "escape", "exec", "false", "func", "if",
+        "break", "do", "catch", "coro", "compile", "create", "defer",
+        "data", "else", "escape", "exec", "false", "func", "if", "in",
         "include", "loop", "match", "null", "print", "resume",
         "return", "set", "start", "throw", "true", "var", "yield",
     ).toSortedSet()
@@ -232,8 +232,8 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
             parser_stmt()
         }).flatten()
         G.outer = Stmt.Block(tk0, null, listOf(
-            Stmt.Data(tk0, Tk.Type("Return", tk0.pos.copy()), Type.Tuple(tk0, emptyList()), emptyList()),
-            Stmt.Data(tk0, Tk.Type("Break", tk0.pos.copy()), Type.Tuple(tk0, emptyList()), emptyList()),
+            Stmt.Data(tk0, Tk.Type("Return", tk0.pos), Type.Tuple(tk0, emptyList()), emptyList()),
+            Stmt.Data(tk0, Tk.Type("Break", tk0.pos), Type.Tuple(tk0, emptyList()), emptyList()),
         ) + ss)
         cache_ups()
         check_vars()
