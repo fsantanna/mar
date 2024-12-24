@@ -418,6 +418,23 @@ class Exec  {
         """)
         assert(out == "40\n") { out }
     }
+    @Test
+    fun ff_06_coro_global () {
+        val out = test("""
+            var x = 10
+            do {
+                coro co: (x2: Int) -> Int -> Int -> Int {
+                    var y2:Int = yield(x2*2)
+                    return((y2 * 2) + x)
+                }
+                var exe: exec (Int) -> Int -> Int -> Int = create(co)
+                var x1: <Int,Int> = start exe(5)
+                var y1: <Int,Int> = resume exe(x1!1 + 10)
+                print(y1!2)
+            }
+        """)
+        assert(out == "50\n") { out }
+    }
 
     // TUPLE
 

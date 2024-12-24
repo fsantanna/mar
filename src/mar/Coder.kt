@@ -517,7 +517,8 @@ fun Stmt.coder (pre: Boolean): String {
 }
 
 fun Tk.Var.coder (fr: Any, pre: Boolean): String {
-    return if (fr.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) {
+    val dcl = this.to_xdcl(fr)!!.first
+    return if (dcl.xup!!.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) {
         "mar_exe->mem.${this.str}"
     } else {
         this.str

@@ -1,11 +1,15 @@
 package mar
 
-fun Expr.Acc.to_xdcl (): XDcl? {
-    return this.up_first {
+fun Tk.Var.to_xdcl (fr: Any): XDcl? {
+    return fr.up_first {
         if (it !is Stmt.Block) null else {
-            it.to_dcls().find { (_,id,_) -> id.str == this.tk.str }
+            it.to_dcls().find { (_,id,_) -> id.str == this.str }
         }
     } as XDcl?
+}
+
+fun Expr.Acc.to_xdcl (): XDcl? {
+    return this.tk_.to_xdcl(this)
 }
 
 fun Stmt.Block.to_dcls (): List<XDcl> {
