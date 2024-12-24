@@ -62,6 +62,7 @@ fun Type.coder (pre: Boolean): String {
         is Type.Pointer    -> this.ptr!!.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "MAR_Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
         is Type.Union      -> "MAR_Union__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
+        is Type.Vector     -> TODO()
         is Type.Proto.Func -> "MAR_Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(pre).first
         is Type.Exec       -> this.x_exec_coro(pre).first
@@ -538,12 +539,13 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_mar_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
-        is Expr.Tuple -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
-        is Expr.Union -> {
+        is Expr.Tuple  -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
+        is Expr.Vector -> TODO()
+        is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
             "((${this.type().coder(pre)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"
         }
-        is Expr.Field -> {
+        is Expr.Field  -> {
             val idx = this.idx.toIntOrNull().let {
                 if (it == null) this.idx else "_"+it
             }
@@ -561,7 +563,7 @@ fun Expr.coder (pre: Boolean): String {
                 }
             }
         }
-        is Expr.Disc  -> {
+        is Expr.Disc   -> {
             val tp = this.col.type()
             val ret = if (tp !is Type.Data) {
                 val (i,_) = tp.discx(this.idx)!!
@@ -580,11 +582,11 @@ fun Expr.coder (pre: Boolean): String {
                 ($ret)
             """
         }
-        is Expr.Pred  -> {
+        is Expr.Pred   -> {
             val (i,_) = this.col.type().discx(this.idx)!!
             "(${this.col.coder(pre)}.tag==${i+1})"
         }
-        is Expr.Cons  -> {
+        is Expr.Cons   -> {
             val s = this.walk(this.ts)!!.first
             if (s.subs == null) {
                 var ret = "({"

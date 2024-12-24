@@ -40,6 +40,7 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Unit -> "()"
         is Type.Pointer -> "\\" + this.ptr!!.to_str(pre)
         is Type.Tuple -> "[" + this.ts.map { (id,tp) -> id.cond { it.str+":" } + tp.to_str(pre) }.joinToString(",") + "]"
+        is Type.Vector -> "#[" + this.its + " * " + this.tp.to_str(pre) + "]"
         is Type.Union -> "<" + this.ts.map { (id,tp) -> id.cond { it.str+":" } + tp.to_str(pre) }.joinToString(",") + ">"
         is Type.Proto -> {
             val inps = when (this) {
@@ -89,13 +90,16 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Unit   -> "()"
 
         is Expr.Tuple  -> {
-            "(" + "[" + this.vs.map { (id,v) -> id.cond { "."+it.str+"=" } + v.to_str(pre) }.joinToString(",") + "]" + this.xtp.cond { ":${it.to_str()}" } + ")"
+            "([" + this.vs.map { (id,v) -> id.cond { "."+it.str+"=" } + v.to_str(pre) }.joinToString(",") + "]" + this.xtp.cond { ":${it.to_str()}" } + ")"
+        }
+        is Expr.Vector -> {
+            "#[" + this.vs.map { (id,v) -> id.cond { "."+it.str+"=" } + v.to_str(pre) }.joinToString(",") + "]" + this.xtp.cond { ":${it.to_str()}" }
         }
         is Expr.Field  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"
         is Expr.Union  -> "<." + this.idx + "=" + this.v.to_str(pre) + ">" + this.xtp.cond { ":${it.to_str()}" }
-        is Expr.Disc  -> "(${this.col.to_str(pre)}!${this.idx})"
-        is Expr.Pred  -> "(${this.col.to_str(pre)}?${this.idx})"
-        is Expr.Cons  -> "(${this.ts.to_str(pre)}(${this.e.to_str(pre)}))"
+        is Expr.Disc   -> "(${this.col.to_str(pre)}!${this.idx})"
+        is Expr.Pred   -> "(${this.col.to_str(pre)}?${this.idx})"
+        is Expr.Cons   -> "(${this.ts.to_str(pre)}(${this.e.to_str(pre)}))"
 
         is Expr.Uno    -> "(" + this.tk_.to_str(pre) + this.e.to_str(pre) + ")"
         is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk_.to_str(pre) + " " + this.e2.to_str(pre) + ")"

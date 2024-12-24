@@ -207,6 +207,15 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                     else -> err(pos, "preprocessor error : unexoected \"$id\"")
                 }
             }
+            (x == '#') -> {
+                val (n1,x1) = read2()
+                if (x1 == '[') {
+                    yield(Tk.Fix("$x[", pos))
+                } else {
+                    unread2(n1)
+                    yield(Tk.Op(x.toString(), pos))
+                }
+            }
             (x in OPERATORS.first) -> {
                 val op = x + read2While { it in OPERATORS.first }
                 when {

@@ -45,6 +45,7 @@ fun Expr.infer (tp: Type?): Type? {
                 this.xtp
             }
         }
+        is Expr.Vector -> TODO()
         is Expr.Field -> {
             val col = this.col.infer(null)
             val tup = when (col) {

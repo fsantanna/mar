@@ -92,6 +92,12 @@ fun cache_ups () {
                 }
                 me.vs.forEach { (_,e) -> e.xup = me }
             }
+            is Expr.Vector -> {
+                if (me.xtp != null) {
+                    me.xtp!!.xup = me
+                }
+                me.vs.forEach { (_,e) -> e.xup = me }
+            }
             is Expr.Union -> {
                 if (me.xtp != null) {
                     me.xtp!!.xup = me

@@ -234,6 +234,7 @@ fun Expr.type (): Type {
         is Expr.Throw -> this.xtp!!
 
         is Expr.Tuple -> this.xtp!!
+        is Expr.Vector -> this.xtp!!
         is Expr.Union -> this.xtp!!
         is Expr.Field -> {
             val tup = this.col.type().let {

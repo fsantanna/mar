@@ -510,6 +510,18 @@ class Exec  {
         assert(out == "[4]\n") { out }
     }
 
+    // VECTOR
+
+    @Test
+    fun gh_01_vector () {
+        val out = test("""
+            var v: #[3*Int] = #[1,0,3]
+            set v[1] = v[1] + 2
+            print(v)
+        """)
+        assert(out == "#[1,2,3]\n") { out }
+    }
+
     // DATA
 
     @Test

@@ -202,6 +202,37 @@ class Parser {
         assert(trap { parser_stmt() } == "anon : (lin 1, col 23) : expected \"<\" : have \"Int\"")
     }
 
+    // TYPE / VECTOR
+
+    @Test
+    fun al_01_vec () {
+        G.tks = ("#[10*Int]").lexer()
+        parser_lexer()
+        val tp = parser_type(null, false)
+        assert(tp is Type.Vector && tp.its==10 && tp.tp is Type.Prim)
+        assert(tp.to_str() == "#[10 * Int]")
+    }
+    @Test
+    fun al_02_vec () {
+        G.tks = ("#[10 * #[1*Int]]").lexer()
+        parser_lexer()
+        val tp = parser_type(null, false)
+        assert(tp is Type.Vector && tp.its==10 && tp.tp is Type.Vector)
+        assert(tp.to_str() == "#[10 * #[1 * Int]]")
+    }
+    @Test
+    fun al_03_vec_err () {
+        G.tks = ("#[1.1*Int]").lexer()
+        parser_lexer()
+        assert(trap { parser_type(null, false) } == "anon : (lin 1, col 3) : vector error : expected number")
+    }
+    @Test
+    fun al_04_vec_err () {
+        G.tks = ("#[1 Int]").lexer()
+        parser_lexer()
+        assert(trap { parser_type(null, false) } == "anon : (lin 1, col 5) : expected \"*\" : have \"Int\"")
+    }
+
     // PARENS
 
     @Test
@@ -571,6 +602,7 @@ class Parser {
     }
     @Test
     fun ii_06_loop_n () {
+        G.N = 1
         G.tks = ("loop i in 10 {}").lexer()
         parser_lexer()
         val ss = parser_stmt()
@@ -717,6 +749,17 @@ class Parser {
         val ss = parser_stmt()
         assert(ss.to_str() == "var v: <Err:(),Ok:Int>\n" +
                 "set v = <.Ok=20>:<Err:(),Ok:Int>\n") { ss.to_str() }
+    }
+
+    // VECTOR
+
+    @Test
+    fun jl_01_vector () {
+        G.tks = ("#[10,20]").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e.to_str() == "#[10,20]") { e.to_str() }
+        //assert(trap { parser_expr() } == "anon : (lin 1, col 8) : expected \":\" : have end of file")
     }
 
     // DATA

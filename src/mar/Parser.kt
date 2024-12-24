@@ -233,6 +233,17 @@ fun parser_type (pre: Tk?, fr_proto: Boolean): Type {
             }
             Type.Union(tk0, true, ts)
         }
+        accept_fix("#[") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            accept_enu_err("Num")
+            val its = (G.tk0 as Tk.Num).str.toIntOrNull()
+            if (its == null) {
+                err(G.tk0!!, "vector error : expected number")
+            }
+            accept_op_err("*")
+            val tp = parser_type(null, false)
+            Type.Vector(tk0, its, tp)
+        }
         accept_enu("Nat")  -> Type.Nat(G.tk0 as Tk.Nat)
         else -> err_expected(G.tk1!!, "type")
     }
@@ -280,6 +291,24 @@ fun parser_expr_4_prim (): Expr {
                 parser_type(null, false) as Type.Tuple
             }
             Expr.Tuple(tk0, tp, l)
+        }
+        accept_fix("#[")    -> {
+            val tk0 = G.tk0 as Tk.Fix
+            val l = parser_list(",", "]") {
+                val x = if (!accept_fix(".")) null else {
+                    (accept_enu("Var") || accept_enu_err("Num"))
+                    val idx = G.tk0!! as Tk.Var
+                    accept_fix_err("=")
+                    idx
+                }
+                val e = parser_expr()
+                Pair(x, e)
+            }
+            val tp = if (!accept_fix(":")) null else {
+                check_fix_err("[")
+                parser_type(null, false) as Type.Tuple
+            }
+            Expr.Vector(tk0, tp, l)
         }
         accept_op("<")      -> {
             val tk0 = G.tk0 as Tk.Op
