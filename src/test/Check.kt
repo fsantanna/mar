@@ -559,6 +559,7 @@ class Check {
         val out = check("""
             var t: #[10*Int] = #['a']
         """)
+        //println(G.outer!!.to_str())
         assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
     }
     @Test

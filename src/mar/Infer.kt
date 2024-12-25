@@ -40,7 +40,7 @@ fun Expr.infer (tp: Type?): Type? {
             }
             if (dn == null) null else {
                 if (this.xtp == null) {
-                    this.xtp = if (tp is Type.Tuple) tp else dn
+                    this.xtp = if (tp is Type.Tuple) tp else dn // b/c of int/float
                 }
                 this.xtp
             }
@@ -53,13 +53,14 @@ fun Expr.infer (tp: Type?): Type? {
                 val v = vs.fold(vs.first()) { a,b ->
                     if (a==null||b==null) null else a.sup_vs(b)
                 }
+                //println(v?.to_str())
                 if (v == null) null else {
                     Type.Vector(this.tk, vs.size, v)
                 }
             }
             if (dn == null) null else {
                 if (this.xtp == null) {
-                    this.xtp = if (tp is Type.Vector) tp else dn
+                    this.xtp = dn
                 }
                 this.xtp
             }

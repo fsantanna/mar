@@ -223,7 +223,7 @@ fun check_types () {
             is Expr.Index -> {
                 when {
                     (me.col.type() !is Type.Vector) -> err(me.col.tk, "index error : expected vector")
-                    (me.idx.type().is_num()) -> err(me.idx.tk, "index error : expected number")
+                    (!me.idx.type().is_num()) -> err(me.idx.tk, "index error : expected number")
                 }
             }
             is Expr.Union -> {
