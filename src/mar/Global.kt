@@ -100,8 +100,9 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
     class Unit   (tk_: Tk): Expr(G.N++, null, tk_, null)
 
     class Tuple  (tk: Tk, var xtp: Type.Tuple?, val vs: List<Pair<Tk.Var?,Expr>>): Expr(G.N++, null, tk, null)
-    class Vector (tk: Tk, var xtp: Type.Tuple?, val vs: List<Pair<Tk.Var?,Expr>>): Expr(G.N++, null, tk, null)
+    class Vector (tk: Tk, var xtp: Type.Vector?, val vs: List<Expr>): Expr(G.N++, null, tk, null)
     class Field  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)
+    class Index  (tk: Tk, val col: Expr, val idx: Expr): Expr(G.N++, null, tk, null)
     class Union  (tk: Tk, var xtp: Type.Union?, val idx: String, val v: Expr): Expr(G.N++, null, tk, null)
     class Pred   (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)
     class Disc   (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)

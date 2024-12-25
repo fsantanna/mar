@@ -45,7 +45,25 @@ fun Expr.infer (tp: Type?): Type? {
                 this.xtp
             }
         }
-        is Expr.Vector -> TODO()
+        is Expr.Vector -> {
+            val up = this.xtp ?: tp
+            val xup = if (up !is Type.Vector) null else up.tp
+            val dn = if (this.vs.size == 0) null else {
+                val vs = this.vs.map { it.infer(xup) }
+                val v = vs.fold(vs.first()) { a,b ->
+                    if (a==null||b==null) null else a.sup_vs(b)
+                }
+                if (v == null) null else {
+                    Type.Vector(this.tk, vs.size, v)
+                }
+            }
+            if (dn == null) null else {
+                if (this.xtp == null) {
+                    this.xtp = if (tp is Type.Vector) tp else dn
+                }
+                this.xtp
+            }
+        }
         is Expr.Field -> {
             val col = this.col.infer(null)
             val tup = when (col) {
@@ -57,6 +75,13 @@ fun Expr.infer (tp: Type?): Type? {
                 (col == null) -> null
                 (tup !is Type.Tuple) -> throw InferException()
                 else -> tup.index(this.idx) ?: throw InferException()
+            }
+        }
+        is Expr.Index -> {
+            this.col.infer(Type.Prim(Tk.Type("Int",this.tk.pos)))
+            val col = this.col.infer(null)
+            if (col !is Type.Vector) null else {
+                col.tp
             }
         }
         is Expr.Union -> {

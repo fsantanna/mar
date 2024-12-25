@@ -5,6 +5,7 @@ fun Expr.is_lval (): Boolean {
         is Expr.Acc   -> true
         is Expr.Nat   -> true
         is Expr.Field -> true
+        is Expr.Index -> true
         else          -> false
     }
 }

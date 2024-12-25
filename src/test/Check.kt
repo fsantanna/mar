@@ -551,6 +551,42 @@ class Check {
         """)
         assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
     }
+
+    // VECTOR
+
+    @Test
+    fun cd_01_vector_err () {
+        val out = check("""
+            var t: #[10*Int] = #['a']
+        """)
+        assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun cd_02_vector_err () {
+        val out = check("""
+            var t: #[10*Int]
+            do(t['a'])
+        """)
+        assert(out == "TODO") { out!! }
+    }
+    @Test
+    fun cd_03_vector_err () {
+        val out = check("""
+            var a: #[2*Int]
+            var b: #[4*Int]
+            set a = b
+            set b = a
+        """)
+        assert(out == "anon : (lin 5, col 19) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun cd_04_vector_err () {
+        val out = check("""
+            do(1[0])
+        """)
+        assert(out == "anon : (lin 2, col 16) : index error : expected vector") { out!! }
+    }
+
     // UNION
 
     @Test

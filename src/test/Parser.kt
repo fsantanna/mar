@@ -761,6 +761,14 @@ class Parser {
         assert(e.to_str() == "#[10,20]") { e.to_str() }
         //assert(trap { parser_expr() } == "anon : (lin 1, col 8) : expected \":\" : have end of file")
     }
+    @Test
+    fun jl_02_vector () {
+        G.tks = ("x[1]()[2]").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e.to_str() == "(((x[1])())[2])") { e.to_str() }
+        //assert(trap { parser_expr() } == "anon : (lin 1, col 8) : expected \":\" : have end of file")
+    }
 
     // DATA
 

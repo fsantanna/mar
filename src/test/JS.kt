@@ -1,4 +1,4 @@
-package test
+//package test
 
 import mar.*
 import org.junit.FixMethodOrder

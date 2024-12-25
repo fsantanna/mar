@@ -96,7 +96,7 @@ fun cache_ups () {
                 if (me.xtp != null) {
                     me.xtp!!.xup = me
                 }
-                me.vs.forEach { (_,e) -> e.xup = me }
+                me.vs.forEach { it.xup = me }
             }
             is Expr.Union -> {
                 if (me.xtp != null) {
@@ -105,6 +105,10 @@ fun cache_ups () {
                 me.v.xup = me
             }
             is Expr.Field -> me.col.xup = me
+            is Expr.Index -> {
+                me.col.xup = me
+                me.idx.xup = me
+            }
             is Expr.Disc  -> me.col.xup = me
             is Expr.Pred  -> me.col.xup = me
             is Expr.Cons  -> me.e.xup = me

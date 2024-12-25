@@ -563,6 +563,7 @@ fun Expr.coder (pre: Boolean): String {
                 }
             }
         }
+        is Expr.Index  -> TODO()
         is Expr.Disc   -> {
             val tp = this.col.type()
             val ret = if (tp !is Type.Data) {

@@ -242,6 +242,7 @@ fun parser_type (pre: Tk?, fr_proto: Boolean): Type {
             }
             accept_op_err("*")
             val tp = parser_type(null, false)
+            accept_fix_err("]")
             Type.Vector(tk0, its, tp)
         }
         accept_enu("Nat")  -> Type.Nat(G.tk0 as Tk.Nat)
@@ -295,18 +296,11 @@ fun parser_expr_4_prim (): Expr {
         accept_fix("#[")    -> {
             val tk0 = G.tk0 as Tk.Fix
             val l = parser_list(",", "]") {
-                val x = if (!accept_fix(".")) null else {
-                    (accept_enu("Var") || accept_enu_err("Num"))
-                    val idx = G.tk0!! as Tk.Var
-                    accept_fix_err("=")
-                    idx
-                }
-                val e = parser_expr()
-                Pair(x, e)
+                parser_expr()
             }
             val tp = if (!accept_fix(":")) null else {
-                check_fix_err("[")
-                parser_type(null, false) as Type.Tuple
+                check_fix_err("#[")
+                parser_type(null, false) as Type.Vector
             }
             Expr.Vector(tk0, tp, l)
         }
@@ -388,6 +382,11 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
             "(" -> {
                 val args = parser_list(",",")") { parser_expr() }
                 Expr.Call(e.tk, e, args)
+            }
+            "[" -> {
+                val idx = parser_expr()
+                accept_fix_err("]")
+                Expr.Index(e.tk, e, idx)
             }
             "\\" -> Expr.Uno(Tk.Op("deref", G.tk0!!.pos), e)
             "." -> {

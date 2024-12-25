@@ -23,8 +23,9 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Unit       && other is Type.Unit)       -> true
         (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
         (this is Type.Data       && other is Type.Data)       -> (this.ts.size<=other.ts.size && this.ts.zip(other.ts).all { (thi,oth) -> thi.str==oth.str })
-        (this is Type.Pointer    && other is Type.Pointer)    -> (this.ptr==null || other.ptr==null || this.ptr.is_sup_of(other.ptr))
-        (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> (thi.first==null||thi.first?.str==oth.first?.str) && thi.second.is_sup_of(oth.second) }
+        (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
+        (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size<=other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> (thi.first==null||thi.first?.str==oth.first?.str) && thi.second.is_sup_of(oth.second) }
+        (this is Type.Vector     && other is Type.Vector)     -> (this.its<=other.its) && this.tp.is_sup_of(other.tp)
         (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.second.is_sup_of(oth.second) }
         (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
         (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
@@ -247,6 +248,7 @@ fun Expr.type (): Type {
             tup as Type.Tuple
             tup.index(idx)!!
         }
+        is Expr.Index -> TODO()
         is Expr.Disc  -> this.col.type().discx(this.idx)!!.second
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos))
         is Expr.Cons  -> this.walk(ts)!!.let { (s,_,_) ->

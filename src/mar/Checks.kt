@@ -220,6 +220,12 @@ fun check_types () {
                     }
                 }
             }
+            is Expr.Index -> {
+                when {
+                    (me.col.type() !is Type.Vector) -> err(me.col.tk, "index error : expected vector")
+                    (me.idx.type().is_num()) -> err(me.idx.tk, "index error : expected number")
+                }
+            }
             is Expr.Union -> {
                 val (_,sub) = me.xtp!!.disc(me.idx).nulls()
                 if (sub==null || !sub.is_sup_of(me.v.type())) {

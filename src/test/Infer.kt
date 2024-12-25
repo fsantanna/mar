@@ -810,4 +810,30 @@ class Infer {
            "}\n"+
            "}") { G.outer!!.to_str() }
     }
+
+    // VECTOR / FIELD
+
+    @Test
+    fun ii_01_vector () {
+        val out = infer("""
+            var x = #[]
+        """)
+        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
+    }
+    @Test
+    fun ii_02_vector () {
+        val out = infer("""
+            var x = #[1,2,3]
+        """)
+        //assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "var x: #[3 * Int]\n"+
+           "set x = #[1,2,3]:#[3 * Int]\n"+
+           "}") { G.outer!!.to_str() }
+    }
 }
