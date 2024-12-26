@@ -119,6 +119,14 @@ fun coder_types (pre: Boolean): String {
                     } $x;
                 """)
             }
+            is Type.Vector -> {
+                val x = me.coder(pre)
+                listOf("""
+                    typedef struct $x {
+                        ${me.tp.coder(pre)} vec[${me.its}];
+                    } $x;
+                """)
+            }
             is Type.Union -> {
                 val x = me.coder(pre)
                 listOf("""
@@ -464,6 +472,18 @@ fun Stmt.coder (pre: Boolean): String {
                         }
                         """
                     }
+                    is Type.Vector -> {
+                        """
+                        {
+                            printf("#[");
+                            ${tp.coder(pre)} mar_${tp.n} = $v;
+                            ${(0 until tp.its).map {
+                                aux(tp.tp, "mar_${tp.n}.vec[$it]")
+                            }.joinToString("printf(\",\");")}
+                            printf("]");
+                        }
+                        """
+                    }
                     is Type.Union -> {
                         """
                         {
@@ -540,7 +560,7 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
         is Expr.Tuple  -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
-        is Expr.Vector -> TODO()
+        is Expr.Vector -> "((${this.type().coder(pre)}) { .vec = ${this.vs.map { it.coder(pre) }.joinToString(",") } })"
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
             "((${this.type().coder(pre)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"
@@ -563,7 +583,7 @@ fun Expr.coder (pre: Boolean): String {
                 }
             }
         }
-        is Expr.Index  -> TODO()
+        is Expr.Index  -> "${this.col.coder(pre)}.vec[${this.idx.coder(pre)}]"
         is Expr.Disc   -> {
             val tp = this.col.type()
             val ret = if (tp !is Type.Data) {
