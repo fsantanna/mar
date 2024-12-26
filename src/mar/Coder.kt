@@ -485,7 +485,7 @@ fun Stmt.coder (pre: Boolean): String {
                         {
                             printf("#[");
                             ${tp.coder(pre)} mar_${tp.n} = $v;
-                            ${(0 until tp.size).map {
+                            ${(0 until tp.size!!).map {
                                 aux(tp.tp, "mar_${tp.n}.vec[$it]")
                             }.joinToString("printf(\",\");")}
                             printf("]");
