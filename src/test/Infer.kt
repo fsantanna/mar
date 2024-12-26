@@ -833,7 +833,22 @@ class Infer {
            "data Break.*: [] {\n"+
            "}\n"+
            "var x: #[3 * Int]\n"+
-           "set x = #[1,2,3]:#[3 * Int]\n"+
+           "set x = (#[1,2,3]:#[3 * Int])\n"+
+           "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun ii_03_vector () {
+        val out = infer("""
+            var x = #(#[10])
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "var x: Int\n"+
+           "set x = (#(#[10]:#[1 * Int]))\n"+
            "}") { G.outer!!.to_str() }
     }
 }

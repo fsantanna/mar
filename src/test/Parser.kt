@@ -209,7 +209,7 @@ class Parser {
         G.tks = ("#[10*Int]").lexer()
         parser_lexer()
         val tp = parser_type(null, false)
-        assert(tp is Type.Vector && tp.its==10 && tp.tp is Type.Prim)
+        assert(tp is Type.Vector && tp.size==10 && tp.tp is Type.Prim)
         assert(tp.to_str() == "#[10 * Int]")
     }
     @Test
@@ -217,7 +217,7 @@ class Parser {
         G.tks = ("#[10 * #[1*Int]]").lexer()
         parser_lexer()
         val tp = parser_type(null, false)
-        assert(tp is Type.Vector && tp.its==10 && tp.tp is Type.Vector)
+        assert(tp is Type.Vector && tp.size==10 && tp.tp is Type.Vector)
         assert(tp.to_str() == "#[10 * #[1 * Int]]")
     }
     @Test
@@ -229,6 +229,18 @@ class Parser {
     @Test
     fun al_04_vec_err () {
         G.tks = ("#[1 Int]").lexer()
+        parser_lexer()
+        assert(trap { parser_type(null, false) } == "anon : (lin 1, col 5) : expected \"*\" : have \"Int\"")
+    }
+    @Test
+    fun al_05_vec_undef_err () {
+        G.tks = ("#[Int]").lexer()
+        parser_lexer()
+        assert(trap { parser_type(null, false) } == "anon : (lin 1, col 5) : expected \"*\" : have \"Int\"")
+    }
+    @Test
+    fun al_06_vec_ptr () {
+        G.tks = ("\\#[Int]").lexer()
         parser_lexer()
         assert(trap { parser_type(null, false) } == "anon : (lin 1, col 5) : expected \"*\" : have \"Int\"")
     }
@@ -758,7 +770,7 @@ class Parser {
         G.tks = ("#[10,20]").lexer()
         parser_lexer()
         val e = parser_expr()
-        assert(e.to_str() == "#[10,20]") { e.to_str() }
+        assert(e.to_str() == "(#[10,20])") { e.to_str() }
         //assert(trap { parser_expr() } == "anon : (lin 1, col 8) : expected \":\" : have end of file")
     }
     @Test
@@ -767,6 +779,14 @@ class Parser {
         parser_lexer()
         val e = parser_expr()
         assert(e.to_str() == "(((x[1])())[2])") { e.to_str() }
+        //assert(trap { parser_expr() } == "anon : (lin 1, col 8) : expected \":\" : have end of file")
+    }
+    @Test
+    fun jl_03_vector_size () {
+        G.tks = ("#x").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e.to_str() == "(#x)") { e.to_str() }
         //assert(trap { parser_expr() } == "anon : (lin 1, col 8) : expected \":\" : have end of file")
     }
 

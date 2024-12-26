@@ -40,7 +40,7 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Unit -> "()"
         is Type.Pointer -> "\\" + this.ptr!!.to_str(pre)
         is Type.Tuple -> "[" + this.ts.map { (id,tp) -> id.cond { it.str+":" } + tp.to_str(pre) }.joinToString(",") + "]"
-        is Type.Vector -> "#[" + this.its + " * " + this.tp.to_str(pre) + "]"
+        is Type.Vector -> "#[" + this.size + " * " + this.tp.to_str(pre) + "]"
         is Type.Union -> "<" + this.ts.map { (id,tp) -> id.cond { it.str+":" } + tp.to_str(pre) }.joinToString(",") + ">"
         is Type.Proto -> {
             val inps = when (this) {
@@ -93,7 +93,7 @@ fun Expr.to_str (pre: Boolean = false): String {
             "([" + this.vs.map { (id,v) -> id.cond { "."+it.str+"=" } + v.to_str(pre) }.joinToString(",") + "]" + this.xtp.cond { ":${it.to_str()}" } + ")"
         }
         is Expr.Vector -> {
-            "#[" + this.vs.map { it.to_str(pre) }.joinToString(",") + "]" + this.xtp.cond { ":${it.to_str()}" }
+            "(#[" + this.vs.map { it.to_str(pre) }.joinToString(",") + "]" + this.xtp.cond { ":${it.to_str()}" } + ")"
         }
         is Expr.Field  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"
         is Expr.Index  -> "(" + this.col.to_str(pre) + "[" + this.idx.to_str(pre) + "])"

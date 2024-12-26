@@ -123,7 +123,8 @@ fun coder_types (pre: Boolean): String {
                 val x = me.coder(pre)
                 listOf("""
                     typedef struct $x {
-                        ${me.tp.coder(pre)} vec[${me.its}];
+                        int size;
+                        ${me.tp.coder(pre)} vec[${me.size}];
                     } $x;
                 """)
             }
@@ -344,8 +345,15 @@ fun Stmt.coder (pre: Boolean): String {
         """
         }
         is Stmt.Dcl -> {
-            val in_coro = this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro
-            (!in_coro).cond { this.xtp!!.coder(pre) + " " + this.id.str + ";" }
+            val dcl = if (this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) "" else {
+                this.xtp!!.coder(pre) + " " + this.id.str + ";"
+            }
+            val ini = this.xtp.let {
+                if (it !is Type.Vector) "" else {
+                    this.id.str + ".size = ${it.size};"
+                }
+            }
+            dcl + ini
         }
         is Stmt.Set    -> {
             when (this.src) {
@@ -477,7 +485,7 @@ fun Stmt.coder (pre: Boolean): String {
                         {
                             printf("#[");
                             ${tp.coder(pre)} mar_${tp.n} = $v;
-                            ${(0 until tp.its).map {
+                            ${(0 until tp.size).map {
                                 aux(tp.tp, "mar_${tp.n}.vec[$it]")
                             }.joinToString("printf(\",\");")}
                             printf("]");
@@ -555,12 +563,20 @@ fun Expr.coder (pre: Boolean): String {
         }
     }
     return when (this) {
-        is Expr.Uno -> "(" + this.tk.str.op_mar_to_c() + this.e.coder(pre) + ")"
+        is Expr.Uno -> {
+            return if (this.tk.str == "#") {
+                "(" + this.e.coder(pre) + ".size)"
+            } else {
+                "(" + this.tk.str.op_mar_to_c() + this.e.coder(pre) + ")"
+            }
+        }
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_mar_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
 
         is Expr.Tuple  -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
-        is Expr.Vector -> "((${this.type().coder(pre)}) { .vec = ${this.vs.map { it.coder(pre) }.joinToString(",") } })"
+        is Expr.Vector -> (this.type() as Type.Vector).let {
+            "((${it.coder(pre)}) { .size=${it.size}, .vec=${this.vs.map { it.coder(pre) }.joinToString(",") } })"
+        }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
             "((${this.type().coder(pre)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"

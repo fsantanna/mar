@@ -588,6 +588,21 @@ class Check {
         """)
         assert(out == "anon : (lin 2, col 16) : index error : expected vector") { out!! }
     }
+    @Test
+    fun cd_05_vector_err () {
+        val out = check("""
+            var v: #[2*Int]
+            var x: Bool = #v
+        """)
+        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun cd_06_vector_err () {
+        val out = check("""
+            do(#1)
+        """)
+        assert(out == "anon : (lin 2, col 16) : operation error : expected vector") { out!! }
+    }
 
     // UNION
 

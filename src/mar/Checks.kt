@@ -196,6 +196,13 @@ fun check_types () {
     }
     fun fe (me: Expr) {
         when (me) {
+            is Expr.Uno -> {
+                when (me.tk.str) {
+                    "#" -> if (me.e.type() !is Type.Vector) {
+                        err(me.tk, "operation error : expected vector")
+                    }
+                }
+            }
             is Expr.Tuple -> {
                 val tp = Type.Tuple(me.tk, me.vs.map { (id,v) -> Pair(id, v.type()) })
                 if (!tp.is_sup_of(me.xtp!!)) {  // tp=[10]: xtp=[a:Int], correct is xtp.sup(tp), but not for tuple cons

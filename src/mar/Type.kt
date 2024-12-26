@@ -21,7 +21,7 @@ fun Type.is_same_of (other: Type): Boolean {
         (this is Type.Data       && other is Type.Data)       -> (this.ts.size==other.ts.size && this.ts.zip(other.ts).all { (thi,oth) -> thi.str==oth.str })
         (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_same_of(other.ptr)
         (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> (thi.first?.str==oth.first?.str) && thi.second.is_same_of(oth.second) }
-        (this is Type.Vector     && other is Type.Vector)     -> (this.its==other.its) && this.tp.is_same_of(other.tp)
+        (this is Type.Vector     && other is Type.Vector)     -> (this.size==other.size) && this.tp.is_same_of(other.tp)
         (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.second.is_same_of(oth.second) }
         (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_same_of(oth) } && other.out.is_same_of(this.out)
         (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_same_of(oth) } && this.res.is_same_of(other.res) && other.yld.is_same_of(this.yld) && other.out.is_same_of(this.out)
@@ -222,6 +222,7 @@ fun Expr.type (): Type {
             "-" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
             "ref" -> Type.Pointer(this.tk, this.e.type())
             "deref" -> (this.e.type() as Type.Pointer).ptr!!
+            "#" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
             else -> error("impossible case")
         }
         is Expr.Bin -> when (this.tk_.str) {

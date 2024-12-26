@@ -518,8 +518,37 @@ class Exec  {
             var v: #[3*Int] = #[1,0,3]
             set v[1] = v[1] + 2
             print(v)
+            print(#v)
         """)
-        assert(out == "#[1,2,3]\n") { out }
+        assert(out == "#[1,2,3]\n3\n") { out }
+    }
+    @Test
+    fun gh_02_vector () {
+        val out = test("""
+            var v: #[3*Int]
+            print(#v)
+        """)
+        assert(out == "3\n") { out }
+    }
+    @Test
+    fun gh_03_vector () {
+        val out = test("""
+            var v: #[3*Int] = #[1,0,3]
+            var vv: \#[Int] = \v
+            print(vv\[2])
+        """)
+        assert(out == "3\n") { out }
+    }
+    @Test
+    fun gh_04_vector_copy () {
+        val out = test("""
+            var a = #[1,2,3]
+            var b = a
+            set a[1] = 0
+            print(a)
+            print(b)
+        """)
+        assert(out == "#[1,0,3]\n#[1,2,3]\n") { out }
     }
 
     // DATA
