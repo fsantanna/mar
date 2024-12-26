@@ -1142,6 +1142,21 @@ class Parser {
                 "}\n") { ss.to_str() }
     }
 
+    // WHERE
+
+    @Test
+    fun qq_01_where () {
+        G.tks = ("var x = y where { y = 10 }").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "var x\n"+
+            "do {\n"+
+            "var y\n"+
+            "set y = 10\n"+
+            "set x = y\n"+
+            "}\n") { ss.to_str() }
+    }
+
     // TEMPLATE
 
     @Test

@@ -810,5 +810,32 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 err_expected(tk1, "statement")
             }
         }
-    }
+    }.let {
+        if (!accept_fix("where")) it else {
+            when {
+                (it.size == 1) -> assert(it[0] !is Stmt.Dcl)
+                (it.size == 2) -> assert(it[0] is Stmt.Dcl && it[1] !is Stmt.Dcl)
+                else -> TODO("4")
+            }
+
+            val tk0 = G.tk0!!
+            accept_fix_err("{")
+            val ss = parser_list(null, "}") {
+                accept_enu_err("Var")
+                val id = G.tk0 as Tk.Var
+                accept_fix_err("=")
+                val e = parser_expr()
+                listOf (
+                    Stmt.Dcl(tk0, id, null),
+                    Stmt.Set(G.tk0!!, Expr.Acc(id), e)
+                )
+            }.flatten()
+
+            when {
+                (it.size == 1) -> listOf(Stmt.Block(tk0, null, ss + it))
+                (it.size == 2) -> listOf(it[0], Stmt.Block(tk0, null, ss + it.drop(1)))
+                else -> error("impossible case")
+            }
+        }
+     }
 }

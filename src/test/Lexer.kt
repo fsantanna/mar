@@ -50,13 +50,15 @@ class Lexer {
 
     @Test
     fun bb_01_ids() {
-        val tks = ("if xxx Type coro match break return escape loop throw defer exec create data start catch resume yield").lexer()
+        val tks = ("if xxx Type coro match break until while return escape loop throw defer exec create data start catch resume yield where").lexer()
         assert(tks.next().let { it is Tk.Fix  && it.str == "if" })
         assert(tks.next().let { it is Tk.Var  && it.str == "xxx" })
         assert(tks.next().let { it is Tk.Type && it.str == "Type" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "coro" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "match" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "break" })
+        assert(tks.next().let { it is Tk.Fix  && it.str == "until" })
+        assert(tks.next().let { it is Tk.Fix  && it.str == "while" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "return" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "escape" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "loop" })
@@ -69,6 +71,7 @@ class Lexer {
         assert(tks.next().let { it is Tk.Fix  && it.str == "catch" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "resume" })
         assert(tks.next().let { it is Tk.Fix  && it.str == "yield" })
+        assert(tks.next().let { it is Tk.Fix  && it.str == "where" })
         assert(tks.next() is Tk.Eof)
         assert(!tks.hasNext())
     }
