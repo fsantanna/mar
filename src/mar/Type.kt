@@ -11,13 +11,27 @@ val nums = setOf("Float", "Int", "U8")
 fun Type.is_num (): Boolean {
     return (this is Type.Nat || this is Type.Any || (this is Type.Prim && nums.contains(this.tk.str)))
 }
-fun Type.Prim.compat (other: Type.Prim): Boolean {
-    return (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
+
+fun Type.is_same_of (other: Type): Boolean {
+    return when {
+        (this is Type.Any && other is Type.Any) -> true
+        (this is Type.Nat && other is Type.Nat) -> (this.tk.str == other.tk.str)
+        (this is Type.Unit       && other is Type.Unit)       -> true
+        (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str)
+        (this is Type.Data       && other is Type.Data)       -> (this.ts.size==other.ts.size && this.ts.zip(other.ts).all { (thi,oth) -> thi.str==oth.str })
+        (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_same_of(other.ptr)
+        (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> (thi.first?.str==oth.first?.str) && thi.second.is_same_of(oth.second) }
+        (this is Type.Vector     && other is Type.Vector)     -> (this.its==other.its) && this.tp.is_same_of(other.tp)
+        (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.second.is_same_of(oth.second) }
+        (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_same_of(oth) } && other.out.is_same_of(this.out)
+        (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_same_of(oth) } && this.res.is_same_of(other.res) && other.yld.is_same_of(this.yld) && other.out.is_same_of(this.out)
+        (this is Type.Exec       && other is Type.Exec)       -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_same_of(oth) } && this.res.is_same_of(other.res) && other.yld.is_same_of(this.yld) && other.out.is_same_of(this.out)
+        else -> false
+    }
 }
 
 fun Type.is_sup_of (other: Type): Boolean {
     return when {
-        //(this is Type.Top) -> true
         (this is Type.Any || other is Type.Any) -> true
         (this is Type.Nat || other is Type.Nat) -> true
         (this is Type.Unit       && other is Type.Unit)       -> true
@@ -25,7 +39,7 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Data       && other is Type.Data)       -> (this.ts.size<=other.ts.size && this.ts.zip(other.ts).all { (thi,oth) -> thi.str==oth.str })
         (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
         (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> (thi.first==null||thi.first?.str==oth.first?.str) && thi.second.is_sup_of(oth.second) }
-        (this is Type.Vector     && other is Type.Vector)     -> (this.its<=other.its) && this.tp.is_sup_of(other.tp)
+        (this is Type.Vector     && other is Type.Vector)     -> this.tp.is_same_of(other.tp)
         (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.second.is_sup_of(oth.second) }
         (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
         (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
@@ -34,7 +48,7 @@ fun Type.is_sup_of (other: Type): Boolean {
     }
 }
 
-fun Type.is_same_of (other: Type): Boolean {
+fun Type.is_sup_sub_of (other: Type): Boolean {
     return this.is_sup_of(other) && other.is_sup_of(this)
 }
 
@@ -66,7 +80,7 @@ fun Type.sup_vs (other: Type): Type? {
 
 fun Expr.Bin.args (tp1: Type, tp2: Type): Boolean {
     return when (this.tk_.str) {
-        "==", "!=" -> tp1.is_same_of(tp2)
+        "==", "!=" -> tp1.is_sup_sub_of(tp2)
         ">", "<", ">=", "<=",
         "+", "-", "*", "/", "%" -> (tp1.is_num() && tp2.is_num())
         "||", "&&" -> {

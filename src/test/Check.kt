@@ -568,7 +568,7 @@ class Check {
             var t: #[10*Int]
             do(t['a'])
         """)
-        assert(out == "TODO") { out!! }
+        assert(out == "anon : (lin 3, col 18) : index error : expected number") { out!! }
     }
     @Test
     fun cd_03_vector_err () {
@@ -578,7 +578,8 @@ class Check {
             set a = b
             set b = a
         """)
-        assert(out == "anon : (lin 5, col 19) : set error : types mismatch") { out!! }
+        assert(out == null) { out!! }
+        //assert(out == "anon : (lin 5, col 19) : set error : types mismatch") { out!! }
     }
     @Test
     fun cd_04_vector_err () {
