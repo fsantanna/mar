@@ -124,7 +124,7 @@ fun coder_types (pre: Boolean): String {
                 listOf("""
                     typedef struct $x {
                         int size;
-                        ${me.tp.coder(pre)} vec[${me.size}];
+                        ${me.tp.coder(pre)} buf[${me.size}];
                     } $x;
                 """)
             }
@@ -486,7 +486,7 @@ fun Stmt.coder (pre: Boolean): String {
                             printf("#[");
                             ${tp.coder(pre)} mar_${tp.n} = $v;
                             ${(0 until tp.size!!).map {
-                                aux(tp.tp, "mar_${tp.n}.vec[$it]")
+                                aux(tp.tp, "mar_${tp.n}.buf[$it]")
                             }.joinToString("printf(\",\");")}
                             printf("]");
                         }
@@ -575,7 +575,7 @@ fun Expr.coder (pre: Boolean): String {
 
         is Expr.Tuple  -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
         is Expr.Vector -> (this.type() as Type.Vector).let {
-            "((${it.coder(pre)}) { .size=${it.size}, .vec=${this.vs.map { it.coder(pre) }.joinToString(",") } })"
+            "((${it.coder(pre)}) { .size=${it.size}, .buf=${this.vs.map { it.coder(pre) }.joinToString(",") } })"
         }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
@@ -599,7 +599,7 @@ fun Expr.coder (pre: Boolean): String {
                 }
             }
         }
-        is Expr.Index  -> "${this.col.coder(pre)}.vec[${this.idx.coder(pre)}]"
+        is Expr.Index  -> "${this.col.coder(pre)}.buf[${this.idx.coder(pre)}]"
         is Expr.Disc   -> {
             val tp = this.col.type()
             val ret = if (tp !is Type.Data) {
