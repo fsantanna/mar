@@ -59,10 +59,10 @@ fun Type.coder (pre: Boolean): String {
         is Type.Prim       -> this.tk.str
         is Type.Data       -> this.ts.first().str
         is Type.Unit       -> "_VOID_"
-        is Type.Pointer    -> this.ptr!!.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
+        is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "MAR_Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
         is Type.Union      -> "MAR_Union__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Vector     -> "MAR_Vector__${this.tp.coder(pre)}"
+        is Type.Vector     -> "MAR_Vector__${this.tp.coder(pre)}".clean()
         is Type.Proto.Func -> "MAR_Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(pre).first
         is Type.Exec       -> this.x_exec_coro(pre).first

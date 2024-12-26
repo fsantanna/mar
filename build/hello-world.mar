@@ -1,4 +1,4 @@
-var t = ["hello","world"]
-loop v in t {
-    println(v)
+var v = #["hello","world"]
+loop i in #v {
+    print(v[i])
 }
