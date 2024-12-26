@@ -204,7 +204,7 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                         }
                         G.ccs.addAll(f.split(" "))
                     }
-                    else -> err(pos, "preprocessor error : unexoected \"$id\"")
+                    else -> err(pos, "preprocessor error : unexpected \"$id\"")
                 }
             }
             (x == '#') -> {

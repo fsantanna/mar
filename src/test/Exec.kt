@@ -1309,6 +1309,33 @@ class Exec  {
         assert(out == "10\n") { out }
     }
 
+    // TEST
+
+    @Test
+    fun xx_01_test () {
+        G.test = false
+        val out = test("""
+            print("1")
+            test {
+                print("2")
+            }
+            print("3")
+        """)
+        assert(out == "1\n3\n") { out }
+    }
+    @Test
+    fun xx_02_test () {
+        G.test = true
+        val out = test("""
+            print("1")
+            test {
+                print("2")
+            }
+            print("3")
+        """)
+        assert(out == "1\n2\n3\n") { out }
+    }
+
     // MISC
 
     @Test

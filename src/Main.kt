@@ -10,7 +10,7 @@ fun main (args: Array<String>) {
             ys["--cc"]!!.map { it.split(" ") }.flatten()
         }
 
-        //TEST = ys.containsKey("--test")
+        G.test = ys.containsKey("--test")
         //DEBUG = ys.containsKey("--debug")
         //DUMP = DEBUG
 

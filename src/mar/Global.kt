@@ -39,7 +39,7 @@ val KEYWORDS: SortedSet<String> = (
         "break", "do", "catch", "coro", "compile", "create", "defer",
         "data", "else", "escape", "exec", "false", "func", "if", "in",
         "include", "loop", "match", "null", "print", "resume",
-        "return", "set", "start", "throw", "true", "var", "yield",
+        "return", "set", "start", "test", "throw", "true", "var", "yield",
     ).toSortedSet()
 )
 
@@ -151,6 +151,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
 object G {
     var N: Int = 1
 
+    var test: Boolean = false
     val ccs: MutableList<String> = mutableListOf()
 
     var tks: Iterator<Tk>? = null
@@ -159,24 +160,16 @@ object G {
 
     var outer: Stmt.Block? = null
 
-    //val cons  = mutableMapOf<Node,Type.Tuple>()     // resolve sub types
     val types = mutableSetOf<String>()              // for C generation
 
     val defers: MutableMap<Any, Triple<MutableList<Int>,String,String>> = mutableMapOf()
 
     var datas = 1
 
-    /*
-    var tags: MutableMap<String,Tk.Type> = mutableMapOf()
-    val datas = mutableMapOf<String,List<Var_Type>>()
-    val nats: MutableMap<Node,Pair<List<Node>,String>> = mutableMapOf()
-    var nonlocs: MutableMap<Node,List<Node>> = mutableMapOf()
-    val mems: MutableSet<Stmt>  = mutableSetOf()
-     */
-
     fun reset () {
         N = 1
 
+        //test = false
         ccs.clear()
 
         tks = null

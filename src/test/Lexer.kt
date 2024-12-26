@@ -254,7 +254,7 @@ class Lexer {
     @Test
     fun hh_00_pre_err() {
         val tks = ("^xxx").lexer()
-        assert(trap { tks.next() } == "anon : (lin 1, col 1) : preprocessor error : unexoected \"xxx\"")
+        assert(trap { tks.next() } == "anon : (lin 1, col 1) : preprocessor error : unexpected \"xxx\"")
     }
     @Test
     fun hh_01_inc() {

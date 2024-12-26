@@ -450,6 +450,14 @@ fun check_stmt_is_expr (): Boolean {
     return (check_fix("create") || check_fix("start") || check_fix("resume") || check_fix("yield") || check_fix("match"))
 }
 
+fun parser_stmt_block (): List<Stmt> {
+    accept_fix_err("{")
+    val ss = parser_list(null, "}") {
+        parser_stmt()
+    }.flatten()
+    return ss
+}
+
 fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
     return when {
         (accept_fix("func") || accept_fix("coro")) -> {
@@ -458,10 +466,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val id = G.tk0 as Tk.Var
             accept_fix_err(":")
             val tp = parser_type(tk0, true, false)
-            accept_fix_err("{")
-            val ss = parser_list(null, "}") {
-                parser_stmt()
-            }.flatten()
+            val ss = parser_stmt_block()
             val esc = Type.Data(tk0, listOf(Tk.Type("Return",tk0.pos)))
             when (tp) {
                 is Type.Proto.Func.Vars ->
@@ -502,10 +507,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                     }
                     tp
                 }
-                accept_fix_err("{")
-                val ss = parser_list(null, "}") {
-                    parser_stmt()
-                }.flatten()
+                val ss = parser_stmt_block()
                 listOf(Stmt.Block(tk0, esc, ss))
             }
         }
@@ -550,10 +552,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
         }
         accept_fix("defer") -> {
             val tk0 = G.tk0!!
-            accept_fix_err("{")
-            val blk = parser_list(null, "}") {
-                parser_stmt()
-            }.flatten()
+            val blk = parser_stmt_block()
             listOf(Stmt.Defer(tk0, Stmt.Block(tk0, null, blk)))
         }
         accept_fix("catch") -> {
@@ -568,10 +567,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 }
                 tp
             }
-            accept_fix_err("{")
-            val blk = parser_list(null, "}") {
-                parser_stmt()
-            }.flatten()
+            val blk = parser_stmt_block()
             listOf(Stmt.Catch(tk0, tp, Stmt.Block(tk0, null, blk)))
         }
         check_fix("throw") -> {
@@ -583,15 +579,9 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
         accept_fix("if") -> {
             val tk0 = G.tk0 as Tk.Fix
             val cnd = parser_expr()
-            accept_fix_err("{")
-            val t = parser_list(null, "}") {
-                parser_stmt()
-            }.flatten()
+            val t = parser_stmt_block()
             val f = if (accept_fix("else")) {
-                accept_fix_err("{")
-                parser_list(null, "}") {
-                    parser_stmt()
-                }.flatten()
+                parser_stmt_block()
             } else {
                 emptyList()
             }
@@ -606,11 +596,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 val b = parser_expr()
                 Pair(a,b)
             }
-            accept_fix_err("{")
-            val blk = parser_list(null, "}") {
-                parser_stmt()
-            }.flatten()
-
+            val blk = parser_stmt_block()
             val brk = Type.Data(tk0, listOf(Tk.Type("Break",tk0.pos)))
             if (num == null) {
                 listOf(Stmt.Loop(tk0, Stmt.Block(tk0, brk, blk)))
@@ -785,6 +771,15 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val e = parser_expr()
             accept_fix_err(")")
             listOf(Stmt.Print(tk0, e))
+        }
+        accept_fix("test") -> {
+            val tk0 = G.tk0!!
+            val blk = parser_stmt_block()
+            if (G.test) {
+                listOf(Stmt.Block(tk0, null, blk))
+            } else {
+                emptyList()
+            }
         }
 
         else -> {
