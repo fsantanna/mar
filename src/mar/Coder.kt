@@ -307,6 +307,14 @@ fun Stmt.coder (pre: Boolean): String {
             val body = this.ss.map {
                 it.coder(pre) + "\n"
             }.joinToString("")
+            val escs = this.dn_collect_pre({
+                // TODO: should consider nested matching do/escape
+                when (it) {
+                    is Stmt.Proto  -> null
+                    is Stmt.Escape -> listOf(it)
+                    else -> emptyList()
+                }
+            }, {null}, {null}).let { !it.isEmpty() }
             """
             { // BLOCK | ${this.dump()}
                 ${G.defers[this.n].cond {
@@ -329,14 +337,16 @@ fun Stmt.coder (pre: Boolean): String {
                     continue;
                 }
                 // TODO: {this.check_aborted("continue")}
-                ${this.esc.cond { """
+                ${escs.cond { """
                     if (MAR_ESCAPE.tag == __MAR_ESCAPE_NONE__) {
                         // no escape
-                    } else if (mar_sup(MAR_TAG_${it.ts.coder(pre).uppercase()}, MAR_ESCAPE.tag)) {
-                        MAR_ESCAPE.tag = __MAR_ESCAPE_NONE__;   // caught escape: go ahead
-                        ${(it.ts.first().str == "Break").cond { """
-                            goto MAR_LOOP_STOP_${this.xup!!.n};
-                        """ }}
+                    ${this.esc.cond { """
+                        } else if (mar_sup(MAR_TAG_${it.ts.coder(pre).uppercase()}, MAR_ESCAPE.tag)) {
+                            MAR_ESCAPE.tag = __MAR_ESCAPE_NONE__;   // caught escape: go ahead
+                            ${(it.ts.first().str == "Break").cond { """
+                                goto MAR_LOOP_STOP_${this.xup!!.n};
+                            """ }}                        
+                    """ }}
                     } else {
                         continue;                               // uncaught escape: propagate up
                     }

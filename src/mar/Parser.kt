@@ -632,6 +632,25 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                         Expr.Tuple(tk0,null, emptyList())))
             )
         }
+        (accept_fix("while") || accept_fix("until")) -> {
+            val tk0 = G.tk0!!
+            accept_fix_err("(")
+            val cnd = parser_expr().let {
+                if (tk0.str == "until") it else {
+                    Expr.Uno(Tk.Op("!", tk0.pos), it)
+                }
+            }
+            accept_fix_err(")")
+            listOf (
+                Stmt.If(tk0, cnd,
+                    Stmt.Block(tk0, null, listOf(
+                        Stmt.Escape(tk0,
+                            Expr.Cons(tk0, listOf(Tk.Type("Break", tk0.pos)),
+                                Expr.Tuple(tk0,null, emptyList()))))
+                    ),
+                    Stmt.Block(tk0, null, emptyList()))
+            )
+        }
 
         (set!=null && accept_fix("create")) -> {
             val tk0 = G.tk0 as Tk.Fix

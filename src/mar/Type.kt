@@ -219,6 +219,7 @@ fun Type.Union.disc (idx: String): Pair<Int, Type>? {
 fun Expr.type (): Type {
     return when (this) {
         is Expr.Uno -> when (this.tk_.str) {
+            "!" -> Type.Prim(Tk.Type( "Bool", this.tk.pos))
             "-" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
             "ref" -> Type.Pointer(this.tk, this.e.type())
             "deref" -> (this.e.type() as Type.Pointer).ptr

@@ -632,6 +632,13 @@ class Parser {
             "}\n"+
             "}\n") { ss.to_str() }
     }
+    @Test
+    fun ii_07_loop_until_err () {
+        G.N = 1
+        G.tks = ("loop { until 10 }").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 14) : expected \"(\" : have \"10\"")
+    }
 
     // TUPLE
 

@@ -39,7 +39,8 @@ val KEYWORDS: SortedSet<String> = (
         "break", "do", "catch", "coro", "compile", "create", "defer",
         "data", "else", "escape", "exec", "false", "func", "if", "in",
         "include", "loop", "match", "null", "print", "resume",
-        "return", "set", "start", "test", "throw", "true", "var", "yield",
+        "return", "set", "start", "test", "throw", "true",
+        "until", "var", "yield", "while"
     ).toSortedSet()
 )
 

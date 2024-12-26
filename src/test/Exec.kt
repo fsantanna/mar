@@ -272,6 +272,50 @@ class Exec  {
         assert(out == "0\n1\n") { out }
     }
 
+    // BREAK / WHILE / UNTIL
+
+    @Test
+    fun cd_01_loop_break () {
+        val out = test("""
+            print(1)
+            loop {
+                print(2)
+                if true {
+                    break
+                }
+                print(99)
+            }
+            print(3)
+        """)
+        assert(out == "1\n2\n3\n") { out }
+    }
+    @Test
+    fun cd_02_loop_until () {
+        val out = test("""
+            print(1)
+            loop {
+                print(2)
+                until(true)
+                print(99)
+            }
+            print(3)
+        """)
+        assert(out == "1\n2\n3\n") { out }
+    }
+    @Test
+    fun cd_03_loop_until () {
+        val out = test("""
+            print(1)
+            loop {
+                print(2)
+                while(false)
+                print(99)
+            }
+            print(3)
+        """)
+        assert(out == "1\n2\n3\n") { out }
+    }
+
     // FUNC
 
     @Test
