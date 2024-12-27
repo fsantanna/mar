@@ -165,12 +165,13 @@ class Lexer {
 
     @Test
     fun dd_01_ops() {
-        val tks = ("&& + \\ >=").lexer()
+        val tks = ("&& + \\ ! >=").lexer()
         assert(tks.next().let { it is Tk.Op  && it.str == "&&" })
         assert(tks.next().let { it is Tk.Op  && it.str == "+" })
         assert(tks.next().let { it is Tk.Op  && it.str == "\\" })
+        assert(tks.next().let { it is Tk.Op  && it.str == "!" })
         assert(tks.next().let { it is Tk.Op  && it.str == ">=" })
-        assert(tks.next().let { it is Tk.Eof && it.pos.lin==1 && it.pos.col==10 })
+        assert(tks.next().let { it is Tk.Eof && it.pos.lin==1 && it.pos.col==12 })
     }
 
     // CHAR

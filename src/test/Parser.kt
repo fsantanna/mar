@@ -293,7 +293,8 @@ class Parser {
         val e = parser_expr()
         assert(e.to_str() == "\"f\"") { e.to_str() }
     }
-    // BINARY
+
+    // BINARY / UNARY
 
     @Test
     fun cc_01_bin_err() {
@@ -308,6 +309,13 @@ class Parser {
         parser_lexer()
         val e = parser_expr_1_bin()
         assert(e.to_str() == "(2 * (3 - 1))")
+    }
+    @Test
+    fun cc_03_uno() {
+        G.tks = ("!-x").lexer()
+        parser_lexer()
+        val e = parser_expr()
+        assert(e.to_str() == "(!(-x))")
     }
 
     // DO
@@ -1170,7 +1178,7 @@ class Parser {
     @Test
     fun NEW_tt_01_data () {     // template
         G.tks = ("""
-            data Exec {a,b}: <Yield: a, Return: b>
+            data Exec {a,b,n}: <Yield: a, Return: b, X: #[n*Int]>
             var x: Exec {(),Int} = Exec.Return(10)
             var i = x!Return
             var y = x?Yield

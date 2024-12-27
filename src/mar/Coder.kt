@@ -581,7 +581,18 @@ fun Expr.coder (pre: Boolean): String {
             }
         }
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_mar_to_c() + " " + this.e2.coder(pre) + ")"
-        is Expr.Call -> this.f.coder(pre) + "(" + this.args.map { it.coder(pre) }.joinToString(",") + ")"
+        is Expr.Call -> {
+            val call = "${this.f.coder(pre)} ( ${this.args.map { it.coder(pre) }.joinToString(",")} )"
+            """
+            ({
+                typeof($call) mar_$n = $call;
+                if (MAR_EXCEPTION.tag != __MAR_EXCEPTION_NONE__) {
+                    continue;
+                }
+                mar_$n;
+             })
+            """
+        }
 
         is Expr.Tuple  -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
         is Expr.Vector -> (this.type() as Type.Vector).let {

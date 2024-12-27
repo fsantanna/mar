@@ -97,6 +97,13 @@ class Exec  {
         """)
         assert(out == "0.500000\n") { out }
     }
+    @Test
+    fun ab_05_uno_not() {
+        val out = test("""
+            print(!false)
+        """)
+        assert(out == "true\n") { out }
+    }
 
     // NAT
 
@@ -187,7 +194,7 @@ class Exec  {
         val out = test("""
             do {
                 ```
-                void print_int (int v) {
+                _VOID_ print_int (int v) {
                     printf("%d\n", v);
                 }
                 ```
@@ -1242,6 +1249,20 @@ class Exec  {
         """)
         assert(out == "uncaught exception\n") { out }
     }
+    @Test
+    fun kk_08_throw_call () {
+        val out = test("""
+            func f: () -> () {
+                print(2)
+                throw()
+                print(99)
+            }
+            print(1)
+            f()
+            print(99)
+        """)
+        assert(out == "1\n2\nuncaught exception\n") { out }
+    }
 
     // DEFER
 
@@ -1380,6 +1401,22 @@ class Exec  {
         assert(out == "1\n2\n3\n") { out }
     }
 
+    // PRELUDE
+
+    @Test
+    fun xj_01_pre_assert () {
+        val out = test("""
+            print(1)
+            ensure(true)
+            print(2)
+            ensure(false)
+            print(3)
+        """)
+        assert(out == "1\n"+
+            "2\n"+
+            "uncaught exception\n") { out }
+    }
+
     // MISC
 
     @Test
@@ -1410,7 +1447,7 @@ class Exec  {
             var b = []
             var c = b.x     ;; infer exception, do not check infer
         """)
-        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
-        assert(out == "anon : (lin 2, col 17) : inference error : unknown type\n") { out }
+        assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
+        //assert(out == "anon : (lin 2, col 17) : inference error : unknown type\n") { out }
     }
 }
