@@ -64,6 +64,7 @@ fun Expr.infer (tp: Type?): Type? {
                 }
                 this.xtp
             }
+            this.xtp
         }
         is Expr.Field -> {
             val col = this.col.infer(null)
@@ -270,7 +271,7 @@ fun infer_types () {
             is Stmt.Block -> {}
             is Stmt.Dcl -> {}
             is Stmt.Set -> {
-                var tp1 = me.dst.infer(null)
+                val tp1 = me.dst.infer(null)
                 val tp2 = me.src.infer(tp1)
                 if (tp2!=null && tp1==null) {
                     if (me.dst is Expr.Acc) {
@@ -279,9 +280,8 @@ fun infer_types () {
                             assert(dcl.xtp == null)
                             dcl.xtp = tp2
                         }
-                        tp1 = tp2
                     } else {
-                        tp1 = me.dst.infer(null)
+                        me.dst.infer(null)
                     }
                 }
             }
@@ -303,28 +303,10 @@ fun infer_types () {
             is Stmt.Print -> me.e.infer(null)
             is Stmt.Pass -> me.e.infer(Type.Unit(me.tk))
         }
-    }
-
-    val ok = try {
-        G.outer!!.dn_visit_pos(::fs, {}, {})
-        true
-    } catch (_: InferException) {
-        false
-    }
-
-    if (ok) {
-        G.outer!!.dn_visit_pos({
-            when (it) {
-                is Stmt.Dcl -> {
-                    if (it.xtp==null || it.xtp is Type.Any) {
-                        err(it.id, "inference error : unknown type")
-                    }
-                }
-                else -> {}
-            }
-        }, {
+        me.dn_collect_pre({if (me==it) emptyList<Unit>() else null}, {
             val xtp = when (it) {
                 is Expr.Tuple  -> it.xtp
+                is Expr.Vector -> it.xtp
                 is Expr.Union  -> it.xtp
                 is Expr.Throw  -> it.xtp
                 is Expr.If     -> it.xtp
@@ -332,9 +314,37 @@ fun infer_types () {
                 is Expr.MatchE -> it.xtp
                 else -> Unit
             }
+            /*
+                println("-=-=-")
+                println(me.to_str())
+                println(it.to_str())
+                println(xtp)
+             */
             if (xtp == null) {
                 err(it.tk, "inference error : unknown type")
             }
-        }, {})
+            emptyList()
+        }, {null})
+    }
+
+    val ok = try {
+        G.outer!!.dn_visit_pos(::fs, {}, {})
+        true
+    } catch (x: InferException) {
+        false
+    }
+
+    if (ok) {
+        G.outer!!.dn_visit_pos({
+            when (it) {
+                is Stmt.Dcl -> {
+                    //println(listOf(it.to_str(), it.xtp?.to_str()))
+                    if (it.xtp==null || it.xtp is Type.Any) {
+                        err(it.id, "inference error : unknown type")
+                    }
+                }
+                else -> {}
+            }
+        }, {}, {})
     }
 }

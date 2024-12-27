@@ -246,6 +246,14 @@ class Parser {
         assert(tp is Type.Pointer && tp.ptr.let { it is Type.Vector && it.size==null })
         assert(tp.to_str() == "\\#[Int]") { tp.to_str() }
     }
+    @Test
+    fun al_07_vec_vec_ptr () {
+        G.tks = ("\\#[#[Int]]").lexer()
+        parser_lexer()
+        val tp = parser_type(null, false, false)
+        assert(tp is Type.Pointer && tp.ptr.let { it is Type.Vector && it.size==null })
+        assert(tp.to_str() == "\\#[#[Int]]") { tp.to_str() }
+    }
 
     // PARENS
 
@@ -1171,5 +1179,16 @@ class Parser {
         parser_lexer()
         val ss = parser_stmt()
         assert(ss.to_str() == "data Pos: [Int,Int]\n") { ss.to_str() }
+    }
+
+    // MISC
+
+    @Test
+    fun zz_01_lin () {
+        G.tks = ("""
+            do(1 /= 1)
+        """).lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 2, col 19) : expected expression : have \"=\"")
     }
 }

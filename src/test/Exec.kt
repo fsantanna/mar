@@ -1396,4 +1396,21 @@ class Exec  {
         """)
         assert(out == "a\n10\n") { out }
     }
+    @Test
+    fun zz_02_xxx () {
+        val out = test("""
+            return()
+        """)
+        assert(out == "anon : (lin 2, col 13) : escape error : expected matching enclosing block\n") { out }
+    }
+    @Test
+    fun zz_03_yyy () {
+        val out = test("""
+            var a = #[]     ;; infer null, check error
+            var b = []
+            var c = b.x     ;; infer exception, do not check infer
+        """)
+        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
+        assert(out == "anon : (lin 2, col 17) : inference error : unknown type\n") { out }
+    }
 }

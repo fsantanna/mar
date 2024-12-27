@@ -82,7 +82,7 @@ fun check_vars () {
             }
             is Stmt.Set -> {
                 if (me.dst is Expr.Nat && me.dst.tk.str=="mar_ret") {
-                    me.dst.xtp = (me.up_first { it is Stmt.Proto } as Stmt.Proto).tp.out
+                    me.dst.xtp = (me.up_first { it is Stmt.Proto } as Stmt.Proto?)?.tp?.out
                 }
             }
             is Stmt.Escape -> {

@@ -386,8 +386,8 @@ class Infer {
             var x = <.1=()>
         """)
         //assert(out == "anon : (lin 2, col 13) : inference error : unknown types") { out!! }
-        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
-        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun dd_02_infer_data_union () {
@@ -719,7 +719,8 @@ class Infer {
             data Error.*: []
             var x = if true => 10 => throw() 
         """)
-        assert(out == "anon : (lin 3, col 17) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 3, col 21) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 3, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun ff_07_if_throw () {
@@ -748,7 +749,8 @@ class Infer {
             data Error.*: []
             var x = throw() 
         """)
-        assert(out == "anon : (lin 3, col 17) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 3, col 21) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 3, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun gg_02_throw_err () {
@@ -818,7 +820,8 @@ class Infer {
         val out = infer("""
             var x = #[]
         """)
-        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 2, col 21) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
     }
     @Test
     fun ii_02_vector () {

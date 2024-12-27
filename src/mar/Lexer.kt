@@ -229,7 +229,7 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                     }
                     else -> {
                         for (i in 0..op.length-1) {
-                            yield(Tk.Op(op[i].toString(), pos.copy(lin=pos.col+1+i)))
+                            yield(Tk.Op(op[i].toString(), pos.copy(col=pos.col+i)))
                         }
                     }
                 }
