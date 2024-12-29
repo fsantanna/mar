@@ -12,7 +12,7 @@ class Lexer {
     // SYMBOL
     @Test
     fun aa_01_syms() {
-        val tks = ("{ } ( ; < > ( = ) ) # - , ][ #[ / * + .").lexer()
+        val tks = ("{ } ( ; < > ( = ) ) # - , ][ #[ ## / * + .").lexer()
         assert(tks.next().str == "{")
         assert(tks.next().str == "}")
         assert(tks.next().str == "(")
@@ -28,6 +28,7 @@ class Lexer {
         assert(tks.next().str == "]")
         assert(tks.next().str == "[")
         assert(tks.next().str == "#[")
+        assert(tks.next().str == "##")
         assert(tks.next().str == "/")
         assert(tks.next().str == "*")
         assert(tks.next().str == "+")

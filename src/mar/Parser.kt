@@ -413,8 +413,9 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
 }
 
 fun parser_expr_2_pre (): Expr {
+    val unos = listOf("-", "\\", "#", "##", "!")
     return when {
-        accept_op("-") || accept_op("\\") || accept_op("#") || accept_op("!") -> {
+        unos.any { accept_op(it) } -> {
             val op = (G.tk0 as Tk.Op).let {
                 if (it.str != "\\") it else {
                     Tk.Op("ref", it.pos)

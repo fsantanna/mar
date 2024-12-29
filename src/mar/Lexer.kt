@@ -26,6 +26,7 @@ fun FileX (name: String, cur: String?): File? {
         (cur != null) -> cur + "/" + name
         else -> return null
     }
+    //println(path)
     val h = File(path)
     if (h.exists() && h.isFile) {
         return h
@@ -209,11 +210,13 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
             }
             (x == '#') -> {
                 val (n1,x1) = read2()
-                if (x1 == '[') {
-                    yield(Tk.Fix("$x[", pos))
-                } else {
-                    unread2(n1)
-                    yield(Tk.Op(x.toString(), pos))
+                when {
+                    (x1 == '[') -> yield(Tk.Fix("$x[", pos))
+                    (x1 == '#') -> yield(Tk.Op("##", pos))
+                    else -> {
+                        unread2(n1)
+                        yield(Tk.Op(x.toString(), pos))
+                    }
                 }
             }
             (x in OPERATORS.first) -> {

@@ -814,6 +814,21 @@ class Parser {
         assert(e.to_str() == "(#x)") { e.to_str() }
         //assert(trap { parser_expr() } == "anon : (lin 1, col 8) : expected \":\" : have end of file")
     }
+    @Test
+    fun jl_04_vector_size () {
+        G.tks = ("set #x = 1").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "set (#x) = 1\n") { ss.to_str() }
+    }
+    @Test
+    fun jl_05_vector_size_err () {
+        G.tks = ("set ##x = 1").lexer()
+        parser_lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "data Pos: [Int,Int]\n") { ss.to_str() }
+    }
 
     // DATA
 

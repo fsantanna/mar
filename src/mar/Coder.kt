@@ -123,7 +123,7 @@ fun coder_types (pre: Boolean): String {
                 val x = me.coder(pre)
                 listOf("""
                     typedef struct $x {
-                        int size;
+                        int max, cur;
                         ${me.tp.coder(pre)} buf[${me.size}];
                     } $x;
                 """)
@@ -359,9 +359,10 @@ fun Stmt.coder (pre: Boolean): String {
                 this.xtp!!.coder(pre) + " " + this.id.str + ";"
             }
             val ini = this.xtp.let {
-                if (it !is Type.Vector) "" else {
-                    this.id.str + ".size = ${it.size};"
-                }
+                if (it !is Type.Vector) "" else """
+                    ${this.id.str}.max = ${it.size};
+                    ${this.id.str}.cur = 0;
+                """
             }
             dcl + ini
         }
@@ -575,7 +576,7 @@ fun Expr.coder (pre: Boolean): String {
     return when (this) {
         is Expr.Uno -> {
             return if (this.tk.str == "#") {
-                "(" + this.e.coder(pre) + ".size)"
+                "(" + this.e.coder(pre) + ".max)"
             } else {
                 "(" + this.tk.str.op_mar_to_c() + this.e.coder(pre) + ")"
             }
@@ -596,7 +597,7 @@ fun Expr.coder (pre: Boolean): String {
 
         is Expr.Tuple  -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
         is Expr.Vector -> (this.type() as Type.Vector).let {
-            "((${it.coder(pre)}) { .size=${it.size}, .buf=${this.vs.map { it.coder(pre) }.joinToString(",") } })"
+            "((${it.coder(pre)}) { .max=${it.size}, .cur=0, .buf=${this.vs.map { it.coder(pre) }.joinToString(",") } })"
         }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
