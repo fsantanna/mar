@@ -224,6 +224,7 @@ fun Expr.type (): Type {
             "ref" -> Type.Pointer(this.tk, this.e.type())
             "deref" -> (this.e.type() as Type.Pointer).ptr
             "#" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
+            "##" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
             else -> error("impossible case")
         }
         is Expr.Bin -> when (this.tk_.str) {

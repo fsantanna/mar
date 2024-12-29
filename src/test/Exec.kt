@@ -601,6 +601,16 @@ class Exec  {
         """)
         assert(out == "#[1,0,3]\n#[1,2,3]\n") { out }
     }
+    @Test
+    fun gh_05_vector_max () {
+        val out = test("""
+            var a = #[1,2,3]
+            set #a = 2
+            print(#a)
+            print(##a)
+        """)
+        assert(out == "2\n3\n") { out }
+    }
 
     // DATA
 

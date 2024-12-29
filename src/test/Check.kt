@@ -603,6 +603,14 @@ class Check {
         """)
         assert(out == "anon : (lin 2, col 16) : operation error : expected vector") { out!! }
     }
+    @Test
+    fun cd_07_vector_err () {
+        val out = check("""
+            var v: #[1*Int]
+            var x: Bool = ##v
+        """)
+        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+    }
 
     // UNION
 

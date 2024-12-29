@@ -825,9 +825,7 @@ class Parser {
     fun jl_05_vector_size_err () {
         G.tks = ("set ##x = 1").lexer()
         parser_lexer()
-        parser_lexer()
-        val ss = parser_stmt()
-        assert(ss.to_str() == "data Pos: [Int,Int]\n") { ss.to_str() }
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 5) : set error : expected assignable destination")
     }
 
     // DATA

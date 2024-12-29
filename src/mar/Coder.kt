@@ -575,10 +575,10 @@ fun Expr.coder (pre: Boolean): String {
     }
     return when (this) {
         is Expr.Uno -> {
-            return if (this.tk.str == "#") {
-                "(" + this.e.coder(pre) + ".max)"
-            } else {
-                "(" + this.tk.str.op_mar_to_c() + this.e.coder(pre) + ")"
+            return when (this.tk.str) {
+                "#"  -> "(" + this.e.coder(pre) + ".cur)"
+                "##" -> "(" + this.e.coder(pre) + ".max)"
+                else -> "(" + this.tk.str.op_mar_to_c() + this.e.coder(pre) + ")"
             }
         }
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_mar_to_c() + " " + this.e2.coder(pre) + ")"
