@@ -611,6 +611,33 @@ class Exec  {
         """)
         assert(out == "2\n3\n") { out }
     }
+    @Test
+    fun gh_06_vector_cur () {
+        val out = test("""
+            var a = #[1,2,3]
+            print(#a)
+            print(##a)
+        """)
+        assert(out == "3\n3\n") { out }
+    }
+    @Test
+    fun gh_07_vector_cur () {
+        val out = test("""
+            var a: #[3*Int] = #[1,2]
+            print(#a)
+            print(##a)
+        """)
+        assert(out == "2\n3\n") { out }
+    }
+    @Test
+    fun gh_08_vector_cur () {
+        val out = test("""
+            var a: #[2*Int] = #[1,2,3]
+            print(#a)
+            print(##a)
+        """)
+        assert(out == "2\n2\n") { out }
+    }
 
     // DATA
 

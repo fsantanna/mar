@@ -597,7 +597,7 @@ fun Expr.coder (pre: Boolean): String {
 
         is Expr.Tuple  -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
         is Expr.Vector -> (this.type() as Type.Vector).let {
-            "((${it.coder(pre)}) { .max=${it.size}, .cur=0, .buf=${this.vs.map { it.coder(pre) }.joinToString(",") } })"
+            "((${it.coder(pre)}) { .max=${it.size}, .cur=${it.size}, .buf=${this.vs.map { it.coder(pre) }.joinToString(",") } })"
         }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
