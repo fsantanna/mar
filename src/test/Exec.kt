@@ -560,6 +560,17 @@ class Exec  {
         """)
         assert(out == "[4]\n") { out }
     }
+    @Test
+    fun gg_08_tuple () {
+        val out = test("""
+            var a: [x:Int] = [10*0.3]
+            var v: [Int]
+            set v = a
+            ;;set a = v
+            print(a)
+        """)
+        assert(out == "[3]\n") { out }
+    }
 
     // VECTOR
 
@@ -577,9 +588,10 @@ class Exec  {
     fun gh_02_vector () {
         val out = test("""
             var v: #[3*Int]
+            print(##v)
             print(#v)
         """)
-        assert(out == "3\n") { out }
+        assert(out == "3\n0\n") { out }
     }
     @Test
     fun gh_03_vector () {

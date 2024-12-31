@@ -62,7 +62,7 @@ fun Type.coder (pre: Boolean): String {
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "MAR_Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
         is Type.Union      -> "MAR_Union__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Vector     -> "MAR_Vector__${this.tp.coder(pre)}".clean()
+        is Type.Vector     -> "MAR_Vector__${this.max.cond2({it.toString()},{"0"})}_${this.tp.coder(pre)}".clean()
         is Type.Proto.Func -> "MAR_Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(pre).first
         is Type.Exec       -> this.x_exec_coro(pre).first
@@ -124,7 +124,7 @@ fun coder_types (pre: Boolean): String {
                 listOf("""
                     typedef struct $x {
                         int max, cur;
-                        ${me.tp.coder(pre)} buf[${me.size}];
+                        ${me.tp.coder(pre)} buf[${me.max.cond2({it.toString()},{""})}];
                     } $x;
                 """)
             }
@@ -360,19 +360,32 @@ fun Stmt.coder (pre: Boolean): String {
             }
             val ini = this.xtp.let {
                 if (it !is Type.Vector) "" else """
-                    ${this.id.str}.max = ${it.size};
+                    ${this.id.str}.max = ${it.max};
                     ${this.id.str}.cur = 0;
                 """
             }
             dcl + ini
         }
         is Stmt.Set    -> {
-            when (this.src) {
-                is Expr.Yield, is Expr.MatchT, is Expr.MatchE -> this.src.coder(pre) + """
-                    ${this.dst.coder(pre)} = mar_${this.src.n};
-                """
-                else -> this.dst.coder(pre) + " = " + this.src.coder(pre) + ";"
+            val dst = this.dst.coder(pre)
+            val (xpre,src) = when (this.src) {
+                is Expr.Yield, is Expr.MatchT, is Expr.MatchE -> Pair(this.src.coder(pre), "mar_${this.src.n}")
+                else -> Pair("", this.src.coder(pre))
             }
+            val xsrc = run {
+                val tdst = this.dst.type()
+                val tsrc = this.src.type()
+                if (tdst.is_num() || tdst.is_same_of(tsrc)) src else "MAR_CAST(${tdst.coder(pre)}, $src)"
+            }
+            val pos = this.dst.type().let {
+                if (it !is Type.Vector || it.max==null) "" else {
+                    """
+                    $dst.max = ${it.max};
+                    $dst.cur = MIN($dst.max, $dst.cur);                        
+                    """
+                }
+            }
+            xpre + "\n" + dst + " = " + xsrc + ";\n" + pos
         }
 
         is Stmt.Escape -> """
@@ -496,7 +509,7 @@ fun Stmt.coder (pre: Boolean): String {
                         {
                             printf("#[");
                             ${tp.coder(pre)} mar_${tp.n} = $v;
-                            ${(0 until tp.size!!).map {
+                            ${(0 until tp.max!!).map {
                                 aux(tp.tp, "mar_${tp.n}.buf[$it]")
                             }.joinToString("printf(\",\");")}
                             printf("]");
@@ -597,7 +610,7 @@ fun Expr.coder (pre: Boolean): String {
 
         is Expr.Tuple  -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
         is Expr.Vector -> (this.type() as Type.Vector).let {
-            "((${it.coder(pre)}) { .max=${it.size}, .cur=${it.size}, .buf=${this.vs.map { it.coder(pre) }.joinToString(",") } })"
+            "((${it.coder(pre)}) { .max=${it.max}, .cur=${it.max}, .buf={${this.vs.map { it.coder(pre) }.joinToString(",") }} })"
         }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
@@ -797,6 +810,11 @@ fun coder_main (pre: Boolean): String {
         #include <stdlib.h>
         #include <stdarg.h>
         
+        #undef MAX
+        #undef MIN
+        #define MAX(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
+        #define MIN(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
+
         typedef int     _VOID_;
         typedef int     Bool;
         typedef char    Char;

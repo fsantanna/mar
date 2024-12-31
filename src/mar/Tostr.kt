@@ -40,7 +40,7 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Unit -> "()"
         is Type.Pointer -> "\\" + this.ptr.to_str(pre)
         is Type.Tuple -> "[" + this.ts.map { (id,tp) -> id.cond { it.str+":" } + tp.to_str(pre) }.joinToString(",") + "]"
-        is Type.Vector -> "#[" + this.size.cond { "$it * " } + this.tp.to_str(pre) + "]"
+        is Type.Vector -> "#[" + this.max.cond { "$it * " } + this.tp.to_str(pre) + "]"
         is Type.Union -> "<" + this.ts.map { (id,tp) -> id.cond { it.str+":" } + tp.to_str(pre) }.joinToString(",") + ">"
         is Type.Proto -> {
             val inps = when (this) {

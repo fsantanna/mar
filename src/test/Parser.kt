@@ -209,7 +209,7 @@ class Parser {
         G.tks = ("#[10*Int]").lexer()
         parser_lexer()
         val tp = parser_type(null, false, false)
-        assert(tp is Type.Vector && tp.size==10 && tp.tp is Type.Prim)
+        assert(tp is Type.Vector && tp.max==10 && tp.tp is Type.Prim)
         assert(tp.to_str() == "#[10 * Int]")
     }
     @Test
@@ -217,7 +217,7 @@ class Parser {
         G.tks = ("#[10 * #[1*Int]]").lexer()
         parser_lexer()
         val tp = parser_type(null, false, false)
-        assert(tp is Type.Vector && tp.size==10 && tp.tp is Type.Vector)
+        assert(tp is Type.Vector && tp.max==10 && tp.tp is Type.Vector)
         assert(tp.to_str() == "#[10 * #[1 * Int]]")
     }
     @Test
@@ -243,7 +243,7 @@ class Parser {
         G.tks = ("\\#[Int]").lexer()
         parser_lexer()
         val tp = parser_type(null, false, false)
-        assert(tp is Type.Pointer && tp.ptr.let { it is Type.Vector && it.size==null })
+        assert(tp is Type.Pointer && tp.ptr.let { it is Type.Vector && it.max==null })
         assert(tp.to_str() == "\\#[Int]") { tp.to_str() }
     }
     @Test
@@ -251,7 +251,7 @@ class Parser {
         G.tks = ("\\#[#[Int]]").lexer()
         parser_lexer()
         val tp = parser_type(null, false, false)
-        assert(tp is Type.Pointer && tp.ptr.let { it is Type.Vector && it.size==null })
+        assert(tp is Type.Pointer && tp.ptr.let { it is Type.Vector && it.max==null })
         assert(tp.to_str() == "\\#[#[Int]]") { tp.to_str() }
     }
 
