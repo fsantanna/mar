@@ -567,7 +567,18 @@ class Exec  {
             var v: [Int]
             set v = a
             ;;set a = v
-            print(a)
+            print(v)
+        """)
+        assert(out == "[3]\n") { out }
+    }
+    @Test
+    fun gg_09_tuple () {
+        val out = test("""
+            func f: (v: [Int]) -> () {
+                print(v)
+            }
+            var a: [x:Int] = [10*0.3]
+            f(a)
         """)
         assert(out == "[3]\n") { out }
     }
@@ -647,6 +658,17 @@ class Exec  {
             var a: #[2*Int] = #[1,2,3]
             print(#a)
             print(##a)
+        """)
+        assert(out == "2\n2\n") { out }
+    }
+    @Test
+    fun gh_09_vector_cur () {
+        val out = test("""
+            func f: (a: #[2*Int]) -> () {
+                print(#a)
+                print(##a)
+            }
+            f(#[1,2,3])
         """)
         assert(out == "2\n2\n") { out }
     }

@@ -282,7 +282,14 @@ fun Stmt.coder (pre: Boolean): String {
                         switch (mar_exe->pc) {
                             case 0:
                                 ${this.tp_.inps_.mapIndexed { i,vtp ->
-                                    vtp.first.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n"
+                                    val (id,tp) = vtp
+                                    id.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n" +
+                                        if (tp !is Type.Vector) "" else {
+                                            """
+                                            $id.max = ${tp.max};
+                                            $id.cur = MIN($id.max, $id.cur);
+                                            """
+                                        }
                                 }.joinToString("")}
                     """ }}
                     ${this.blk.coder(pre)}
@@ -368,24 +375,32 @@ fun Stmt.coder (pre: Boolean): String {
         }
         is Stmt.Set    -> {
             val dst = this.dst.coder(pre)
-            val (xpre,src) = when (this.src) {
-                is Expr.Yield, is Expr.MatchT, is Expr.MatchE -> Pair(this.src.coder(pre), "mar_${this.src.n}")
-                else -> Pair("", this.src.coder(pre))
-            }
-            val xsrc = run {
-                val tdst = this.dst.type()
-                val tsrc = this.src.type()
-                if (tdst.is_num() || tdst.is_same_of(tsrc)) src else "MAR_CAST(${tdst.coder(pre)}, $src)"
-            }
-            val pos = this.dst.type().let {
-                if (it !is Type.Vector || it.max==null) "" else {
+            val src = this.src.coder(pre)
+            val tdst = this.dst.type()
+            val tsrc = this.src.type()
+            when {
+                this.src.let { it is Expr.Yield || it is Expr.MatchT || it is Expr.MatchE } -> {
+                    assert(tsrc !is Type.Vector)
+                    this.src.coder(pre) + """
+                        $dst = mar_${this.src.n};
                     """
-                    $dst.max = ${it.max};
-                    $dst.cur = MIN($dst.max, $dst.cur);                        
+                }
+                tdst.is_num() -> "$dst = $src;"
+                tdst.is_same_of(tsrc) -> "$dst = $src;"
+                (tdst !is Type.Vector || tdst.max==null) -> {
+                    "$dst = MAR_CAST(${tdst.coder(pre)}, $src);"
+                }
+                else -> {
+                    """
+                    {
+                        typeof($dst)* mar_$n = &$dst;
+                        *mar_$n = MAR_CAST(${tdst.coder(pre)}, $src);
+                        mar_$n->max = ${tdst.max};
+                        mar_$n->cur = MIN(mar_$n->max, mar_$n->cur);                        
+                    }                        
                     """
                 }
             }
-            xpre + "\n" + dst + " = " + xsrc + ";\n" + pos
         }
 
         is Stmt.Escape -> """
@@ -596,7 +611,22 @@ fun Expr.coder (pre: Boolean): String {
         }
         is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_mar_to_c() + " " + this.e2.coder(pre) + ")"
         is Expr.Call -> {
-            val call = "${this.f.coder(pre)} ( ${this.args.map { it.coder(pre) }.joinToString(",")} )"
+            val inps = this.f.type().let {
+                if (it !is Type.Proto) null else {
+                    it.inps
+                }
+            }
+            val call = "${this.f.coder(pre)} ( ${this.args.mapIndexed { i,arg ->
+                val src = arg.coder(pre)
+                val tdst = if (inps == null) null else inps[i]
+                val tsrc = arg.type()
+                when {
+                    (tdst == null) -> src
+                    tdst.is_num() -> src
+                    tdst.is_same_of(tsrc) -> src
+                    else -> "MAR_CAST(${tdst.coder(pre)}, $src)"
+                }
+            }.joinToString(",")} )"
             """
             ({
                 typeof($call) mar_$n = $call;
