@@ -275,6 +275,18 @@ fun Stmt.coder (pre: Boolean): String {
             } + """
             {
                 ${this.tp.out.coder(pre)} mar_ret;
+                ${(this is Stmt.Proto.Func).cond {
+                    this as Stmt.Proto.Func
+                    this.tp_.inps_.map { (id,tp) ->
+                        if (tp !is Type.Vector) "" else {
+                            val xid = id.str
+                            """
+                            $xid.max = ${tp.max};
+                            $xid.cur = MIN($xid.max, $xid.cur);                            
+                            """
+                        }
+                    }.joinToString("")
+                }}
                 do {
                     ${(this is Stmt.Proto.Coro).cond {
                         this as Stmt.Proto.Coro
@@ -283,14 +295,8 @@ fun Stmt.coder (pre: Boolean): String {
                             case 0:
                                 ${this.tp_.inps_.mapIndexed { i,vtp ->
                                     val (id,tp) = vtp
-                                    id.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n" +
-                                        if (tp !is Type.Vector) "" else {
-                                            """
-                                            $id.max = ${tp.max};
-                                            $id.cur = MIN($id.max, $id.cur);
-                                            """
-                                        }
-                                }.joinToString("")}
+                                    assert(tp !is Type.Vector)
+                                    id.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n"                                }.joinToString("")}
                     """ }}
                     ${this.blk.coder(pre)}
                     ${(this is Stmt.Proto.Coro).cond { """
