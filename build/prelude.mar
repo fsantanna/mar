@@ -7,14 +7,14 @@ func ensure: (v: Bool) -> () {
     }
 }
 
-func int_to_string: (v: Int) -> #[32*Char] {
+func string_from_int: (v: Int) -> #[32*Char] {
     var ret: #[32*Char]
     `ret.cur = 1 + snprintf(ret.buf, 32, "%d", v)`
     return(ret)
 }
 
 test {
-    var str = int_to_string(10)
+    var str = string_from_int(10)
     ensure(#str == 3)
     ensure(##str == 32)
     ensure(str[0] == '1')
@@ -27,25 +27,43 @@ func string_empty: () -> #[1*Char] {
 }
 
 func string_cat_pointer: (s: \#[Char], p: \Char) -> () {
-    ensure((##s\ > 0) && (##s\ > #s\))
-    ensure(s\[#s\] == '\0')
+    ensure(s\[#s\ - 1] == '\0')
     var n: Int = `strlen(p)`
-    ensure(##s\ >= (#s\+1+n))
+    ensure(##s\ >= (#s\+n))
     loop i in n {
-        set s\[#s\] = `p[i]`
+        set s\[#s\-1] = `p[i]`
         set #s\ = #s\ + 1
     }
-    set s\[#s\] = '\0'
+    set s\[#s\-1] = '\0'
 }
 
 test {
     var str: #[10*Char] = string_empty()
-    ensure((##str==10) && (#str==0) && (str[0]=='\0'))
+    ensure((##str==10) && (#str==1) && (str[0]=='\0'))
 
     string_cat_pointer(\str, "xxx")
     ensure(`strcmp(str.buf, "xxx")` == 0)
 
     string_cat_pointer(\str, " ")
     string_cat_pointer(\str, "yyy")
+    ensure(`strcmp(str.buf, "xxx yyy")` == 0)
+}
+
+func string_cat_string: (s: \#[Char], t: \#[Char]) -> () {
+    ensure(s\[#s\ - 1] == '\0')
+    ensure(t\[#t\ - 1] == '\0')
+    string_cat_pointer(s, `t->buf`)
+}
+
+test {
+    var str: #[10*Char] = string_empty()
+    ensure((##str==10) && (#str==1) && (str[0]=='\0'))
+
+    string_cat_string(\str, \#['x','x','x','\0'])
+    ensure(`strcmp(str.buf, "xxx")` == 0)
+
+    var yyy: #[10*Char] = string_empty()
+    string_cat_pointer(\yyy, " yyy")
+    string_cat_string(\str, \yyy)
     ensure(`strcmp(str.buf, "xxx yyy")` == 0)
 }
