@@ -530,9 +530,12 @@ fun Stmt.coder (pre: Boolean): String {
                         {
                             printf("#[");
                             ${tp.coder(pre)} mar_${tp.n} = $v;
-                            ${(0 until tp.max!!).map {
-                                aux(tp.tp, "mar_${tp.n}.buf[$it]")
-                            }.joinToString("printf(\",\");")}
+                            for (int i=0; i<mar_${tp.n}.cur; i++) {
+                                if (i > 0) {
+                                    printf(",");
+                                }
+                                ${aux(tp.tp, "mar_${tp.n}.buf[i]")};
+                            }
                             printf("]");
                         }
                         """
@@ -845,6 +848,7 @@ fun coder_main (pre: Boolean): String {
         #include <stdio.h>
         #include <stdlib.h>
         #include <stdarg.h>
+        #include <string.h>
         
         #undef MAX
         #undef MIN

@@ -186,6 +186,14 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun bb_09_nat_equal() {
+        val out = test("""
+            ensure(`1` == 1)
+            print(10)
+        """)
+        assert(out == "10\n") { out }
+    }
 
     // CALL / PRINT / IF / LOOP / MATCH
 
@@ -679,6 +687,14 @@ class Exec  {
             f(#[1,2,3])
         """)
         assert(out == "2\n2\n") { out }
+    }
+    @Test
+    fun gh_10_vector_print () {
+        val out = test("""
+            var a: #[2*Int] = #[10]
+            print(a)
+        """)
+        assert(out == "#[10]\n") { out }
     }
 
     // DATA
