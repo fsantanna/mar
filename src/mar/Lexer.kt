@@ -180,19 +180,22 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                 val id = read2While { a -> a.isLetter() }
                 when (id) {
                      "include" -> {
-                        val (_, x2) = read2()
-                        if (x2 != '(') {
-                            err(pos, "include error : expected \"(\"")
-                        }
-                        val f = read2Until(')')
-                        if (f == null) {
-                            err(pos, "include error : exoected \")\"")
-                        }
-                        val h = FileX(f, stack.first().file.let { if (it==null) null else File(it).parentFile?.toString() })
-                        if (h == null) {
-                            err(pos, "include error : file not found : $f")
-                        }
-                        stack.addFirst(Lex(f, 1, 1, 0, 0, PushbackReader(StringReader(h.readText()), 2)))
+                         val (_, x2) = read2()
+                         if (x2 != '(') {
+                             err(pos, "include error : expected \"(\"")
+                         }
+                         val f = read2Until(')')
+                         if (f == null) {
+                             err(pos, "include error : exoected \")\"")
+                         }
+                         val h = FileX(f, stack.first().file.let { if (it==null) null else File(it).parentFile?.toString() })
+                         if (h == null) {
+                             err(pos, "include error : file not found : $f")
+                         }
+                         if (!G.incs.contains(h.path)) {
+                             G.incs.add(h.path)
+                             stack.addFirst(Lex(f, 1, 1, 0, 0, PushbackReader(StringReader(h.readText()), 2)))
+                         }
                     }
                     "compile" -> {
                         val (_, x2) = read2()

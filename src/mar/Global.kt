@@ -159,6 +159,7 @@ object G {
     var tks: Iterator<Tk>? = null
     var tk0: Tk? = null
     var tk1: Tk? = null
+    val incs: MutableSet<String> = mutableSetOf()
 
     var outer: Stmt.Block? = null
 
@@ -177,6 +178,7 @@ object G {
         tks = null
         tk0 = null
         tk1 = null
+        incs.clear()
 
         outer = null
 

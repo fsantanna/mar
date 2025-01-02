@@ -294,4 +294,24 @@ class Lexer {
         val tks = ("^include(\\x\\\\n.mar)").lexer()
         assert(trap { tks.next() } == "anon : (lin 1, col 1) : include error : file not found : \\x\\\\n.mar")
     }
+    @Test
+    fun hh_05_inc_dub() {
+        G.incs.clear()
+        File("/tmp/x.tst").printWriter().use { out ->
+            out.println("1")
+            out.println("2")
+            out.println("")
+        }
+        val tks = """
+            before
+            ^include(/tmp/x.tst)
+            ^include(/tmp/x.tst)
+            after
+        """.trimIndent().lexer()
+        assert(tks.next().let { it is Tk.Var && it.pos.file=="anon"       && it.pos.lin==1 && it.pos.col==1 && it.str == "before" })
+        assert(tks.next().let { it is Tk.Num && it.pos.file=="/tmp/x.tst" && it.pos.lin==1 && it.pos.col==1 && it.str == "1" })
+        assert(tks.next().let { it is Tk.Num && it.pos.file=="/tmp/x.tst" && it.pos.lin==2 && it.pos.col==1 && it.str == "2" })
+        assert(tks.next().let { it is Tk.Var && it.pos.file=="anon"       && it.pos.lin==4 && it.pos.col==1 && it.str == "after" })
+        assert(tks.next().let { it is Tk.Eof && it.pos.lin==4 && it.pos.col==6 })
+    }
 }

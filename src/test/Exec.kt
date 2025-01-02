@@ -582,6 +582,14 @@ class Exec  {
         """)
         assert(out == "[3]\n") { out }
     }
+    @Test
+    fun TODO_gg_10_tuple_field () {
+        val out = test("""
+            var a: [x:Int] = [x=10]
+            print(a)
+        """)
+        assert(out == "[3]\n") { out }
+    }
 
     // VECTOR
 
