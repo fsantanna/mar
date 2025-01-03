@@ -20,7 +20,8 @@ fun infer (me: String): String? {
         ) + ss)
         cache_ups()
         check_vars()
-        infer_types()
+        infer_apply()
+        infer_check()
         //check_types()
     }
     //return null

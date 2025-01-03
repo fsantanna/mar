@@ -20,7 +20,7 @@ fun check (me: String): String? {
         ) + ss)
         cache_ups()
         check_vars()
-        infer_types()
+        infer_apply()
         check_types()
     }
     //return null

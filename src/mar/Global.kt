@@ -239,8 +239,9 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
         ) + ss)
         cache_ups()
         check_vars()
-        infer_types()
+        infer_apply()
         check_types()
+        infer_check()
     } catch (e: Throwable) {
         if (THROW) {
             throw e

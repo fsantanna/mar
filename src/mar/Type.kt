@@ -268,7 +268,7 @@ fun Expr.type (): Type? {
             when (it) {
                 is Type.Nat, is Type.Any -> it
                 is Type.Proto.Func -> it.out
-                else -> error("impossible case")
+                else -> null
             }
         }
         is Expr.Throw -> this.xtp
@@ -281,16 +281,17 @@ fun Expr.type (): Type? {
                 when (it) {
                     is Type.Tuple -> it
                     is Type.Data  -> it.walk()!!.third
-                    else -> error("impossible case")
+                    else -> null
                 }
             }
-            tup as Type.Tuple
-            tup.index(idx)
+            if (tup !is Type.Tuple) null else {
+                tup.index(idx)
+            }
         }
         is Expr.Index -> this.col.type().let {
             if (it !is Type.Vector) null else { it.tp }
         }
-        is Expr.Disc  -> this.col.type()?.discx(this.idx)!!.second
+        is Expr.Disc  -> this.col.type()?.discx(this.idx)?.second
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos))
         is Expr.Cons  -> this.walk(ts)!!.let { (s,_,_) ->
             if (s.subs == null) {
@@ -312,14 +313,18 @@ fun Expr.type (): Type? {
         }
 
         is Expr.Create -> {
-            val co = this.co.type() as Type.Proto.Coro
-            Type.Exec(co.tk, co.inps, co.res, co.yld, co.out)
+            val co = this.co.type()
+            if (co !is Type.Proto.Coro) null else {
+                Type.Exec(co.tk, co.inps, co.res, co.yld, co.out)
+            }
         }
         is Expr.Start -> (this.exe.type() as Type.Exec).let {
             Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
         }
-        is Expr.Resume -> (this.exe.type() as Type.Exec).let {
-            Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
+        is Expr.Resume -> this.exe.type().let {
+            if (it !is Type.Exec) null else {
+                Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
+            }
         }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
         is Expr.If -> {
