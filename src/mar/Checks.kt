@@ -263,8 +263,30 @@ fun check_types () {
                     err(me.e.tk, "constructor error : types mismatch")
                 }
             }
-            is Expr.Bin -> if (!me.args(me.e1.typex(), me.e2.typex())) {
-                err(me.tk, "operation error : types mismatch")
+            is Expr.Bin -> {
+                val tp1 = me.e1.typex()
+                val tp2 = me.e2.typex()
+                val ok = when (me.tk_.str) {
+                    "==", "!=" -> tp1.is_sup_sub_of(tp2)
+                    ">", "<", ">=", "<=",
+                    "+", "-", "*", "/", "%" -> (tp1.is_num() && tp2.is_num())
+                    "||", "&&" -> {
+                        tp1.is_sup_of(Type.Prim(Tk.Type( "Bool", me.tk.pos))) &&
+                        tp2.is_sup_of(Type.Prim(Tk.Type( "Bool", me.tk.pos)))
+                    }
+                    "++" -> {
+                        when {
+                            (tp1 is Type.Vector && tp2 is Type.Vector) -> {
+                                (tp1.max!=null && tp2.max!=null && tp1.tp.is_same_of(tp2.tp))
+                            }
+                            else -> false
+                        }
+                    }
+                    else -> error("impossible case")
+                }
+                if (!ok) {
+                    err(me.tk, "operation error : types mismatch")
+                }
             }
             is Expr.Call -> {
                 val tp = me.f.type()

@@ -7,15 +7,17 @@ func ensure: (v: Bool) -> () {
     }
 }
 
+;; STRING
+
 func string_from_int: (v: Int) -> #[32*Char] {
     var ret: #[32*Char]
-    `ret.cur = 1 + snprintf(ret.buf, 32, "%d", v)`
+    `ret.cur = snprintf(ret.buf, 32, "%d", v)`
     return(ret)
 }
 
 test {
     var str = string_from_int(10)
-    ensure(#str == 3)
+    ensure(#str == 2)
     ensure(##str == 32)
     ensure(str[0] == '1')
     ensure(str[1] == '0')
@@ -23,7 +25,14 @@ test {
 }
 
 func string_empty: () -> #[1*Char] {
-    return(#['\0'])
+    var ret = #['\0']
+    set #ret = 0
+    return(ret)
+}
+
+test {
+    var str: #[10*Char] = string_empty()
+    ensure((##str==10) && (#str==1) && (str[0]=='\0'))
 }
 
 func string_cat_pointer: (s: \#[Char], p: \Char) -> () {
@@ -39,7 +48,6 @@ func string_cat_pointer: (s: \#[Char], p: \Char) -> () {
 
 test {
     var str: #[10*Char] = string_empty()
-    ensure((##str==10) && (#str==1) && (str[0]=='\0'))
 
     string_cat_pointer(\str, "xxx")
     ensure(`strcmp(str.buf, "xxx")` == 0)

@@ -703,11 +703,40 @@ class Exec  {
     fun gi_01_concat () {
         val out = test("""
             var a: #[3*Int] = #[1,2]
-            var b = #[3,4]
-            print([#a,#b])
-            print(a ++ b)
+            var c = a ++ #[3,4]
+            print([#a,#c,##c])
+            print(c)
         """)
-        assert(out == "[2,3]\n#[1,2,3,4]\n") { out }
+        assert(out == "[2,4,5]\n#[1,2,3,4]\n") { out }
+    }
+    @Test
+    fun gi_02_concat () {
+        val out = test("""
+            var a: #[3*Char] = #['a','b']
+            var c = a ++ #['c','d','\0']
+            print([#c,##c])
+            `puts(c.buf)`
+        """)
+        assert(out == "[5,5]\nabcd\n") { out }
+    }
+    @Test
+    fun gi_03_concat () {
+        val out = test("""
+            var a: #[3*Char] = #['a','b']
+            var c = a ++ "cd"
+            print([#c,##c])
+            `puts(c.buf)`
+        """)
+        assert(out == "abcd\n") { out }
+    }
+    @Test
+    fun gi_04_concat () {
+        val out = test("""
+            var c = "ab" ++ "cd"
+            print([#c,##c])
+            `puts(c.buf)`
+        """)
+        assert(out == "abcd\n") { out }
     }
 
     // DATA

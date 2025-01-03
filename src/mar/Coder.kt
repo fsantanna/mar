@@ -146,6 +146,31 @@ fun coder_types (pre: Boolean): String {
             else -> emptyList()
         }
     }
+    fun fe (me: Expr): List<String> {
+        return when (me) {
+            is Expr.Bin -> {
+                if (me.tk.str == "++") {
+                    val tp = me.typex() as Type.Vector
+                    val x = tp.coder(pre)
+                    if (G.types.contains(x)) {
+                        return emptyList()
+                    } else {
+                        G.types.add(x)
+                    }
+                    val y = tp.tp.coder(pre)
+                    return listOf("""
+                        typedef struct $x {
+                            int max, cur;
+                            $y buf[${tp.max!!}];
+                        } $x;
+                    """)
+                } else {
+                    emptyList()
+                }
+            }
+            else -> emptyList()
+        }
+    }
     fun fs (me: Stmt): List<String> {
         return when (me) {
             is Stmt.Data -> when {
@@ -260,7 +285,7 @@ fun coder_types (pre: Boolean): String {
             else -> emptyList()
         }
     }
-    val ts = G.outer!!.dn_collect_pos(::fs, {emptyList()}, ::ft)
+    val ts = G.outer!!.dn_collect_pos(::fs, ::fe, ::ft)
     return ts.joinToString("")
 }
 
@@ -618,7 +643,43 @@ fun Expr.coder (pre: Boolean): String {
                 else -> "(" + this.tk.str.op_mar_to_c() + this.e.coder(pre) + ")"
             }
         }
-        is Expr.Bin -> "(" + this.e1.coder(pre) + " " + this.tk.str.op_mar_to_c() + " " + this.e2.coder(pre) + ")"
+        is Expr.Bin -> {
+            val e1 = this.e1.coder(pre)
+            val e2 = this.e2.coder(pre)
+            when (this.tk.str) {
+                "++" -> {
+                    val tp = this.typex() as Type.Vector
+                    val one = tp.tp.coder(pre)
+                    val xe1 = if (this.e1.typex() is Type.Vector) {
+                        "mar_vector_cat_vector((MAR_Vector*)&mar_$n, (MAR_Vector*)&mar_e1_$n, sizeof($one));"
+                    } else {
+                        "mar_vector_cat_pointer((MAR_Vector*)&mar_$n, mar_e1_$n, strlen(mar_e1_$n), sizeof($one));"
+                    }
+                    val xe2 = if (this.e2.typex() is Type.Vector) {
+                        "mar_vector_cat_vector((MAR_Vector*)&mar_$n, (MAR_Vector*)&mar_e2_$n, sizeof($one));"
+                    } else {
+                        "mar_vector_cat_pointer((MAR_Vector*)&mar_$n, mar_e2_$n, strlen(mar_e2_$n), sizeof($one));"
+                    }
+                    """
+                    ({
+                        ${tp.coder(pre)} mar_$n = { .max=${tp.max}, .cur=0 };
+                        typeof($e1) mar_e1_$n = $e1;
+                        typeof($e2) mar_e2_$n = $e2;
+                        $xe1
+                        $xe2
+                        ${((tp.tp is Type.Prim) && (tp.tp.tk.str == "Char")).cond { 
+                            """
+                            if (mar_$n.cur < mar_$n.max) {
+                                mar_$n.buf[mar_$n.cur] = '\0';
+                            }
+                            """
+                         }}
+                        mar_$n;
+                    })
+                    """                }
+                else -> "(" + e1 + " " + this.tk.str.op_mar_to_c() + " " + e2 + ")"
+            }
+        }
         is Expr.Call -> {
             val inps = this.f.type().let {
                 if (it !is Type.Proto) null else {
@@ -899,7 +960,22 @@ fun coder_main (pre: Boolean): String {
             char _[100];
         } Exception;
         Exception MAR_EXCEPTION = { __MAR_EXCEPTION_NONE__ };
-
+        
+        typedef struct MAR_Vector {
+            int max, cur;
+            char buf[];
+        } MAR_Vector;
+        
+        void mar_vector_cat_pointer (MAR_Vector* dst, char* src, int len, int size) {
+            int n = MIN(dst->max-dst->cur, len);
+            memcpy(&dst->buf[dst->cur*size], src, n*size);
+            dst->cur += n;
+        }
+        
+        void mar_vector_cat_vector (MAR_Vector* dst, MAR_Vector* src, int size) {
+            mar_vector_cat_pointer(dst, src->buf, src->cur, size);
+        }
+        
         int main (void) {
             do {
                 ${G.outer!!.coder(pre)}
