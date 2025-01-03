@@ -626,7 +626,7 @@ class Check {
         val out = check("""
             do(1++1)
         """)
-        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 2, col 17) : operation error : types mismatch") { out!! }
     }
 
     // UNION

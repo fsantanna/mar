@@ -158,8 +158,12 @@ fun check_types () {
                 }
             }
             is Stmt.Set -> {
-                if (!me.dst.typex().is_sup_of(me.src.typex())) {
-                    err(me.tk, "set error : types mismatch")
+                val dst = me.dst.type()
+                val src = me.src.type()
+                if (dst!=null && src!=null) {
+                    if (!dst.is_sup_of(src)) {
+                        err(me.tk, "set error : types mismatch")
+                    }
                 }
             }
             is Stmt.If -> {

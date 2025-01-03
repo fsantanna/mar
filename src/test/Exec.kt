@@ -1555,7 +1555,8 @@ class Exec  {
             var b = []
             var c = b.x     ;; infer exception, do not check infer
         """)
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
+        assert(out == "anon : (lin 4, col 22) : field error : invalid index\n") { out }
+        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
         //assert(out == "anon : (lin 2, col 17) : inference error : unknown type\n") { out }
     }
     @Test
