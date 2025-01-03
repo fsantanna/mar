@@ -13,8 +13,8 @@ fun Expr.infer (tp: Type?): Type? {
         is Expr.Acc -> this.tk_.type(this)
 
         is Expr.Bool, is Expr.Str, is Expr.Chr,
-        is Expr.Null, is Expr.Unit -> this.type()
-        is Expr.Num -> this.type() //.let { it.num_cast(tp).sup_vs(it)!! }
+        is Expr.Null, is Expr.Unit -> this.typex()
+        is Expr.Num -> this.typex() //.let { it.num_cast(tp).sup_vs(it)!! }
 
         is Expr.Tuple -> {
             val up = this.xtp ?: tp
@@ -255,14 +255,16 @@ fun Expr.infer (tp: Type?): Type? {
             }
         }
     }.let {
+        val xtp = it ?: this.type()
+        //println(xtp)
         this.xnum = when {
-            (it == null) -> null
+            (xtp == null) -> null
             (tp == null) -> null
-            !it.is_num() -> null
+            !xtp.is_num() -> null
             !tp.is_num() -> null
             else -> tp
         }
-        it
+        xtp
     }
 }
 

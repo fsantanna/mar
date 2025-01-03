@@ -287,7 +287,9 @@ fun Expr.type (): Type? {
             tup as Type.Tuple
             tup.index(idx)
         }
-        is Expr.Index -> (this.col.type() as Type.Vector?)?.tp
+        is Expr.Index -> this.col.type().let {
+            if (it !is Type.Vector) null else { it.tp }
+        }
         is Expr.Disc  -> this.col.type()?.discx(this.idx)!!.second
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos))
         is Expr.Cons  -> this.walk(ts)!!.let { (s,_,_) ->
@@ -320,7 +322,13 @@ fun Expr.type (): Type? {
             Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
         }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
-        is Expr.If -> this.t.type()?.sup_vs(this.f.type()!!)
+        is Expr.If -> {
+            val tt = this.t.type()
+            val tf = this.f.type()
+            if (tt == null || tf == null) null else {
+                tt.sup_vs(tf)
+            }
+        }
         is Expr.MatchT -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a?.sup_vs(b!!)})
         is Expr.MatchE -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a?.sup_vs(b!!)})
     }.let {
