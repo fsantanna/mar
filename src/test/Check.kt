@@ -151,6 +151,13 @@ class Check {
         )
         assert(out == null) { out!! }
     }
+    @Test
+    fun ab_03_add() {
+        val out = check("""
+            do(true + false)
+        """)
+        assert(out == "anon : (lin 2, col 21) : operation error : types mismatch") { out!! }
+    }
 
     // FUNC / CALL
 
@@ -608,6 +615,16 @@ class Check {
         val out = check("""
             var v: #[1*Int]
             var x: Bool = ##v
+        """)
+        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+    }
+
+    // CONCATENATE
+
+    @Test
+    fun cd_01_concat_err () {
+        val out = check("""
+            do(1++1)
         """)
         assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
     }

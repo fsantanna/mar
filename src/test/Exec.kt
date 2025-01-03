@@ -697,6 +697,19 @@ class Exec  {
         assert(out == "#[10]\n") { out }
     }
 
+    // CONCATENATE
+
+    @Test
+    fun gi_01_concat () {
+        val out = test("""
+            var a: #[3*Int] = #[1,2]
+            var b = #[3,4]
+            print([#a,#b])
+            print(a ++ b)
+        """)
+        assert(out == "[2,3]\n#[1,2,3,4]\n") { out }
+    }
+
     // DATA
 
     @Test

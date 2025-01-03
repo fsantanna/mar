@@ -317,6 +317,13 @@ class Parser {
         val e = parser_expr()
         assert(e.to_str() == "(!(-x))")
     }
+    @Test
+    fun cc_04_concat() {
+        G.tks = ("a ++ b").lexer()
+        parser_lexer()
+        val e = parser_expr_1_bin()
+        assert(e.to_str() == "(a ++ b)") { e.to_str() }
+    }
 
     // DO
 

@@ -130,7 +130,7 @@ fun Expr.infer (tp: Type?): Type? {
         }
         is Expr.Bin -> {
             val xtp = when (this.tk.str) {
-                "+", "-", "*", "/", "%" -> tp
+                "+", "-", "*", "/", "%", "++" -> tp
                 else -> null
             }
             val e1 = this.e1.infer(xtp)

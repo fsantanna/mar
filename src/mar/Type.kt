@@ -87,6 +87,14 @@ fun Expr.Bin.args (tp1: Type, tp2: Type): Boolean {
             tp1.is_sup_of(Type.Prim(Tk.Type( "Bool", this.tk.pos))) &&
             tp2.is_sup_of(Type.Prim(Tk.Type( "Bool", this.tk.pos)))
         }
+        "++" -> {
+            when {
+                (tp1 is Type.Vector && tp2 is Type.Vector) -> {
+                    tp1.max == null && tp2.max == null && tp1.tp.is_same_of(tp2.tp)
+                }
+                else -> false
+            }
+        }
         else -> error("impossible case")
     }
 }
@@ -238,6 +246,16 @@ fun Expr.type (): Type {
                     Type.Prim(Tk.Type("Float", this.tk.pos))
                 } else {
                     Type.Prim(Tk.Type("Int", this.tk.pos))
+                }
+            }
+            "++" -> {
+                val tp1 = this.e1.type()
+                val tp2 = this.e2.type()
+                when {
+                    (tp1 is Type.Vector && tp2 is Type.Vector) -> {
+                        Type.Vector(this.tk, tp1.max!! + tp2.max!!, tp1.tp)
+                    }
+                    else -> error("impossible case")
                 }
             }
             else -> error("impossible case")
