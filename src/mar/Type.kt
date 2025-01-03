@@ -224,13 +224,17 @@ fun Type.Union.disc (idx: String): Pair<Int, Type>? {
     }
 }
 
-fun Expr.type (): Type {
+fun Expr.typex (): Type {
+    return this.type()!!
+}
+
+fun Expr.type (): Type? {
     return when (this) {
         is Expr.Uno -> when (this.tk_.str) {
             "!" -> Type.Prim(Tk.Type( "Bool", this.tk.pos))
             "-" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
-            "ref" -> Type.Pointer(this.tk, this.e.type())
-            "deref" -> (this.e.type() as Type.Pointer).ptr
+            "ref" -> Type.Pointer(this.tk, this.e.type()!!)
+            "deref" -> this.e.type().let { if (it !is Type.Pointer) null else it.ptr }
             "#" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
             "##" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
             else -> error("impossible case")
@@ -255,7 +259,7 @@ fun Expr.type (): Type {
                     (tp1 is Type.Vector && tp2 is Type.Vector) -> {
                         Type.Vector(this.tk, tp1.max!! + tp2.max!!, tp1.tp)
                     }
-                    else -> error("impossible case")
+                    else -> null
                 }
             }
             else -> error("impossible case")
@@ -267,11 +271,11 @@ fun Expr.type (): Type {
                 else -> error("impossible case")
             }
         }
-        is Expr.Throw -> this.xtp!!
+        is Expr.Throw -> this.xtp
 
-        is Expr.Tuple -> this.xtp!!
-        is Expr.Vector -> this.xtp!!
-        is Expr.Union -> this.xtp!!
+        is Expr.Tuple -> this.xtp
+        is Expr.Vector -> this.xtp
+        is Expr.Union -> this.xtp
         is Expr.Field -> {
             val tup = this.col.type().let {
                 when (it) {
@@ -281,10 +285,10 @@ fun Expr.type (): Type {
                 }
             }
             tup as Type.Tuple
-            tup.index(idx)!!
+            tup.index(idx)
         }
-        is Expr.Index -> (this.col.type() as Type.Vector).tp
-        is Expr.Disc  -> this.col.type().discx(this.idx)!!.second
+        is Expr.Index -> (this.col.type() as Type.Vector?)?.tp
+        is Expr.Disc  -> this.col.type()?.discx(this.idx)!!.second
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos))
         is Expr.Cons  -> this.walk(ts)!!.let { (s,_,_) ->
             if (s.subs == null) {
@@ -293,11 +297,11 @@ fun Expr.type (): Type {
                 Type.Data(this.tk, this.ts)
             }
         }
-        is Expr.Acc -> this.tk_.type(this)!!
+        is Expr.Acc -> this.tk_.type(this)
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos))
         is Expr.Str -> Type.Pointer(this.tk, Type.Prim(Tk.Type( "Char", this.tk.pos)))
         is Expr.Chr -> Type.Prim(Tk.Type( "Char", this.tk.pos))
-        is Expr.Nat -> this.xtp!! //?: Type.Nat(Tk.Nat("TODO",this.tk.pos))
+        is Expr.Nat -> this.xtp //?: Type.Nat(Tk.Nat("TODO",this.tk.pos))
         is Expr.Null -> Type.Pointer(this.tk, Type.Any(this.tk))
         is Expr.Unit -> Type.Unit(this.tk)
         is Expr.Num -> {
@@ -316,12 +320,12 @@ fun Expr.type (): Type {
             Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
         }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
-        is Expr.If -> this.t.type().sup_vs(this.f.type())!!
-        is Expr.MatchT -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a.sup_vs(b)!!})
-        is Expr.MatchE -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a.sup_vs(b)!!})
+        is Expr.If -> this.t.type()?.sup_vs(this.f.type()!!)
+        is Expr.MatchT -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a?.sup_vs(b!!)})
+        is Expr.MatchE -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a?.sup_vs(b!!)})
     }.let {
-        if (it.xup == null) {
-            it.xup = this
+        if (it?.xup == null) {
+            it?.xup = this
         }
         it
     }

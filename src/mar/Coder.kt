@@ -382,8 +382,8 @@ fun Stmt.coder (pre: Boolean): String {
         is Stmt.Set    -> {
             val dst = this.dst.coder(pre)
             val src = this.src.coder(pre)
-            val tdst = this.dst.type()
-            val tsrc = this.src.type()
+            val tdst = this.dst.typex()
+            val tsrc = this.src.typex()
             when {
                 this.src.let { it is Expr.Yield || it is Expr.MatchT || it is Expr.MatchE } -> {
                     assert(tsrc !is Type.Vector)
@@ -585,7 +585,7 @@ fun Stmt.coder (pre: Boolean): String {
                     else -> TODO("3")
                 }
             }
-            aux(this.e.type(), this.e.coder(pre)) + """
+            aux(this.e.typex(), this.e.coder(pre)) + """
                 puts("");
             """
         }
@@ -628,7 +628,7 @@ fun Expr.coder (pre: Boolean): String {
             val call = "${this.f.coder(pre)} ( ${this.args.mapIndexed { i,arg ->
                 val src = arg.coder(pre)
                 val tdst = if (inps == null) null else inps[i]
-                val tsrc = arg.type()
+                val tsrc = arg.typex()
                 when {
                     (tdst == null) -> src
                     tdst.is_num() -> src
@@ -647,19 +647,19 @@ fun Expr.coder (pre: Boolean): String {
             """
         }
 
-        is Expr.Tuple  -> "((${this.type().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
-        is Expr.Vector -> (this.type() as Type.Vector).let {
+        is Expr.Tuple  -> "((${this.typex().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
+        is Expr.Vector -> (this.typex() as Type.Vector).let {
             "((${it.coder(pre)}) { .max=${it.max}, .cur=${it.max}, .buf={${this.vs.map { it.coder(pre) }.joinToString(",") }} })"
         }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
-            "((${this.type().coder(pre)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"
+            "((${this.typex().coder(pre)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"
         }
         is Expr.Field  -> {
             val idx = this.idx.toIntOrNull().let {
                 if (it == null) this.idx else "_"+it
             }
-            val tp = this.col.type()
+            val tp = this.col.typex()
             if (tp !is Type.Data) {
                 "(${this.col.coder(pre)}.$idx)"
             } else {
@@ -675,7 +675,7 @@ fun Expr.coder (pre: Boolean): String {
         }
         is Expr.Index  -> "${this.col.coder(pre)}.buf[${this.idx.coder(pre)}]"
         is Expr.Disc   -> {
-            val tp = this.col.type()
+            val tp = this.col.typex()
             val ret = if (tp !is Type.Data) {
                 val (i,_) = tp.discx(this.idx)!!
                 "${this.col.coder(pre)}._${i+1}"
@@ -694,7 +694,7 @@ fun Expr.coder (pre: Boolean): String {
             """
         }
         is Expr.Pred   -> {
-            val (i,_) = this.col.type().discx(this.idx)!!
+            val (i,_) = this.col.typex().discx(this.idx)!!
             "(${this.col.coder(pre)}.tag==${i+1})"
         }
         is Expr.Cons   -> {
@@ -744,7 +744,7 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Null -> this.to_str(pre)
         is Expr.Num -> this.to_str(pre).let {
             if (this.xnum == null) it else {
-                val tp = this.type()
+                val tp = this.typex()
                 val sup = tp.sup_vs(this.xnum!!)
                 if (sup == tp) it else {
                     "((" + sup!!.coder(pre) + ")" + it + ")"
@@ -754,7 +754,7 @@ fun Expr.coder (pre: Boolean): String {
 
         is Expr.Throw -> """
             ({
-                assert(sizeof(Exception) >= sizeof(${this.e.type().coder(pre)}));
+                assert(sizeof(Exception) >= sizeof(${this.e.typex().coder(pre)}));
                 MAR_EXCEPTION = MAR_CAST(Exception, ${this.e.coder(pre)});
                 continue;
                 ${this.xtp!!.coder(pre)} mar_$n ; mar_$n;
@@ -762,7 +762,7 @@ fun Expr.coder (pre: Boolean): String {
         """
 
         is Expr.Create -> {
-            val xtp = (this.xup as Stmt.Set).dst.type().coder(pre)
+            val xtp = (this.xup as Stmt.Set).dst.typex().coder(pre)
             """
             ($xtp) { 0, ${this.co.coder(pre)}, {} };
             """
@@ -796,13 +796,13 @@ fun Expr.coder (pre: Boolean): String {
                 mar_exe->pc = ${this.n};
                 return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
             case ${this.n}:
-                ${this.type().coder(pre)} mar_$n = mar_arg._2;
+                ${this.typex().coder(pre)} mar_$n = mar_arg._2;
             """
         }
 
         is Expr.If -> "((${this.cnd.coder(pre)}) ? (${this.t.coder(pre)}) : (${this.f.coder(pre)}))"
         is Expr.MatchT -> """
-            ${this.type().coder(pre)} mar_$n;
+            ${this.typex().coder(pre)} mar_$n;
             switch (${this.tst.coder(pre)}.tag) {
                 ${this.cases.map { (tst,e) -> """
                     ${tst.cond2({"case MAR_TAG_${it.ts.coder(pre).uppercase()}"},{"default"})}:
@@ -812,7 +812,7 @@ fun Expr.coder (pre: Boolean): String {
             }
         """
         is Expr.MatchE -> """
-            ${this.type().coder(pre)} mar_$n;
+            ${this.typex().coder(pre)} mar_$n;
             switch (${this.tst.coder(pre)}) {
                 ${this.cases.map { (tst,e) -> """
                     ${tst.cond2({"case ${it.coder(pre)}"},{"default"})}:
@@ -825,7 +825,7 @@ fun Expr.coder (pre: Boolean): String {
         when (this) {
             is Expr.Num, is Expr.MatchT, is Expr.MatchE, is Expr.Yield -> it
             else -> {
-                val tp = this.type()
+                val tp = this.typex()
                 when {
                     (this.xnum == null) -> it
                     (this.xnum!!.tk.str == tp.tk.str) -> it

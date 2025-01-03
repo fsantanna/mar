@@ -1563,7 +1563,8 @@ class Exec  {
         val out = test("""
         do(1\)
         """)
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
+        assert(out == "anon : (lin 2, col 13) : operation error : expected pointer\n") { out }
+        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
         //assert(out == "anon : (lin 2, col 17) : inference error : unknown type\n") { out }
     }
 }

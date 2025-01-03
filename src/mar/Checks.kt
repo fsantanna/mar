@@ -158,17 +158,17 @@ fun check_types () {
                 }
             }
             is Stmt.Set -> {
-                if (!me.dst.type().is_sup_of(me.src.type())) {
+                if (!me.dst.typex().is_sup_of(me.src.typex())) {
                     err(me.tk, "set error : types mismatch")
                 }
             }
             is Stmt.If -> {
-                if (!me.cnd.type().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos)))) {
+                if (!me.cnd.typex().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos)))) {
                     err(me.tk, "if error : expected boolean condition")
                 }
             }
             is Stmt.MatchT -> {
-                val fsts = listOf(me.tst.type()) + me.cases.map { it.first }.filterNotNull()
+                val fsts = listOf(me.tst.typex()) + me.cases.map { it.first }.filterNotNull()
                 val x: Type? = fsts.first()
                 val xs = fsts.fold(x, { a,b -> a?.sup_vs(b) })
                 if (xs == null) {
@@ -176,7 +176,7 @@ fun check_types () {
                 }
             }
             is Stmt.MatchE -> {
-                val fsts = listOf(me.tst.type()) + me.cases.map { it.first }.filterNotNull().map { it.type() }
+                val fsts = listOf(me.tst.typex()) + me.cases.map { it.first }.filterNotNull().map { it.typex() }
                 val x: Type? = fsts.first()
                 val xs = fsts.fold(x, { a,b -> a?.sup_vs(b) })
                 if (xs == null) {
@@ -198,13 +198,16 @@ fun check_types () {
         when (me) {
             is Expr.Uno -> {
                 when (me.tk.str) {
+                    "deref" -> if (me.e.type() !is Type.Pointer) {
+                        err(me.tk, "operation error : expected pointer")
+                    }
                     "#" -> if (me.e.type() !is Type.Vector) {
                         err(me.tk, "operation error : expected vector")
                     }
                 }
             }
             is Expr.Tuple -> {
-                val tp = Type.Tuple(me.tk, me.vs.map { (id,v) -> Pair(id, v.type()) })
+                val tp = Type.Tuple(me.tk, me.vs.map { (id,v) -> Pair(id, v.typex()) })
                 if (!tp.is_sup_of(me.xtp!!)) {  // tp=[10]: xtp=[a:Int], correct is xtp.sup(tp), but not for tuple cons
                     err(me.tk, "tuple error : types mismatch")
                 }
@@ -229,34 +232,34 @@ fun check_types () {
             }
             is Expr.Index -> {
                 when {
-                    (me.col.type() !is Type.Vector) -> err(me.col.tk, "index error : expected vector")
-                    (!me.idx.type().is_num()) -> err(me.idx.tk, "index error : expected number")
+                    (me.col.typex() !is Type.Vector) -> err(me.col.tk, "index error : expected vector")
+                    (!me.idx.typex().is_num()) -> err(me.idx.tk, "index error : expected number")
                 }
             }
             is Expr.Union -> {
                 val (_,sub) = me.xtp!!.disc(me.idx).nulls()
-                if (sub==null || !sub.is_sup_of(me.v.type())) {
+                if (sub==null || !sub.is_sup_of(me.v.typex())) {
                     err(me.tk, "union error : types mismatch")
                 }
             }
             is Expr.Disc -> {
-                if (me.col.type().discx(me.idx) == null) {
+                if (me.col.typex().discx(me.idx) == null) {
                     err(me.tk, "discriminator error : types mismatch")
                 }
             }
             is Expr.Pred -> {
-                if (me.col.type().discx(me.idx) == null) {
+                if (me.col.typex().discx(me.idx) == null) {
                     err(me.tk, "predicate error : types mismatch")
                 }
             }
             is Expr.Cons -> {
                 val tp = me.walk(me.ts)!!.third
-                val te = me.e.type()
+                val te = me.e.typex()
                 if (!tp.is_sup_of(te)) {
                     err(me.e.tk, "constructor error : types mismatch")
                 }
             }
-            is Expr.Bin -> if (!me.args(me.e1.type(), me.e2.type())) {
+            is Expr.Bin -> if (!me.args(me.e1.typex(), me.e2.typex())) {
                 err(me.tk, "operation error : types mismatch")
             }
             is Expr.Call -> {
@@ -267,7 +270,7 @@ fun check_types () {
                     (tp !is Type.Proto.Func) -> false
                     (tp.inps.size != me.args.size) -> false
                     else -> tp.inps.zip(me.args).all { (par, arg) ->
-                        par.is_sup_of(arg.type())
+                        par.is_sup_of(arg.typex())
                     }
                 }
                 if (!ok) {
@@ -281,64 +284,64 @@ fun check_types () {
                 }
             }
             is Expr.Start -> {
-                val exe = me.exe.type()
+                val exe = me.exe.typex()
                 if (exe !is Type.Exec) {
                     err(me.tk, "start error : expected active coroutine")
                 }
-                val ok = (exe.inps.size == me.args.size) && exe.inps.zip(me.args).all { (thi,oth) -> thi.is_sup_of(oth.type()) }
+                val ok = (exe.inps.size == me.args.size) && exe.inps.zip(me.args).all { (thi,oth) -> thi.is_sup_of(oth.typex()) }
                 if (!ok) {
                     err(me.tk, "start error : types mismatch")
                 }
             }
             is Expr.Resume -> {
-                val exe = me.exe.type()
+                val exe = me.exe.typex()
                 if (exe !is Type.Exec) {
                     err(me.tk, "resume error : expected active coroutine")
                 }
-                if (!exe.res.is_sup_of(me.arg.type())) {
+                if (!exe.res.is_sup_of(me.arg.typex())) {
                     err(me.tk, "resume error : types mismatch")
                 }
             }
             is Expr.Yield -> {
                 val up = me.up_first { it is Stmt.Proto } as Stmt.Proto.Coro
                 val exe = up.tp_
-                if (!exe.yld.is_sup_of(me.arg.type())) {
+                if (!exe.yld.is_sup_of(me.arg.typex())) {
                     err(me.tk, "yield error : types mismatch")
                 }
             }
             is Expr.If -> {
-                if (!me.cnd.type().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos)))) {
+                if (!me.cnd.typex().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos)))) {
                     err(me.cnd.tk, "if error : expected boolean condition")
                 }
-                if (me.t.type().sup_vs(me.f.type()) == null) {
+                if (me.t.typex().sup_vs(me.f.typex()) == null) {
                     err(me.tk, "if error : types mismatch")
                 }
             }
             is Expr.MatchT -> {
-                val fsts = listOf(me.tst.type()) + me.cases.map { it.first }.filterNotNull()
+                val fsts = listOf(me.tst.typex()) + me.cases.map { it.first }.filterNotNull()
                 val x: Type? = fsts.first()
                 val xs = fsts.fold(x, { a,b -> a?.sup_vs(b) })
                 if (xs == null) {
                     err(me.tk, "match error : types mismatch")
                 }
 
-                val snds = me.cases.map { it.second.type() }
-                val y: Type? = me.cases.first().second.type()
+                val snds = me.cases.map { it.second.typex() }
+                val y: Type? = me.cases.first().second.typex()
                 val ys = snds.fold(y) {a,b -> a?.sup_vs(b) }
                 if (ys == null) {
                     err(me.tk, "match error : types mismatch")
                 }
             }
             is Expr.MatchE -> {
-                val fsts = listOf(me.tst.type()) + me.cases.map { it.first }.filterNotNull().map { it.type() }
+                val fsts = listOf(me.tst.typex()) + me.cases.map { it.first }.filterNotNull().map { it.typex() }
                 val x: Type? = fsts.first()
                 val xs = fsts.fold(x, { a,b -> a?.sup_vs(b) })
                 if (xs == null) {
                     err(me.tk, "match error : types mismatch")
                 }
 
-                val snds = me.cases.map { it.second.type() }
-                val y: Type? = me.cases.first().second.type()
+                val snds = me.cases.map { it.second.typex() }
+                val y: Type? = me.cases.first().second.typex()
                 val ys = snds.fold(y) {a,b -> a?.sup_vs(b) }
                 if (ys == null) {
                     err(me.tk, "match error : types mismatch")
