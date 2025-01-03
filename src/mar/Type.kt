@@ -12,6 +12,14 @@ fun Type.is_num (): Boolean {
     return (this is Type.Nat || this is Type.Any || (this is Type.Prim && nums.contains(this.tk.str)))
 }
 
+fun Type.is_str (): Boolean {
+    return when {
+        (this is Type.Pointer) -> this.ptr.let { it is Type.Prim && it.tk.str=="Char" }
+        (this is Type.Vector)  -> this.tp.let  { it is Type.Prim && it.tk.str=="Char" }
+        else -> false
+    }
+}
+
 fun Type.is_same_of (other: Type): Boolean {
     return when {
         (this is Type.Any && other is Type.Any) -> true
@@ -236,11 +244,23 @@ fun Expr.type (): Type? {
                 val tp2 = this.e2.type()
                 when {
                     (tp1 is Type.Vector && tp2 is Type.Vector) -> {
-                        val one = if ((tp1.tp is Type.Prim) && (tp1.tp.tk.str == "Char")) 1 else 0
-                        Type.Vector(this.tk, tp1.max!! + tp2.max!! - one, tp1.tp)
+                        Type.Vector(this.tk, tp1.max!! + tp2.max!!, tp1.tp)
                     }
-                    else -> null
-                }
+                    (tp1 is Type.Vector && this.e2 is Expr.Str) -> {
+                        Type.Vector(this.tk, tp1.max!! + this.e2.tk.str.length-2, tp1.tp)
+                    }
+                    (tp2 is Type.Vector && this.e1 is Expr.Str) -> {
+                        Type.Vector(this.tk, this.e1.tk.str.length-2 + tp2.max!!, tp2.tp)
+                    }
+                    (this.e1 is Expr.Str && this.e2 is Expr.Str) -> {
+                        Type.Vector(this.tk, this.e1.tk.str.length-2 + this.e2.tk.str.length-2, Type.Prim(Tk.Type("Char", this.tk.pos)))
+                    }
+                    else -> error("impossible case")
+                }.let {
+                    println(this.to_str())
+                    println(it.to_str())
+                    it
+                 }
             }
             else -> error("impossible case")
         }

@@ -279,6 +279,13 @@ fun check_types () {
                             (tp1 is Type.Vector && tp2 is Type.Vector) -> {
                                 (tp1.max!=null && tp2.max!=null && tp1.tp.is_same_of(tp2.tp))
                             }
+                            (tp1 is Type.Vector && me.e2 is Expr.Str) -> {
+                                (tp1.max!=null && tp1.is_str())
+                            }
+                            (tp2 is Type.Vector && me.e1 is Expr.Str) -> {
+                                (tp2.max!=null && tp2.is_str())
+                            }
+                            (me.e1 is Expr.Str && me.e2 is Expr.Str) -> true
                             else -> false
                         }
                     }
