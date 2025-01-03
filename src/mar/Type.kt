@@ -255,12 +255,8 @@ fun Expr.type (): Type? {
                     (this.e1 is Expr.Str && this.e2 is Expr.Str) -> {
                         Type.Vector(this.tk, this.e1.tk.str.length-2 + this.e2.tk.str.length-2, Type.Prim(Tk.Type("Char", this.tk.pos)))
                     }
-                    else -> error("impossible case")
-                }.let {
-                    println(this.to_str())
-                    println(it.to_str())
-                    it
-                 }
+                    else -> null
+                }
             }
             else -> error("impossible case")
         }
