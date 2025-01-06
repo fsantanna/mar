@@ -514,6 +514,18 @@ fun Stmt.coder (pre: Boolean): String {
             ($xtp) { 0, ${this.co.coder(pre)}, {} };
             """
         }
+        is Stmt.Start -> {
+            val exe = this.exe.coder(pre)
+            val tp = this.exe.type() as Type.Exec
+            val (xuni,_) = tp.x_inp_uni(pre)
+            """
+            $exe.co (
+                &$exe, ($xuni) { ._1 = {
+                    ${this.args.map { it.coder(pre) }.joinToString(",")}
+                } }
+            );
+            """
+        }
 
         is Stmt.If     -> """
             if (${this.cnd.coder(pre)}) {
@@ -860,18 +872,6 @@ fun Expr.coder (pre: Boolean): String {
             })
         """
 
-        is Expr.Start -> {
-            val exe = this.exe.coder(pre)
-            val tp = this.exe.type() as Type.Exec
-            val (xuni,_) = tp.x_inp_uni(pre)
-            """
-            $exe.co (
-                &$exe, ($xuni) { ._1 = {
-                    ${this.args.map { it.coder(pre) }.joinToString(",")}
-                } }
-            );
-            """
-        }
         is Expr.Resume -> {
             val exe = this.exe.coder(pre)
             val tp = this.exe.type() as Type.Exec

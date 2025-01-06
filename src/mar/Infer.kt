@@ -12,6 +12,20 @@ fun Stmt.infer (tp: Type?): Type? {
                 }
             }
         }
+        is Stmt.Start -> {
+            val exe = this.exe.infer(null)
+            if (exe is Type.Exec) {
+                this.args.mapIndexed { i,e ->
+                    e.infer(exe.inps[i])
+                }
+                exe.yld
+            } else {
+                this.args.map {
+                    it.infer(null)
+                }
+                null
+            }
+        }
        else -> error("impossible case")
    }
 }
@@ -122,18 +136,6 @@ fun Expr.infer (tp: Type?): Type? {
             this.e.infer(null)
         }
 
-        is Expr.Start -> {
-            val exe = this.exe.infer(null)
-            if (exe is Type.Exec) {
-                this.args.mapIndexed { i,e ->
-                    e.infer(exe.inps[i])
-                }
-            } else {
-                this.args.map {
-                    it.infer(null)
-                }
-            }
-        }
         is Expr.Resume -> {
             val exe = this.exe.infer(null)
             if (exe is Type.Exec) {
@@ -251,6 +253,11 @@ fun infer_apply () {
                     me.co.infer(null)
                 }
            }
+            is Stmt.Start -> {
+                if (me.xup !is Stmt.SetS) {
+                    me.infer(null)
+                }
+            }
 
            is Stmt.Print -> me.e.infer(null)
            is Stmt.Pass -> me.e.infer(Type.Unit(me.tk))

@@ -223,6 +223,9 @@ fun Stmt.type (): Type? {
                 Type.Exec(co.tk, co.inps, co.res, co.yld, co.out)
             }
         }
+        is Stmt.Start -> (this.exe.type() as Type.Exec).let {
+            Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
+        }
         else -> error("impossible case")
     }
 }
@@ -324,9 +327,6 @@ fun Expr.type (): Type? {
             Type.Prim(Tk.Type(x, this.tk.pos))
         }
 
-        is Expr.Start -> (this.exe.type() as Type.Exec).let {
-            Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
-        }
         is Expr.Resume -> this.exe.type().let {
             if (it !is Type.Exec) null else {
                 Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })

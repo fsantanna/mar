@@ -75,6 +75,12 @@ fun cache_ups () {
             }
 
             is Stmt.Create -> me.co.xup = me
+            is Stmt.Start -> {
+                me.exe.xup = me
+                me.args.forEach {
+                    it.xup = me
+                }
+            }
 
             is Stmt.Print -> me.e.xup = me
             is Stmt.Pass -> me.e.xup = me
@@ -129,12 +135,6 @@ fun cache_ups () {
 
             is Expr.Throw -> {
                 me.e.xup = me
-            }
-            is Expr.Start -> {
-                me.exe.xup = me
-                me.args.forEach {
-                    it.xup = me
-                }
             }
             is Expr.Resume -> {
                 me.exe.xup = me

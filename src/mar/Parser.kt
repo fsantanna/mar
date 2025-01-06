@@ -658,19 +658,14 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             accept_fix_err("(")
             val co = parser_expr()
             accept_fix_err(")")
-            listOf(Stmt.SetS(set.first, set.second, Stmt.Create(tk0, co)))
+            listOf(Stmt.Create(tk0, co))
         }
         accept_fix("start") -> {
             val tk0 = G.tk0 as Tk.Fix
             val exe = parser_expr_4_prim()
             accept_fix_err("(")
             val args = parser_list(",",")") { parser_expr() }
-            if (set == null) {
-                listOf(Stmt.Pass(tk0, Expr.Start(tk0, exe, args)))
-            } else {
-                listOf(Stmt.SetE(set.first, set.second, Expr.Start(tk0, exe, args)))
-
-            }
+            listOf(Stmt.Start(tk0, exe, args))
         }
         accept_fix("resume") -> {
             val tk0 = G.tk0 as Tk.Fix
