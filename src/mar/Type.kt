@@ -211,6 +211,22 @@ fun Type.Union.disc (idx: String): Pair<Int, Type>? {
     }
 }
 
+fun Stmt.typex (): Type {
+    return this.type()!!
+}
+
+fun Stmt.type (): Type? {
+    return when (this) {
+        is Stmt.Create -> {
+            val co = this.co.type()
+            if (co !is Type.Proto.Coro) null else {
+                Type.Exec(co.tk, co.inps, co.res, co.yld, co.out)
+            }
+        }
+        else -> error("impossible case")
+    }
+}
+
 fun Expr.typex (): Type {
     return this.type()!!
 }
@@ -308,12 +324,6 @@ fun Expr.type (): Type? {
             Type.Prim(Tk.Type(x, this.tk.pos))
         }
 
-        is Expr.Create -> {
-            val co = this.co.type()
-            if (co !is Type.Proto.Coro) null else {
-                Type.Exec(co.tk, co.inps, co.res, co.yld, co.out)
-            }
-        }
         is Expr.Start -> (this.exe.type() as Type.Exec).let {
             Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
         }

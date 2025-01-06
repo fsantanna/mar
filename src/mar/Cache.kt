@@ -29,7 +29,11 @@ fun cache_ups () {
                     me.xtp!!.xup = me
                 }
             }
-            is Stmt.Set -> {
+            is Stmt.SetE -> {
+                me.dst.xup = me
+                me.src.xup = me
+            }
+            is Stmt.SetS -> {
                 me.dst.xup = me
                 me.src.xup = me
             }
@@ -69,6 +73,8 @@ fun cache_ups () {
                     it.second.xup = me
                 }
             }
+
+            is Stmt.Create -> me.co.xup = me
 
             is Stmt.Print -> me.e.xup = me
             is Stmt.Pass -> me.e.xup = me
@@ -124,7 +130,6 @@ fun cache_ups () {
             is Expr.Throw -> {
                 me.e.xup = me
             }
-            is Expr.Create -> me.co.xup = me
             is Expr.Start -> {
                 me.exe.xup = me
                 me.args.forEach {

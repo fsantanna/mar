@@ -80,7 +80,7 @@ fun check_vars () {
                     }
                 }
             }
-            is Stmt.Set -> {
+            is Stmt.SetE -> {
                 if (me.dst is Expr.Nat && me.dst.tk.str=="mar_ret") {
                     me.dst.xtp = (me.up_first { it is Stmt.Proto } as Stmt.Proto?)?.tp?.out
                 }
@@ -157,7 +157,16 @@ fun check_types () {
                     }
                 }
             }
-            is Stmt.Set -> {
+            is Stmt.SetE -> {
+                val dst = me.dst.type()
+                val src = me.src.type()
+                if (dst!=null && src!=null) {
+                    if (!dst.is_sup_of(src)) {
+                        err(me.tk, "set error : types mismatch")
+                    }
+                }
+            }
+            is Stmt.SetS -> {
                 val dst = me.dst.type()
                 val src = me.src.type()
                 if (dst!=null && src!=null) {
@@ -193,6 +202,12 @@ fun check_types () {
                     if (xxx==null || xxx.first.subs==null) {
                         err(me.tp.tk, "catch error : expected hierarchical data type")
                     }
+                }
+            }
+            is Stmt.Create -> {
+                val co = me.co.type()
+                if (co !is Type.Proto.Coro) {
+                    err(me.tk, "create error : expected coroutine prototype")
                 }
             }
             else -> {}
@@ -308,12 +323,6 @@ fun check_types () {
                 }
                 if (!ok) {
                     err(me.tk, "call error : types mismatch")
-                }
-            }
-            is Expr.Create -> {
-                val co = me.co.type()
-                if (co !is Type.Proto.Coro) {
-                    err(me.tk, "create error : expected coroutine prototype")
                 }
             }
             is Expr.Start -> {

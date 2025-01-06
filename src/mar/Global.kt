@@ -118,7 +118,6 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
 
     class Throw  (tk: Tk, var xtp: Type?, val e: Expr): Expr(G.N++, null, tk, null)
 
-    class Create  (tk: Tk, val co: Expr): Expr(G.N++, null, tk, null)
     class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Expr(G.N++, null, tk, null)
     class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Expr(G.N++, null, tk, null)
     class Yield   (tk: Tk, val arg: Expr): Expr(G.N++, null, tk, null)
@@ -137,7 +136,8 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
 
     class Block  (tk: Tk, val esc: Type.Data?, val ss: List<Stmt>) : Stmt(G.N++, null, tk)
     class Dcl    (tk: Tk, val id: Tk.Var, var xtp: Type?) : Stmt(G.N++, null, tk)
-    class Set    (tk: Tk, val dst: Expr, val src: Expr): Stmt(G.N++, null, tk)
+    class SetE   (tk: Tk, val dst: Expr, val src: Expr): Stmt(G.N++, null, tk)
+    class SetS   (tk: Tk, val dst: Expr, val src: Stmt): Stmt(G.N++, null, tk)
 
     class Escape (tk: Tk, val e: Expr.Cons): Stmt(G.N++, null, tk)
     class Defer  (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, null, tk)
@@ -147,6 +147,8 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Loop   (tk: Tk, val blk: Stmt.Block): Stmt(G.N++, null, tk)
     class MatchT (tk: Tk, val tst: Expr, val cases: List<Pair<Type.Data?,Stmt.Block>>): Stmt(G.N++, null, tk)
     class MatchE (tk: Tk, val tst: Expr, val cases: List<Pair<Expr?,Stmt.Block>>): Stmt(G.N++, null, tk)
+
+    class Create  (tk: Tk, val co: Expr): Stmt(G.N++, null, tk)
 
     class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
     class Pass  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)

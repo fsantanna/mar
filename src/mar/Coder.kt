@@ -404,7 +404,36 @@ fun Stmt.coder (pre: Boolean): String {
             }
             dcl + ini
         }
-        is Stmt.Set    -> {
+        is Stmt.SetE    -> {
+            val dst = this.dst.coder(pre)
+            val src = this.src.coder(pre)
+            val tdst = this.dst.typex()
+            val tsrc = this.src.typex()
+            when {
+                this.src.let { it is Expr.Yield || it is Expr.MatchT || it is Expr.MatchE } -> {
+                    assert(tsrc !is Type.Vector)
+                    this.src.coder(pre) + """
+                        $dst = mar_${this.src.n};
+                    """
+                }
+                tdst.is_num() -> "$dst = $src;"
+                tdst.is_same_of(tsrc) -> "$dst = $src;"
+                (tdst !is Type.Vector || tdst.max==null) -> {
+                    "$dst = MAR_CAST(${tdst.coder(pre)}, $src);"
+                }
+                else -> {
+                    """
+                    {
+                        typeof($dst)* mar_$n = &$dst;
+                        *mar_$n = MAR_CAST(${tdst.coder(pre)}, $src);
+                        mar_$n->max = ${tdst.max};
+                        mar_$n->cur = MIN(mar_$n->max, mar_$n->cur);                        
+                    }                        
+                    """
+                }
+            }
+        }
+        is Stmt.SetS    -> {
             val dst = this.dst.coder(pre)
             val src = this.src.coder(pre)
             val tdst = this.dst.typex()
@@ -476,6 +505,13 @@ fun Stmt.coder (pre: Boolean): String {
                     continue;
                 }
             }
+            """
+        }
+
+        is Stmt.Create -> {
+            val xtp = (this.xup as Stmt.SetS).dst.typex().coder(pre)
+            """
+            ($xtp) { 0, ${this.co.coder(pre)}, {} };
             """
         }
 
@@ -824,12 +860,6 @@ fun Expr.coder (pre: Boolean): String {
             })
         """
 
-        is Expr.Create -> {
-            val xtp = (this.xup as Stmt.Set).dst.typex().coder(pre)
-            """
-            ($xtp) { 0, ${this.co.coder(pre)}, {} };
-            """
-        }
         is Expr.Start -> {
             val exe = this.exe.coder(pre)
             val tp = this.exe.type() as Type.Exec

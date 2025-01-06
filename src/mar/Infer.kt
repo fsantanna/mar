@@ -1,5 +1,21 @@
 package mar
 
+fun Stmt.infer (tp: Type?): Type? {
+    return when (this) {
+        is Stmt.Create -> {
+            val xtp = if (tp !is Type.Exec) null else {
+                this.co.infer(Type.Proto.Coro(tp.tk, tp.inps, tp.res, tp.yld, tp.out))
+            }
+            this.co.infer(xtp).let {
+                if (it !is Type.Proto.Coro) null else {
+                    Type.Exec(co.tk, it.inps, it.res, it.yld, it.out)
+                }
+            }
+        }
+       else -> error("impossible case")
+   }
+}
+
 fun Expr.infer (tp: Type?): Type? {
     when (this) {
         is Expr.Acc, is Expr.Bool, is Expr.Str, is Expr.Chr,
@@ -106,7 +122,6 @@ fun Expr.infer (tp: Type?): Type? {
             this.e.infer(null)
         }
 
-        is Expr.Create -> this.co.infer(null)
         is Expr.Start -> {
             val exe = this.exe.infer(null)
             if (exe is Type.Exec) {
@@ -186,7 +201,22 @@ fun infer_apply () {
 
            is Stmt.Block -> {}
            is Stmt.Dcl -> {}
-           is Stmt.Set -> {
+           is Stmt.SetE -> {
+               val tp1 = me.dst.infer(null)
+               val tp2 = me.src.infer(tp1)
+               if (tp2!=null && tp1==null) {
+                   if (me.dst is Expr.Acc) {
+                       val dcl = me.dst.to_xdcl()!!.first
+                       if (dcl is Stmt.Dcl) {
+                           assert(dcl.xtp == null)
+                           dcl.xtp = tp2
+                       }
+                   } else {
+                       me.dst.infer(null)
+                   }
+               }
+           }
+           is Stmt.SetS -> {
                val tp1 = me.dst.infer(null)
                val tp2 = me.src.infer(tp1)
                if (tp2!=null && tp1==null) {
@@ -214,6 +244,12 @@ fun infer_apply () {
                me.cases.forEach {
                    it.first?.infer(tst)
                }
+           }
+
+           is Stmt.Create -> {
+                if (me.xup !is Stmt.SetS) {
+                    me.co.infer(null)
+                }
            }
 
            is Stmt.Print -> me.e.infer(null)

@@ -482,7 +482,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             check_fix_err("(")
             val e = parser_expr()
             listOf (
-                Stmt.Set(tk0,
+                Stmt.SetE(tk0,
                     Expr.Nat(Tk.Nat("mar_ret", tk0.pos), null),
                     e),
                 Stmt.Escape(tk0,
@@ -523,7 +523,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 check_stmt_is_expr() -> parser_stmt(Pair(tk0,dst))
                 else -> {
                     val src = parser_expr()
-                    listOf(Stmt.Set(tk0, dst, src))
+                    listOf(Stmt.SetE(tk0, dst, src))
                 }
             }
         }
@@ -536,7 +536,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             }
             when {
                 !accept_fix("=") -> listOf(Stmt.Dcl(tk0, id, tp))
-                !check_stmt_is_expr() -> listOf(Stmt.Dcl(tk0, id, tp), Stmt.Set(tk0, Expr.Acc(id), parser_expr()))
+                !check_stmt_is_expr() -> listOf(Stmt.Dcl(tk0, id, tp), Stmt.SetE(tk0, Expr.Acc(id), parser_expr()))
                 else -> {
                     listOf(Stmt.Dcl(tk0,id,tp)) + parser_stmt(Pair(G.tk0!!,Expr.Acc(id)))
                 }
@@ -606,12 +606,12 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 val lim = Tk.Var("mar_lim_${G.N}", n.tk.pos)
                 listOf (
                     Stmt.Dcl(tk0, id, Type.Prim(Tk.Type("Int",id.pos))),
-                    Stmt.Set(tk0, Expr.Acc(id), Expr.Num(Tk.Num("0",id.pos))),
+                    Stmt.SetE(tk0, Expr.Acc(id), Expr.Num(Tk.Num("0",id.pos))),
                     Stmt.Dcl(tk0, lim, Type.Prim(Tk.Type("Int",id.pos))),
-                    Stmt.Set(tk0, Expr.Acc(lim), n),
+                    Stmt.SetE(tk0, Expr.Acc(lim), n),
                     Stmt.Loop(tk0,
                         Stmt.Block(tk0, brk,blk + listOf(
-                            Stmt.Set(tk0, Expr.Acc(id), Expr.Bin(Tk.Op("+",id.pos), Expr.Acc(id), Expr.Num(Tk.Num("1",id.pos)))),
+                            Stmt.SetE(tk0, Expr.Acc(id), Expr.Bin(Tk.Op("+",id.pos), Expr.Acc(id), Expr.Num(Tk.Num("1",id.pos)))),
                             Stmt.If(tk0, Expr.Bin(Tk.Op("==",id.pos), Expr.Acc(id), Expr.Acc(lim)),
                                 Stmt.Block(tk0, null, listOf(
                                     Stmt.Escape(tk0,
@@ -658,7 +658,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             accept_fix_err("(")
             val co = parser_expr()
             accept_fix_err(")")
-            listOf(Stmt.Set(set.first, set.second, Expr.Create(tk0, co)))
+            listOf(Stmt.SetS(set.first, set.second, Stmt.Create(tk0, co)))
         }
         accept_fix("start") -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -668,7 +668,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             if (set == null) {
                 listOf(Stmt.Pass(tk0, Expr.Start(tk0, exe, args)))
             } else {
-                listOf(Stmt.Set(set.first, set.second, Expr.Start(tk0, exe, args)))
+                listOf(Stmt.SetE(set.first, set.second, Expr.Start(tk0, exe, args)))
 
             }
         }
@@ -685,7 +685,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             if (set == null) {
                 listOf(Stmt.Pass(tk0, Expr.Resume(tk0, exe, arg)))
             } else {
-                listOf(Stmt.Set(set.first, set.second, Expr.Resume(tk0, exe, arg)))
+                listOf(Stmt.SetE(set.first, set.second, Expr.Resume(tk0, exe, arg)))
 
             }
         }
@@ -701,7 +701,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             if (set == null) {
                 listOf(Stmt.Pass(tk0, Expr.Yield(tk0, arg)))
             } else {
-                listOf(Stmt.Set(set.first, set.second, Expr.Yield(tk0, arg)))
+                listOf(Stmt.SetE(set.first, set.second, Expr.Yield(tk0, arg)))
 
             }
         }
@@ -745,8 +745,8 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             when {
                 (set==null && tt==true) -> listOf(Stmt.MatchT(tk0, tst, cases as List<Pair<Type.Data?,Stmt.Block>>))
                 (set==null && tt!=true) -> listOf(Stmt.MatchE(tk0, tst, cases as List<Pair<Expr?,Stmt.Block>>))
-                (set!=null && tt==true) -> listOf(Stmt.Set(set.first, set.second, Expr.MatchT(tk0, null, tst, cases as List<Pair<Type.Data?,Expr>>)))
-                (set!=null && tt!=true) -> listOf(Stmt.Set(set.first, set.second, Expr.MatchE(tk0, null, tst, cases as List<Pair<Expr?,Expr>>)))
+                (set!=null && tt==true) -> listOf(Stmt.SetE(set.first, set.second, Expr.MatchT(tk0, null, tst, cases as List<Pair<Type.Data?,Expr>>)))
+                (set!=null && tt!=true) -> listOf(Stmt.SetE(set.first, set.second, Expr.MatchE(tk0, null, tst, cases as List<Pair<Expr?,Expr>>)))
                 else -> error("impossible case")
             }
         }
@@ -828,7 +828,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 val e = parser_expr()
                 listOf (
                     Stmt.Dcl(tk0, id, null),
-                    Stmt.Set(G.tk0!!, Expr.Acc(id), e)
+                    Stmt.SetE(G.tk0!!, Expr.Acc(id), e)
                 )
             }.flatten()
 

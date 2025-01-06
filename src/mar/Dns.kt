@@ -7,7 +7,8 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
 
         is Stmt.Block -> (this.esc?.dn_collect_pos(ft) ?: emptyList()) + this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
         is Stmt.Dcl -> this.xtp?.dn_collect_pos(ft) ?: emptyList()
-        is Stmt.Set -> this.src.dn_collect_pos(fe,ft) + this.dst.dn_collect_pos(fe,ft)
+        is Stmt.SetE -> this.src.dn_collect_pos(fe,ft) + this.dst.dn_collect_pos(fe,ft)
+        is Stmt.SetS -> this.src.dn_collect_pos(fs,fe,ft) + this.dst.dn_collect_pos(fe,ft)
 
         is Stmt.Escape -> this.e.dn_collect_pos(fe,ft)
         is Stmt.Defer -> this.blk.dn_collect_pos(fs,fe,ft)
@@ -17,6 +18,8 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
         is Stmt.Loop  -> this.blk.dn_collect_pos(fs,fe,ft)
         is Stmt.MatchT-> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(ft) ?: emptyList()) + it.second.dn_collect_pos(fs,fe,ft) }.flatten()
         is Stmt.MatchE-> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(fe,ft) ?: emptyList()) + it.second.dn_collect_pos(fs,fe,ft) }.flatten()
+
+        is Stmt.Create -> this.co.dn_collect_pos(fe,ft)
 
         is Stmt.Print -> this.e.dn_collect_pos(fe,ft)
         is Stmt.Pass -> this.e.dn_collect_pos(fe,ft)
@@ -36,7 +39,6 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
         is Expr.Cons   -> this.e.dn_collect_pos(fe,ft)
         is Expr.Call   -> this.f.dn_collect_pos(fe,ft) + this.args.map { it.dn_collect_pos(fe,ft) }.flatten()
         is Expr.Throw  -> this.e.dn_collect_pos(fe,ft)
-        is Expr.Create -> this.co.dn_collect_pos(fe,ft)
         is Expr.Start  -> this.args.map { it.dn_collect_pos(fe,ft) }.flatten() + this.exe.dn_collect_pos(fe,ft)
         is Expr.Resume -> this.arg.dn_collect_pos(fe,ft) + this.exe.dn_collect_pos(fe,ft)
         is Expr.Yield  -> this.arg.dn_collect_pos(fe,ft)
@@ -88,7 +90,8 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
 
         is Stmt.Block -> (this.esc?.dn_collect_pre(ft) ?: emptyList()) + this.ss.map { it.dn_collect_pre(fs,fe,ft) }.flatten()
         is Stmt.Dcl -> this.xtp?.dn_collect_pre(ft) ?: emptyList()
-        is Stmt.Set -> this.dst.dn_collect_pre(fe,ft) + this.src.dn_collect_pre(fe,ft)
+        is Stmt.SetE -> this.dst.dn_collect_pre(fe,ft) + this.src.dn_collect_pre(fe,ft)
+        is Stmt.SetS -> this.dst.dn_collect_pre(fe,ft) + this.src.dn_collect_pre(fs,fe,ft)
 
         is Stmt.Escape -> this.e.dn_collect_pre(fe,ft)
         is Stmt.Defer -> this.blk.dn_collect_pre(fs,fe,ft)
@@ -98,6 +101,8 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
         is Stmt.Loop  -> this.blk.dn_collect_pre(fs,fe,ft)
         is Stmt.MatchT-> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(ft) ?: emptyList()) + it.second.dn_collect_pre(fs,fe,ft) }.flatten()
         is Stmt.MatchE-> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(fe,ft) ?: emptyList()) + it.second.dn_collect_pre(fs,fe,ft) }.flatten()
+
+        is Stmt.Create -> this.co.dn_collect_pre(fe,ft)
 
         is Stmt.Print -> this.e.dn_collect_pre(fe,ft)
         is Stmt.Pass -> this.e.dn_collect_pre(fe,ft)
@@ -121,7 +126,6 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
         is Expr.Cons  -> this.e.dn_collect_pre(fe,ft)
         is Expr.Call  -> this.f.dn_collect_pre(fe,ft) + this.args.map { it.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Throw -> this.e.dn_collect_pre(fe,ft)
-        is Expr.Create -> this.co.dn_collect_pre(fe,ft)
         is Expr.Start  -> this.exe.dn_collect_pre(fe,ft) + this.args.map { it.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Resume -> this.exe.dn_collect_pre(fe,ft) + this.arg.dn_collect_pre(fe,ft)
         is Expr.Yield  -> this.arg.dn_collect_pre(fe,ft)

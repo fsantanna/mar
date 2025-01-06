@@ -107,7 +107,6 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Call   -> "(" + this.f.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + "))"
         is Expr.Throw  -> "throw(" + this.e.to_str(pre) + ")"
 
-        is Expr.Create -> "create(" + this.co.to_str(pre) + ")"
         is Expr.Start  -> "start " + this.exe.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
         is Expr.Resume -> "resume " + this.exe.to_str(pre) + "(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
         is Expr.Yield  -> "yield(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
@@ -165,7 +164,8 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Proto.Coro -> "coro " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Block  -> "do " + this.esc.cond { it.to_str(pre)+" " } + "{\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
         is Stmt.Dcl    -> "var ${this.id.str}" + this.xtp.cond { ": ${it.to_str()}" }
-        is Stmt.Set    -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
+        is Stmt.SetE   -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
+        is Stmt.SetS   -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
         is Stmt.Escape -> "escape(" + this.e.to_str(pre) + ")"
         is Stmt.Defer  -> "defer {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Catch  -> "catch " + this.tp.cond { it.to_str(pre)+" " } + "{\n" + this.blk.ss.to_str(pre) + "}"
@@ -189,6 +189,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
             }.joinToString("")
             "match $tst {\n$cases}"
         }
+        is Stmt.Create -> "create(" + this.co.to_str(pre) + ")"
         is Stmt.Print  -> "print(" + this.e.to_str(pre) + ")"
         is Stmt.Pass   -> "do(" + this.e.to_str(pre) + ")"
     }.let {

@@ -548,7 +548,7 @@ class Parser {
         G.tks = ("set x = create(f)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Set && s.src is Expr.Create && s.src.co is Expr.Acc)
+        assert(s is Stmt.SetS && s.src is Stmt.Create && s.src.co is Expr.Acc)
         assert(s.to_str() == "set x = create(f)")
     }
     @Test
@@ -556,7 +556,7 @@ class Parser {
         G.tks = ("set x = resume xf(false)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Set && s.src is Expr.Resume && s.src.exe is Expr.Acc && s.src.arg is Expr.Bool)
+        assert(s is Stmt.SetE && s.src is Expr.Resume && s.src.exe is Expr.Acc && s.src.arg is Expr.Bool)
         assert(s.to_str() == "set x = resume xf(false)")
     }
     @Test
@@ -564,7 +564,7 @@ class Parser {
         G.tks = ("set y = yield(null)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Set && s.src is Expr.Yield && s.src.arg is Expr.Null)
+        assert(s is Stmt.SetE && s.src is Expr.Yield && s.src.arg is Expr.Null)
         assert(s.to_str() == "set y = yield(null)") { s.to_str() }
     }
     @Test
