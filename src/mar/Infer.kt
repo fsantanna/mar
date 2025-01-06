@@ -250,7 +250,7 @@ fun infer_apply () {
 
            is Stmt.Create -> {
                 if (me.xup !is Stmt.SetS) {
-                    me.co.infer(null)
+                    me.infer(null)
                 }
            }
             is Stmt.Start -> {

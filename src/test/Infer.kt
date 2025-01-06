@@ -256,7 +256,7 @@ class Infer {
                 "}\n" +
                 "var exe: exec (<(),Int>) -> () -> () -> ()\n" +
                 "set exe = create(co)\n" +
-                "do(start exe(<.1=()>:<(),Int>))\n" +
+                "start exe(<.1=()>:<(),Int>)\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -278,7 +278,7 @@ class Infer {
                 "}\n" +
                 "var exe: exec () -> <(),Int> -> () -> ()\n" +
                 "set exe = create(co)\n" +
-                "do(start exe())\n" +
+                "start exe()\n" +
                 "do(resume exe(<.1=()>:<(),Int>))\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -303,7 +303,7 @@ class Infer {
                 "}\n" +
                 "var exe: exec () -> () -> <(),Int> -> ()\n" +
                 "set exe = create(co)\n" +
-                "do(start exe())\n" +
+                "start exe()\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
