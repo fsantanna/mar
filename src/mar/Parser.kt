@@ -719,12 +719,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 parser_expr()
             }
             accept_fix_err(")")
-            if (set == null) {
-                listOf(Stmt.Pass(tk0, Expr.Resume(tk0, exe, arg)))
-            } else {
-                listOf(Stmt.SetE(set.first, set.second, Expr.Resume(tk0, exe, arg)))
-
-            }
+            listOf(Stmt.Resume(tk0, exe, arg))
         }
         accept_fix("yield") -> {
             val tk0 = G.tk0 as Tk.Fix

@@ -226,6 +226,11 @@ fun Stmt.type (): Type? {
         is Stmt.Start -> (this.exe.type() as Type.Exec).let {
             Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
         }
+        is Stmt.Resume -> this.exe.type().let {
+            if (it !is Type.Exec) null else {
+                Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
+            }
+        }
         else -> error("impossible case")
     }
 }
@@ -327,11 +332,6 @@ fun Expr.type (): Type? {
             Type.Prim(Tk.Type(x, this.tk.pos))
         }
 
-        is Expr.Resume -> this.exe.type().let {
-            if (it !is Type.Exec) null else {
-                Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
-            }
-        }
         is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
         is Expr.If -> {
             val tt = this.t.type()

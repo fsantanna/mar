@@ -21,6 +21,7 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
 
         is Stmt.Create -> this.co.dn_collect_pos(fe,ft)
         is Stmt.Start  -> this.args.map { it.dn_collect_pos(fe,ft) }.flatten() + this.exe.dn_collect_pos(fe,ft)
+        is Stmt.Resume -> this.arg.dn_collect_pos(fe,ft) + this.exe.dn_collect_pos(fe,ft)
 
         is Stmt.Print -> this.e.dn_collect_pos(fe,ft)
         is Stmt.Pass -> this.e.dn_collect_pos(fe,ft)
@@ -40,7 +41,6 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
         is Expr.Cons   -> this.e.dn_collect_pos(fe,ft)
         is Expr.Call   -> this.f.dn_collect_pos(fe,ft) + this.args.map { it.dn_collect_pos(fe,ft) }.flatten()
         is Expr.Throw  -> this.e.dn_collect_pos(fe,ft)
-        is Expr.Resume -> this.arg.dn_collect_pos(fe,ft) + this.exe.dn_collect_pos(fe,ft)
         is Expr.Yield  -> this.arg.dn_collect_pos(fe,ft)
         is Expr.If     -> this.cnd.dn_collect_pos(fe,ft) + this.t.dn_collect_pos(fe,ft) + this.f.dn_collect_pos(fe,ft)
         is Expr.MatchT -> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(ft) ?: emptyList()) + it.second.dn_collect_pos(fe,ft) }.flatten()
@@ -104,6 +104,7 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
 
         is Stmt.Create -> this.co.dn_collect_pre(fe,ft)
         is Stmt.Start  -> this.exe.dn_collect_pre(fe,ft) + this.args.map { it.dn_collect_pre(fe,ft) }.flatten()
+        is Stmt.Resume -> this.exe.dn_collect_pre(fe,ft) + this.arg.dn_collect_pre(fe,ft)
 
         is Stmt.Print -> this.e.dn_collect_pre(fe,ft)
         is Stmt.Pass -> this.e.dn_collect_pre(fe,ft)
@@ -127,7 +128,6 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
         is Expr.Cons  -> this.e.dn_collect_pre(fe,ft)
         is Expr.Call  -> this.f.dn_collect_pre(fe,ft) + this.args.map { it.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Throw -> this.e.dn_collect_pre(fe,ft)
-        is Expr.Resume -> this.exe.dn_collect_pre(fe,ft) + this.arg.dn_collect_pre(fe,ft)
         is Expr.Yield  -> this.arg.dn_collect_pre(fe,ft)
         is Expr.If     -> this.cnd.dn_collect_pre(fe,ft) + this.t.dn_collect_pre(fe,ft) + this.f.dn_collect_pre(fe,ft)
         is Expr.MatchT -> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(ft) ?: emptyList()) + it.second.dn_collect_pre(fe,ft) }.flatten()

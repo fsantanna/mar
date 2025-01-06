@@ -1,6 +1,7 @@
 package mar
 
 fun Stmt.infer (tp: Type?): Type? {
+    println(this.to_str())
     return when (this) {
         is Stmt.Create -> {
             val xtp = if (tp !is Type.Exec) null else {
@@ -18,13 +19,23 @@ fun Stmt.infer (tp: Type?): Type? {
                 this.args.mapIndexed { i,e ->
                     e.infer(exe.inps[i])
                 }
-                exe.yld
+                Type.Union(this.tk, true, listOf(exe.yld,exe.out).map { Pair(null,it) })
             } else {
                 this.args.map {
                     it.infer(null)
                 }
                 null
             }
+        }
+       is Stmt.Resume -> {
+           val exe = this.exe.infer(null)
+           if (exe is Type.Exec) {
+               this.arg.infer(exe.res)
+                Type.Union(this.tk, true, listOf(exe.yld,exe.out).map { Pair(null,it) })
+           } else {
+               this.arg.infer(null)
+               null
+           }
         }
        else -> error("impossible case")
    }
@@ -136,12 +147,6 @@ fun Expr.infer (tp: Type?): Type? {
             this.e.infer(null)
         }
 
-        is Expr.Resume -> {
-            val exe = this.exe.infer(null)
-            if (exe is Type.Exec) {
-                this.arg.infer(exe.res)
-            }
-        }
         is Expr.Yield -> {
             val coro = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
             this.arg.infer(coro.yld)
@@ -249,15 +254,20 @@ fun infer_apply () {
            }
 
            is Stmt.Create -> {
-                if (me.xup !is Stmt.SetS) {
-                    me.infer(null)
-                }
+               if (me.xup !is Stmt.SetS) {
+                   me.infer(null)
+               }
            }
-            is Stmt.Start -> {
-                if (me.xup !is Stmt.SetS) {
-                    me.infer(null)
-                }
-            }
+           is Stmt.Start -> {
+               if (me.xup !is Stmt.SetS) {
+                   me.infer(null)
+               }
+           }
+           is Stmt.Resume -> {
+               if (me.xup !is Stmt.SetS) {
+                   me.infer(null)
+               }
+           }
 
            is Stmt.Print -> me.e.infer(null)
            is Stmt.Pass -> me.e.infer(Type.Unit(me.tk))

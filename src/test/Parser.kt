@@ -532,7 +532,7 @@ class Parser {
         G.tks = ("resume xf()").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Pass && s.e is Expr.Resume && s.e.exe is Expr.Acc && s.e.arg is Expr.Unit)
+        assert(s is Stmt.Resume && s.exe is Expr.Acc && s.arg is Expr.Unit)
         assert(s.to_str() == "do(resume xf())") { s.to_str() }
     }
     @Test
@@ -556,7 +556,7 @@ class Parser {
         G.tks = ("set x = resume xf(false)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.SetE && s.src is Expr.Resume && s.src.exe is Expr.Acc && s.src.arg is Expr.Bool)
+        assert(s is Stmt.SetS && s.src is Stmt.Resume && s.src.exe is Expr.Acc && s.src.arg is Expr.Bool)
         assert(s.to_str() == "set x = resume xf(false)")
     }
     @Test

@@ -107,7 +107,6 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Call   -> "(" + this.f.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + "))"
         is Expr.Throw  -> "throw(" + this.e.to_str(pre) + ")"
 
-        is Expr.Resume -> "resume " + this.exe.to_str(pre) + "(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
         is Expr.Yield  -> "yield(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
 
         is Expr.If     -> "if ${this.cnd.to_str(pre)} => ${this.t.to_str(pre)} => ${this.f.to_str(pre)}"
@@ -191,6 +190,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
 
         is Stmt.Create -> "create(" + this.co.to_str(pre) + ")"
         is Stmt.Start  -> "start " + this.exe.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
+        is Stmt.Resume -> "resume " + this.exe.to_str(pre) + "(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
 
         is Stmt.Print  -> "print(" + this.e.to_str(pre) + ")"
         is Stmt.Pass   -> "do(" + this.e.to_str(pre) + ")"

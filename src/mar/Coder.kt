@@ -439,7 +439,7 @@ fun Stmt.coder (pre: Boolean): String {
             val tdst = this.dst.typex()
             val tsrc = this.src.typex()
             when {
-                this.src.let { it is Expr.Yield || it is Expr.MatchT || it is Expr.MatchE } -> {
+                this.src.let { it is Expr.Yield || it is Stmt.MatchT || it is Expr.MatchE } -> {
                     assert(tsrc !is Type.Vector)
                     this.src.coder(pre) + """
                         $dst = mar_${this.src.n};
@@ -523,6 +523,16 @@ fun Stmt.coder (pre: Boolean): String {
                 &$exe, ($xuni) { ._1 = {
                     ${this.args.map { it.coder(pre) }.joinToString(",")}
                 } }
+            );
+            """
+        }
+        is Stmt.Resume -> {
+            val exe = this.exe.coder(pre)
+            val tp = this.exe.type() as Type.Exec
+            val (xuni,_) = tp.x_inp_uni(pre)
+            """
+            $exe.co (
+                &$exe, ($xuni) { ._2 = ${this.arg.coder(pre)} }
             );
             """
         }
@@ -872,16 +882,6 @@ fun Expr.coder (pre: Boolean): String {
             })
         """
 
-        is Expr.Resume -> {
-            val exe = this.exe.coder(pre)
-            val tp = this.exe.type() as Type.Exec
-            val (xuni,_) = tp.x_inp_uni(pre)
-            """
-            $exe.co (
-                &$exe, ($xuni) { ._2 = ${this.arg.coder(pre)} }
-            );
-            """
-        }
         is Expr.Yield -> {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
             val (xuni,_) = tp.x_out_uni(pre)

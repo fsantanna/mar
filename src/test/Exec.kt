@@ -1400,6 +1400,19 @@ class Exec  {
         """)
         assert(out == "1\n2\nuncaught exception\n") { out }
     }
+    @Test
+    fun kk_09_throw () {
+        val out = test("""
+            data X.*: []
+            var e = catch {
+                throw(X [])
+                print(999)
+            }
+            print(e)
+        """)
+        //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
+        assert(out == "X []\n") { out }
+    }
 
     // DEFER
 

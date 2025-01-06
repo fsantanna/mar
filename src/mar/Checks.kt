@@ -220,6 +220,15 @@ fun check_types () {
                     err(me.tk, "start error : types mismatch")
                 }
             }
+            is Stmt.Resume -> {
+                val exe = me.exe.typex()
+                if (exe !is Type.Exec) {
+                    err(me.tk, "resume error : expected active coroutine")
+                }
+                if (!exe.res.is_sup_of(me.arg.typex())) {
+                    err(me.tk, "resume error : types mismatch")
+                }
+            }
             else -> {}
         }
     }
@@ -333,15 +342,6 @@ fun check_types () {
                 }
                 if (!ok) {
                     err(me.tk, "call error : types mismatch")
-                }
-            }
-            is Expr.Resume -> {
-                val exe = me.exe.typex()
-                if (exe !is Type.Exec) {
-                    err(me.tk, "resume error : expected active coroutine")
-                }
-                if (!exe.res.is_sup_of(me.arg.typex())) {
-                    err(me.tk, "resume error : types mismatch")
                 }
             }
             is Expr.Yield -> {
