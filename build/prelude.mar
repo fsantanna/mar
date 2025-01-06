@@ -1,6 +1,8 @@
 data Error.*: [] {
 }
 
+;;data String: #[Char]
+
 func ensure: (v: Bool) -> () {
     if !v {
         throw()
@@ -8,6 +10,31 @@ func ensure: (v: Bool) -> () {
 }
 
 ;; STRING
+
+func string_to_c: (s: \#[Char]) -> \Char {
+    if s\[#s\-1] != '\0' {
+        ensure(#s\ < ##s\)
+        set s\[#s\] = '\0'
+    }
+    return(`s->buf`)
+}
+
+test {
+    var p1 = string_to_c(\#['o','i','\0'])
+    ensure(`strcmp(p1,"oi")` == 0)
+    ensure(`strlen(p1)` == 2)
+
+    var s2: #[3*Char] = #['o','i']
+    var p2 = string_to_c(\s2)
+    ensure(`strcmp(p2,"oi")` == 0)
+    ensure(`strlen(p2)` == 2)
+
+    ;; TODO: throw/catch
+    catch {
+        string_to_c(\#['o','i'])
+    }
+    ensure(false)
+}
 
 func string_from_int: (v: Int) -> #[32*Char] {
     var ret: #[32*Char]
