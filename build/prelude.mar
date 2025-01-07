@@ -34,12 +34,10 @@ test {
     ensure(`strcmp(p2,"oi")` == 0)
     ensure(`strlen(p2)` == 2)
 
-    ;; TODO: throw/catch
     var x = catch Error.Ensure {
         string_to_c(\#['o','i'])
     }
-    ;;ansure(x?print(x)
-    ensure(false)
+    ensure(x?Err)
 }
 
 func string_from_int: (v: Int) -> #[32*Char] {
