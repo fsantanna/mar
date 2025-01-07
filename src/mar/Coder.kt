@@ -410,7 +410,7 @@ fun Stmt.coder (pre: Boolean): String {
             val tdst = this.dst.typex()
             val tsrc = this.src.typex()
             when {
-                this.src.let { it is Expr.Yield || it is Expr.MatchT || it is Expr.MatchE } -> {
+                this.src.let { it is Expr.MatchT || it is Expr.MatchE } -> {
                     assert(tsrc !is Type.Vector)
                     this.src.coder(pre) + """
                         $dst = mar_${this.src.n};
@@ -438,28 +438,15 @@ fun Stmt.coder (pre: Boolean): String {
             val src = this.src.coder(pre)
             val tdst = this.dst.typex()
             val tsrc = this.src.typex()
-            when {
-                this.src.let { it is Expr.Yield || it is Stmt.MatchT || it is Expr.MatchE } -> {
-                    assert(tsrc !is Type.Vector)
-                    this.src.coder(pre) + """
-                        $dst = mar_${this.src.n};
-                    """
-                }
-                tdst.is_num() -> "$dst = $src;"
-                tdst.is_same_of(tsrc) -> "$dst = $src;"
-                (tdst !is Type.Vector || tdst.max==null) -> {
-                    "$dst = MAR_CAST(${tdst.coder(pre)}, $src);"
-                }
-                else -> {
-                    """
-                    {
-                        typeof($dst)* mar_$n = &$dst;
-                        *mar_$n = MAR_CAST(${tdst.coder(pre)}, $src);
-                        mar_$n->max = ${tdst.max};
-                        mar_$n->cur = MIN(mar_$n->max, mar_$n->cur);                        
-                    }                        
-                    """
-                }
+            assert(tsrc !is Type.Vector && tdst.is_same_of(tsrc))
+            if (this.src.let {
+                it is Stmt.Yield || it is Stmt.MatchT || it is Stmt.MatchE
+            }) {
+                this.src.coder(pre) + """
+                    $dst = mar_${this.src.n};
+                """
+            } else {
+                "$dst = $src;"
             }
         }
 
@@ -916,7 +903,7 @@ fun Expr.coder (pre: Boolean): String {
         """
     }.let {
         when (this) {
-            is Expr.Num, is Expr.MatchT, is Expr.MatchE, is Expr.Yield -> it
+            is Expr.Num, is Expr.MatchT, is Expr.MatchE -> it
             else -> {
                 val tp = this.typex()
                 when {
