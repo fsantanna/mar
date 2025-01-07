@@ -1413,6 +1413,18 @@ class Exec  {
         //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
         assert(out == "X []\n") { out }
     }
+    @Test
+    fun kk_10_throw () {
+        val out = test("""
+            data X.*: []
+            var e = catch X {
+                print(10)
+            }
+            print([e?Ok, e!Ok, e])
+        """)
+        //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
+        assert(out == "[true,(),<.1=()>]\n") { out }
+    }
 
     // DEFER
 

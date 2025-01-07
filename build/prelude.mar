@@ -1,12 +1,17 @@
 data Error.*: [] {
+    Ensure: [\Char]
 }
 
 ;;data String: #[Char]
 
-func ensure: (v: Bool) -> () {
+func ensure_msg: (v: Bool, msg: \Char) -> () {
     if !v {
-        throw()
+        throw(Error.Ensure [msg])
     }
+}
+
+func ensure: (v: Bool) -> () {
+    ensure_msg(v, "ensure error")
 }
 
 ;; STRING
@@ -30,9 +35,10 @@ test {
     ensure(`strlen(p2)` == 2)
 
     ;; TODO: throw/catch
-    catch {
+    var x = catch Error.Ensure {
         string_to_c(\#['o','i'])
     }
+    ;;ansure(x?print(x)
     ensure(false)
 }
 

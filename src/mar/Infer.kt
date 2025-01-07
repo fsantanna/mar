@@ -2,7 +2,12 @@ package mar
 
 fun Stmt.infer (tp: Type?): Type? {
     return when (this) {
-        is Stmt.Catch -> this.tp
+        is Stmt.Catch -> if (this.tp == null) null else {
+            Type.Union(this.tk, true, listOf(
+                Pair(Tk.Type("Ok",this.tk.pos), Type.Unit(this.tk)),
+                Pair(Tk.Type("Err",this.tk.pos), this.tp)
+            ))
+        }
 
         is Stmt.Create -> {
             val xtp = if (tp !is Type.Exec) null else {

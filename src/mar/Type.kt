@@ -217,7 +217,12 @@ fun Stmt.typex (): Type {
 
 fun Stmt.type (): Type? {
     return when (this) {
-        is Stmt.Catch -> this.tp
+        is Stmt.Catch -> if (this.tp == null) null else {
+            Type.Union(this.tk, true, listOf(
+                Pair(Tk.Type("Ok",this.tk.pos), Type.Unit(this.tk)),
+                Pair(Tk.Type("Err",this.tk.pos), this.tp)
+            ))
+        }
         is Stmt.Create -> {
             val co = this.co.type()
             if (co !is Type.Proto.Coro) null else {

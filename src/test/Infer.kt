@@ -789,7 +789,7 @@ class Infer {
            "}\n"+
            "data Break.*: [] {\n"+
            "}\n"+
-           "var x: Break\n"+
+           "var x: <Ok:(),Err:Break>\n"+
            "set x = catch Break {\n"+
            "}\n"+
            "}") { G.outer!!.to_str() }

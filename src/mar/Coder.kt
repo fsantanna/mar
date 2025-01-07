@@ -130,7 +130,16 @@ fun coder_types (pre: Boolean): String {
             }
             is Type.Union -> {
                 val x = me.coder(pre)
+                val xx = x.uppercase()
                 listOf("""
+                    typedef enum MAR_TAGS_$xx {
+                        __MAR_TAG_${xx}__,
+                        ${me.ts.mapIndexed { i, (id, _) ->
+                            """
+                            MAR_TAG_${xx}_${if (id == null) i else id.str.uppercase()},
+                            """
+                        }.joinToString("")}
+                    } MAR_TAGS_$xx;
                     typedef struct $x {
                         ${me.tagged.cond { "int tag;" }}
                         union {
@@ -184,9 +193,8 @@ fun coder_types (pre: Boolean): String {
                         val x2 = if (tp !is Type.Union) {
                             emptyList()
                         } else {
-                            listOf(
-                                """
-                            typedef enum MAR_TAGS_$SS {
+                            listOf("""
+                                typedef enum MAR_TAGS_$SS {
                                 __MAR_TAG_${SS}__,
                                 ${
                                     tp.ts.mapIndexed { i, (id, _) ->
@@ -196,8 +204,7 @@ fun coder_types (pre: Boolean): String {
                                     }.joinToString("")
                                 }
                             } MAR_TAGS_$SS;
-                        """
-                            ) + tp.ts.map { (id, t) ->
+                            """) + tp.ts.map { (id, t) ->
                                 if (id == null) emptyList() else f(t, s + listOf(id.str))
                             }.flatten()
                         }
@@ -439,14 +446,22 @@ fun Stmt.coder (pre: Boolean): String {
             val tdst = this.dst.typex()
             val tsrc = this.src.typex()
             assert(tsrc !is Type.Vector && tdst.is_same_of(tsrc))
-            if (this.src.let {
-                it is Stmt.Yield || it is Stmt.MatchT || it is Stmt.MatchE
-            }) {
-                this.src.coder(pre) + """
+            when (this.src) {
+                is Stmt.Yield, is Stmt.MatchT, is Stmt.MatchE -> this.src.coder(pre) + """
                     $dst = mar_${this.src.n};
                 """
-            } else {
-                "$dst = $src;"
+                is Stmt.Catch -> this.src.tp.cond {
+                    val uni  = this.src.typex().coder(pre)
+                    val xuni = uni.uppercase()
+                    """
+                    if (MAR_EXCEPTION.tag == __MAR_EXCEPTION_NONE__) {
+                        $dst = ($uni) { .tag=MAR_TAG_${xuni}_OK };
+                    } else {
+                        $dst = ($uni) { .tag=MAR_TAG_${xuni}_ERR, .Err=MAR_CAST(${it.coder(pre)}, MAR_EXCEPTION) };
+                    }
+                    """
+                }
+                else -> "$dst = $src;"
             }
         }
 
