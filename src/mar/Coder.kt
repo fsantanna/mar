@@ -440,31 +440,7 @@ fun Stmt.coder (pre: Boolean): String {
                 }
             }
         }
-        is Stmt.SetS    -> {
-            //TODO("mover para os stmts, testar se xup is SetS")
-            val dst = this.dst.coder(pre)
-            val src = this.src.coder(pre)
-            val tdst = this.dst.typex()
-            val tsrc = this.src.typex()
-            assert(tsrc !is Type.Vector && tdst.is_same_of(tsrc))
-            when (this.src) {
-                is Stmt.Yield, is Stmt.MatchT, is Stmt.MatchE -> this.src.coder(pre) + """
-                    $dst = mar_${this.src.n};
-                """
-                is Stmt.Catch -> this.src.tp.cond {
-                    val uni  = this.src.typex().coder(pre)
-                    val xuni = uni.uppercase()
-                    """
-                    if (MAR_EXCEPTION.tag == __MAR_EXCEPTION_NONE__) {
-                        $dst = ($uni) { .tag=${xuni}_OK_TAG };
-                    } else {
-                        $dst = ($uni) { .tag=${xuni}_ERR_TAG, .Err=CAST(${it.coder(pre)}, MAR_EXCEPTION) };
-                    }
-                    """
-                }
-                else -> "$dst = $src;"
-            }
-        }
+        is Stmt.SetS    -> this.src.coder(pre)
 
         is Stmt.Escape -> """
             MAR_ESCAPE = CAST(Escape, ${this.e.coder(pre)});
@@ -489,6 +465,8 @@ fun Stmt.coder (pre: Boolean): String {
             """
         }
         is Stmt.Catch -> {
+            val uni  = this.typex().coder(pre)
+            val xuni = uni.uppercase()
             """
             { // CATCH | ${this.dump()}
                 do {
@@ -496,6 +474,12 @@ fun Stmt.coder (pre: Boolean): String {
                 } while (0);
                 if (MAR_EXCEPTION.tag == __MAR_EXCEPTION_NONE__) {
                     // no escape
+                    ${(this.xup is Stmt.SetS).cond {
+                        val set = this.xup as Stmt.SetS
+                        """
+                        ${set.dst.coder(pre)} = ($uni) { .tag=${xuni}_OK_TAG };
+                        """
+                     }}
                 } else if (
                     ${this.tp.cond2({
                         "mar_sup(${it.ts.coder(pre).uppercase()}_TAG, MAR_EXCEPTION.tag)"
@@ -503,6 +487,12 @@ fun Stmt.coder (pre: Boolean): String {
                         "true"
                     })}
                 ) {
+                    ${(this.xup is Stmt.SetS && this.tp!=null).cond {
+                        val set = this.xup as Stmt.SetS
+                        """
+                        ${set.dst.coder(pre)} = ($uni) { .tag=${xuni}_ERR_TAG, .Err=CAST(${this.tp!!.coder(pre)}, MAR_EXCEPTION) };
+                        """
+                     }}
                     MAR_EXCEPTION.tag = __MAR_EXCEPTION_NONE__;
                 } else {
                     continue;
@@ -513,7 +503,12 @@ fun Stmt.coder (pre: Boolean): String {
 
         is Stmt.Create -> {
             val xtp = (this.xup as Stmt.SetS).dst.typex().coder(pre)
-            """
+            (this.xup is Stmt.SetS).cond {
+                val set = this.xup as Stmt.SetS
+                """
+                ${set.dst.coder(pre)} =
+                """
+            } + """
             ($xtp) { 0, ${this.co.coder(pre)}, {} };
             """
         }
@@ -521,7 +516,12 @@ fun Stmt.coder (pre: Boolean): String {
             val exe = this.exe.coder(pre)
             val tp = this.exe.type() as Type.Exec
             val (xuni,_) = tp.x_inp_uni(pre)
-            """
+            (this.xup is Stmt.SetS).cond {
+                val set = this.xup as Stmt.SetS
+                """
+                ${set.dst.coder(pre)} =
+                """
+            } + """
             $exe.co (
                 &$exe, ($xuni) { ._1 = {
                     ${this.args.map { it.coder(pre) }.joinToString(",")}
@@ -533,7 +533,12 @@ fun Stmt.coder (pre: Boolean): String {
             val exe = this.exe.coder(pre)
             val tp = this.exe.type() as Type.Exec
             val (xuni,_) = tp.x_inp_uni(pre)
-            """
+            (this.xup is Stmt.SetS).cond {
+                val set = this.xup as Stmt.SetS
+                """
+                ${set.dst.coder(pre)} =
+                """
+            } + """
             $exe.co (
                 &$exe, ($xuni) { ._2 = ${this.arg.coder(pre)} }
             );
@@ -546,7 +551,12 @@ fun Stmt.coder (pre: Boolean): String {
                 mar_exe->pc = ${this.n};
                 return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
             case ${this.n}:
-                ${this.typex().coder(pre)} mar_$n = mar_arg._2;
+                ${(this.xup is Stmt.SetS).cond {
+                    val set = this.xup as Stmt.SetS
+                    """
+                    ${set.dst.coder(pre)} = mar_arg._2;
+                    """
+                }}
             """
         }
 

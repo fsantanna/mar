@@ -1411,7 +1411,7 @@ class Exec  {
             print(e)
         """)
         //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
-        assert(out == "X []\n") { out }
+        assert(out == "<.2=X []>\n") { out }
     }
     @Test
     fun kk_10_throw () {
@@ -1423,7 +1423,7 @@ class Exec  {
             print([e?Ok, e!Ok, e])
         """)
         //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
-        assert(out == "[true,(),<.1=()>]\n") { out }
+        assert(out == "10\n[true,(),<.1=()>]\n") { out }
     }
 
     // DEFER
