@@ -438,7 +438,7 @@ class Check {
             var t: []
             var x: Int = t
         """)
-        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 24) : set error : types mismatch") { out!! }
     }
     @Test
     fun cc_02_tuple () {
@@ -459,14 +459,14 @@ class Check {
         val out = check("""
             var x: [Int] = [()]: [()]
         """)
-        assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 2, col 26) : set error : types mismatch") { out!! }
     }
     @Test
     fun cc_04_tuple () {
         val out = check("""
             var x: [] = [()]: [()]
         """)
-        assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 2, col 23) : set error : types mismatch") { out!! }
     }
     @Test
     fun cc_05_disc_err () {
@@ -496,7 +496,7 @@ class Check {
         val out = check("""
             var pos: [x:Int,y:Int] = [.y=10,.x=20]: [y:Int,x:Int]  ;; x/y inverted
         """)
-        assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 2, col 36) : set error : types mismatch") { out!! }
     }
     @Test
     fun cc_08_disc_err () {
@@ -556,7 +556,7 @@ class Check {
             data T: []
             var x: T = [[]]
         """)
-        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 22) : set error : types mismatch") { out!! }
     }
 
     // VECTOR
@@ -567,7 +567,7 @@ class Check {
             var t: #[10*Int] = #['a']
         """)
         //println(G.outer!!.to_str())
-        assert(out == "anon : (lin 2, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 2, col 30) : set error : types mismatch") { out!! }
     }
     @Test
     fun cd_02_vector_err () {
@@ -601,7 +601,7 @@ class Check {
             var v: #[2*Int]
             var x: Bool = #v
         """)
-        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 25) : set error : types mismatch") { out!! }
     }
     @Test
     fun cd_06_vector_err () {
@@ -616,7 +616,7 @@ class Check {
             var v: #[1*Int]
             var x: Bool = ##v
         """)
-        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 25) : set error : types mismatch") { out!! }
     }
 
     // CONCATENATE
@@ -637,7 +637,7 @@ class Check {
             var t: <>
             var x: Int = t
         """)
-        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 24) : set error : types mismatch") { out!! }
     }
     @Test
     fun cd_02_union () {
@@ -748,7 +748,7 @@ class Check {
             data Pos: [Int, Int]
             var p: Pos = [10, 10]: [Int, Int]
         """)
-        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 24) : set error : types mismatch") { out!! }
     }
     @Test
     fun dd_03_data_err () {
@@ -789,7 +789,7 @@ class Check {
             var p: Pos = [10, 20]: [Int, Int]
             var x: Bool = p.1
         """)
-        assert(out == "anon : (lin 3, col 13) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 24) : set error : types mismatch") { out!! }
     }
     @Test
     fun dd_08_data () {

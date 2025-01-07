@@ -574,14 +574,15 @@ fun parser_stmt (): List<Stmt> {
             val (_,tp) = if (accept_fix(":")) parser_var_type(id) else {
                 Pair(id, null)
             }
+            val tk1 = G.tk1
             listOf(Stmt.Dcl(tk0, id, tp)) + when {
                 !accept_fix("=") -> emptyList()
                 check_stmt_as_set_src() -> {
                     val ss = parser_stmt()
                     assert(ss.size == 1)
-                    listOf(Stmt.SetS(tk0, Expr.Acc(id), ss.first()))
+                    listOf(Stmt.SetS(tk1!!, Expr.Acc(id), ss.first()))
                 }
-                else -> listOf(Stmt.SetE(tk0, Expr.Acc(id), parser_expr()))
+                else -> listOf(Stmt.SetE(tk1!!, Expr.Acc(id), parser_expr()))
             }
         }
 
