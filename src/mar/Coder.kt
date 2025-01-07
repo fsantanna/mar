@@ -465,8 +465,8 @@ fun Stmt.coder (pre: Boolean): String {
             """
         }
         is Stmt.Catch -> {
-            val uni  = this.typex().coder(pre)
-            val xuni = uni.uppercase()
+            val uni  = this.type()?.coder(pre)
+            val xuni = uni?.uppercase()
             """
             { // CATCH | ${this.dump()}
                 do {

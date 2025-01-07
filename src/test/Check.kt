@@ -1584,7 +1584,7 @@ class Check {
             data X.*: [] {
                 Y: []
             }
-            var x: X = catch X.Y {
+            var x: <(),X> = catch X.Y {
             }
         """)
         assert(out == null) { out!! }
@@ -1597,7 +1597,7 @@ class Check {
            "Y: [] {\n"+
            "}\n"+
            "}\n"+
-           "var x: X\n"+
+           "var x: <(),X>\n"+
            "set x = catch X.Y {\n"+
            "}\n"+
            "}") { G.outer!!.to_str() }
