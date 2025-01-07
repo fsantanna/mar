@@ -1,7 +1,6 @@
 package mar
 
 fun Stmt.infer (tp: Type?): Type? {
-    println(this.to_str())
     return when (this) {
         is Stmt.Create -> {
             val xtp = if (tp !is Type.Exec) null else {
@@ -27,7 +26,7 @@ fun Stmt.infer (tp: Type?): Type? {
                 null
             }
         }
-       is Stmt.Resume -> {
+        is Stmt.Resume -> {
            val exe = this.exe.infer(null)
            if (exe is Type.Exec) {
                this.arg.infer(exe.res)
@@ -37,6 +36,12 @@ fun Stmt.infer (tp: Type?): Type? {
                null
            }
         }
+        is Stmt.Yield -> {
+            val coro = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
+            this.arg.infer(coro.yld)
+            coro.res
+        }
+
        else -> error("impossible case")
    }
 }
@@ -145,11 +150,6 @@ fun Expr.infer (tp: Type?): Type? {
         is Expr.Throw -> {
             this.xtp = tp
             this.e.infer(null)
-        }
-
-        is Expr.Yield -> {
-            val coro = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
-            this.arg.infer(coro.yld)
         }
 
         is Expr.If -> {
@@ -264,6 +264,11 @@ fun infer_apply () {
                }
            }
            is Stmt.Resume -> {
+               if (me.xup !is Stmt.SetS) {
+                   me.infer(null)
+               }
+           }
+           is Stmt.Yield -> {
                if (me.xup !is Stmt.SetS) {
                    me.infer(null)
                }

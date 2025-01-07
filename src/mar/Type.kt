@@ -231,6 +231,7 @@ fun Stmt.type (): Type? {
                 Type.Union(this.tk, true, listOf(it.yld, it.out).map { Pair(null,it) })
             }
         }
+        is Stmt.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
         else -> error("impossible case")
     }
 }
@@ -332,7 +333,6 @@ fun Expr.type (): Type? {
             Type.Prim(Tk.Type(x, this.tk.pos))
         }
 
-        is Expr.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
         is Expr.If -> {
             val tt = this.t.type()
             val tf = this.f.type()

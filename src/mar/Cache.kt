@@ -85,6 +85,9 @@ fun cache_ups () {
                 me.exe.xup = me
                 me.arg.xup = me
             }
+            is Stmt.Yield -> {
+                me.arg.xup = me
+            }
 
             is Stmt.Print -> me.e.xup = me
             is Stmt.Pass -> me.e.xup = me
@@ -139,9 +142,6 @@ fun cache_ups () {
 
             is Expr.Throw -> {
                 me.e.xup = me
-            }
-            is Expr.Yield -> {
-                me.arg.xup = me
             }
 
             is Expr.If -> {

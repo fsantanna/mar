@@ -98,6 +98,12 @@ fun check_vars () {
                     err(me.tk, "escape error : expected matching enclosing block")
                 }
             }
+            is Stmt.Yield -> {
+                val up = me.up_first { it is Stmt.Proto }
+                if (up !is Stmt.Proto.Coro) {
+                    err(me.tk, "yield error : expected enclosing coro")
+                }
+            }
             else -> {}
         }
     }
@@ -112,12 +118,6 @@ fun check_vars () {
                 val v = me.walk(me.ts)
                 if (v == null) {
                     err(me.tk, "constructor error : data \"${me.ts.to_str()}\" is not declared")
-                }
-            }
-            is Expr.Yield -> {
-                val up = me.up_first { it is Stmt.Proto }
-                if (up !is Stmt.Proto.Coro) {
-                    err(me.tk, "yield error : expected enclosing coro")
                 }
             }
             else -> {}
@@ -227,6 +227,13 @@ fun check_types () {
                 }
                 if (!exe.res.is_sup_of(me.arg.typex())) {
                     err(me.tk, "resume error : types mismatch")
+                }
+            }
+            is Stmt.Yield -> {
+                val up = me.up_first { it is Stmt.Proto } as Stmt.Proto.Coro
+                val exe = up.tp_
+                if (!exe.yld.is_sup_of(me.arg.typex())) {
+                    err(me.tk, "yield error : types mismatch")
                 }
             }
             else -> {}
@@ -342,13 +349,6 @@ fun check_types () {
                 }
                 if (!ok) {
                     err(me.tk, "call error : types mismatch")
-                }
-            }
-            is Expr.Yield -> {
-                val up = me.up_first { it is Stmt.Proto } as Stmt.Proto.Coro
-                val exe = up.tp_
-                if (!exe.yld.is_sup_of(me.arg.typex())) {
-                    err(me.tk, "yield error : types mismatch")
                 }
             }
             is Expr.If -> {

@@ -495,7 +495,7 @@ fun parser_stmt_block (): List<Stmt> {
     return ss
 }
 
-fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
+fun parser_stmt (): List<Stmt> {
     return when {
         (accept_fix("func") || accept_fix("coro")) -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -557,7 +557,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             val tk0 = G.tk0 as Tk.Fix
             when {
                 check_stmt_as_set_src() -> {
-                    val src = parser_stmt(Pair(tk0,dst))
+                    val src = parser_stmt()
                     assert(src.size == 1)
                     listOf(Stmt.SetS(tk0, dst, src.first()))
                 }
@@ -577,7 +577,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             listOf(Stmt.Dcl(tk0, id, tp)) + when {
                 !accept_fix("=") -> emptyList()
                 check_stmt_as_set_src() -> {
-                    val ss = parser_stmt(Pair(G.tk0!!,Expr.Acc(id)))
+                    val ss = parser_stmt()
                     assert(ss.size == 1)
                     listOf(Stmt.SetS(tk0, Expr.Acc(id), ss.first()))
                 }
@@ -695,7 +695,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
             )
         }
 
-        (set!=null && accept_fix("create")) -> {
+        accept_fix("create") -> {
             val tk0 = G.tk0 as Tk.Fix
             accept_fix_err("(")
             val co = parser_expr()
@@ -730,12 +730,7 @@ fun parser_stmt (set: Pair<Tk,Expr>? = null): List<Stmt> {
                 parser_expr()
             }
             accept_fix_err(")")
-            if (set == null) {
-                listOf(Stmt.Pass(tk0, Expr.Yield(tk0, arg)))
-            } else {
-                listOf(Stmt.SetE(set.first, set.second, Expr.Yield(tk0, arg)))
-
-            }
+            listOf(Stmt.Yield(tk0, arg))
         }
 
         (accept_fix("match")) -> {

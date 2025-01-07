@@ -536,6 +536,17 @@ fun Stmt.coder (pre: Boolean): String {
             );
             """
         }
+        is Stmt.Yield -> {
+            val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
+            val (xuni,_) = tp.x_out_uni(pre)
+            """
+                mar_exe->pc = ${this.n};
+                return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
+            case ${this.n}:
+                ${this.typex().coder(pre)} mar_$n = mar_arg._2;
+            """
+        }
+
 
         is Stmt.If     -> """
             if (${this.cnd.coder(pre)}) {
@@ -881,17 +892,6 @@ fun Expr.coder (pre: Boolean): String {
                 ${this.xtp!!.coder(pre)} mar_$n ; mar_$n;
             })
         """
-
-        is Expr.Yield -> {
-            val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
-            val (xuni,_) = tp.x_out_uni(pre)
-            """
-                mar_exe->pc = ${this.n};
-                return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
-            case ${this.n}:
-                ${this.typex().coder(pre)} mar_$n = mar_arg._2;
-            """
-        }
 
         is Expr.If -> "((${this.cnd.coder(pre)}) ? (${this.t.coder(pre)}) : (${this.f.coder(pre)}))"
         is Expr.MatchT -> """

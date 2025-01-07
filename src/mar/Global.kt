@@ -118,8 +118,6 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
 
     class Throw  (tk: Tk, var xtp: Type?, val e: Expr): Expr(G.N++, null, tk, null)
 
-    class Yield   (tk: Tk, val arg: Expr): Expr(G.N++, null, tk, null)
-
     class If      (tk: Tk, var xtp: Type?, val cnd: Expr, val t: Expr, val f: Expr): Expr(G.N++, null, tk, null)
     class MatchT  (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Type.Data?,Expr>>): Expr(G.N++, null, tk, null)
     class MatchE  (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Expr?,Expr>>): Expr(G.N++, null, tk, null)
@@ -149,6 +147,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Create  (tk: Tk, val co: Expr): Stmt(G.N++, null, tk)
     class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Stmt(G.N++, null, tk)
     class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Stmt(G.N++, null, tk)
+    class Yield   (tk: Tk, val arg: Expr): Stmt(G.N++, null, tk)
 
     class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
     class Pass  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)

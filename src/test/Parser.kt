@@ -525,7 +525,9 @@ class Parser {
     fun hh_01_spawn() {
         G.tks = ("create(f)").lexer()
         parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 1, col 1) : expected expression : have \"create\"")
+        val s = parser_stmt().first()
+        assert(s is Stmt.Create && s.co is Expr.Acc)
+        //assert(trap { parser_stmt() } == "anon : (lin 1, col 1) : expected expression : have \"create\"")
     }
     @Test
     fun hh_02_resume() {
@@ -533,15 +535,15 @@ class Parser {
         parser_lexer()
         val s = parser_stmt().first()
         assert(s is Stmt.Resume && s.exe is Expr.Acc && s.arg is Expr.Unit)
-        assert(s.to_str() == "do(resume xf())") { s.to_str() }
+        assert(s.to_str() == "resume xf()") { s.to_str() }
     }
     @Test
     fun hh_03_yield() {
         G.tks = ("yield()").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Pass && s.e is Expr.Yield && s.e.arg is Expr.Unit)
-        assert(s.to_str() == "do(yield())") { s.to_str() }
+        assert(s is Stmt.Yield && s.arg is Expr.Unit)
+        assert(s.to_str() == "yield()") { s.to_str() }
     }
     @Test
     fun hh_04_spawn() {
@@ -564,7 +566,7 @@ class Parser {
         G.tks = ("set y = yield(null)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.SetE && s.src is Expr.Yield && s.src.arg is Expr.Null)
+        assert(s is Stmt.SetS && s.src is Stmt.Yield && s.src.arg is Expr.Null)
         assert(s.to_str() == "set y = yield(null)") { s.to_str() }
     }
     @Test

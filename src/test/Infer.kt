@@ -279,7 +279,7 @@ class Infer {
                 "var exe: exec () -> <(),Int> -> () -> ()\n" +
                 "set exe = create(co)\n" +
                 "start exe()\n" +
-                "do(resume exe(<.1=()>:<(),Int>))\n" +
+                "resume exe(<.1=()>:<(),Int>)\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -375,7 +375,7 @@ class Infer {
                 "}\n" +
                 "var co1: exec (Int) -> () -> () -> ()\n" +
                 "set co1 = create(gen1)\n" +
-                "do(start co1(([]:[])))\n" +
+                "start co1(([]:[]))\n" +
                 "}") { G.outer!!.to_str() }
     }
 
