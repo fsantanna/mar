@@ -6,7 +6,7 @@ fun String.clean (): String {
 
 fun Type.Proto.Coro.x_coro_exec (pre: Boolean): Pair<String,String> {
     val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(pre) }.joinToString("__").clean()
-    return Pair("MAR_Coro__$tps", "MAR_Exec__$tps")
+    return Pair("Coro__$tps", "Exec__$tps")
 }
 fun Type.Proto.Coro.x_inp_tup (pre: Boolean): Pair<String, Type.Tuple> {
     val tp = Type.Tuple(this.tk, this.inps.map { Pair(null,it) })
@@ -33,7 +33,7 @@ fun Type.Proto.Coro.x_sig (pre: Boolean, id: String): String {
 
 fun Type.Exec.x_exec_coro (pre: Boolean): Pair<String,String> {
     val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(pre) }.joinToString("__").clean()
-    return Pair("MAR_Exec__$tps", "MAR_Coro__$tps")
+    return Pair("Exec__$tps", "Coro__$tps")
 }
 fun Type.Exec.x_inp_tup (pre: Boolean): Pair<String, Type.Tuple> {
     val tp = Type.Tuple(this.tk, this.inps.map { Pair(null,it) })
@@ -60,10 +60,10 @@ fun Type.coder (pre: Boolean): String {
         is Type.Data       -> this.ts.first().str
         is Type.Unit       -> "_VOID_"
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
-        is Type.Tuple      -> "MAR_Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Union      -> "MAR_Union__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Vector     -> "MAR_Vector__${this.max.cond2({it.toString()},{"0"})}_${this.tp.coder(pre)}".clean()
-        is Type.Proto.Func -> "MAR_Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
+        is Type.Tuple      -> "Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
+        is Type.Union      -> "Union__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
+        is Type.Vector     -> "Vector__${this.max.cond2({it.toString()},{"0"})}_${this.tp.coder(pre)}".clean()
+        is Type.Proto.Func -> "Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(pre).first
         is Type.Exec       -> this.x_exec_coro(pre).first
     }
@@ -132,14 +132,14 @@ fun coder_types (pre: Boolean): String {
                 val x = me.coder(pre)
                 val xx = x.uppercase()
                 listOf("""
-                    typedef enum MAR_TAGS_$xx {
-                        __MAR_TAG_${xx}__,
+                    typedef enum ${xx}_TAGS {
+                        __${xx}_TAG__,
                         ${me.ts.mapIndexed { i, (id, _) ->
                             """
-                            MAR_TAG_${xx}_${if (id == null) i else id.str.uppercase()},
+                            ${xx}_${if (id == null) i else id.str.uppercase()}_TAG,
                             """
                         }.joinToString("")}
-                    } MAR_TAGS_$xx;
+                    } ${xx}_TAGS;
                     typedef struct $x {
                         ${me.tagged.cond { "int tag;" }}
                         union {
@@ -194,16 +194,16 @@ fun coder_types (pre: Boolean): String {
                             emptyList()
                         } else {
                             listOf("""
-                                typedef enum MAR_TAGS_$SS {
-                                __MAR_TAG_${SS}__,
+                                typedef enum ${SS}_TAGS {
+                                __${SS}_TAG__,
                                 ${
                                     tp.ts.mapIndexed { i, (id, _) ->
                                         """
-                                        MAR_TAG_${SS}_${if (id == null) i else id.str.uppercase()},
+                                        ${SS}_${if (id == null) i else id.str.uppercase()}_TAG,
                                         """
                                     }.joinToString("")
                                 }
-                            } MAR_TAGS_$SS;
+                            } ${SS}_TAGS;
                             """) + tp.ts.map { (id, t) ->
                                 if (id == null) emptyList() else f(t, s + listOf(id.str))
                             }.flatten()
@@ -215,7 +215,7 @@ fun coder_types (pre: Boolean): String {
                 else -> {
                     val sup = me.t.str
                     fun f (s: Stmt.Data, sup: String, l: List<Int>): String {
-                        val id = sup + "_" + s.t.str.uppercase()
+                        val id = (if (sup=="") "" else sup+"_") + s.t.str.uppercase()
                         //println(listOf(me.tk.pos, me.to_str()))
                         assert(l.size <= 6)
                         var n = 0
@@ -225,7 +225,7 @@ fun coder_types (pre: Boolean): String {
                             k -= 5
                         }
                         return """
-                            #define MAR_TAG$id $n
+                            #define ${id}_TAG $n
                         """ + s.subs!!.mapIndexed { i,ss ->
                             f(ss, id, l + listOf(i+1))
                         }.joinToString("")
@@ -386,7 +386,7 @@ fun Stmt.coder (pre: Boolean): String {
                     if (MAR_ESCAPE.tag == __MAR_ESCAPE_NONE__) {
                         // no escape
                     ${this.esc.cond { """
-                        } else if (mar_sup(MAR_TAG_${it.ts.coder(pre).uppercase()}, MAR_ESCAPE.tag)) {
+                        } else if (mar_sup(${it.ts.coder(pre).uppercase()}_TAG, MAR_ESCAPE.tag)) {
                             MAR_ESCAPE.tag = __MAR_ESCAPE_NONE__;   // caught escape: go ahead
                             ${(it.ts.first().str == "Break").cond { """
                                 goto MAR_LOOP_STOP_${this.xup!!.n};
@@ -426,13 +426,13 @@ fun Stmt.coder (pre: Boolean): String {
                 tdst.is_num() -> "$dst = $src;"
                 tdst.is_same_of(tsrc) -> "$dst = $src;"
                 (tdst !is Type.Vector || tdst.max==null) -> {
-                    "$dst = MAR_CAST(${tdst.coder(pre)}, $src);"
+                    "$dst = CAST(${tdst.coder(pre)}, $src);"
                 }
                 else -> {
                     """
                     {
                         typeof($dst)* mar_$n = &$dst;
-                        *mar_$n = MAR_CAST(${tdst.coder(pre)}, $src);
+                        *mar_$n = CAST(${tdst.coder(pre)}, $src);
                         mar_$n->max = ${tdst.max};
                         mar_$n->cur = MIN(mar_$n->max, mar_$n->cur);                        
                     }                        
@@ -441,6 +441,7 @@ fun Stmt.coder (pre: Boolean): String {
             }
         }
         is Stmt.SetS    -> {
+            //TODO("mover para os stmts, testar se xup is SetS")
             val dst = this.dst.coder(pre)
             val src = this.src.coder(pre)
             val tdst = this.dst.typex()
@@ -455,9 +456,9 @@ fun Stmt.coder (pre: Boolean): String {
                     val xuni = uni.uppercase()
                     """
                     if (MAR_EXCEPTION.tag == __MAR_EXCEPTION_NONE__) {
-                        $dst = ($uni) { .tag=MAR_TAG_${xuni}_OK };
+                        $dst = ($uni) { .tag=${xuni}_OK_TAG };
                     } else {
-                        $dst = ($uni) { .tag=MAR_TAG_${xuni}_ERR, .Err=MAR_CAST(${it.coder(pre)}, MAR_EXCEPTION) };
+                        $dst = ($uni) { .tag=${xuni}_ERR_TAG, .Err=CAST(${it.coder(pre)}, MAR_EXCEPTION) };
                     }
                     """
                 }
@@ -466,7 +467,7 @@ fun Stmt.coder (pre: Boolean): String {
         }
 
         is Stmt.Escape -> """
-            MAR_ESCAPE = MAR_CAST(Escape, ${this.e.coder(pre)});
+            MAR_ESCAPE = CAST(Escape, ${this.e.coder(pre)});
             continue;            
         """
         is Stmt.Defer -> {
@@ -497,7 +498,7 @@ fun Stmt.coder (pre: Boolean): String {
                     // no escape
                 } else if (
                     ${this.tp.cond2({
-                        "mar_sup(MAR_TAG_${it.ts.coder(pre).uppercase()}, MAR_EXCEPTION.tag)"
+                        "mar_sup(${it.ts.coder(pre).uppercase()}_TAG, MAR_EXCEPTION.tag)"
                     },{
                         "true"
                     })}
@@ -568,7 +569,7 @@ fun Stmt.coder (pre: Boolean): String {
             // MATCH | ${this.dump()}
             switch (${this.tst.coder(pre)}.tag) {
                 ${this.cases.map { (tst,e) -> """
-                    ${tst.cond2({"case MAR_TAG_${it.ts.coder(pre).uppercase()}"},{"default"})}:
+                    ${tst.cond2({"case ${it.ts.coder(pre).uppercase()}_TAG"},{"default"})}:
                         ${e.coder(pre)};
                     break;
                 """ }.joinToString("")}
@@ -767,7 +768,7 @@ fun Expr.coder (pre: Boolean): String {
                     (tdst == null) -> src
                     tdst.is_num() -> src
                     tdst.is_same_of(tsrc) -> src
-                    else -> "MAR_CAST(${tdst.coder(pre)}, $src)"
+                    else -> "CAST(${tdst.coder(pre)}, $src)"
                 }
             }.joinToString(",")} )"
             """
@@ -846,7 +847,7 @@ fun Expr.coder (pre: Boolean): String {
                                 val nxt = this.ts[i + 1].str
                                 """
                                 {
-                                    .tag = MAR_TAG_${tp.uppercase()}_${nxt.uppercase()},
+                                    .tag = ${tp.uppercase()}_${nxt.uppercase()}_TAG,
                                     { .$nxt = ceu_${i + 1} }
                                 };
                                 """
@@ -859,7 +860,7 @@ fun Expr.coder (pre: Boolean): String {
                     "."+(id?.str ?: ("_"+(i+1))) + " = " + v.coder(pre)
                 }.joinToString(",")
                 val ts = this.ts.coder(pre)
-                "((${this.ts.first().str}) { .tag=MAR_TAG_${ts.uppercase()}, .$ts={$vs} })"
+                "((${this.ts.first().str}) { .tag=${ts.uppercase()}_TAG, .$ts={$vs} })"
             }
         }
 
@@ -869,7 +870,7 @@ fun Expr.coder (pre: Boolean): String {
             (this.xtp is Type.Any)     -> this.tk.str
             (this.xtp is Type.Nat)     -> this.tk.str
             (this.xtp is Type.Prim)    -> this.tk.str
-            (this.xtp is Type.Data)    -> "MAR_CAST(${this.xtp!!.coder(pre)}, ${this.tk.str})"
+            (this.xtp is Type.Data)    -> "CAST(${this.xtp!!.coder(pre)}, ${this.tk.str})"
             else -> "((${this.xtp!!.coder(pre)}) ${this.tk.str})"
         }
         is Expr.Acc -> this.tk_.coder(this, pre)
@@ -889,7 +890,7 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Throw -> """
             ({
                 assert(sizeof(Exception) >= sizeof(${this.e.typex().coder(pre)}));
-                MAR_EXCEPTION = MAR_CAST(Exception, ${this.e.coder(pre)});
+                MAR_EXCEPTION = CAST(Exception, ${this.e.coder(pre)});
                 continue;
                 ${this.xtp!!.coder(pre)} mar_$n ; mar_$n;
             })
@@ -900,7 +901,7 @@ fun Expr.coder (pre: Boolean): String {
             ${this.typex().coder(pre)} mar_$n;
             switch (${this.tst.coder(pre)}.tag) {
                 ${this.cases.map { (tst,e) -> """
-                    ${tst.cond2({"case MAR_TAG_${it.ts.coder(pre).uppercase()}"},{"default"})}:
+                    ${tst.cond2({"case ${it.ts.coder(pre).uppercase()}_TAG"},{"default"})}:
                         mar_$n = ${e.coder(pre)};
                     break;
                 """ }.joinToString("")}
@@ -962,7 +963,7 @@ fun coder_main (pre: Boolean): String {
         #define true   1
         #define false  0
         
-        #define MAR_CAST(tp,v) (((union { tp a; typeof(v) b; }) {.b=v}).a)
+        #define CAST(tp,v) (((union { tp a; typeof(v) b; }) {.b=v}).a)
         
         int mar_sup (uint32_t sup, uint32_t sub) {
             //printf(">>> %X vs %X\n", sup, sub);
