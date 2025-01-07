@@ -217,6 +217,7 @@ fun Stmt.typex (): Type {
 
 fun Stmt.type (): Type? {
     return when (this) {
+        is Stmt.Catch -> this.tp
         is Stmt.Create -> {
             val co = this.co.type()
             if (co !is Type.Proto.Coro) null else {

@@ -1404,7 +1404,7 @@ class Exec  {
     fun kk_09_throw () {
         val out = test("""
             data X.*: []
-            var e = catch {
+            var e = catch X {
                 throw(X [])
                 print(999)
             }

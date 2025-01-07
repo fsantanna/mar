@@ -2,12 +2,14 @@ package mar
 
 fun Stmt.infer (tp: Type?): Type? {
     return when (this) {
+        is Stmt.Catch -> this.tp
+
         is Stmt.Create -> {
             val xtp = if (tp !is Type.Exec) null else {
-                this.co.infer(Type.Proto.Coro(tp.tk, tp.inps, tp.res, tp.yld, tp.out))
+                Type.Proto.Coro(tp.tk, tp.inps, tp.res, tp.yld, tp.out)
             }
             this.co.infer(xtp).let {
-                if (it !is Type.Proto.Coro) null else {
+                if (it !is Type.Proto.Coro) tp else {
                     Type.Exec(co.tk, it.inps, it.res, it.yld, it.out)
                 }
             }
@@ -241,7 +243,11 @@ fun infer_apply () {
 
            is Stmt.Escape -> me.e.infer(null)
            is Stmt.Defer -> {}
-           is Stmt.Catch -> {}
+           is Stmt.Catch -> {
+               if (me.xup !is Stmt.SetS) {
+                   me.infer(null)
+               }
+           }
 
            is Stmt.If -> me.cnd.infer(Type.Prim(Tk.Type("Bool",me.tk.pos)))
            is Stmt.Loop -> {}

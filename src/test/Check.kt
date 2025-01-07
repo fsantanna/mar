@@ -1559,6 +1559,49 @@ class Check {
         """)
         assert(out == "anon : (lin 5, col 19) : type error : data \"X.Y\" is not declared") { out!! }
     }
+    @Test
+    fun ff_04_catch_err () {
+        val out = check("""
+            var x: Break = catch Return {
+            }
+        """)
+        assert(out == "anon : (lin 2, col 26) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun ff_05_catch_err () {
+        val out = check("""
+            data X.*: [] {
+                Y: []
+            }
+            var x: X.Y = catch X {
+            }
+        """)
+        assert(out == "anon : (lin 5, col 24) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun ff_06_catch () {
+        val out = check("""
+            data X.*: [] {
+                Y: []
+            }
+            var x: X = catch X.Y {
+            }
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "data X.*: [] {\n"+
+           "Y: [] {\n"+
+           "}\n"+
+           "}\n"+
+           "var x: X\n"+
+           "set x = catch X.Y {\n"+
+           "}\n"+
+           "}") { G.outer!!.to_str() }
+    }
 
     // ESCAPE
 

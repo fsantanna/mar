@@ -742,7 +742,7 @@ class Infer {
                 "}") { G.outer!!.to_str() }
     }
 
-    // THROW
+    // THROW / CATCH
 
     @Test
     fun gg_01_throw_err () {
@@ -771,6 +771,30 @@ class Infer {
            "set x = throw((Error(([]:[]))))\n"+
            "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun gg_03_throw_err () {
+        val out = infer("""
+            var x = catch {}
+        """)
+        assert(out == "anon : (lin 2, col 17) : inference error : unknown type") { out!! }
+    }
+    @Test
+    fun gg_04_throw () {
+        val out = infer("""
+            var x = catch Break {}
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "var x: Break\n"+
+           "set x = catch Break {\n"+
+           "}\n"+
+           "}") { G.outer!!.to_str() }
+    }
+
 
     // STMT / MATCH
 

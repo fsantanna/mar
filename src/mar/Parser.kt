@@ -484,7 +484,9 @@ fun parser_expr (): Expr {
 }
 
 fun check_stmt_as_set_src (): Boolean {
-    return (check_fix("create") || check_fix("start") || check_fix("resume") || check_fix("yield") || check_fix("catch"))
+    return listOf("create","start","resume","yield","catch").any {
+        check_fix(it)
+    }
 }
 
 fun parser_stmt_block (): List<Stmt> {
