@@ -4,6 +4,8 @@ data Error.*: [] {
 
 ;;data String: #[Char]
 
+;; ENSURE
+
 func ensure_msg: (v: Bool, msg: \Char) -> () {
     if !v {
         throw(Error.Ensure [msg])
@@ -53,54 +55,4 @@ test {
     ensure(str[0] == '1')
     ensure(str[1] == '0')
     ensure(str[2] == '\0')
-}
-
-func string_empty: () -> #[1*Char] {
-    return(#['\0'])
-}
-
-test {
-    var str: #[10*Char] = string_empty()
-    ensure((##str==10) && (#str==1) && (str[0]=='\0'))
-}
-
-func string_cat_pointer: (s: \#[Char], p: \Char) -> () {
-    ensure(s\[#s\ - 1] == '\0')
-    var n: Int = `strlen(p)`
-    ensure(##s\ >= (#s\+n))
-    loop i in n {
-        set s\[#s\-1] = `p[i]`
-        set #s\ = #s\ + 1
-    }
-    set s\[#s\-1] = '\0'
-}
-
-test {
-    var str: #[10*Char] = string_empty()
-
-    string_cat_pointer(\str, "xxx")
-    ensure(`strcmp(str.buf, "xxx")` == 0)
-
-    string_cat_pointer(\str, " ")
-    string_cat_pointer(\str, "yyy")
-    ensure(`strcmp(str.buf, "xxx yyy")` == 0)
-}
-
-func string_cat_string: (s: \#[Char], t: \#[Char]) -> () {
-    ensure(s\[#s\ - 1] == '\0')
-    ensure(t\[#t\ - 1] == '\0')
-    string_cat_pointer(s, `t->buf`)
-}
-
-test {
-    var str: #[10*Char] = string_empty()
-    ensure((##str==10) && (#str==1) && (str[0]=='\0'))
-
-    string_cat_string(\str, \#['x','x','x','\0'])
-    ensure(`strcmp(str.buf, "xxx")` == 0)
-
-    var yyy: #[10*Char] = string_empty()
-    string_cat_pointer(\yyy, " yyy")
-    string_cat_string(\str, \yyy)
-    ensure(`strcmp(str.buf, "xxx yyy")` == 0)
 }
