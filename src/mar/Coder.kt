@@ -62,7 +62,14 @@ fun Type.coder (pre: Boolean): String {
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
         is Type.Union      -> "Union__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Vector     -> "Vector__${this.max.cond2({it.toString()},{"0"})}_${this.tp.coder(pre)}".clean()
+        is Type.Vector     -> {
+            val n = when (this.max) {
+                null -> "x"
+                is Expr.Num -> this.tk.str
+                else -> "n"
+            }
+            "Vector__${n}_${this.tp.coder(pre)}".clean()
+        }
         is Type.Proto.Func -> "Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(pre).first
         is Type.Exec       -> this.x_exec_coro(pre).first
@@ -121,6 +128,9 @@ fun coder_types (pre: Boolean): String {
             }
             is Type.Vector -> {
                 val x = me.coder(pre)
+                val n = if (me.max == null) "" else {
+                    me.max.coder(pre)
+                }
                 listOf("""
                     typedef struct $x {
                         int max, cur;

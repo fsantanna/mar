@@ -31,7 +31,7 @@ test {
     ensure(`strcmp(p1,"oi")` == 0)
     ensure(`strlen(p1)` == 2)
 
-    var s2: #[3*Char] = #['o','i']
+    var s2: #[Char*3] = #['o','i']
     var p2 = string_to_c(\s2)
     ensure(`strcmp(p2,"oi")` == 0)
     ensure(`strlen(p2)` == 2)
@@ -42,8 +42,8 @@ test {
     ensure(x?Err)
 }
 
-func string_from_int: (v: Int) -> #[32*Char] {
-    var ret: #[32*Char]
+func string_from_int: (v: Int) -> #[Char*32] {
+    var ret: #[Char*32]
     `ret.cur = snprintf(ret.buf, 32, "%d", v)`
     return(ret)
 }

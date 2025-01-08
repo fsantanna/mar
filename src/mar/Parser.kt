@@ -235,16 +235,11 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
         }
         accept_fix("#[") -> {
             val tk0 = G.tk0 as Tk.Fix
-            val size = if (fr_pointer && !check_enu("Num")) null else {
-                accept_enu_err("Num")
-                val v = (G.tk0 as Tk.Num).str.toIntOrNull()
-                if (v == null) {
-                    err(G.tk0!!, "vector error : expected number")
-                }
-                accept_op_err("*")
-                v
-            }
             val tp = parser_type(null, false, fr_pointer)
+            val size = if (fr_pointer && check_fix("]")) null else {
+                accept_op_err("*")
+                parser_expr()
+            }
             accept_fix_err("]")
             Type.Vector(tk0, size, tp)
         }

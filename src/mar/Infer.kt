@@ -102,7 +102,7 @@ fun Expr.infer (tp: Type?): Type? {
                 }
                 //println(v?.to_str())
                 if (v == null) null else {
-                    Type.Vector(this.tk, vs.size, v)
+                    Type.Vector(this.tk, Expr.Num(Tk.Num(vs.size.toString(),this.tk.pos)), v)
                 }
             }
             if (dn != null) {

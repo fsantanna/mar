@@ -696,6 +696,15 @@ class Exec  {
         """)
         assert(out == "#[10]\n") { out }
     }
+    @Test
+    fun gh_11_vector_dynamic () {
+        val out = test("""
+            var n = 2
+            var a: #[Int*n] = #[10,20,30]
+            print(a)
+        """)
+        assert(out == "#[10,20]\n") { out }
+    }
 
     // CONCATENATE
 

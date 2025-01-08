@@ -206,18 +206,18 @@ class Parser {
 
     @Test
     fun al_01_vec () {
-        G.tks = ("#[10*Int]").lexer()
+        G.tks = ("#[Int*10]").lexer()
         parser_lexer()
         val tp = parser_type(null, false, false)
-        assert(tp is Type.Vector && tp.max==10 && tp.tp is Type.Prim)
+        assert(tp is Type.Vector && tp.max is Expr.Num && tp.max.tk.str=="10" && tp.tp is Type.Prim)
         assert(tp.to_str() == "#[10 * Int]")
     }
     @Test
     fun al_02_vec () {
-        G.tks = ("#[10 * #[1*Int]]").lexer()
+        G.tks = ("#[#[Int*1] * 10]").lexer()
         parser_lexer()
         val tp = parser_type(null, false, false)
-        assert(tp is Type.Vector && tp.max==10 && tp.tp is Type.Vector)
+        assert(tp is Type.Vector && tp.max is Expr.Num && tp.max.tk.str=="10" && tp.tp is Type.Vector)
         assert(tp.to_str() == "#[10 * #[1 * Int]]")
     }
     @Test
