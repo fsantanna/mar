@@ -741,14 +741,14 @@ fun Expr.coder (pre: Boolean): String {
                     val tp = this.typex() as Type.Vector
                     val one = tp.tp.coder(pre)
                     val xe1 = if (this.e1.typex() is Type.Vector) {
-                        "mar_vector_cat_vector((MAR_Vector*)&mar_$n, (MAR_Vector*)&mar_e1_$n, sizeof($one));"
+                        "mar_vector_cat_vector((Vector*)&mar_$n, (Vector*)&mar_e1_$n, sizeof($one));"
                     } else {
-                        "mar_vector_cat_pointer((MAR_Vector*)&mar_$n, mar_e1_$n, strlen(mar_e1_$n), sizeof($one));"
+                        "mar_vector_cat_pointer((Vector*)&mar_$n, mar_e1_$n, strlen(mar_e1_$n), sizeof($one));"
                     }
                     val xe2 = if (this.e2.typex() is Type.Vector) {
-                        "mar_vector_cat_vector((MAR_Vector*)&mar_$n, (MAR_Vector*)&mar_e2_$n, sizeof($one));"
+                        "mar_vector_cat_vector((Vector*)&mar_$n, (Vector*)&mar_e2_$n, sizeof($one));"
                     } else {
-                        "mar_vector_cat_pointer((MAR_Vector*)&mar_$n, mar_e2_$n, strlen(mar_e2_$n), sizeof($one));"
+                        "mar_vector_cat_pointer((Vector*)&mar_$n, mar_e2_$n, strlen(mar_e2_$n), sizeof($one));"
                     }
                     """
                     ({
@@ -1014,18 +1014,18 @@ fun coder_main (pre: Boolean): String {
         } Exception;
         Exception MAR_EXCEPTION = { __MAR_EXCEPTION_NONE__ };
         
-        typedef struct MAR_Vector {
+        typedef struct Vector {
             int max, cur;
             char buf[];
-        } MAR_Vector;
+        } Vector;
         
-        void mar_vector_cat_pointer (MAR_Vector* dst, char* src, int len, int size) {
+        void mar_vector_cat_pointer (Vector* dst, char* src, int len, int size) {
             int n = MIN(dst->max-dst->cur, len);
             memcpy(&dst->buf[dst->cur*size], src, n*size);
             dst->cur += n;
         }
         
-        void mar_vector_cat_vector (MAR_Vector* dst, MAR_Vector* src, int size) {
+        void mar_vector_cat_vector (Vector* dst, Vector* src, int size) {
             mar_vector_cat_pointer(dst, src->buf, src->cur, size);
         }
         

@@ -105,11 +105,10 @@ fun Expr.infer (tp: Type?): Type? {
                     Type.Vector(this.tk, vs.size, v)
                 }
             }
-            if (dn == null) null else {
+            if (dn != null) {
                 if (this.xtp == null) {
                     this.xtp = dn
                 }
-                this.xtp
             }
         }
         is Expr.Field -> this.col.infer(null)
