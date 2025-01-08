@@ -722,6 +722,14 @@ fun Expr.coder (pre: Boolean): String {
             return when (this.tk.str) {
                 "#"  -> "(" + this.e.coder(pre) + ".cur)"
                 "##" -> "(" + this.e.coder(pre) + ".max)"
+                "ref" -> {
+                    val x = this.e.coder(pre)
+                    if (this.e.is_lval()) {
+                        "(&$x)"
+                    } else {
+                        "({ typeof($x) mar_$n=$x; &mar_$n; })"
+                    }
+                }
                 else -> "(" + this.tk.str.op_mar_to_c() + this.e.coder(pre) + ")"
             }
         }

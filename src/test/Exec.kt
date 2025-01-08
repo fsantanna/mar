@@ -1622,4 +1622,14 @@ class Exec  {
         //assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
         //assert(out == "anon : (lin 2, col 17) : inference error : unknown type\n") { out }
     }
+    @Test
+    fun zz_05 () {
+        val out = test("""
+        func f: (v: \Int) -> Int {
+            return(v\)
+        }
+        print(f(\1))
+        """)
+        assert(out == "1\n") { out }
+    }
 }
