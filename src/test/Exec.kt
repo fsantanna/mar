@@ -604,7 +604,7 @@ class Exec  {
     @Test
     fun gh_01_vector () {
         val out = test("""
-            var v: #[3*Int] = #[1,0,3]
+            var v: #[Int*3] = #[1,0,3]
             set v[1] = v[1] + 2
             print(v)
             print(#v)
@@ -614,7 +614,7 @@ class Exec  {
     @Test
     fun gh_02_vector () {
         val out = test("""
-            var v: #[3*Int]
+            var v: #[Int*3]
             print(##v)
             print(#v)
         """)
@@ -623,7 +623,7 @@ class Exec  {
     @Test
     fun gh_03_vector () {
         val out = test("""
-            var v: #[3*Int] = #[1,0,3]
+            var v: #[Int*3] = #[1,0,3]
             var vv: \#[Int] = \v
             print(vv\[2])
         """)
@@ -662,7 +662,7 @@ class Exec  {
     @Test
     fun gh_07_vector_cur () {
         val out = test("""
-            var a: #[3*Int] = #[1,2]
+            var a: #[Int*3] = #[1,2]
             print(#a)
             print(##a)
         """)
@@ -671,7 +671,7 @@ class Exec  {
     @Test
     fun gh_08_vector_cur () {
         val out = test("""
-            var a: #[2*Int] = #[1,2,3]
+            var a: #[Int*2] = #[1,2,3]
             print(#a)
             print(##a)
         """)
@@ -680,7 +680,7 @@ class Exec  {
     @Test
     fun gh_09_vector_cur () {
         val out = test("""
-            func f: (a: #[2*Int]) -> () {
+            func f: (a: #[Int*2]) -> () {
                 print(#a)
                 print(##a)
             }
@@ -691,7 +691,7 @@ class Exec  {
     @Test
     fun gh_10_vector_print () {
         val out = test("""
-            var a: #[2*Int] = #[10]
+            var a: #[Int*2] = #[10]
             print(a)
         """)
         assert(out == "#[10]\n") { out }
@@ -711,7 +711,7 @@ class Exec  {
     @Test
     fun gi_01_concat () {
         val out = test("""
-            var a: #[3*Int] = #[1,2]
+            var a: #[Int*3] = #[1,2]
             var c = a ++ #[3,4]
             print([#a,#c,##c])
             print(c)
@@ -721,7 +721,7 @@ class Exec  {
     @Test
     fun gi_02_concat () {
         val out = test("""
-            var a: #[3*Char] = #['a','b']
+            var a: #[Char*3] = #['a','b']
             var c = a ++ #['c','d','\0']
             print([#c,##c])
             `puts(c.buf)`
@@ -731,7 +731,7 @@ class Exec  {
     @Test
     fun gi_03_concat () {
         val out = test("""
-            var a: #[3*Char] = #['a','b']
+            var a: #[Char*3] = #['a','b']
             var c = a ++ "cd" ++ #['\0']
             print([#c,##c])
             `puts(c.buf)`

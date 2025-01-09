@@ -860,8 +860,8 @@ class Infer {
            "}\n"+
            "data Break.*: [] {\n"+
            "}\n"+
-           "var x: #[3 * Int]\n"+
-           "set x = (#[1,2,3]:#[3 * Int])\n"+
+           "var x: #[Int*3]\n"+
+           "set x = (#[1,2,3]:#[Int*3])\n"+
            "}") { G.outer!!.to_str() }
     }
     @Test
@@ -876,7 +876,7 @@ class Infer {
            "data Break.*: [] {\n"+
            "}\n"+
            "var x: Int\n"+
-           "set x = (#(#[10]:#[1 * Int]))\n"+
+           "set x = (#(#[10]:#[Int*1]))\n"+
            "}") { G.outer!!.to_str() }
     }
     @Test
@@ -891,7 +891,7 @@ class Infer {
            "data Break.*: [] {\n"+
            "}\n"+
            "var x: Int\n"+
-           "set x = (##(#[10]:#[1 * Int]))\n"+
+           "set x = (##(#[10]:#[Int*1]))\n"+
            "}") { G.outer!!.to_str() }
     }
 }

@@ -65,7 +65,7 @@ fun Type.coder (pre: Boolean): String {
         is Type.Vector     -> {
             val n = when (this.max) {
                 null -> "x"
-                is Expr.Num -> this.tk.str
+                is Expr.Num -> this.max.tk.str
                 else -> "n"
             }
             "Vector__${n}_${this.tp.coder(pre)}".clean()
@@ -134,7 +134,7 @@ fun coder_types (pre: Boolean): String {
                 listOf("""
                     typedef struct $x {
                         int max, cur;
-                        ${me.tp.coder(pre)} buf[${me.max.cond2({it.toString()},{""})}];
+                        ${me.tp.coder(pre)} buf[${me.max.cond2({it.to_str(pre)},{""})}];
                     } $x;
                 """)
             }
@@ -323,7 +323,7 @@ fun Stmt.coder (pre: Boolean): String {
                         if (tp !is Type.Vector) "" else {
                             val xid = id.str
                             """
-                            $xid.max = ${tp.max};
+                            $xid.max = ${tp.max!!.to_str(pre)};
                             $xid.cur = MIN($xid.max, $xid.cur);                            
                             """
                         }
@@ -415,7 +415,7 @@ fun Stmt.coder (pre: Boolean): String {
             }
             val ini = this.xtp.let {
                 if (it !is Type.Vector) "" else """
-                    ${this.id.str}.max = ${it.max};
+                    ${this.id.str}.max = ${it.max!!.to_str(pre)};
                     ${this.id.str}.cur = 0;
                 """
             }
@@ -443,7 +443,7 @@ fun Stmt.coder (pre: Boolean): String {
                     {
                         typeof($dst)* mar_$n = &$dst;
                         *mar_$n = CAST(${tdst.coder(pre)}, $src);
-                        mar_$n->max = ${tdst.max};
+                        mar_$n->max = ${tdst.max.to_str(pre)};
                         mar_$n->cur = MIN(mar_$n->max, mar_$n->cur);                        
                     }                        
                     """
@@ -762,7 +762,7 @@ fun Expr.coder (pre: Boolean): String {
                     }
                     """
                     ({
-                        ${tp.coder(pre)} mar_$n = { .max=${tp.max}, .cur=0 };
+                        ${tp.coder(pre)} mar_$n = { .max=${tp.max!!.coder(pre)}, .cur=0 };
                         typeof($e1) mar_e1_$n = $e1;
                         typeof($e2) mar_e2_$n = $e2;
                         $xe1
@@ -812,7 +812,8 @@ fun Expr.coder (pre: Boolean): String {
 
         is Expr.Tuple  -> "((${this.typex().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
         is Expr.Vector -> (this.typex() as Type.Vector).let {
-            "((${it.coder(pre)}) { .max=${it.max}, .cur=${it.max}, .buf={${this.vs.map { it.coder(pre) }.joinToString(",") }} })"
+            val max = it.max!!.coder(pre)
+            "((${it.coder(pre)}) { .max=$max, .cur=$max, .buf={${this.vs.map { it.coder(pre) }.joinToString(",") }} })"
         }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!

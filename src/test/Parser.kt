@@ -210,7 +210,7 @@ class Parser {
         parser_lexer()
         val tp = parser_type(null, false, false)
         assert(tp is Type.Vector && tp.max is Expr.Num && tp.max.tk.str=="10" && tp.tp is Type.Prim)
-        assert(tp.to_str() == "#[10 * Int]")
+        assert(tp.to_str() == "#[Int*10]")
     }
     @Test
     fun al_02_vec () {
@@ -218,17 +218,17 @@ class Parser {
         parser_lexer()
         val tp = parser_type(null, false, false)
         assert(tp is Type.Vector && tp.max is Expr.Num && tp.max.tk.str=="10" && tp.tp is Type.Vector)
-        assert(tp.to_str() == "#[10 * #[1 * Int]]")
+        assert(tp.to_str() == "#[#[Int*1]*10]")
     }
     @Test
     fun al_03_vec_err () {
-        G.tks = ("#[1.1*Int]").lexer()
+        G.tks = ("#[Int*1.1]").lexer()
         parser_lexer()
         assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 3) : vector error : expected number")
     }
     @Test
     fun al_04_vec_err () {
-        G.tks = ("#[1 Int]").lexer()
+        G.tks = ("#[Int 1]").lexer()
         parser_lexer()
         assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 5) : expected \"*\" : have \"Int\"")
     }

@@ -564,7 +564,7 @@ class Check {
     @Test
     fun cd_01_vector_err () {
         val out = check("""
-            var t: #[10*Int] = #['a']
+            var t: #[Int*10] = #['a']
         """)
         //println(G.outer!!.to_str())
         assert(out == "anon : (lin 2, col 30) : set error : types mismatch") { out!! }
@@ -572,7 +572,7 @@ class Check {
     @Test
     fun cd_02_vector_err () {
         val out = check("""
-            var t: #[10*Int]
+            var t: #[Int*10]
             do(t['a'])
         """)
         assert(out == "anon : (lin 3, col 18) : index error : expected number") { out!! }
@@ -580,8 +580,8 @@ class Check {
     @Test
     fun cd_03_vector_err () {
         val out = check("""
-            var a: #[2*Int]
-            var b: #[4*Int]
+            var a: #[Int*2]
+            var b: #[Int*4]
             set a = b
             set b = a
         """)
@@ -598,7 +598,7 @@ class Check {
     @Test
     fun cd_05_vector_err () {
         val out = check("""
-            var v: #[2*Int]
+            var v: #[Int*2]
             var x: Bool = #v
         """)
         assert(out == "anon : (lin 3, col 25) : set error : types mismatch") { out!! }
@@ -613,7 +613,7 @@ class Check {
     @Test
     fun cd_07_vector_err () {
         val out = check("""
-            var v: #[1*Int]
+            var v: #[Int*1]
             var x: Bool = ##v
         """)
         assert(out == "anon : (lin 3, col 25) : set error : types mismatch") { out!! }
