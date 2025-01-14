@@ -701,9 +701,20 @@ class Exec  {
         val out = test("""
             var n = 2
             var a: #[Int*n] = #[10,20,30]
-            print(a)
+            print([##a, #a, a])
         """)
         assert(out == "#[10,20]\n") { out }
+    }
+    @Test
+    fun gh_12_vector () {
+        val out = test("""
+            var i = 10
+            var v: #[Int*3] = #[1,0,i]
+            set v[1] = v[1] + 2
+            print(v)
+            print(#v)
+        """)
+        assert(out == "#[1,2,10]\n3\n") { out }
     }
 
     // CONCATENATE

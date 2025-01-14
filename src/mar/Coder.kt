@@ -62,14 +62,7 @@ fun Type.coder (pre: Boolean): String {
         is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
         is Type.Union      -> "Union__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Vector     -> {
-            val n = when (this.max) {
-                null -> "x"
-                is Expr.Num -> this.max.tk.str
-                else -> "n"
-            }
-            "Vector__${n}_${this.tp.coder(pre)}".clean()
-        }
+        is Type.Vector     -> "Vector"
         is Type.Proto.Func -> "Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(pre).first
         is Type.Exec       -> this.x_exec_coro(pre).first
@@ -126,18 +119,6 @@ fun coder_types (pre: Boolean): String {
                     } $x;
                 """)
             }
-            is Type.Vector -> {
-                val x = me.coder(pre)
-                val n = if (me.max == null) "" else {
-                    me.max.coder(pre)
-                }
-                listOf("""
-                    typedef struct $x {
-                        int max, cur;
-                        ${me.tp.coder(pre)} buf[${me.max.cond2({it.to_str(pre)},{""})}];
-                    } $x;
-                """)
-            }
             is Type.Union -> {
                 val x = me.coder(pre)
                 val xx = x.uppercase()
@@ -161,31 +142,6 @@ fun coder_types (pre: Boolean): String {
                         };
                     } $x;
                 """)
-            }
-            else -> emptyList()
-        }
-    }
-    fun fe (me: Expr): List<String> {
-        return when (me) {
-            is Expr.Bin -> {
-                if (me.tk.str == "++") {
-                    val tp = me.typex() as Type.Vector
-                    val x = tp.coder(pre)
-                    if (G.types.contains(x)) {
-                        return emptyList()
-                    } else {
-                        G.types.add(x)
-                    }
-                    val y = tp.tp.coder(pre)
-                    return listOf("""
-                        typedef struct $x {
-                            int max, cur;
-                            $y buf[${tp.max!!}];
-                        } $x;
-                    """)
-                } else {
-                    emptyList()
-                }
             }
             else -> emptyList()
         }
@@ -302,7 +258,7 @@ fun coder_types (pre: Boolean): String {
             else -> emptyList()
         }
     }
-    val ts = G.outer!!.dn_collect_pos(::fs, ::fe, ::ft)
+    val ts = G.outer!!.dn_collect_pos(::fs, {emptyList()}, ::ft)
     return ts.joinToString("")
 }
 
@@ -322,9 +278,13 @@ fun Stmt.coder (pre: Boolean): String {
                     this.tp_.inps_.map { (id,tp) ->
                         if (tp !is Type.Vector) "" else {
                             val xid = id.str
+                            val xtp = tp.tp.to_str(pre)
                             """
                             $xid.max = ${tp.max!!.to_str(pre)};
-                            $xid.cur = MIN($xid.max, $xid.cur);                            
+                            $xid.cur = MIN($xid.max, $xid.cur);
+                            $xtp mar_$n[$xid.max];
+                            memcpy($xid.buf, mar_$n, sizeof($xtp)*$xid.cur);
+                            $xid.buf = (char*) &mar_$n;
                             """
                         }
                     }.joinToString("")
@@ -415,8 +375,12 @@ fun Stmt.coder (pre: Boolean): String {
             }
             val ini = this.xtp.let {
                 if (it !is Type.Vector) "" else """
-                    ${this.id.str}.max = ${it.max!!.to_str(pre)};
-                    ${this.id.str}.cur = 0;
+                    //{
+                        ${this.id.str}.max = ${it.max!!.coder(pre)};
+                        ${this.id.str}.cur = 0;
+                        ${it.tp.to_str(pre)} mar_$n[${this.id.str}.max];
+                        ${this.id.str}.buf = (char*) &mar_$n;
+                    //}
                 """
             }
             dcl + ini
@@ -434,19 +398,18 @@ fun Stmt.coder (pre: Boolean): String {
                     """
                 }
                 tdst.is_num() -> "$dst = $src;"
-                tdst.is_same_of(tsrc) -> "$dst = $src;"
-                (tdst !is Type.Vector || tdst.max==null) -> {
-                    "$dst = CAST(${tdst.coder(pre)}, $src);"
-                }
-                else -> {
-                    """
+                (tdst is Type.Vector) -> """
                     {
-                        typeof($dst)* mar_$n = &$dst;
-                        *mar_$n = CAST(${tdst.coder(pre)}, $src);
-                        mar_$n->max = ${tdst.max.to_str(pre)};
-                        mar_$n->cur = MIN(mar_$n->max, mar_$n->cur);                        
+                        Vector* mar_dst_$n = &$dst;
+                        Vector mar_src_$n = $src;
+                        int mar_n_$n = MIN(mar_src_$n.cur, mar_dst_$n->max);
+                        memcpy(mar_dst_$n->buf, mar_src_$n.buf, sizeof(${tdst.tp.coder(pre)}) * mar_n_$n);
+                        mar_dst_$n->cur = mar_n_$n;
                     }                        
-                    """
+                """
+                tdst.is_same_of(tsrc) -> "$dst = $src;"
+                else -> {
+                    "$dst = CAST(${tdst.coder(pre)}, $src);"
                 }
             }
         }
@@ -651,7 +614,7 @@ fun Stmt.coder (pre: Boolean): String {
                                 if (i > 0) {
                                     printf(",");
                                 }
-                                ${aux(tp.tp, "mar_${tp.n}.buf[i]")};
+                                ${aux(tp.tp, "((${tp.tp.coder(pre)}*)mar_${tp.n}.buf)[i]")};
                             }
                             printf("]");
                         }
@@ -751,20 +714,20 @@ fun Expr.coder (pre: Boolean): String {
                     val tp = this.typex() as Type.Vector
                     val one = tp.tp.coder(pre)
                     val xe1 = if (this.e1.typex() is Type.Vector) {
-                        "mar_vector_cat_vector((Vector*)&mar_$n, (Vector*)&mar_e1_$n, sizeof($one));"
+                        "mar_vector_cat_vector(&mar_$n, &mar_e1_$n, sizeof($one));"
                     } else {
-                        "mar_vector_cat_pointer((Vector*)&mar_$n, mar_e1_$n, strlen(mar_e1_$n), sizeof($one));"
+                        "mar_vector_cat_pointer(&mar_$n, mar_e1_$n, strlen(mar_e1_$n), sizeof($one));"
                     }
                     val xe2 = if (this.e2.typex() is Type.Vector) {
-                        "mar_vector_cat_vector((Vector*)&mar_$n, (Vector*)&mar_e2_$n, sizeof($one));"
+                        "mar_vector_cat_vector(&mar_$n, &mar_e2_$n, sizeof($one));"
                     } else {
-                        "mar_vector_cat_pointer((Vector*)&mar_$n, mar_e2_$n, strlen(mar_e2_$n), sizeof($one));"
+                        "mar_vector_cat_pointer(&mar_$n, mar_e2_$n, strlen(mar_e2_$n), sizeof($one));"
                     }
                     """
                     ({
-                        ${tp.coder(pre)} mar_$n = { .max=${tp.max!!.coder(pre)}, .cur=0 };
-                        typeof($e1) mar_e1_$n = $e1;
-                        typeof($e2) mar_e2_$n = $e2;
+                        Vector mar_$n = { .max=${tp.max!!.coder(pre)}, .cur=0 };
+                        Vector mar_e1_$n = $e1;
+                        Vector mar_e2_$n = $e2;
                         $xe1
                         $xe2
                         /*
@@ -813,7 +776,13 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Tuple  -> "((${this.typex().coder(pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
         is Expr.Vector -> (this.typex() as Type.Vector).let {
             val max = it.max!!.coder(pre)
-            "((${it.coder(pre)}) { .max=$max, .cur=$max, .buf={${this.vs.map { it.coder(pre) }.joinToString(",") }} })"
+            """
+            ({
+                static ${it.tp.coder(pre)} mar_buf_$n[] = { ${this.vs.map { it.coder(pre) }.joinToString(",") } };
+                Vector mar_$n = { .max=$max, .cur=$max, .buf=(char*)&mar_buf_$n };
+                mar_$n;
+            })
+            """
         }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
@@ -837,7 +806,10 @@ fun Expr.coder (pre: Boolean): String {
                 }
             }
         }
-        is Expr.Index  -> "${this.col.coder(pre)}.buf[${this.idx.coder(pre)}]"
+        is Expr.Index  -> {
+            val tp = (this.col.typex() as Type.Vector).tp.coder(pre)
+            "(($tp*)${this.col.coder(pre)}.buf)[${this.idx.coder(pre)}]"
+        }
         is Expr.Disc   -> {
             val tp = this.col.typex()
             val ret = if (tp !is Type.Data) {
@@ -1009,8 +981,6 @@ fun coder_main (pre: Boolean): String {
             return 1;
         }
         
-        ${coder_types(pre)}
-        
         #define __MAR_ESCAPE_NONE__  0
         typedef struct Escape {
             int tag;
@@ -1027,7 +997,7 @@ fun coder_main (pre: Boolean): String {
         
         typedef struct Vector {
             int max, cur;
-            char buf[];
+            char* buf;
         } Vector;
         
         void mar_vector_cat_pointer (Vector* dst, char* src, int len, int size) {
@@ -1039,6 +1009,8 @@ fun coder_main (pre: Boolean): String {
         void mar_vector_cat_vector (Vector* dst, Vector* src, int size) {
             mar_vector_cat_pointer(dst, src->buf, src->cur, size);
         }
+        
+        ${coder_types(pre)}
         
         int main (void) {
             do {
