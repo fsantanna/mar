@@ -281,32 +281,41 @@ fun Expr.type (): Type? {
                 }
                 when {
                     (tp1 is Type.Vector && tp2 is Type.Vector) -> {
-                        Type.Vector(this.tk, bin("+",tp1.max!!,tp2.max!!), tp1.tp)
+                        Type.Vector(this.tk, Expr.Num(Tk.Num((tp1.max!!.tk.str.toInt()+tp2.max!!.tk.str.toInt()).toString(), this.tk.pos)) /*bin("+",tp1.max!!,tp2.max!!)*/, tp1.tp)
                     }
                     (tp1 is Type.Vector && this.e2 is Expr.Str) -> {
                         Type.Vector(this.tk,
+                            Expr.Num(Tk.Num((tp1.max!!.tk.str.toInt() + this.e2.tk.str.length).toString(), this.tk.pos)),
+                            /*
                             bin("+",
                                 tp1.max!!,
                                 bin("-", num(this.e2.tk.str.length), num(2))
                             ),
+                             */
                             tp1.tp
                         )
                     }
                     (tp2 is Type.Vector && this.e1 is Expr.Str) -> {
                         Type.Vector(this.tk,
+                            Expr.Num(Tk.Num((this.e1.tk.str.length + tp2.max!!.tk.str.toInt()).toString(), this.tk.pos)),
+                            /*
                             bin("+",
                                 bin("-", num(this.e1.tk.str.length), num(2)),
                                 tp2.max!!
                             ),
+                             */
                             tp2.tp
                         )
                     }
                     (this.e1 is Expr.Str && this.e2 is Expr.Str) -> {
                         Type.Vector(this.tk,
+                            Expr.Num(Tk.Num((this.e1.tk.str.length + this.e2.tk.str.length).toString(), this.tk.pos)),
+                            /*
                             bin("+",
                                 bin("-", num(this.e1.tk.str.length), num(2)),
                                 bin("-", num(this.e2.tk.str.length), num(2))
                             ),
+                             */
                             Type.Prim(Tk.Type("Char", this.tk.pos))
                         )
                     }

@@ -750,7 +750,7 @@ fun Expr.coder (pre: Boolean): String {
                     }
                     """
                     ({
-                        ${tp.coder(pre)} mar_$n = { .max=${tp.max}, .cur=0 };
+                        ${tp.coder(pre)} mar_$n = { .max=${tp.max!!.tk.str}, .cur=0 };
                         typeof($e1) mar_e1_$n = $e1;
                         typeof($e2) mar_e2_$n = $e2;
                         $xe1
