@@ -200,14 +200,16 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                     accept_enu_err("Type")
                     l.add(G.tk0 as Tk.Type)
                 }
-                val tpls: List<Type_Expr>? = if (!accept_fix("(")) null else {
-                    parser_list(",", ")") {
+                val tpls: List<Type_Expr>? = if (!accept_fix("{{")) null else {
+                    val l = parser_list(",", "}") {
                         if (accept_fix(":")) {
                             Pair(parser_type(null, false, false), null)
                         } else {
                             Pair(null, parser_expr())
                         }
                     }
+                    accept_fix_err("}")
+                    l
                 }
                 Type.Data(tp, tpls, l)
             }
@@ -783,10 +785,12 @@ fun parser_stmt (): List<Stmt> {
             accept_enu_err("Type")
             val t = G.tk0 as Tk.Type
             fun tpls (): List<Var_Type>? {
-                return if (!accept_fix("{")) null else {
-                    parser_list(",", "}") {
+                return if (!accept_fix("{{")) null else {
+                    val l = parser_list(",", "}") {
                         parser_var_type(null)
                     }
+                    accept_fix_err("}")
+                    l
                 }
             }
             if (!accept_fix(".")) {

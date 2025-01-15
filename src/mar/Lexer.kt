@@ -175,7 +175,16 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                     break
                 }
             }
-            (x in listOf('{','}','(',')','[',']',',','\$','.',':')) -> yield(Tk.Fix(x.toString(), pos))
+            (x in listOf('}','(',')','[',']',',','\$','.',':')) -> yield(Tk.Fix(x.toString(), pos))
+            (x in listOf('{')) -> {
+                val (n1, x1) = read2()
+                if (x1 == '{') {
+                    yield(Tk.Fix("{{", pos))
+                } else {
+                    unread2(n1)
+                    yield(Tk.Fix(x.toString(), pos))
+                }
+            }
             (x == '^') -> {
                 val id = read2While { a -> a.isLetter() }
                 when (id) {

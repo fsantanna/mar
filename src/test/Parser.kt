@@ -1217,9 +1217,9 @@ class Parser {
     @Test
     fun tt_01_data () {
         G.tks = ("""
-            data Maybe {t:Type}: <Nothing:(), Just:{t}>
-            var x: Maybe (Int) = Maybe {Int}.Just(10)
-            var x: Maybe (Int) = Just(10)
+            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
+            var x: Maybe {{Int}} = Maybe {{Int}}.Just(10)
+            var x: Maybe {{Int}} = Just(10)
             var x: Maybe = Just(10)
             var x = Maybe.Just(10)
         """).lexer()
@@ -1230,14 +1230,14 @@ class Parser {
     @Test
     fun tt_02_func () {
         G.tks = ("""
-            func {n:Int, t:Type} f: (v:{t}) -> [Int,Int] {
-                var x: #[{t}*{n}] = #[v]
+            func {{n:Int, t:Type}} f: (v:{{t}}) -> [Int,Int] {
+                var x: #[{{t}}*{{n}}] = #[v]
                 return([##x, x[0]])
             }
-            print(f {10,Int} (20))
-            print(f {10} (20))
+            print(f {{10,Int}} (20))
+            print(f {{10}} (20))
 
-            func {n:Int} f: (v:#[Int*{n}]) -> () {
+            func {{n:Int}} f: (v:#[Int*{{n}}]) -> () {
                 return(##v)
             }
             print(f(#[1,2,3]))
