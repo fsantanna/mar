@@ -200,7 +200,16 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                     accept_enu_err("Type")
                     l.add(G.tk0 as Tk.Type)
                 }
-                Type.Data(tp, l)
+                val tpls: List<Type_Expr>? = if (!accept_fix("{")) null else {
+                    parser_list(",", "}") {
+                        if (accept_fix(":")) {
+                            Pair(parser_type(null, false, false), null)
+                        } else {
+                            Pair(null, parser_expr())
+                        }
+                    }
+                }
+                Type.Data(tp, tpls, l)
             }
         }
         accept_op("\\") -> {
@@ -501,7 +510,7 @@ fun parser_stmt (): List<Stmt> {
             accept_fix_err(":")
             val tp = parser_type(tk0, true, false)
             val ss = parser_stmt_block()
-            val esc = Type.Data(tk0, listOf(Tk.Type("Return",tk0.pos)))
+            val esc = Type.Data(tk0, null, listOf(Tk.Type("Return",tk0.pos)))
             when (tp) {
                 is Type.Proto.Func.Vars ->
                     Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk, esc, ss))
@@ -638,7 +647,7 @@ fun parser_stmt (): List<Stmt> {
                 Pair(a,b)
             }
             val blk = parser_stmt_block()
-            val brk = Type.Data(tk0, listOf(Tk.Type("Break",tk0.pos)))
+            val brk = Type.Data(tk0, null, listOf(Tk.Type("Break",tk0.pos)))
             if (num == null) {
                 listOf(Stmt.Loop(tk0, Stmt.Block(tk0, brk, blk)))
             } else {
@@ -773,12 +782,21 @@ fun parser_stmt (): List<Stmt> {
             val tk0 = G.tk0!!
             accept_enu_err("Type")
             val t = G.tk0 as Tk.Type
+            fun tpls (): List<Var_Type>? {
+                return if (!accept_fix("{")) null else {
+                    parser_list(",", "}") {
+                        parser_var_type(null)
+                    }
+                }
+            }
             if (!accept_fix(".")) {
+                val xs = tpls()
                 accept_fix_err(":")
                 val tp = parser_type(null, false, false)
-                listOf(Stmt.Data(tk0, t, tp, null))
+                listOf(Stmt.Data(tk0, t, xs, tp, null))
             } else {
                 accept_op_err("*")
+                val xs = tpls()
                 accept_fix_err(":")
                 val tp = if (!check_fix_err("[")) {
                     Type.Tuple(G.tk0!!, emptyList())
@@ -796,11 +814,11 @@ fun parser_stmt (): List<Stmt> {
                             } else {
                                 parser_type(null, false, false) as Type.Tuple
                             }
-                            Stmt.Data(xt, xt, xtp, f())
+                            Stmt.Data(xt, xt, null, xtp, f())
                         }
                     }
                 }
-                listOf(Stmt.Data(tk0, t, tp, f()))
+                listOf(Stmt.Data(tk0, t, xs, tp, f()))
             }
         }
         accept_fix("print") -> {

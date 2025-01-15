@@ -54,6 +54,7 @@ val PRIMS = setOf(
 
 typealias XDcl = Triple<Stmt,Tk.Var,Type?>
 typealias Var_Type = Pair<Tk.Var,Type>
+typealias Type_Expr = Pair<Type?,Expr?>
 
 sealed class Tk (val str: String, val pos: Pos) {
     class Eof  (pos: Pos): Tk("", pos)
@@ -74,7 +75,7 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
     class Nat     (val tk_: Tk.Nat): Type(G.N++, null, tk_)
     class Unit    (tk: Tk): Type(G.N++, null, tk)
     class Prim    (val tk_: Tk.Type): Type(G.N++, null, tk_)
-    class Data    (tk: Tk, val ts: List<Tk.Type>): Type(G.N++, null, tk)
+    class Data    (tk: Tk, val tpls: List<Type_Expr>?, val ts: List<Tk.Type>): Type(G.N++, null, tk)
     class Pointer (tk: Tk, val ptr: Type): Type(G.N++, null, tk)
     class Tuple   (tk: Tk, val ts: List<Pair<Tk.Var?,Type>>): Type(G.N++, null, tk)
     class Union   (tk: Tk, val tagged: Boolean, val ts: List<Pair<Tk.Type?,Type>>): Type(G.N++, null, tk)
@@ -124,7 +125,7 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
 }
 
 sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
-    class Data   (tk: Tk, val t: Tk.Type, val tp: Type, val subs: List<Stmt.Data>?): Stmt(G.N++, null, tk)
+    class Data   (tk: Tk, val t: Tk.Type, val tpls: List<Var_Type>?, val tp: Type, val subs: List<Stmt.Data>?): Stmt(G.N++, null, tk)
     sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, null, tk) {
         class Func (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
         class Coro (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Coro.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
@@ -235,8 +236,8 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
             parser_stmt()
         }).flatten()
         G.outer = Stmt.Block(tk0, null, listOf(
-            Stmt.Data(tk0, Tk.Type("Return", tk0.pos), Type.Tuple(tk0, emptyList()), emptyList()),
-            Stmt.Data(tk0, Tk.Type("Break", tk0.pos), Type.Tuple(tk0, emptyList()), emptyList()),
+            Stmt.Data(tk0, Tk.Type("Return", tk0.pos), null, Type.Tuple(tk0, emptyList()), emptyList()),
+            Stmt.Data(tk0, Tk.Type("Break", tk0.pos), null, Type.Tuple(tk0, emptyList()), emptyList()),
         ) + ss)
         cache_ups()
         check_vars()

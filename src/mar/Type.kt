@@ -67,7 +67,7 @@ fun Type.sup_vs (other: Type): Type? {
                 (x.str == y.str)
             }
             if (l.size == 0) null else {
-                Type.Data(this.tk, l)
+                Type.Data(this.tk, null, l)
             }
         }
         (this.is_num() && other.is_num()) -> {
@@ -184,7 +184,7 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
                 if (s.subs == null) {
                     Pair(i.last(),tp)
                 } else {
-                    val xtp = Type.Data(this.tk, xts.map { Tk.Type(it, this.tk.pos) })
+                    val xtp = Type.Data(this.tk, null, xts.map { Tk.Type(it, this.tk.pos) })
                     xtp.xup = this
                     Pair(i.last(), xtp)
                 }
@@ -355,9 +355,9 @@ fun Expr.type (): Type? {
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos))
         is Expr.Cons  -> this.walk(ts)!!.let { (s,_,_) ->
             if (s.subs == null) {
-                Type.Data(this.tk, this.ts.take(1))
+                Type.Data(this.tk, null, this.ts.take(1))
             } else {
-                Type.Data(this.tk, this.ts)
+                Type.Data(this.tk, null, this.ts)
             }
         }
         is Expr.Acc -> this.tk_.type(this)
