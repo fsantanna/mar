@@ -621,19 +621,19 @@ class Parser {
     }
     @Test
     fun ii_04_match () {
-        G.tks = ("match x { :X.Y {} else {pass(x)} }").lexer()
+        G.tks = ("match x { :X.Y: {} else {pass(x)} }").lexer()
         parser_lexer()
         val ss = parser_stmt()
         assert(ss.to_str() == "match x {\n"+
-                                ":X.Y {  }\n"+
+                                ":X.Y: {  }\n"+
                                 "else { do((pass(x))) }\n"+
                                 "}\n") { ss.to_str() }
     }
     @Test
     fun ii_04_match_err () {
-        G.tks = ("match x { :X.Y {} ; 1 {} ; else {pass(x)} }").lexer()
+        G.tks = ("match x { :X.Y: {} ; 1 {} ; else {pass(x)} }").lexer()
         parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 1, col 21) : expected type : have \"1\"")
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 22) : expected type : have \"1\"")
     }
     @Test
     fun ii_05_match_err () {
@@ -1086,25 +1086,25 @@ class Parser {
     }
     @Test
     fun ll_03_catch_err () {
-        G.tks = ("catch :Int { }").lexer()
+        G.tks = ("catch :Int: { }").lexer()
         parser_lexer()
         assert(trap { parser_stmt() } == "anon : (lin 1, col 8) : exception error : expected data type")
     }
     @Test
     fun ll_04_catch () {
-        G.tks = ("catch :X.Y.Z { print(x) }").lexer()
+        G.tks = ("catch :X.Y.Z: { print(x) }").lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "catch :X.Y.Z {\n" +
+        assert(ss.to_str() == "catch :X.Y.Z: {\n" +
                 "print(x)\n" +
                 "}\n") { ss.to_str() }
     }
     @Test
     fun ll_05_catch () {
-        G.tks = ("catch :X { throw(X[]) }").lexer()
+        G.tks = ("catch :X: { throw(X[]) }").lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "catch :X {\n" +
+        assert(ss.to_str() == "catch :X: {\n" +
                 "do(throw((X(([])))))\n" +
                 "}\n") { ss.to_str() }
     }
@@ -1132,10 +1132,10 @@ class Parser {
 
     @Test
     fun nn_01_escaoe () {
-        G.tks = ("do :X { escape(X[]) }").lexer()
+        G.tks = ("do :X: { escape(X[]) }").lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "do :X {\n" +
+        assert(ss.to_str() == "do :X: {\n" +
                 "escape((X(([]))))\n" +
                 "}\n") { ss.to_str() }
     }
