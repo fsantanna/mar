@@ -1200,7 +1200,40 @@ class Parser {
     // TEMPLATE
 
     @Test
-    fun NEW_tt_01_data () {     // template
+    fun tt_01_data () {
+        G.tks = ("""
+            data Maybe {t:Type}: <Nothing:(), Just:{t}>
+            var x: Maybe {Int} = Maybe {Int}.Just(10)
+            var x: Maybe {Int} = Just(10)
+            var x: Maybe = Just(10)
+            var x = Maybe.Just(10)
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "data Pos: [Int,Int]\n") { ss.to_str() }
+    }
+    @Test
+    fun tt_02_func () {
+        G.tks = ("""
+            func {n:Int, t:Type} f: (v:{t}) -> [Int,Int] {
+                var x: #[{t}*{n}] = #[v]
+                return([##x, x[0]])
+            }
+            print(f {10,Int} (20))
+            print(f {10} (20))
+
+            func {n:Int} f: (v:#[Int*{n}]) -> () {
+                return(##v)
+            }
+            print(f(#[1,2,3]))
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "data Pos: [Int,Int]\n") { ss.to_str() }
+    }
+
+    @Test
+    fun NEW_tt_xx_data () {     // template
         G.tks = ("""
             data Exec {a,b,n}: <Yield: a, Return: b, X: #[n*Int]>
             var x: Exec {(),Int} = Exec.Return(10)
