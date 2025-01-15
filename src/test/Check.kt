@@ -1860,4 +1860,62 @@ class Check {
            "}") { G.outer!!.to_str() }
     }
 
+    // TEMPLATE
+
+    @Test
+    fun tt_01_data () {
+        val out = check("""
+            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
+            var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "OK") { G.outer!!.to_str() }
+    }
+    @Test
+    fun tt_02_data_err () {
+        val out = check("""
+            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
+            var x: Maybe {{:Bool}} = Maybe {{:Int}}.Just(10)
+        """)
+        assert(out == "Bool vs Int") { out!! }
+    }
+    @Test
+    fun tt_03_data_err () {
+        val out = check("""
+            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
+            var x: Maybe {{:Bool}} = Maybe {{:Bool}}.Just(10)
+        """)
+        assert(out == "Bool vs 10") { out!! }
+    }
+    @Test
+    fun tt_04a_data_err () {
+        val out = check("""
+            data Either {{a:Type}}: <Left:{{a}}, Right:{{b}}>
+        """)
+        assert(out == "anon : (lin 2, col 13) : type error : template \"b\" is not declared") { out!! }
+    }
+    @Test
+    fun tt_04b_data_err () {
+        val out = check("""
+            data Maybe {{t:Type}}: <Nothing:(), Just:Int>
+        """)
+        assert(out == "anon : (lin 2, col 13) : type error : template \"t\" is not used") { out!! }
+    }
+    @Test
+    fun tt_05_data_err () {
+        val out = check("""
+            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
+            var x: Maybe {{:Bool}} = Maybe {{}}.Just(10)
+        """)
+        assert(out == "{{:Bool}} vs {{}}") { out!! }
+    }
+    @Test
+    fun tt_06_data_err () {
+        val out = check("""
+            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
+            var x: Maybe {{}}
+        """)
+        assert(out == "{{t:Type}} vs {{}}") { out!! }
+    }
+
 }

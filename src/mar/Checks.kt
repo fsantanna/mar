@@ -144,6 +144,24 @@ fun check_vars () {
 fun check_types () {
     fun fs (me: Stmt) {
         when (me) {
+            is Stmt.Data -> {
+                val defs = (me.tpls?.map { it.first.str } ?: emptyList()).toSet()
+                val uses = me.tp.dn_collect_pos({if (it is Type.Tpl) listOf(it.tk_.str) else emptyList()}).toSet()
+                (defs - uses).let {
+                    if (it.size > 0) {
+                        it.first().let {
+                            err(me.tk, "type error : template \"${it}\" is not used")
+                        }
+                    }
+                }
+                (uses - defs).let {
+                    if (it.size > 0) {
+                        it.first().let {
+                            err(me.tk, "type error : template \"${it}\" is not declared")
+                        }
+                    }
+                }
+            }
             is Stmt.Proto.Coro -> {
                 //if (me.tp.in)) {
                     //err(me.tk, "declaration error : types mismatch")
