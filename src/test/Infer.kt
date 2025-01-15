@@ -781,7 +781,7 @@ class Infer {
     @Test
     fun gg_04_throw () {
         val out = infer("""
-            var x = catch :Break: {}
+            var x = catch :Break {}
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n"+
@@ -790,7 +790,7 @@ class Infer {
            "data Break.*: [] {\n"+
            "}\n"+
            "var x: <Ok:(),Err:Break>\n"+
-           "set x = catch :Break: {\n"+
+           "set x = catch :Break {\n"+
            "}\n"+
            "}") { G.outer!!.to_str() }
     }

@@ -1520,7 +1520,7 @@ class Check {
     fun ff_01_catch_err () {
         val out = check("""
             data X: Int
-            catch :X: {
+            catch :X {
             }
         """)
         assert(out == "anon : (lin 3, col 20) : catch error : expected hierarchical data type") { out!! }
@@ -1531,7 +1531,7 @@ class Check {
             data X.*: [] {
                 X: []
             }
-            catch :X.X: {
+            catch :X.X {
             }
         """)
         assert(out == null) { out!! }
@@ -1544,7 +1544,7 @@ class Check {
                 "X: [] {\n" +
                 "}\n" +
                 "}\n" +
-                "catch :X.X: {\n" +
+                "catch :X.X {\n" +
                 "}\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -1554,7 +1554,7 @@ class Check {
             data X.*: [] {
                 X: []
             }
-            catch :X.Y: {
+            catch :X.Y {
             }
         """)
         assert(out == "anon : (lin 5, col 20) : type error : data \"X.Y\" is not declared") { out!! }
@@ -1562,7 +1562,7 @@ class Check {
     @Test
     fun ff_04_catch_err () {
         val out = check("""
-            var x: Break = catch :Return: {
+            var x: Break = catch :Return {
             }
         """)
         assert(out == "anon : (lin 2, col 26) : set error : types mismatch") { out!! }
@@ -1573,7 +1573,7 @@ class Check {
             data X.*: [] {
                 Y: []
             }
-            var x: X.Y = catch :X: {
+            var x: X.Y = catch :X {
             }
         """)
         assert(out == "anon : (lin 5, col 24) : set error : types mismatch") { out!! }
@@ -1584,7 +1584,7 @@ class Check {
             data X.*: [] {
                 Y: []
             }
-            var x: <(),X> = catch :X.Y: {
+            var x: <(),X> = catch :X.Y {
             }
         """)
         assert(out == null) { out!! }
@@ -1598,7 +1598,7 @@ class Check {
            "}\n"+
            "}\n"+
            "var x: <(),X>\n"+
-           "set x = catch :X.Y: {\n"+
+           "set x = catch :X.Y {\n"+
            "}\n"+
            "}") { G.outer!!.to_str() }
     }
@@ -1609,7 +1609,7 @@ class Check {
     fun gg_01_escape_err () {
         val out = check("""
             data X: Int
-            do :X: {
+            do :X {
             }
         """)
         assert(out == "anon : (lin 3, col 17) : block error : expected hierarchical data type") { out!! }
@@ -1620,7 +1620,7 @@ class Check {
             data X.*: [] {
                 X: []
             }
-            do :X.X: {
+            do :X.X {
             }
         """)
         assert(out == null) { out!! }
@@ -1633,7 +1633,7 @@ class Check {
                 "X: [] {\n" +
                 "}\n" +
                 "}\n" +
-                "do :X.X: {\n" +
+                "do :X.X {\n" +
                 "}\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -1643,7 +1643,7 @@ class Check {
             data X.*: [] {
                 X: []
             }
-            do :X.Y: {
+            do :X.Y {
             }
         """)
         assert(out == "anon : (lin 5, col 17) : type error : data \"X.Y\" is not declared") { out!! }
@@ -1654,7 +1654,7 @@ class Check {
             data X.*: [] {
                 X: []
             }
-            do :X: {
+            do :X {
                 escape(X.Y[])
             }
         """)
@@ -1672,7 +1672,7 @@ class Check {
     fun gg_06_escape_err () {
         val out = check("""
             data X.*: []
-            do :X: {
+            do :X {
                 func f: () -> () {
                     escape(X[])
                 }
@@ -1684,7 +1684,7 @@ class Check {
     fun gg_07_escape () {
         val out = check("""
             data X.*: []
-            do :X: {
+            do :X {
                 escape(X[])
             }
         """)
@@ -1696,7 +1696,7 @@ class Check {
                 "}\n" +
                 "data X.*: [] {\n" +
                 "}\n" +
-                "do :X: {\n" +
+                "do :X {\n" +
                 "escape((X(([]:[]))))\n" +
                 "}\n" +
                 "}") { G.outer!!.to_str() }

@@ -111,7 +111,7 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.MatchT -> {
             val tst = this.tst.to_str(pre)
             val cases = this.cases.map {
-                val cnd = if (it.first == null) "else" else ":"+it.first!!.to_str(pre)+":"
+                val cnd = if (it.first == null) "else" else ":"+it.first!!.to_str(pre)
                 val e = it.second.to_str(pre)
                 "$cnd => $e\n"
             }.joinToString("")
@@ -158,19 +158,19 @@ fun Stmt.to_str (pre: Boolean = false): String {
         }
         is Stmt.Proto.Func -> "func " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Proto.Coro -> "coro " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
-        is Stmt.Block  -> "do " + this.esc.cond { ":"+it.to_str(pre)+": " } + "{\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
+        is Stmt.Block  -> "do " + this.esc.cond { ":"+it.to_str(pre)+" " } + "{\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
         is Stmt.Dcl    -> "var ${this.id.str}" + this.xtp.cond { ": ${it.to_str()}" }
         is Stmt.SetE   -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
         is Stmt.SetS   -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
         is Stmt.Escape -> "escape(" + this.e.to_str(pre) + ")"
         is Stmt.Defer  -> "defer {\n" + this.blk.ss.to_str(pre) + "}"
-        is Stmt.Catch  -> "catch " + this.tp.cond { ":"+it.to_str(pre)+": " } + "{\n" + this.blk.ss.to_str(pre) + "}"
+        is Stmt.Catch  -> "catch " + this.tp.cond { ":"+it.to_str(pre)+" " } + "{\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.If     -> "if " + this.cnd.to_str(pre) + " {\n" + this.t.ss.to_str(pre) + "} else {\n" + this.f.ss.to_str(pre) + "}"
         is Stmt.Loop   -> "loop {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.MatchT -> {
             val tst = this.tst.to_str(pre)
             val cases = this.cases.map {
-                val cnd = if (it.first == null) "else" else ":"+it.first!!.to_str(pre)+":"
+                val cnd = if (it.first == null) "else" else ":"+it.first!!.to_str(pre)
                 val ss = it.second.ss.map { it.to_str(pre) }.joinToString("\n")
                 "$cnd { $ss }\n"
             }.joinToString("")
