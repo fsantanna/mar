@@ -445,6 +445,20 @@ class Parser {
                 "set x = 10\n" +
                 "}") { e.to_str() }
     }
+    @Test
+    fun ee_08_func_data() {
+        G.tks = ("""
+            func f: () -> T {
+                return ()
+            }
+        """).lexer()
+        parser_lexer()
+        val e = parser_stmt().first()
+        assert(e.to_str() == "func f: () -> T {\n"+
+           "set `mar_ret` = ()\n"+
+           "escape((Return(([]))))\n"+
+           "}") { e.to_str() }
+    }
 
     // NUM / NIL / BOOL
 
@@ -1204,8 +1218,8 @@ class Parser {
     fun tt_01_data () {
         G.tks = ("""
             data Maybe {t:Type}: <Nothing:(), Just:{t}>
-            var x: Maybe {Int} = Maybe {Int}.Just(10)
-            var x: Maybe {Int} = Just(10)
+            var x: Maybe (Int) = Maybe {Int}.Just(10)
+            var x: Maybe (Int) = Just(10)
             var x: Maybe = Just(10)
             var x = Maybe.Just(10)
         """).lexer()

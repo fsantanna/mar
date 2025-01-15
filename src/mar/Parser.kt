@@ -200,8 +200,8 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                     accept_enu_err("Type")
                     l.add(G.tk0 as Tk.Type)
                 }
-                val tpls: List<Type_Expr>? = if (!accept_fix("{")) null else {
-                    parser_list(",", "}") {
+                val tpls: List<Type_Expr>? = if (!accept_fix("(")) null else {
+                    parser_list(",", ")") {
                         if (accept_fix(":")) {
                             Pair(parser_type(null, false, false), null)
                         } else {
