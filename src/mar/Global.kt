@@ -80,6 +80,7 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
     class Tuple   (tk: Tk, val ts: List<Pair<Tk.Var?,Type>>): Type(G.N++, null, tk)
     class Union   (tk: Tk, val tagged: Boolean, val ts: List<Pair<Tk.Type?,Type>>): Type(G.N++, null, tk)
     class Vector  (tk: Tk, val max: Expr?, val tp: Type): Type(G.N++, null, tk)
+    class Tpl     (val tk_: Tk.Var): Type(G.N++, null, tk_)
 
     sealed class Proto (tk: Tk, val inps: List<Type>, val out: Type): Type(G.N++, null, tk) {
         open class Func (tk: Tk, inps: List<Type>, out: Type): Proto(tk, inps, out) {

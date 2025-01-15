@@ -53,7 +53,7 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
 fun <V> Type.dn_collect_pos (ft: (Type)->List<V>): List<V> {
     return when (this) {
         //is Type.Err,
-        is Type.Any, is Type.Nat -> emptyList()
+        is Type.Any, is Type.Tpl, is Type.Nat -> emptyList()
         is Type.Unit, is Type.Prim, is Type.Data -> emptyList()
         is Type.Pointer -> this.ptr.dn_collect_pos(ft)
         is Type.Tuple -> this.ts.map { (_,tp) -> tp.dn_collect_pos(ft) }.flatten()
@@ -144,7 +144,7 @@ fun <V> Type.dn_collect_pre (ft: (Type)->List<V>?): List<V> {
     }
     return v + when (this) {
         //is Type.Err,
-        is Type.Any, is Type.Nat -> emptyList()
+        is Type.Any, is Type.Tpl, is Type.Nat -> emptyList()
         is Type.Unit, is Type.Prim, is Type.Data -> emptyList()
         is Type.Pointer -> this.ptr.dn_collect_pre(ft)
         is Type.Tuple -> this.ts.map { (_,tp) -> tp.dn_collect_pre(ft) }.flatten()

@@ -34,6 +34,7 @@ fun Type.to_str (pre: Boolean = false): String {
     return when (this) {
         //is Type.Err,
         is Type.Any -> TODO()
+        is Type.Tpl -> "{{${this.tk.str}}}"
         is Type.Nat -> "`${this.tk.str}`"
         is Type.Prim -> this.tk.str
         is Type.Data -> this.ts.to_str(pre)
@@ -147,13 +148,14 @@ fun List<Stmt>.to_str (pre: Boolean = false): String {
 fun Stmt.to_str (pre: Boolean = false): String {
     return when (this) {
         is Stmt.Data   -> {
+            val tpls = this.tpls.cond { " {{" + it.map { it.to_str(pre) }.joinToString(",") + "}}" }
             if (this.subs == null) {
-                "data " + this.t.str + ": " + this.tp.to_str(pre)
+                "data " + this.t.str + tpls + ": " + this.tp.to_str(pre)
             } else {
                 fun f (l: List<Stmt.Data>): String {
                     return l.map { it.t.str + ": " + it.tp.to_str(pre) + " {\n" + f(it.subs!!) + "}\n" }.joinToString("")
                 }
-                "data " + this.t.str + ".*: " + this.tp.to_str(pre) + " {\n" + f(this.subs) + "}"
+                "data " + this.t.str + tpls + ".*: " + this.tp.to_str(pre) + " {\n" + f(this.subs) + "}"
             }
         }
         is Stmt.Proto.Func -> "func " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"

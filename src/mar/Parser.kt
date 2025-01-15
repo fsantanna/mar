@@ -201,7 +201,7 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                     l.add(G.tk0 as Tk.Type)
                 }
                 val tpls: List<Type_Expr>? = if (!accept_fix("{{")) null else {
-                    val l = parser_list(",", "}") {
+                    val x = parser_list(",", "}") {
                         if (accept_fix(":")) {
                             Pair(parser_type(null, false, false), null)
                         } else {
@@ -209,7 +209,7 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                         }
                     }
                     accept_fix_err("}")
-                    l
+                    x
                 }
                 Type.Data(tp, tpls, l)
             }
@@ -255,6 +255,13 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
             Type.Vector(tk0, size, tp)
         }
         accept_enu("Nat")  -> Type.Nat(G.tk0 as Tk.Nat)
+        accept_fix("{{") -> {
+            accept_enu_err("Var")
+            val t = Type.Tpl(G.tk0 as Tk.Var)
+            accept_fix_err("}")
+            accept_fix_err("}")
+            t
+        }
         else -> err_expected(G.tk1!!, "type")
     }
 }
