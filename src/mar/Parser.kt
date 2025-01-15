@@ -195,11 +195,6 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
             if (PRIMS.contains(tp.str)) {
                 Type.Prim(tp)
             } else {
-                val l = mutableListOf(tp)
-                while (accept_fix(".")) {
-                    accept_enu_err("Type")
-                    l.add(G.tk0 as Tk.Type)
-                }
                 val tpls: List<Type_Expr>? = if (!accept_fix("{{")) null else {
                     val x = parser_list(",", "}") {
                         if (accept_fix(":")) {
@@ -210,6 +205,11 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                     }
                     accept_fix_err("}")
                     x
+                }
+                val l = mutableListOf(tp)
+                while (accept_fix(".")) {
+                    accept_enu_err("Type")
+                    l.add(G.tk0 as Tk.Type)
                 }
                 Type.Data(tp, tpls, l)
             }

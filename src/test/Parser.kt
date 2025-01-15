@@ -1218,10 +1218,6 @@ class Parser {
     fun tt_01_data () {
         G.tks = ("""
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
-            var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
-            var x: Maybe {{:Int}} = Just(10)
-            var x: Maybe = Just(10)
-            var x = Maybe.Just(10)
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
@@ -1239,10 +1235,19 @@ class Parser {
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "data Maybe {{t: Type}}: <Nothing:(),Just:{{t}}>\n") { ss.to_str() }
+        assert(ss.to_str() == "do {\n"+
+            "var x: Maybe {{:Int}}\n"+
+            "set x = (Maybe {{:Int}}.Just(10))\n"+
+            "var x: Maybe {{:Int}}\n"+
+            "set x = (Just(10))\n"+
+            "var x: Maybe\n"+
+            "set x = (Just(10))\n"+
+            "var x\n"+
+            "set x = (Maybe.Just(10))\n"+
+            "}\n") { ss.to_str() }
     }
     @Test
-    fun tt_02_func () {
+    fun TODO_tt_02_func () {
         G.tks = ("""
             func {{n:Int, t:Type}} f: (v:{{t}}) -> [Int,Int] {
                 var x: #[{{t}}*{{n}}] = #[v]
