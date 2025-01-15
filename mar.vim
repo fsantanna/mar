@@ -17,7 +17,7 @@ syn match   String    "'.'"
 syn match   Constant  '\d\+'
 syn keyword Constant  false null true
 
-syn keyword Function  ensure print
+syn keyword Function  expect print
 
 syn match   Type      '[A-Z][a-zA-Z0-9]\+'
 

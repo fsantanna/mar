@@ -189,7 +189,7 @@ class Exec  {
     @Test
     fun bb_09_nat_equal() {
         val out = test("""
-            ensure(`1` == 1)
+            expect(`1` == 1)
             print(10)
         """)
         assert(out == "10\n") { out }
@@ -1589,9 +1589,9 @@ class Exec  {
     fun xj_01_pre_assert () {
         val out = test("""
             print(1)
-            ensure(true)
+            expect(true)
             print(2)
-            ensure(false)
+            expect(false)
             print(3)
         """)
         assert(out == "1\n"+

@@ -1,26 +1,26 @@
 data Error.*: [] {
-    Ensure: [\Char]
+    Expect: [\Char]
 }
 
 ;;data String: #[Char]
 
-;; ENSURE
+;; EXPECT
 
-func ensure_msg: (v: Bool, msg: \Char) -> () {
+func expect_msg: (v: Bool, msg: \Char) -> () {
     if !v {
-        throw(Error.Ensure [msg])
+        throw(Error.Expect [msg])
     }
 }
 
-func ensure: (v: Bool) -> () {
-    ensure_msg(v, "ensure error")
+func expect: (v: Bool) -> () {
+    expect_msg(v, "expect error")
 }
 
 ;; STRING
 
 func string_to_c: (s: \#[Char]) -> \Char {
     if s\[#s\-1] != '\0' {
-        ensure(#s\ < ##s\)
+        expect(#s\ < ##s\)
         set s\[#s\] = '\0'
     }
     return(`s->buf`)
@@ -28,18 +28,18 @@ func string_to_c: (s: \#[Char]) -> \Char {
 
 test {
     var p1 = string_to_c(\#['o','i','\0'])
-    ensure(`strcmp(p1,"oi")` == 0)
-    ensure(`strlen(p1)` == 2)
+    expect(`strcmp(p1,"oi")` == 0)
+    expect(`strlen(p1)` == 2)
 
     var s2: #[Char*3] = #['o','i']
     var p2 = string_to_c(\s2)
-    ensure(`strcmp(p2,"oi")` == 0)
-    ensure(`strlen(p2)` == 2)
+    expect(`strcmp(p2,"oi")` == 0)
+    expect(`strlen(p2)` == 2)
 
-    var x = catch Error.Ensure {
+    var x = catch Error.Expect {
         string_to_c(\#['o','i'])
     }
-    ensure(x?Err)
+    expect(x?Err)
 }
 
 func string_from_int: (v: Int) -> #[Char*32] {
@@ -50,9 +50,9 @@ func string_from_int: (v: Int) -> #[Char*32] {
 
 test {
     var str = string_from_int(10)
-    ensure(#str == 2)
-    ensure(##str == 32)
-    ensure(str[0] == '1')
-    ensure(str[1] == '0')
-    ensure(str[2] == '\0')
+    expect(#str == 2)
+    expect(##str == 32)
+    expect(str[0] == '1')
+    expect(str[1] == '0')
+    expect(str[2] == '\0')
 }
