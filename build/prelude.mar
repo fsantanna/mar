@@ -36,7 +36,7 @@ test {
     expect(`strcmp(p2,"oi")` == 0)
     expect(`strlen(p2)` == 2)
 
-    var x = catch Error.Expect {
+    var x = catch :Error.Expect {
         string_to_c(\#['o','i'])
     }
     expect(x?Err)

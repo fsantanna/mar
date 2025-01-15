@@ -383,7 +383,7 @@ fun parser_expr_4_prim (): Expr {
                     if (tt == true) {
                         check_enu_err("Type")
                     }
-                    if (tt!=false && check_enu("Type")) {
+                    if (tt!=false && accept_fix(":")) {
                         val tp = parser_type(null, false, false)
                         if (tp !is Type.Data) {
                             err(tp.tk, "exception error : expected data type")
@@ -543,7 +543,7 @@ fun parser_stmt (): List<Stmt> {
                 val esc = if (check_fix("{")) {
                     null
                 } else {
-                    check_enu_err("Type")
+                    accept_fix_err(":")
                     val tp = parser_type(null, false, false)
                     if (tp !is Type.Data) {
                         err(tp.tk, "exception error : expected data type")
@@ -610,7 +610,7 @@ fun parser_stmt (): List<Stmt> {
             val tp = if (check_fix("{")) {
                 null
             } else {
-                check_enu_err("Type")
+                accept_fix_err(":")
                 val tp = parser_type(null, false, false)
                 if (tp !is Type.Data) {
                     err(tp.tk, "exception error : expected data type")
@@ -753,7 +753,7 @@ fun parser_stmt (): List<Stmt> {
                     if (tt == true) {
                         check_enu_err("Type")
                     }
-                    if (tt!=false && check_enu("Type")) {
+                    if (tt!=false && accept_fix(":")) {
                         val tp = parser_type(null, false, false)
                         if (tp !is Type.Data) {
                             err(tp.tk, "exception error : expected data type")

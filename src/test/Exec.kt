@@ -271,7 +271,7 @@ class Exec  {
             }
             var x = X.A [10]
             match x {
-                X.A  { print(x) }
+                :X.A  { print(x) }
                 else { throw()  }
             }
         """)
@@ -1328,7 +1328,7 @@ class Exec  {
     fun kk_01_catch () {
         val out = test("""
             data X.*: []
-            catch X {
+            catch :X {
             }
             print(10)
         """)
@@ -1364,7 +1364,7 @@ class Exec  {
                 Y: []
                 Z: []
             }
-            catch X.Y {
+            catch :X.Y {
                 throw(X.Z [])
             }
             print(10)
@@ -1378,7 +1378,7 @@ class Exec  {
                 Y: []
                 Z: []
             }
-            catch X {
+            catch :X {
                 throw(X.Z [])
             }
             print(10)
@@ -1392,7 +1392,7 @@ class Exec  {
                 Y: []
                 Z: []
             }
-            catch X.Z {
+            catch :X.Z {
                 throw(X.Z [])
             }
             print(10)
@@ -1424,7 +1424,7 @@ class Exec  {
     fun kk_09_throw () {
         val out = test("""
             data X.*: []
-            var e = catch X {
+            var e = catch :X {
                 throw(X [])
                 print(999)
             }
@@ -1437,7 +1437,7 @@ class Exec  {
     fun kk_10_throw () {
         val out = test("""
             data X.*: []
-            var e = catch X {
+            var e = catch :X {
                 print(10)
             }
             print([e?Ok, e!Ok, e])
@@ -1497,8 +1497,8 @@ class Exec  {
                 Y: []
                 Z: []
             }
-            do X.Z {
-                do X.Y {
+            do :X.Z {
+                do :X.Y {
                     escape(X.Z [])
                     print(99)
                 }
