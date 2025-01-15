@@ -10,3 +10,30 @@ fun Expr.is_lval (): Boolean {
         else          -> false
     }
 }
+
+fun Expr.static_int_is (): Boolean {
+    return when (this) {
+        is Expr.Num -> (this.tk.str.toIntOrNull() != null)
+        is Expr.Uno -> this.e.static_int_is()
+        is Expr.Bin -> this.e1.static_int_is() && this.e2.static_int_is()
+        else        -> false
+    }
+}
+
+fun Expr.static_int_eval (): Int {
+    assert(this.static_int_is())
+    return when (this) {
+        is Expr.Num -> this.tk.str.toInt()
+        is Expr.Uno -> when (this.tk.str) {
+            "-"  -> - this.e.static_int_eval()
+            else -> TODO("5")
+        }
+        is Expr.Bin -> when (this.tk.str) {
+            "+" -> this.e1.static_int_eval() + this.e2.static_int_eval()
+            "-" -> this.e1.static_int_eval() - this.e2.static_int_eval()
+            "*" -> this.e1.static_int_eval() * this.e2.static_int_eval()
+            else -> TODO("5")
+        }
+        else -> TODO("5")
+    }
+}

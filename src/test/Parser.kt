@@ -224,19 +224,21 @@ class Parser {
     fun al_03_vec_err () {
         G.tks = ("#[Int*1.1]").lexer()
         parser_lexer()
-        assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 3) : vector error : expected number")
+        val tp = parser_type(null, false, false)
+        assert(tp.to_str() == "#[Int*1.1]") { tp.to_str() }
+        //assert(trap { } == "anon : (lin 1, col 3) : vector error : expected number")
     }
     @Test
     fun al_04_vec_err () {
         G.tks = ("#[Int 1]").lexer()
         parser_lexer()
-        assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 5) : expected \"*\" : have \"Int\"")
+        assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 7) : expected \"*\" : have \"1\"")
     }
     @Test
     fun al_05_vec_undef_err () {
         G.tks = ("#[Int]").lexer()
         parser_lexer()
-        assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 3) : expected number : have \"Int\"")
+        assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 6) : expected \"*\" : have \"]\"")
     }
     @Test
     fun al_06_vec_ptr () {
