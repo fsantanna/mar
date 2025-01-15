@@ -89,7 +89,7 @@ fun check_vars () {
                 val dos = me.ups_until { it is Stmt.Proto }
                     .filter {
                         it is Stmt.Block && it.esc!=null && it.esc.ts.let {
-                            it.map { it.str }.zip(me.e.ts.map { it.str }).all { (a,b) ->
+                            it.map { it.str }.zip(me.e.tp.ts.map { it.str }).all { (a,b) ->
                                 a == b
                             }
                         }
@@ -115,9 +115,9 @@ fun check_vars () {
                 }
             }
             is Expr.Cons -> {
-                val v = me.walk(me.ts)
+                val v = me.walk(me.tp.ts)
                 if (v == null) {
-                    err(me.tk, "constructor error : data \"${me.ts.to_str()}\" is not declared")
+                    err(me.tk, "constructor error : data \"${me.tp.ts.to_str()}\" is not declared")
                 }
             }
             else -> {}
@@ -298,7 +298,7 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val tp = me.walk(me.ts)!!.third
+                val tp = me.walk(me.tp.ts)!!.third
                 val te = me.e.typex()
                 if (!tp.is_sup_of(te)) {
                     err(me.e.tk, "constructor error : types mismatch")

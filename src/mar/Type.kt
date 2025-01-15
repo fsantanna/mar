@@ -353,11 +353,11 @@ fun Expr.type (): Type? {
         }
         is Expr.Disc  -> this.col.type()?.discx(this.idx)?.second
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos))
-        is Expr.Cons  -> this.walk(ts)!!.let { (s,_,_) ->
+        is Expr.Cons  -> this.walk(this.tp.ts)!!.let { (s,_,_) ->
             if (s.subs == null) {
-                Type.Data(this.tk, null, this.ts.take(1))
+                Type.Data(this.tk, null, this.tp.ts.take(1))
             } else {
-                Type.Data(this.tk, null, this.ts)
+                Type.Data(this.tk, null, this.tp.ts)
             }
         }
         is Expr.Acc -> this.tk_.type(this)

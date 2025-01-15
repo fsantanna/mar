@@ -850,18 +850,18 @@ fun Expr.coder (pre: Boolean): String {
             "(${this.col.coder(pre)}.tag==${i+1})"
         }
         is Expr.Cons   -> {
-            val s = this.walk(this.ts)!!.first
+            val s = this.walk(this.tp.ts)!!.first
             if (s.subs == null) {
                 var ret = "({"
-                for (i in this.ts.size - 1 downTo 0) {
-                    val tp = this.ts.take(i + 1).coder(pre)
+                for (i in this.tp.ts.size - 1 downTo 0) {
+                    val tp = this.tp.ts.take(i + 1).coder(pre)
                     ret = ret + "$tp ceu_$i = " +
-                            if (i == this.ts.size - 1) {
+                            if (i == this.tp.ts.size - 1) {
                                 """
                                 ((${tp}) ${this.e.coder(pre)});
                                 """
                             } else {
-                                val nxt = this.ts[i + 1].str
+                                val nxt = this.tp.ts[i + 1].str
                                 """
                                 {
                                     .tag = ${tp.uppercase()}_${nxt.uppercase()}_TAG,
@@ -876,8 +876,8 @@ fun Expr.coder (pre: Boolean): String {
                 val vs = tup.vs.mapIndexed { i,(id,v) ->
                     "."+(id?.str ?: ("_"+(i+1))) + " = " + v.coder(pre)
                 }.joinToString(",")
-                val ts = this.ts.coder(pre)
-                "((${this.ts.first().str}) { .tag=${ts.uppercase()}_TAG, .$ts={$vs} })"
+                val ts = this.tp.ts.coder(pre)
+                "((${this.tp.ts.first().str}) { .tag=${ts.uppercase()}_TAG, .$ts={$vs} })"
             }
         }
 

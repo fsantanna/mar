@@ -335,13 +335,8 @@ fun parser_expr_4_prim (): Expr {
             Expr.Union(tk0, tp, idx, v)
         }
 
-        accept_enu("Type") -> {
-            val tp = G.tk0 as Tk.Type
-            val l = mutableListOf(tp)
-            while (accept_fix(".")) {
-                accept_enu_err("Type")
-                l.add(G.tk0 as Tk.Type)
-            }
+        check_enu("Type") -> {
+            val tp = parser_type(null, false, false) as Type.Data
             val e = when {
                 check_fix("[") -> parser_expr()
                 check_op("<") -> parser_expr()
@@ -356,14 +351,14 @@ fun parser_expr_4_prim (): Expr {
                     x
                 }
             }
-            Expr.Cons(tp, l, e)
+            Expr.Cons(tp.tk, tp, e)
         }
 
         accept_fix("throw") -> {
             val tk0 = G.tk0!!
             accept_fix_err("(")
             val e = if (check_fix(")")) {
-                Expr.Cons(tk0, listOf(Tk.Type("Error",tk0.pos)), Expr.Tuple(tk0, null, emptyList()))
+                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Tuple(tk0, null, emptyList()))
             } else {
                 parser_expr()
             }
@@ -537,7 +532,7 @@ fun parser_stmt (): List<Stmt> {
                     Expr.Nat(Tk.Nat("mar_ret", tk0.pos), null),
                     e),
                 Stmt.Escape(tk0,
-                    Expr.Cons(tk0, listOf(Tk.Type("Return", tk0.pos)),
+                    Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Return", tk0.pos))),
                         Expr.Tuple(tk0,null, emptyList())))
             )
         }
@@ -673,7 +668,7 @@ fun parser_stmt (): List<Stmt> {
                             Stmt.If(tk0, Expr.Bin(Tk.Op("==",id.pos), Expr.Acc(id), Expr.Acc(lim)),
                                 Stmt.Block(tk0, null, listOf(
                                     Stmt.Escape(tk0,
-                                        Expr.Cons(tk0, listOf(Tk.Type("Break", tk0.pos)),
+                                        Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
                                         Expr.Tuple(tk0,null, emptyList())))
                                     )
                                 ),
@@ -687,7 +682,7 @@ fun parser_stmt (): List<Stmt> {
             val tk0 = G.tk0!!
             listOf (
                 Stmt.Escape(tk0,
-                    Expr.Cons(tk0, listOf(Tk.Type("Break", tk0.pos)),
+                    Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
                         Expr.Tuple(tk0,null, emptyList())))
             )
         }
@@ -704,7 +699,7 @@ fun parser_stmt (): List<Stmt> {
                 Stmt.If(tk0, cnd,
                     Stmt.Block(tk0, null, listOf(
                         Stmt.Escape(tk0,
-                            Expr.Cons(tk0, listOf(Tk.Type("Break", tk0.pos)),
+                            Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
                                 Expr.Tuple(tk0,null, emptyList()))))
                     ),
                     Stmt.Block(tk0, null, emptyList()))
