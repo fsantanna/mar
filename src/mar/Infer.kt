@@ -128,7 +128,7 @@ fun Expr.infer (tp: Type?): Type? {
         }
         is Expr.Pred -> this.col.infer(null)
         is Expr.Disc -> this.col.infer(null)
-        is Expr.Cons -> this.e.infer(this.walk(this.tp.ts)!!.third)
+        is Expr.Cons -> this.e.infer(this.walk(null,this.tp.ts)!!.third)
 
         is Expr.Uno -> this.e.infer(tp)
         is Expr.Bin -> {

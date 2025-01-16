@@ -47,7 +47,7 @@ fun check_vars () {
             is Stmt.Data -> {
                 val up = me.xup!!
                 if (up !is Stmt.Data) {
-                    val s = up.walk(listOf(me.t))?.first
+                    val s = up.walk(null,listOf(me.t))?.first
                     if (s!=null && s!=me) {
                         err(me.tk, "type error : data \"${me.t.str}\" is already declared")
                     }
@@ -115,7 +115,7 @@ fun check_vars () {
                 }
             }
             is Expr.Cons -> {
-                val v = me.walk(me.tp.ts)
+                val v = me.walk(null,me.tp.ts)
                 if (v == null) {
                     err(me.tk, "constructor error : data \"${me.tp.ts.to_str()}\" is not declared")
                 }
@@ -316,8 +316,10 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val tp = me.walk(me.tp.ts)!!.third
+                val tp = me.walk(me.tp.tpls,me.tp.ts)!!.third
+                //val tp = me.tp.walk()!!.third
                 val te = me.e.typex()
+                //println(listOf(tp.to_str(), te.to_str()))
                 if (!tp.is_sup_of(te)) {
                     err(me.e.tk, "constructor error : types mismatch")
                 }

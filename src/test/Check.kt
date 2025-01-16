@@ -1869,7 +1869,15 @@ class Check {
             var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
         """)
         assert(out == null) { out!! }
-        assert(G.outer!!.to_str() == "OK") { G.outer!!.to_str() }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "data Maybe {{t: Type}}: <Nothing:(),Just:{{t}}>\n"+
+           "var x: Maybe {{:Int}}\n"+
+           "set x = (Maybe {{:Int}}.Just(10))\n"+
+           "}") { G.outer!!.to_str() }
     }
     @Test
     fun tt_02_data_err () {

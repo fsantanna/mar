@@ -850,7 +850,7 @@ fun Expr.coder (pre: Boolean): String {
             "(${this.col.coder(pre)}.tag==${i+1})"
         }
         is Expr.Cons   -> {
-            val s = this.walk(this.tp.ts)!!.first
+            val s = this.walk(null,this.tp.ts)!!.first
             if (s.subs == null) {
                 var ret = "({"
                 for (i in this.tp.ts.size - 1 downTo 0) {
