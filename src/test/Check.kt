@@ -15,8 +15,8 @@ fun check (me: String): String? {
             parser_stmt()
         }).flatten()
         G.outer = Stmt.Block(tk0, null, listOf(
-                Stmt.Data(tk0, Tk.Type("Return", tk0.pos), null, Type.Tuple(tk0, emptyList()), emptyList()),
-                Stmt.Data(tk0, Tk.Type("Break", tk0.pos), null, Type.Tuple(tk0, emptyList()), emptyList()),
+                Stmt.Data(tk0, Tk.Type("Return", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
+                Stmt.Data(tk0, Tk.Type("Break", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
         ) + ss)
         cache_ups()
         check_vars()

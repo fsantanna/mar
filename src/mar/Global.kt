@@ -126,7 +126,7 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
 }
 
 sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
-    class Data   (tk: Tk, val t: Tk.Type, val tpls: List<Var_Type>?, val tp: Type, val subs: List<Stmt.Data>?): Stmt(G.N++, null, tk)
+    class Data   (tk: Tk, val t: Tk.Type, val tpls: List<Var_Type>, val tp: Type, val subs: List<Stmt.Data>?): Stmt(G.N++, null, tk)
     sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, null, tk) {
         class Func (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
         class Coro (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Coro.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
@@ -237,8 +237,8 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
             parser_stmt()
         }).flatten()
         G.outer = Stmt.Block(tk0, null, listOf(
-            Stmt.Data(tk0, Tk.Type("Return", tk0.pos), null, Type.Tuple(tk0, emptyList()), emptyList()),
-            Stmt.Data(tk0, Tk.Type("Break", tk0.pos), null, Type.Tuple(tk0, emptyList()), emptyList()),
+            Stmt.Data(tk0, Tk.Type("Return", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
+            Stmt.Data(tk0, Tk.Type("Break", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
         ) + ss)
         cache_ups()
         check_vars()

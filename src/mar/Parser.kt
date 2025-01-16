@@ -786,8 +786,8 @@ fun parser_stmt (): List<Stmt> {
             val tk0 = G.tk0!!
             accept_enu_err("Type")
             val t = G.tk0 as Tk.Type
-            fun tpls (): List<Var_Type>? {
-                return if (!accept_fix("{{")) null else {
+            fun tpls (): List<Var_Type> {
+                return if (!accept_fix("{{")) emptyList() else {
                     val l = parser_list(",", "}") {
                         parser_var_type(null)
                     }
@@ -820,7 +820,7 @@ fun parser_stmt (): List<Stmt> {
                             } else {
                                 parser_type(null, false, false) as Type.Tuple
                             }
-                            Stmt.Data(xt, xt, null, xtp, f())
+                            Stmt.Data(xt, xt, emptyList(), xtp, f())
                         }
                     }
                 }

@@ -151,7 +151,7 @@ fun List<Stmt>.to_str (pre: Boolean = false): String {
 fun Stmt.to_str (pre: Boolean = false): String {
     return when (this) {
         is Stmt.Data   -> {
-            val tpls = this.tpls.cond { " {{" + it.map { it.to_str(pre) }.joinToString(",") + "}}" }
+            val tpls = (this.tpls.size>0).cond { " {{" + this.tpls.map { it.to_str(pre) }.joinToString(",") + "}}" }
             if (this.subs == null) {
                 "data " + this.t.str + tpls + ": " + this.tp.to_str(pre)
             } else {
