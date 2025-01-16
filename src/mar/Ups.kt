@@ -36,3 +36,25 @@ fun Any.up_any (cnd: (Any)->Boolean): Boolean {
 fun Any.up_none (cnd: (Any)->Boolean): Boolean {
     return this.up_first(cnd) === null
 }
+
+fun Any.up_data (id: String): Stmt.Data? {
+    return this.up_first { blk ->
+        if (blk !is Stmt.Block) null else {
+            blk.dn_filter_pre(
+                {
+                    when (it) {
+                        is Stmt.Data -> true
+                        is Stmt.Block -> if (it == blk) false else null
+                        else -> false
+                    }
+                },
+                {null},
+                {null}
+            ).let {
+                it as List<Stmt.Data>
+            }.find {
+                it.t.str == id
+            }
+        }
+    } as Stmt.Data?
+}

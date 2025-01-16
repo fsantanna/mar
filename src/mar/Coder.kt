@@ -665,7 +665,7 @@ fun Stmt.coder (pre: Boolean): String {
                         """
                     }
                     is Type.Data -> {
-                        val (s,_,tpx) = tp.walk()!!
+                        val (s,_,tpx) = tp.walk(false)!!
                         val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
                         val x = if (s.subs == null) aux(tpx, v) else {
                             val tup = tpx as Type.Tuple
@@ -815,7 +815,7 @@ fun Expr.coder (pre: Boolean): String {
             if (tp !is Type.Data) {
                 "(${this.col.coder(pre)}.$idx)"
             } else {
-                val s = tp.walk()!!.first
+                val s = tp.walk(false)!!.first
                 if (s.subs == null) {
                     val sub = tp.ts.drop(1).map { it.str + "." }.joinToString("")
                     "(${this.col.coder(pre)}.$sub$idx)"
@@ -832,7 +832,7 @@ fun Expr.coder (pre: Boolean): String {
                 val (i,_) = tp.discx(this.idx)!!
                 "${this.col.coder(pre)}._${i+1}"
             } else {
-                val s = tp.walk()!!.first
+                val s = tp.walk(false)!!.first
                 if (s.subs == null) {
                     val (i,_) = tp.discx(this.idx)!!
                     "${this.col.coder(pre)}._${i+1}"

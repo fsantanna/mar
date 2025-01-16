@@ -114,25 +114,35 @@ fun check_vars () {
                     err(me.tk, "access error : variable \"${me.tk.str}\" is not declared")
                 }
             }
+            /*
             is Expr.Cons -> {
+                //println(listOf("cons", me.to_str(),me.tp.to_str()))
                 val v = me.walk(null,me.tp.ts)
                 if (v == null) {
                     err(me.tk, "constructor error : data \"${me.tp.ts.to_str()}\" is not declared")
                 }
             }
+             */
             else -> {}
         }
     }
     fun ft (me: Type) {
         when (me) {
             is Type.Data -> {
-                val v = me.walk()
+                val v = me.walk(false)
+                //println(v)
                 if (v == null) {
                     err(me.tk, "type error : data \"${me.to_str()}\" is not declared")
                 }
                 val (s,_,_) = v
                 if (s.subs==null && me.ts.size>1) {
-                    err(me.tk, "type error : data \"${me.to_str()}\" is not declared")
+                    //err(me.tk, "type error : data \"${me.to_str()}\" is not declared")
+                }
+                val xtpls = me.xtpls
+                //println(me.to_str())
+                when {
+                    (xtpls == null) -> {} // infer
+                    (s.tpls.size != xtpls.size) -> err(me.tk, "type error : templates mismatch")
                 }
             }
             else -> {}
@@ -169,7 +179,7 @@ fun check_types () {
             }
             is Stmt.Block -> {
                 if (me.esc != null) {
-                    val xxx = me.esc.walk()
+                    val xxx = me.esc.walk(false)
                     if (xxx==null || xxx.first.subs==null) {
                         err(me.esc.tk, "block error : expected hierarchical data type")
                     }
@@ -217,7 +227,7 @@ fun check_types () {
             }
             is Stmt.Catch -> {
                 if (me.tp != null) {
-                    val xxx = me.tp.walk()
+                    val xxx = me.tp.walk(false)
                     if (xxx==null || xxx.first.subs==null) {
                         err(me.tp.tk, "catch error : expected hierarchical data type")
                     }
@@ -281,7 +291,7 @@ fun check_types () {
                 val tup = when (tp) {
                     //is Type.Any -> tp
                     is Type.Tuple -> tp
-                    is Type.Data -> tp.walk()?.third
+                    is Type.Data -> tp.walk(false)?.third
                     else -> null
                 }
                 when (tup) {

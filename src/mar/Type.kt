@@ -156,25 +156,7 @@ fun Type.template_resolve (tpls: List<Pair<Tk.Var,Type_Expr>>): Type {
 
 @JvmName("Any_walk_List_String")
 fun Any.walk (tpls: List<Type_Expr>?, ts: List<String>): Triple<Stmt.Data,List<Int>,Type>? {
-    val s = this.up_first { blk ->
-        if (blk !is Stmt.Block) null else {
-            blk.dn_filter_pre(
-                {
-                    when (it) {
-                        is Stmt.Data -> true
-                        is Stmt.Block -> if (it == blk) false else null
-                        else -> false
-                    }
-                },
-                {null},
-                {null}
-            ).let {
-                it as List<Stmt.Data>
-            }.find {
-                it.t.str == ts.first()
-            }
-        }
-    } as Stmt.Data?
+    val s = this.up_data(ts.first())
     return when {
         (s == null) -> null
         (s.subs == null) -> {
@@ -221,8 +203,8 @@ fun Any.walk (tpls: List<Type_Expr>?, ts: List<Tk.Type>): Triple<Stmt.Data,List<
     return this.walk(tpls, ts.map { it.str })
 }
 
-fun Type.Data.walk (): Triple<Stmt.Data,List<Int>,Type>? {
-    return this.walk(this.xtpls, this.ts)
+fun Type.Data.walk (tpl: Boolean): Triple<Stmt.Data,List<Int>,Type>? {
+    return this.walk(if (tpl) this.xtpls else null, this.ts)
 }
 
 fun Type.Tuple.index (idx: String): Type? {
@@ -405,7 +387,7 @@ fun Expr.type (): Type? {
             val tup = this.col.type().let {
                 when (it) {
                     is Type.Tuple -> it
-                    is Type.Data  -> it.walk()!!.third
+                    is Type.Data  -> it.walk(false)!!.third
                     else -> null
                 }
             }

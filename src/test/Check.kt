@@ -763,8 +763,8 @@ class Check {
         val out = check("""
             var p: Int = Pos ()
         """)
-        //assert(out == "anon : (lin 2, col 26) : type error : data \"Pos\" is not declared") { out!! }
-        assert(out == "anon : (lin 2, col 26) : constructor error : data \"Pos\" is not declared") { out!! }
+        assert(out == "anon : (lin 2, col 26) : type error : data \"Pos\" is not declared") { out!! }
+        //assert(out == "anon : (lin 2, col 26) : constructor error : data \"Pos\" is not declared") { out!! }
     }
     @Test
     fun dd_05_data_err () {
@@ -817,6 +817,14 @@ class Check {
             print(c!A!B)
         """)
         assert(out == "anon : (lin 4, col 20) : discriminator error : types mismatch") { out!! }
+    }
+    @Test
+    fun dd_10x_data_err () {
+        val out = check("""
+            data A: <B:()>
+            var c: A = A.C()
+        """)
+        assert(out == "anon : (lin 3, col 24) : type error : data \"A.C\" is not declared") { out!! }
     }
     @Test
     fun dd_11_data () {
@@ -932,7 +940,7 @@ class Check {
             data X: [()]
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_05_subs_err () {
@@ -940,7 +948,7 @@ class Check {
             data X: []
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_06_subs_err () {
@@ -948,7 +956,7 @@ class Check {
             data X: <A:[a:Int]>
             var x = X.B () 
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : data \"X.B\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"X.B\" is not declared") { out!! }
     }
     @Test
     fun de_07_subs () {
@@ -1077,7 +1085,7 @@ class Check {
             data Res: <Err:(),Ok:Int>
             var r = Res.XXX(10)
         """)
-        assert(out == "anon : (lin 3, col 21) : constructor error : data \"Res.XXX\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 21) : type error : data \"Res.XXX\" is not declared") { out!! }
     }
     @Test
     fun de_13_subs () {
@@ -1251,7 +1259,7 @@ class Check {
             var xy = X.X(10)
             print(xy!X)
         """)
-        assert(out == "anon : (lin 5, col 22) : constructor error : data \"X.X\" is not declared") { out!! }
+        assert(out == "anon : (lin 5, col 22) : type error : data \"X.X\" is not declared") { out!! }
     }
     @Test
     fun df_06_hier_base_err () {
@@ -1261,7 +1269,7 @@ class Check {
             print(xy!X)
         """)
         //assert(out == "anon : (lin 3, col 22) : constructor error : arity mismatch") { out!! }
-        assert(out == "anon : (lin 3, col 22) : constructor error : data \"X.X\" is not declared") { out!! }
+        assert(out == "anon : (lin 3, col 22) : type error : data \"X.X\" is not declared") { out!! }
     }
     @Test
     fun df_07_hier_base () {
@@ -1658,7 +1666,7 @@ class Check {
                 escape(X.Y[])
             }
         """)
-        assert(out == "anon : (lin 6, col 24) : constructor error : data \"X.Y\" is not declared") { out!! }
+        assert(out == "anon : (lin 6, col 24) : type error : data \"X.Y\" is not declared") { out!! }
     }
     @Test
     fun gg_05_escape_err () {
@@ -1915,7 +1923,7 @@ class Check {
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
             var x: Maybe {{:Bool}} = Maybe {{}}.Just(10)
         """)
-        assert(out == "{{:Bool}} vs {{}}") { out!! }
+        assert(out == "anon : (lin 3, col 38) : type error : templates mismatch") { out!! }
     }
     @Test
     fun tt_06_data_err () {
@@ -1923,7 +1931,7 @@ class Check {
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
             var x: Maybe {{}}
         """)
-        assert(out == "{{t:Type}} vs {{}}") { out!! }
+        assert(out == "anon : (lin 3, col 20) : type error : templates mismatch") { out!! }
     }
     @Test
     fun tt_07_data_err () {
