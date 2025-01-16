@@ -37,7 +37,7 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Tpl -> "{{${this.tk.str}}}"
         is Type.Nat -> "`${this.tk.str}`"
         is Type.Prim -> this.tk.str
-        is Type.Data -> this.ts.first().str + this.tpls.cond {
+        is Type.Data -> this.ts.first().str + this.xtpls.cond {
             val xs = it.map { (t,e) -> if (t==null) e!!.to_str(pre) else ":"+t.to_str(pre) }
             " {{${xs.joinToString(",")}}}"
         } + this.ts.drop(1).map { "."+it.str }.joinToString("")

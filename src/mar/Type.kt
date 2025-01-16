@@ -209,7 +209,7 @@ fun Any.walk (tpls: List<Type_Expr>?, ts: List<Tk.Type>): Triple<Stmt.Data,List<
 }
 
 fun Type.Data.walk (): Triple<Stmt.Data,List<Int>,Type>? {
-    return this.walk(this.tpls, this.ts)
+    return this.walk(this.xtpls, this.ts)
 }
 
 fun Type.Tuple.index (idx: String): Type? {

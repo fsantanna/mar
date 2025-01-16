@@ -75,7 +75,7 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
     class Nat     (val tk_: Tk.Nat): Type(G.N++, null, tk_)
     class Unit    (tk: Tk): Type(G.N++, null, tk)
     class Prim    (val tk_: Tk.Type): Type(G.N++, null, tk_)
-    class Data    (tk: Tk, val tpls: List<Type_Expr>?, val ts: List<Tk.Type>): Type(G.N++, null, tk)
+    class Data    (tk: Tk, var xtpls: List<Type_Expr>?, val ts: List<Tk.Type>): Type(G.N++, null, tk)
     class Pointer (tk: Tk, val ptr: Type): Type(G.N++, null, tk)
     class Tuple   (tk: Tk, val ts: List<Pair<Tk.Var?,Type>>): Type(G.N++, null, tk)
     class Union   (tk: Tk, val tagged: Boolean, val ts: List<Pair<Tk.Type?,Type>>): Type(G.N++, null, tk)

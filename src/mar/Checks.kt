@@ -175,18 +175,17 @@ fun check_types () {
                     }
                 }
             }
-            is Stmt.SetE -> {
-                val dst = me.dst.type()
-                val src = me.src.type()
-                if (dst!=null && src!=null) {
-                    if (!dst.is_sup_of(src)) {
-                        err(me.tk, "set error : types mismatch")
-                    }
+            is Stmt.SetE, is Stmt.SetS -> {
+                val dst = when (me) {
+                    is Stmt.SetE -> me.dst.type()
+                    is Stmt.SetS -> me.dst.type()
+                    else -> error("impossible case")
                 }
-            }
-            is Stmt.SetS -> {
-                val dst = me.dst.type()
-                val src = me.src.type()
+                val src = when (me) {
+                    is Stmt.SetE -> me.src.type()
+                    is Stmt.SetS -> me.src.type()
+                    else -> error("impossible case")
+                }
                 if (dst!=null && src!=null) {
                     if (!dst.is_sup_of(src)) {
                         err(me.tk, "set error : types mismatch")
@@ -316,7 +315,7 @@ fun check_types () {
                 }
             }
             is Expr.Cons -> {
-                val tp = me.walk(me.tp.tpls,me.tp.ts)!!.third
+                val tp = me.walk(me.tp.xtpls,me.tp.ts)!!.third
                 //val tp = me.tp.walk()!!.third
                 val te = me.e.typex()
                 //println(listOf(tp.to_str(), te.to_str()))

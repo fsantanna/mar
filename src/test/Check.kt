@@ -1925,5 +1925,13 @@ class Check {
         """)
         assert(out == "{{t:Type}} vs {{}}") { out!! }
     }
+    @Test
+    fun tt_07_data_err () {
+        val out = check("""
+            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
+            var x: Maybe
+        """)
+        assert(out == "{{t:Type}} vs -") { out!! }
+    }
 
 }
