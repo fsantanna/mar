@@ -44,7 +44,20 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Nat || other is Type.Nat) -> true
         (this is Type.Unit       && other is Type.Unit)       -> true
         (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
-        (this is Type.Data       && other is Type.Data)       -> (this.ts.size<=other.ts.size && this.ts.zip(other.ts).all { (thi,oth) -> thi.str==oth.str })
+        (this is Type.Data       && other is Type.Data)       -> {
+            //println(listOf(this.to_str(),other.to_str()))
+            val tpl = (this.xtpls==null && other.xtpls==null) || Pair(this.xtpls!!,other.xtpls!!).let { (thi,oth) -> thi.size==oth.size && thi.zip(oth).all { (thi,oth) ->
+                val (t1,e1) = thi
+                val (t2,e2) = oth
+                when {
+                    (t1!=null && t2!=null) -> t1.is_same_of(t2)
+                    (e1!=null && e2!=null) -> e1.static_int_eval() == e2.static_int_eval()
+                    else -> false
+                }
+            }}
+            val sub = this.ts.size<=other.ts.size && this.ts.zip(other.ts).all { (thi,oth) -> thi.str==oth.str }
+            tpl && sub
+        }
         (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
         (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> (thi.first==null||thi.first?.str==oth.first?.str) && thi.second.is_sup_of(oth.second) }
         (this is Type.Vector     && other is Type.Vector)     -> this.tp.is_same_of(other.tp)
@@ -168,7 +181,7 @@ fun Any.walk (tpls: List<Type_Expr>?, ts: List<String>): Triple<Stmt.Data,List<I
             val l: MutableList<Int> = mutableListOf()
             var tp = if (tpls==null) s.tp else {
                 //println(listOf(s.tpls, tpls))
-                s.tp.template_resolve(s.tpls!!.zip(tpls).map { (v,tpl) ->
+                s.tp.template_resolve(s.tpls.zip(tpls).map { (v,tpl) ->
                     Pair(v.first, tpl)
                 })
             }
@@ -407,9 +420,9 @@ fun Expr.type (): Type? {
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos))
         is Expr.Cons  -> this.walk(null,this.tp.ts)!!.let { (s,_,_) ->
             if (s.subs == null) {
-                Type.Data(this.tk, null, this.tp.ts.take(1))
+                Type.Data(this.tk, this.tp.xtpls, this.tp.ts.take(1))
             } else {
-                Type.Data(this.tk, null, this.tp.ts)
+                Type.Data(this.tk, this.tp.xtpls, this.tp.ts)
             }
         }
         is Expr.Acc -> this.tk_.type(this)

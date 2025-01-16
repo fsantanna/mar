@@ -187,6 +187,8 @@ fun check_types () {
                     else -> error("impossible case")
                 }
                 if (dst!=null && src!=null) {
+                    //println(dst.to_str())
+                    //println(listOf(me.to_str(),src.to_str()))
                     if (!dst.is_sup_of(src)) {
                         err(me.tk, "set error : types mismatch")
                     }

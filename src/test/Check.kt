@@ -1885,7 +1885,7 @@ class Check {
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
             var x: Maybe {{:Bool}} = Maybe {{:Int}}.Just(10)
         """)
-        assert(out == "Bool vs Int") { out!! }
+        assert(out == "anon : (lin 3, col 36) : set error : types mismatch") { out!! }
     }
     @Test
     fun tt_03_data_err () {
@@ -1893,7 +1893,7 @@ class Check {
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
             var x: Maybe {{:Bool}} = Maybe {{:Bool}}.Just(10)
         """)
-        assert(out == "Bool vs 10") { out!! }
+        assert(out == "anon : (lin 3, col 59) : constructor error : types mismatch") { out!! }
     }
     @Test
     fun tt_04a_data_err () {
