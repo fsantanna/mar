@@ -170,7 +170,7 @@ fun cache_ups () {
     }
     fun ft (me: Type) {
         when (me) {
-            is Type.Pointer -> me.ptr?.xup = me
+            is Type.Pointer -> me.ptr.xup = me
             is Type.Tuple -> me.ts.forEach { (_,tp) ->
                 tp.xup = me
             }
@@ -216,4 +216,20 @@ fun cache_ups () {
         }
     }
     G.outer!!.dn_visit_pre(::fs, ::fe, ::ft)
+}
+
+fun cache_tpls () {
+    fun ft (me: Type) {
+        when (me) {
+            is Type.Data -> if (!me.xtpls!!.isEmpty()) {
+                val (s,_,_) = me.walk(false)!!
+                if (G.tpls[s] == null) {
+                    G.tpls[s] = mutableSetOf()
+                }
+                G.tpls[s]!!.add(me.xtpls!!)
+            }
+            else -> {}
+        }
+    }
+    G.outer!!.dn_visit_pre({null}, {null}, ::ft)
 }

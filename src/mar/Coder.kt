@@ -76,16 +76,22 @@ fun List<Tk.Type>.coder (pre: Boolean): String {
 
 fun coder_types (pre: Boolean): String {
     fun ft (me: Type): List<String> {
-        if (me is Type.Any) {
-            return emptyList()
+        when {
+            (me is Type.Any) -> return emptyList()
         }
-        me.coder(pre).let {
-            if (G.types.contains(it)) {
-                return emptyList()
-            } else {
-                G.types.add(it)
+        //println(me.to_str())
+        when (me) {
+            is Type.Proto.Func, is Type.Proto.Coro,
+            is Type.Tuple, is Type.Vector, is Type.Union -> me.coder(pre).let {
+                if (G.types.contains(it)) {
+                    return emptyList()
+                } else {
+                    G.types.add(it)
+                }
             }
+            else -> {}
         }
+
         return when (me) {
             is Type.Proto.Func -> listOf (
                 "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")});\n"

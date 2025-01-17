@@ -168,8 +168,8 @@ object G {
 
     var outer: Stmt.Block? = null
 
-    val types = mutableSetOf<String>()              // for C generation
-
+    val types = mutableSetOf<String>()  // for C generation
+    val tpls  = mutableMapOf<Stmt.Data, MutableSet<List<Type_Expr>>>()
     val defers: MutableMap<Any, Triple<MutableList<Int>,String,String>> = mutableMapOf()
 
     var datas = 1
@@ -189,6 +189,7 @@ object G {
 
         //cons.clear()
         types.clear()
+        tpls.clear()
         defers.clear()
 
         datas = 1
@@ -245,6 +246,7 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
         infer_apply()
         check_types()
         infer_check()
+        cache_tpls()
     } catch (e: Throwable) {
         if (THROW) {
             throw e
