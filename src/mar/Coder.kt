@@ -51,20 +51,20 @@ fun Var_Type.coder (pre: Boolean): String {
     val (id,tp) = this
     return tp.coder(pre) + " " + id.str
 }
-fun Type.coder (pre: Boolean): String {
+fun Type.coder (tpl: Map<String, Type_Expr>?, pre: Boolean): String {
     return when (this) {
         //is Type.Err,
         is Type.Any -> TODO()
-        is Type.Tpl        -> TODO("6")
+        is Type.Tpl        -> tpl!![this.tk.str]!!.first!!.coder(tpl,pre) //"_TPL_" //TODO("6")
         is Type.Nat        -> this.tk.str
         is Type.Prim       -> this.tk.str
         is Type.Data       -> this.ts.first().str
         is Type.Unit       -> "_VOID_"
-        is Type.Pointer    -> this.ptr.coder(pre) + (this.ptr !is Type.Proto).cond { "*" }
-        is Type.Tuple      -> "Tuple__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Union      -> "Union__${this.ts.map { (id,tp) -> tp.coder(pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Vector     -> "Vector__${this.max.cond2({it.tk.str},{"0"})}_${this.tp.coder(pre)}".clean()
-        is Type.Proto.Func -> "Func__${this.inps.to_void().map { it.coder(pre) }.joinToString("__")}__${this.out.coder(pre)}".clean()
+        is Type.Pointer    -> this.ptr.coder(tpl,pre) + (this.ptr !is Type.Proto).cond { "*" }
+        is Type.Tuple      -> "Tuple__${this.ts.map { (id,tp) -> tp.coder(tpl,pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
+        is Type.Union      -> "Union__${this.ts.map { (id,tp) -> tp.coder(tpl,pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
+        is Type.Vector     -> "Vector__${this.max.cond2({it.tk.str},{"0"})}_${this.tp.coder(tpl,pre)}".clean()
+        is Type.Proto.Func -> "Func__${this.inps.to_void().map { it.coder(tpl,pre) }.joinToString("__")}__${this.out.coder(tpl,pre)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(pre).first
         is Type.Exec       -> this.x_exec_coro(pre).first
     }
@@ -92,75 +92,82 @@ fun coder_types (pre: Boolean): String {
             else -> {}
         }
 
-        return when (me) {
-            is Type.Proto.Func -> listOf (
-                "typedef ${me.out.coder(pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")});\n"
-            )
-            is Type.Proto.Coro -> {
-                val (co,exe) = me.x_coro_exec(pre)
-                val (_,itup) = me.x_inp_tup(pre)
-                val (xiuni,iuni) = me.x_inp_uni(pre)
-                val (xouni,ouni) = me.x_out_uni(pre)
-                val x = "struct " + exe
-                ft(itup) + ft(iuni) + ft(ouni) + listOf (
-                    x + ";\n",
-                    "typedef $xouni (*$co) ($x*, $xiuni);\n",
+        val s = me.up_last { it is Stmt.Data } as Stmt.Data?
+        val tpls: List<Map<Tk.Var, Type_Expr>?> = if (s==null || s.tpls.isEmpty()) listOf(null) else {
+            G.tpls[s]?.map { s.tpls.map{(id,_)->id}.zip(it).toMap() } ?: emptyList()
+        }
+
+        return tpls.map { tpl ->
+            when (me) {
+                is Type.Proto.Func -> listOf (
+                    "typedef ${me.out.coder(tpl,pre)} (*${me.coder(pre)}) (${me.inps.map { it.coder(pre) }.joinToString(",")});\n"
                 )
-            }
-            is Type.Tuple -> {
-                val x = me.coder(pre)
-                /*val ids = if (me.ids == null) emptyList() else {
-                    ft(Type.Tuple(me.tk, me.ts, null))
+                is Type.Proto.Coro -> {
+                    val (co,exe) = me.x_coro_exec(pre)
+                    val (_,itup) = me.x_inp_tup(pre)
+                    val (xiuni,iuni) = me.x_inp_uni(pre)
+                    val (xouni,ouni) = me.x_out_uni(pre)
+                    val x = "struct " + exe
+                    ft(itup) + ft(iuni) + ft(ouni) + listOf (
+                        x + ";\n",
+                        "typedef $xouni (*$co) ($x*, $xiuni);\n",
+                    )
                 }
-                ids +*/ listOf("""
-                    typedef struct $x {
-                        ${me.ts.mapIndexed { i,id_tp ->
-                            val (id,tp) = id_tp
-                            """
-                            union {
-                                ${tp.coder(pre)} _${i+1};
-                                ${id.cond { "${tp.coder(pre)} ${it.str};" }}
-                            };                                    
-                            """
-                        }.joinToString("")}
-                    } $x;
-                """)
-            }
-            is Type.Vector -> {
-                val x = me.coder(pre)
-                listOf("""
-                    typedef struct $x {
-                        int max, cur;
-                        ${me.tp.coder(pre)} buf[${me.max.cond2({it.tk.str},{""})}];
-                    } $x;
-                """)
-            }
-            is Type.Union -> {
-                val x = me.coder(pre)
-                val xx = x.uppercase()
-                listOf("""
-                    typedef enum ${xx}_TAGS {
-                        __${xx}_TAG__,
-                        ${me.ts.mapIndexed { i, (id, _) ->
-                            """
-                            ${xx}_${if (id == null) i else id.str.uppercase()}_TAG,
-                            """
-                        }.joinToString("")}
-                    } ${xx}_TAGS;
-                    typedef struct $x {
-                        ${me.tagged.cond { "int tag;" }}
-                        union {
+                is Type.Tuple -> {
+                    val x = me.coder(pre)
+                    /*val ids = if (me.ids == null) emptyList() else {
+                        ft(Type.Tuple(me.tk, me.ts, null))
+                    }
+                    ids +*/ listOf("""
+                        typedef struct $x {
                             ${me.ts.mapIndexed { i,id_tp ->
                                 val (id,tp) = id_tp
-                                id.cond { tp.coder(pre) + " " + it.str + ";\n" } +
-                                tp.coder(pre) + " _" + (i+1) + ";\n"
+                                """
+                                union {
+                                    ${tp.coder(pre)} _${i+1};
+                                    ${id.cond { "${tp.coder(pre)} ${it.str};" }}
+                                };                                    
+                                """
                             }.joinToString("")}
-                        };
-                    } $x;
-                """)
+                        } $x;
+                    """)
+                }
+                is Type.Vector -> {
+                    val x = me.coder(pre)
+                    listOf("""
+                        typedef struct $x {
+                            int max, cur;
+                            ${me.tp.coder(pre)} buf[${me.max.cond2({it.tk.str},{""})}];
+                        } $x;
+                    """)
+                }
+                is Type.Union -> {
+                    val x = me.coder(pre)
+                    val xx = x.uppercase()
+                    listOf("""
+                        typedef enum ${xx}_TAGS {
+                            __${xx}_TAG__,
+                            ${me.ts.mapIndexed { i, (id, _) ->
+                                """
+                                ${xx}_${if (id == null) i else id.str.uppercase()}_TAG,
+                                """
+                            }.joinToString("")}
+                        } ${xx}_TAGS;
+                        typedef struct $x {
+                            ${me.tagged.cond { "int tag;" }}
+                            union {
+                                ${me.ts.mapIndexed { i,id_tp ->
+                                    val (id,tp) = id_tp
+                                    id.cond { tp.coder(pre) + " " + it.str + ";\n" } +
+                                    tp.coder(pre) + " _" + (i+1) + ";\n"
+                                }.joinToString("")}
+                            };
+                        } $x;
+                    """)
+                }
+                else -> emptyList()
             }
-            else -> emptyList()
-        }
+        }.flatten()
     }
     fun fe (me: Expr): List<String> {
         return when (me) {
@@ -694,7 +701,7 @@ fun Stmt.coder (pre: Boolean): String {
                         ${par.cond { "printf(\")\");" }}
                     """
                     }
-                    else -> TODO("3")
+                    else -> "printf(\"()\");" //TODO("3")
                 }
             }
             aux(this.e.typex(), this.e.coder(pre)) + """

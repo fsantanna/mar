@@ -1,11 +1,18 @@
 package mar
 
+fun Any.fup (): Any? {
+    return when (this) {
+        is Stmt -> this.xup
+        is Expr -> this.xup
+        is Type -> this.xup
+        else -> error("impossible cast")
+    }
+}
+
 fun Any.ups_until (cnd: (Any)->Boolean): List<Any> {
     return listOf(this) + when {
         cnd(this) -> emptyList()
-        (this is Stmt) -> this.xup?.ups_until(cnd) ?: emptyList()
-        (this is Expr) -> this.xup?.ups_until(cnd) ?: emptyList()
-        else -> error("impossible case")
+        else -> this.fup()?.ups_until(cnd) ?: emptyList()
     }
 }
 
@@ -22,11 +29,18 @@ fun Any.up_first (cnd: (Any)->Any?): Any? {
     return when {
         (v == true) -> this
         (v!=false && v!=null) -> v
-        (this is Stmt) -> this.xup?.up_first(cnd)
-        (this is Expr) -> this.xup?.up_first(cnd)
-        (this is Type) -> this.xup?.up_first(cnd)
-        else -> error("impossible case")
+        else -> this.fup()?.up_first(cnd)
     }
+}
+
+fun Any.up_last (cnd: (Any)->Any?): Any? {
+    var up = this.up_first(cnd)
+    var tmp = up
+    while (tmp != null) {
+        up = tmp
+        tmp = up.fup()?.up_first(cnd)
+    }
+    return up
 }
 
 fun Any.up_any (cnd: (Any)->Boolean): Boolean {
