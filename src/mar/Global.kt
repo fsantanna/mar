@@ -55,6 +55,7 @@ val PRIMS = setOf(
 typealias XDcl = Triple<Stmt,Tk.Var,Type?>
 typealias Var_Type = Pair<Tk.Var,Type>
 typealias Type_Expr = Pair<Type?,Expr?>
+typealias Tpl_Map = Map<String, Type_Expr>
 
 sealed class Tk (val str: String, val pos: Pos) {
     class Eof  (pos: Pos): Tk("", pos)
