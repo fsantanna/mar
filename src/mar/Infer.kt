@@ -1,5 +1,17 @@
 package mar
 
+fun Type.infer (tp: Type?): Type? {
+    when (this) {
+        is Type.Data -> {
+            if (this.xtpls==null && tp is Type.Data) {
+                TODO()
+            }
+        }
+        else -> error("impossible case")
+    }
+    return this
+}
+
 fun Stmt.infer (tp: Type?): Type? {
     return when (this) {
         is Stmt.Catch -> if (this.tp == null) null else {
@@ -128,7 +140,17 @@ fun Expr.infer (tp: Type?): Type? {
         }
         is Expr.Pred -> this.col.infer(null)
         is Expr.Disc -> this.col.infer(null)
-        is Expr.Cons -> this.e.infer(this.walk(null,this.tp.ts)!!.third)
+        is Expr.Cons -> {
+            val (s,_,x) = this.walk(null,this.tp.ts)!!
+            this.e.infer(x)
+            if (this.tp.xtpls == null) {
+                if (s.tpls.isEmpty()) {
+                    this.tp.xtpls = emptyList()
+                } else {
+                    TODO("8")
+                }
+            }
+        }
 
         is Expr.Uno -> this.e.infer(tp)
         is Expr.Bin -> {
@@ -207,6 +229,45 @@ fun Expr.infer (tp: Type?): Type? {
 }
 
 fun infer_apply () {
+    fun Any.set () {
+        val dst = when (this) {
+            is Stmt.SetS -> this.dst
+            is Stmt.SetE -> this.dst
+            else -> error("impossible case")
+        }
+        val tp1 = dst.infer(null)
+        val tp2 = when (this) {
+            is Stmt.SetS -> this.src.infer(tp1)
+            is Stmt.SetE -> this.src.infer(tp1)
+            else -> error("impossible case")
+        }
+        if (tp2!=null && tp1==null) {
+            if (dst is Expr.Acc) {
+                val dcl = dst.to_xdcl()!!.first
+                if (dcl is Stmt.Dcl) {
+                    assert(dcl.xtp == null)
+                    dcl.xtp = tp2
+                }
+           } else {
+                dst.infer(null)
+           }
+        }
+        if (dst is Expr.Acc) {
+            val dcl = dst.to_xdcl()!!.first
+            if (dcl is Stmt.Dcl) {
+                val tp = dcl.xtp
+                if (tp is Type.Data) {
+                    val (s,_,_) = tp.walk(false)!!
+                    if (s.tpls.isEmpty()) {
+                        tp.xtpls = emptyList()
+                    } else {
+                        TODO("8")
+                    }
+                }
+            }
+        }
+    }
+
     G.outer!!.dn_visit_pos({ me ->
        when (me) {
            is Stmt.Data, -> {}
@@ -214,36 +275,8 @@ fun infer_apply () {
 
            is Stmt.Block -> {}
            is Stmt.Dcl -> {}
-           is Stmt.SetE -> {
-               val tp1 = me.dst.infer(null)
-               val tp2 = me.src.infer(tp1)
-               if (tp2!=null && tp1==null) {
-                   if (me.dst is Expr.Acc) {
-                       val dcl = me.dst.to_xdcl()!!.first
-                       if (dcl is Stmt.Dcl) {
-                           assert(dcl.xtp == null)
-                           dcl.xtp = tp2
-                       }
-                   } else {
-                       me.dst.infer(null)
-                   }
-               }
-           }
-           is Stmt.SetS -> {
-               val tp1 = me.dst.infer(null)
-               val tp2 = me.src.infer(tp1)
-               if (tp2!=null && tp1==null) {
-                   if (me.dst is Expr.Acc) {
-                       val dcl = me.dst.to_xdcl()!!.first
-                       if (dcl is Stmt.Dcl) {
-                           assert(dcl.xtp == null)
-                           dcl.xtp = tp2
-                       }
-                   } else {
-                       me.dst.infer(null)
-                   }
-               }
-           }
+           is Stmt.SetE -> me.set()
+           is Stmt.SetS -> me.set()
 
            is Stmt.Escape -> me.e.infer(null)
            is Stmt.Defer -> {}
