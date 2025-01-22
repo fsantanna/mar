@@ -55,7 +55,7 @@ fun Type.coder (tpl: Tpl_Map?, pre: Boolean): String {
     return when (this) {
         //is Type.Err,
         is Type.Any -> TODO()
-        is Type.Tpl        -> tpl!![this.tk.str]!!.first!!.coder(tpl,pre)
+        is Type.Tpl        -> if (tpl == null) "_TPL_" else tpl[this.tk.str]!!.first!!.coder(tpl,pre)
         is Type.Nat        -> this.tk.str
         is Type.Prim       -> this.tk.str
         is Type.Data       -> this.ts.first().str + this.xtpls!!.map { "_tpl_" }.joinToString("")
