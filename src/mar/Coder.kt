@@ -82,7 +82,7 @@ fun coder_types (pre: Boolean): String {
         //println(me.to_str())
         when (me) {
             is Type.Proto.Func, is Type.Proto.Coro,
-            is Type.Tuple, is Type.Vector, is Type.Union -> me.coder(null,pre).let {
+            is Type.Tuple, is Type.Vector, is Type.Union -> me.coder(TODO(),pre).let {
                 if (G.types.contains(it)) {
                     return emptyList()
                 } else {
@@ -322,11 +322,11 @@ fun Stmt.coder (pre: Boolean): String {
         is Stmt.Proto -> {
             when (this) {
                 is Stmt.Proto.Func ->
-                    this.tp_.out.coder(null,pre) + " " + this.id.str + " (" + this.tp_.inps_.map { it.coder(TODO(),pre) }.joinToString(",") + ")"
+                    this.tp_.out.coder(TODO(),pre) + " " + this.id.str + " (" + this.tp_.inps_.map { it.coder(TODO(),pre) }.joinToString(",") + ")"
                 is Stmt.Proto.Coro -> this.tp_.x_sig(TODO(), pre, this.id.str)
             } + """
             {
-                ${this.tp.out.coder(null,pre)} mar_ret;
+                ${this.tp.out.coder(TODO(),pre)} mar_ret;
                 ${(this is Stmt.Proto.Func).cond {
                     this as Stmt.Proto.Func
                     this.tp_.inps_.map { (id,tp) ->
