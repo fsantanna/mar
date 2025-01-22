@@ -62,6 +62,7 @@ fun Expr.infer (tp: Type?): Type? {
             if (this.xtp == null) {
                 this.xtp = tp ?: Type.Any(this.tk)
             }
+            this.xtp?.infer(null)
         }
 
         is Expr.Tuple -> {
@@ -91,6 +92,7 @@ fun Expr.infer (tp: Type?): Type? {
                     this.xtp = if (tp is Type.Tuple) tp else dn // b/c of int/float
                 }
             }
+            this.xtp?.infer(null)
         }
         is Expr.Vector -> {
             val up = this.xtp ?: tp
@@ -110,6 +112,7 @@ fun Expr.infer (tp: Type?): Type? {
                     this.xtp = dn
                 }
             }
+            this.xtp?.infer(null)
         }
         is Expr.Field -> this.col.infer(null)
         is Expr.Index -> {
@@ -125,10 +128,14 @@ fun Expr.infer (tp: Type?): Type? {
             if (dn!=null && this.xtp==null) {
                 this.xtp = (if (up is Type.Union) up else null)
             }
+            this.xtp?.infer(null)
         }
         is Expr.Pred -> this.col.infer(null)
         is Expr.Disc -> this.col.infer(null)
-        is Expr.Cons -> this.e.infer(this.walk(null,this.tp.ts)!!.third)
+        is Expr.Cons -> {
+            this.tp.infer(null)
+            this.e.infer(this.walk(null,this.tp.ts)!!.third)
+        }
 
         is Expr.Uno -> this.e.infer(tp)
         is Expr.Bin -> {
@@ -156,6 +163,7 @@ fun Expr.infer (tp: Type?): Type? {
         is Expr.Throw -> {
             this.xtp = tp
             this.e.infer(null)
+            this.xtp?.infer(null)
         }
 
         is Expr.If -> {
@@ -165,6 +173,7 @@ fun Expr.infer (tp: Type?): Type? {
             if (cnd!=null && t!=null && f!=null) {
                 this.xtp = t.sup_vs(f)
             }
+            this.xtp?.infer(null)
         }
         is Expr.MatchT -> {
             val tst = this.tst.infer(null)
@@ -178,6 +187,7 @@ fun Expr.infer (tp: Type?): Type? {
                 val fst: Type? = es.first()
                 this.xtp = es.fold(fst) { a,b -> a?.sup_vs(b) }
             }
+            this.xtp?.infer(null)
         }
         is Expr.MatchE -> {
             val tst = this.tst.infer(null)
@@ -191,6 +201,7 @@ fun Expr.infer (tp: Type?): Type? {
                 val fst: Type? = es.first()
                 this.xtp = es.fold(fst) { a,b -> a?.sup_vs(b) }
             }
+            this.xtp?.infer(null)
         }
     }
 
@@ -204,6 +215,84 @@ fun Expr.infer (tp: Type?): Type? {
         else -> tp
     }
     return xtp
+}
+
+fun Type.infer (tp: Type?): Type {
+    /*
+    fun Type.assert_no_tpls () {
+        when (this) {
+            is Type.Data -> {
+                if (this.xtpls == null) {
+                    val (s, _, _) = this.walk(false)!!
+                    assert(s.tpls.isEmpty(), {"TODO: sub tpls"})
+                }
+            }
+            else -> {}
+        }
+    }
+     */
+    when (this) {
+        is Type.Any, is Type.Tpl, is Type.Nat,
+        is Type.Unit, is Type.Prim -> {}
+        is Type.Pointer -> {
+            if (tp is Type.Pointer) {
+                this.ptr.infer(tp.ptr)
+            }
+        }
+        is Type.Tuple -> {
+            if (tp is Type.Tuple) {
+                this.ts.zip(tp.ts).forEach { (a,b) -> a.second.infer(b.second) }
+            }
+        }
+        is Type.Vector -> {
+            if (tp is Type.Vector) {
+                this.tp.infer(tp.tp)
+            }
+        }
+        is Type.Union -> {
+            if (tp is Type.Union) {
+                this.ts.zip(tp.ts).forEach { (a,b) -> a.second.infer(b.second) }
+            }
+        }
+        is Type.Proto.Func -> {
+            if (tp is Type.Proto.Func) {
+                this.inps.zip(tp.inps).forEach { (a,b) -> a.infer(b) }
+                this.out.infer(tp.out)
+            }
+        }
+        is Type.Proto.Coro -> {
+            if (tp is Type.Proto.Coro) {
+                this.inps.zip(tp.inps).forEach { (a,b) -> a.infer(b) }
+                this.res.infer(tp.out)
+                this.yld.infer(tp.out)
+                this.out.infer(tp.out)
+            }
+        }
+        is Type.Exec -> {
+            if (tp is Type.Exec) {
+                this.inps.zip(tp.inps).forEach { (a,b) -> a.infer(b) }
+                this.res.infer(tp.out)
+                this.yld.infer(tp.out)
+                this.out.infer(tp.out)
+            }
+        }
+        is Type.Data -> {
+            val (s,_,_) = this.walk(false)!!
+            when {
+                (this.xtpls != null) -> {}
+                s.tpls.isEmpty() -> {
+                    this.xtpls = emptyList()
+                }
+                (tp !is Type.Data) -> {}
+                (tp.xtpls != null) -> {
+                    this.xtpls = tp.xtpls
+                    assert(this.is_same_of(tp), {"TODO: unmatching infer"})
+                }
+                else -> TODO("infer tpls")
+            }
+        }
+    }
+    return this
 }
 
 fun infer_apply () {
@@ -235,10 +324,15 @@ fun infer_apply () {
     G.outer!!.dn_visit_pos({ me ->
        when (me) {
            is Stmt.Data, -> {}
-           is Stmt.Proto -> {}
+           is Stmt.Proto.Func -> me.tp_.infer(null)
+           is Stmt.Proto.Coro -> me.tp_.infer(null)
 
-           is Stmt.Block -> {}
-           is Stmt.Dcl -> {}
+           is Stmt.Block -> {
+               me.esc?.infer(null)
+           }
+           is Stmt.Dcl -> {
+               me.xtp?.infer(null)
+           }
            is Stmt.SetE -> me.set()
            is Stmt.SetS -> me.set()
 
@@ -248,11 +342,15 @@ fun infer_apply () {
                if (me.xup !is Stmt.SetS) {
                    me.infer(null)
                }
+               me.tp?.infer(null)
            }
 
            is Stmt.If -> me.cnd.infer(Type.Prim(Tk.Type("Bool",me.tk.pos)))
            is Stmt.Loop -> {}
-           is Stmt.MatchT -> me.tst.infer(null)
+           is Stmt.MatchT -> {
+               me.tst.infer(null)
+               me.cases.forEach { (t,_) -> t?.infer(null) }
+           }
            is Stmt.MatchE -> {
                val tst = me.tst.infer(null)
                me.cases.forEach {
@@ -284,19 +382,7 @@ fun infer_apply () {
            is Stmt.Print -> me.e.infer(null)
            is Stmt.Pass -> me.e.infer(Type.Unit(me.tk))
        }
-   }, {}, { me ->
-        when (me) {
-            is Type.Data -> {
-                val (s,_,_) = me.walk(false)!!
-                if (s.tpls.isEmpty()) {
-                    me.xtpls = emptyList()
-                } else {
-                    TODO("8")
-                }
-            }
-            else -> {}
-        }
-   })
+   }, {}, {})
 }
 
 fun infer_check () {
