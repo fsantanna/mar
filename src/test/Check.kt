@@ -1923,7 +1923,9 @@ class Check {
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
             var x: Maybe {{:Bool}} = Maybe.Just(10)
         """)
-        assert(out == "anon : (lin 3, col 38) : type error : templates mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 36) : set error : types mismatch") { out!! }
+        //assert(out == "anon : (lin 3, col 49) : constructor error : types mismatch") { out!! }
+        //assert(out == "anon : (lin 3, col 38) : type error : templates mismatch") { out!! }
     }
     @Test
     fun tt_06_data_err () {
@@ -1931,15 +1933,43 @@ class Check {
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
             var x: Maybe
         """)
-        assert(out == "anon : (lin 3, col 20) : type error : templates mismatch") { out!! }
+        assert(out == "anon : (lin 3, col 20) : type error : missing template") { out!! }
     }
     @Test
-    fun tt_07_data_err () {
+    fun tt_07_data () {
         val out = check("""
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
-            var x: Maybe
+            var x = Maybe.Just(10)
         """)
-        assert(out == "{{t:Type}} vs -") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "data Maybe {{t: Type}}: <Nothing:(),Just:{{t}}>\n" +
+                "var x: Maybe {{:Int}}\n" +
+                "set x = (Maybe {{:Int}}.Just(10))\n" +
+                "}") { G.outer!!.to_str() }
+    }
+    @Test
+    fun tt_08_data () {
+        val out = check("""
+            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
+            var x: Maybe {{:Int}}
+            var y = x
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "data Maybe {{t: Type}}: <Nothing:(),Just:{{t}}>\n" +
+                "var x: Maybe {{:Int}}\n" +
+                "var y: Maybe {{:Int}}\n" +
+                "set y = x\n" +
+                "}") { G.outer!!.to_str() }
     }
 
 }

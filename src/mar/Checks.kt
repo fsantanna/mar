@@ -422,5 +422,16 @@ fun check_types () {
             else -> {}
         }
     }
-    G.outer!!.dn_visit_pos(::fs, ::fe, {null})
+    fun ft (me: Type) {
+        when (me) {
+            is Type.Data -> {
+                if (me.xtpls == null) {
+                    err(me.tk, "type error : missing template")
+                }
+            }
+
+            else -> {}
+        }
+    }
+    G.outer!!.dn_visit_pos(::fs, ::fe, ::ft)
 }

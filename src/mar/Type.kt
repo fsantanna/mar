@@ -45,7 +45,7 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Unit       && other is Type.Unit)       -> true
         (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
         (this is Type.Data       && other is Type.Data)       -> {
-            //println(listOf(this.to_str(),other.to_str()))
+            //println(listOf(this.to_str(),other.to_str(),this.xtpls,other.xtpls))
             val tpl = Pair(this.xtpls!!,other.xtpls!!).let { (thi,oth) -> thi.size==oth.size && thi.zip(oth).all { (thi,oth) ->
                 val (t1,e1) = thi
                 val (t2,e2) = oth

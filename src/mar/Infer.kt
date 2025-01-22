@@ -133,8 +133,9 @@ fun Expr.infer (tp: Type?): Type? {
         is Expr.Pred -> this.col.infer(null)
         is Expr.Disc -> this.col.infer(null)
         is Expr.Cons -> {
-            this.tp.infer(null)
-            this.e.infer(this.walk(null,this.tp.ts)!!.third)
+            val e = this.e.infer(this.walk(null,this.tp.ts)!!.third)
+            val t = if (this.tp.xtpls != null) this.tp else Type.Data(this.tp.tk,listOf(Pair(e,null)),this.tp.ts)
+            this.tp.infer(t)
         }
 
         is Expr.Uno -> this.e.infer(tp)
@@ -218,19 +219,6 @@ fun Expr.infer (tp: Type?): Type? {
 }
 
 fun Type.infer (tp: Type?): Type {
-    /*
-    fun Type.assert_no_tpls () {
-        when (this) {
-            is Type.Data -> {
-                if (this.xtpls == null) {
-                    val (s, _, _) = this.walk(false)!!
-                    assert(s.tpls.isEmpty(), {"TODO: sub tpls"})
-                }
-            }
-            else -> {}
-        }
-    }
-     */
     when (this) {
         is Type.Any, is Type.Tpl, is Type.Nat,
         is Type.Unit, is Type.Prim -> {}
@@ -280,9 +268,7 @@ fun Type.infer (tp: Type?): Type {
             val (s,_,_) = this.walk(false)!!
             when {
                 (this.xtpls != null) -> {}
-                s.tpls.isEmpty() -> {
-                    this.xtpls = emptyList()
-                }
+                s.tpls.isEmpty() -> this.xtpls = emptyList()
                 (tp !is Type.Data) -> {}
                 (tp.xtpls != null) -> {
                     this.xtpls = tp.xtpls
@@ -308,12 +294,15 @@ fun infer_apply () {
             is Stmt.SetE -> this.src.infer(tp1)
             else -> error("impossible case")
         }
+        //println(listOf("set",tp1?.to_str()))
         if (tp2!=null && tp1==null) {
             if (dst is Expr.Acc) {
                 val dcl = dst.to_xdcl()!!.first
                 if (dcl is Stmt.Dcl) {
                     assert(dcl.xtp == null)
-                    dcl.xtp = tp2
+                    dcl.xtp = dcl.xtp ?: tp2
+                    //println(listOf("xxx",dcl.xtp?.to_str()))
+                    dcl.xtp?.infer(null)
                 }
            } else {
                 dst.infer(null)
@@ -339,10 +328,10 @@ fun infer_apply () {
            is Stmt.Escape -> me.e.infer(null)
            is Stmt.Defer -> {}
            is Stmt.Catch -> {
+               me.tp?.infer(null)
                if (me.xup !is Stmt.SetS) {
                    me.infer(null)
                }
-               me.tp?.infer(null)
            }
 
            is Stmt.If -> me.cnd.infer(Type.Prim(Tk.Type("Bool",me.tk.pos)))
@@ -382,7 +371,19 @@ fun infer_apply () {
            is Stmt.Print -> me.e.infer(null)
            is Stmt.Pass -> me.e.infer(Type.Unit(me.tk))
        }
-   }, {}, {})
+   }, {}, { me ->
+        when (me) {
+            is Type.Data -> {
+                val (s,_,_) = me.walk(false)!!
+                if (s.tpls.isEmpty()) {
+                    me.xtpls = emptyList()
+                } else {
+                    //TODO("8")
+                }
+            }
+            else -> {}
+        }
+   })
 }
 
 fun infer_check () {
