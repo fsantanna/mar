@@ -840,8 +840,8 @@ class Check {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "data A: <B:<C:()>>\n" +
-                "var c: A {{}}\n" +
-                "set c = (A {{}}.B.C(()))\n" +
+                "var c: A\n" +
+                "set c = (A.B.C(()))\n" +
                 "print(((c!B)!C))\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -973,8 +973,8 @@ class Check {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "data X: <A:[a:Int]>\n" +
-                "var x: X {{}}\n" +
-                "set x = (X {{}}.A(([10]:[a:Int])))\n" +
+                "var x: X\n" +
+                "set x = (X.A(([10]:[a:Int])))\n" +
                 "var a: [a:Int]\n" +
                 "set a = (x!A)\n" +
                 "}") { G.outer!!.to_str() }
@@ -1003,8 +1003,8 @@ class Check {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "data X: <A:[a:Int]>\n" +
-                "var x: X {{}}\n" +
-                "set x = (X {{}}.A(([10]:[a:Int])))\n" +
+                "var x: X\n" +
+                "set x = (X.A(([10]:[a:Int])))\n" +
                 "var xa: [Int]\n" +
                 "set xa = (x!A)\n" +
                 "var a: Int\n" +
@@ -1024,8 +1024,8 @@ class Check {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "data X: <A:<B:Int>>\n" +
-                "var x: X {{}}\n" +
-                "set x = (X {{}}.A.B(10))\n" +
+                "var x: X\n" +
+                "set x = (X.A.B(10))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -1055,8 +1055,8 @@ class Check {
                 "data Break.*: [] {\n" +
                 "}\n" +
                 "data B: <T:[],F:[]>\n" +
-                "var b: B {{}}\n" +
-                "set b = (B {{}}.T(([]:[])))\n" +
+                "var b: B\n" +
+                "set b = (B.T(([]:[])))\n" +
                 "print((b?T))\n" +
                 "print((b!T))\n" +
                 "}") { G.outer!!.to_str() }
@@ -1149,8 +1149,8 @@ class Check {
                 "Y: [] {\n" +
                 "}\n" +
                 "}\n" +
-                "var y: X {{}}.Y\n" +
-                "set y = (X {{}}.Y(([10]:[a:Int])))\n" +
+                "var y: X.Y\n" +
+                "set y = (X.Y(([10]:[a:Int])))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -1171,8 +1171,8 @@ class Check {
                 "Y: [] {\n" +
                 "}\n" +
                 "}\n" +
-                "var y: X {{}}.Y\n" +
-                "set y = (X {{}}.Y(([10]:[a:Int])))\n" +
+                "var y: X.Y\n" +
+                "set y = (X.Y(([10]:[a:Int])))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -1244,9 +1244,9 @@ class Check {
                 "Y: [] {\n" +
                 "}\n" +
                 "}\n" +
-                "var xy: X {{}}.Y\n" +
-                "set xy = (X {{}}.Y(([10]:[a:Int])))\n" +
-                "var y: X {{}}.Y\n" +
+                "var xy: X.Y\n" +
+                "set xy = (X.Y(([10]:[a:Int])))\n" +
+                "var y: X.Y\n" +
                 "set y = xy\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -1295,8 +1295,8 @@ class Check {
                 "}\n" +
                 "}\n" +
                 "}\n" +
-                "var x0: A {{}}\n" +
-                "set x0 = (A {{}}.B(([true,100]:[a:Bool,b:Int])))\n" +
+                "var x0: A\n" +
+                "set x0 = (A.B(([true,100]:[a:Bool,b:Int])))\n" +
                 "print(x0)\n" +
                 "print((x0!B))\n" +
                 "}") { G.outer!!.to_str() }
@@ -1354,8 +1354,8 @@ class Check {
                 "}\n" +
                 "}\n" +
                 "}\n" +
-                "var c: A {{}}.B.C\n" +
-                "set c = (A {{}}.B.C(([10,20,30]:[x:Int,y:Int,Int])))\n" +
+                "var c: A.B.C\n" +
+                "set c = (A.B.C(([10,20,30]:[x:Int,y:Int,Int])))\n" +
                 "var y: Int\n" +
                 "set y = (c.y)\n" +
                 "}") { G.outer!!.to_str() }
@@ -1375,8 +1375,8 @@ class Check {
                 "}\n" +
                 "data X.*: [Int] {\n" +
                 "}\n" +
-                "var x: X {{}}\n" +
-                "set x = (X {{}}(([10]:[Int])))\n" +
+                "var x: X\n" +
+                "set x = (X(([10]:[Int])))\n" +
                 "print((x.1))\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -1406,8 +1406,8 @@ class Check {
                 "Z: [Int] {\n" +
                 "}\n" +
                 "}\n" +
-                "var xz: X {{}}.Z\n" +
-                "set xz = (X {{}}.Z(([10,20]:[Int,Int])))\n" +
+                "var xz: X.Z\n" +
+                "set xz = (X.Z(([10,20]:[Int,Int])))\n" +
                 "var x: Int\n" +
                 "set x = (xz.1)\n" +
                 "var z: Int\n" +
@@ -1454,10 +1454,10 @@ class Check {
                 "}\n" +
                 "}\n" +
                 "}\n" +
-                "var xza: X {{}}.Z.A\n" +
-                "set xza = (X {{}}.Z.A(([10,20]:[x:Int,z:Int])))\n" +
-                "var xya: X {{}}.Y.A\n" +
-                "set xya = (X {{}}.Y.A(([10,20]:[x:Int,a:Int])))\n" +
+                "var xza: X.Z.A\n" +
+                "set xza = (X.Z.A(([10,20]:[x:Int,z:Int])))\n" +
+                "var xya: X.Y.A\n" +
+                "set xya = (X.Y.A(([10,20]:[x:Int,a:Int])))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -1491,10 +1491,10 @@ class Check {
                 "}\n" +
                 "}\n" +
                 "}\n" +
-                "var xza: X {{}}.Z.A\n" +
-                "set xza = (X {{}}.Z.A(([10,20]:[Int,Int])))\n" +
-                "var xya: X {{}}.Y.A\n" +
-                "set xya = (X {{}}.Y.A(([10,20]:[Int,Int])))\n" +
+                "var xza: X.Z.A\n" +
+                "set xza = (X.Z.A(([10,20]:[Int,Int])))\n" +
+                "var xya: X.Y.A\n" +
+                "set xya = (X.Y.A(([10,20]:[Int,Int])))\n" +
                 "}") { G.outer!!.to_str() }
     }
     @Test
@@ -1516,8 +1516,8 @@ class Check {
                 "B: [Int] {\n" +
                 "}\n" +
                 "}\n" +
-                "var a: A {{}}\n" +
-                "set a = (A {{}}.B(([10]:[Int])))\n" +
+                "var a: A\n" +
+                "set a = (A.B(([10]:[Int])))\n" +
                 "print(((a!B).1))\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -1705,7 +1705,7 @@ class Check {
                 "data X.*: [] {\n" +
                 "}\n" +
                 "do :X {\n" +
-                "escape((X {{}}(([]:[]))))\n" +
+                "escape((X(([]:[]))))\n" +
                 "}\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -1811,7 +1811,7 @@ class Check {
            "var ret: Int\n"+
            "set ret = match v {\n"+
            "(`SDL_QUIT`: `T`) => 10\n"+
-           "else => throw((Error {{}}(([]:[]))))\n"+
+           "else => throw((Error(([]:[]))))\n"+
            "}\n"+
            "}") { G.outer!!.to_str() }
     }
@@ -1863,7 +1863,7 @@ class Check {
            "var v: `T`\n"+
            "match v {\n"+
            "(`SDL_QUIT`: `T`) {  }\n"+
-           "else { do(throw((Error {{}}(([]:[]))))) }\n"+
+           "else { do(throw((Error(([]:[]))))) }\n"+
            "}\n"+
            "}") { G.outer!!.to_str() }
     }
@@ -1921,7 +1921,7 @@ class Check {
     fun tt_05_data_err () {
         val out = check("""
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
-            var x: Maybe {{:Bool}} = Maybe {{}}.Just(10)
+            var x: Maybe {{:Bool}} = Maybe.Just(10)
         """)
         assert(out == "anon : (lin 3, col 38) : type error : templates mismatch") { out!! }
     }
@@ -1929,7 +1929,7 @@ class Check {
     fun tt_06_data_err () {
         val out = check("""
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
-            var x: Maybe {{}}
+            var x: Maybe
         """)
         assert(out == "anon : (lin 3, col 20) : type error : templates mismatch") { out!! }
     }

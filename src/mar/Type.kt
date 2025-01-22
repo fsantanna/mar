@@ -80,7 +80,7 @@ fun Type.sup_vs (other: Type): Type? {
                 (x.str == y.str)
             }
             if (l.size == 0) null else {
-                Type.Data(this.tk, null, l)
+                Type.Data(this.tk, TODO("10"), l)
             }
         }
         (this.is_num() && other.is_num()) -> {
@@ -231,7 +231,7 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
                 if (s.subs == null) {
                     Pair(i.last(),tp)
                 } else {
-                    val xtp = Type.Data(this.tk, null, xts.map { Tk.Type(it, this.tk.pos) })
+                    val xtp = Type.Data(this.tk, this.xtpls, xts.map { Tk.Type(it, this.tk.pos) })
                     xtp.xup = this
                     Pair(i.last(), xtp)
                 }
