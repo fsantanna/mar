@@ -1,5 +1,17 @@
 package mar
 
+fun Type.assert_no_tpls (): Tpl_Map? {
+    this.dn_visit_pos { me ->
+        when (me) {
+            is Type.Data -> {
+                assert(me.xtpls!!.isEmpty(), {"TODO: sub tpls"})
+            }
+            else -> {}
+        }
+    }
+    return null
+}
+
 fun List<Type>.to_void (): List<Type> {
     return when {
         (this.size == 0) -> listOf(Type.Unit(G.tk0!!))

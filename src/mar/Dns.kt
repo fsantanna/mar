@@ -78,6 +78,11 @@ fun Expr.dn_visit_pos (fe: (Expr)->Unit, ft: (Type)->Unit) {
         { ft(it) ; emptyList<Unit>() },
     )
 }
+fun Type.dn_visit_pos (ft: (Type)->Unit) {
+    this.dn_collect_pos (
+        { ft(it) ; emptyList<Unit>() },
+    )
+}
 
 fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V> {
     val v = fs(this)
