@@ -127,7 +127,7 @@ fun Type.template_resolve (tpls: List<Pair<Tk.Var,Type_Expr>>): Type {
         is Type.Nat -> this
         is Type.Unit -> this
         is Type.Prim -> this
-        is Type.Data -> TODO("this.tpls")
+        is Type.Data -> { this.assert_no_tpls() ; this }
         is Type.Pointer -> {
             val tp = this.ptr.template_resolve(tpls)
             Type.Pointer(this.tk, tp)

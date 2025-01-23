@@ -221,15 +221,18 @@ fun cache_ups () {
 fun cache_tpls () {
     fun ft (me: Type) {
         when (me) {
-            is Type.Data -> if (!me.xtpls!!.isEmpty()) {
-                val (s,_,_) = me.walk(false)!!
-                if (G.tpls[s] == null) {
-                    G.tpls[s] = mutableSetOf()
+            is Type.Data -> {
+                if (!me.xtpls!!.isEmpty()) {
+                    val (s,_,_) = me.walk(false)!!
+                    if (G.tpls[s] == null) {
+                        G.tpls[s] = mutableMapOf()
+                    }
+                    val id = me.coder(null,false)
+                    G.tpls[s]!![id] = me.xtpls!!
                 }
-                G.tpls[s]!!.add(me.xtpls!!)
             }
             else -> {}
         }
     }
-    G.outer!!.dn_visit_pre({null}, {null}, ::ft)
+    G.outer!!.dn_visit_pre({}, {}, ::ft)
 }

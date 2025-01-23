@@ -170,7 +170,7 @@ object G {
     var outer: Stmt.Block? = null
 
     val types = mutableSetOf<String>()  // for C generation
-    val tpls  = mutableMapOf<Stmt.Data, MutableSet<List<Type_Expr>>>()
+    val tpls  = mutableMapOf<Stmt.Data, MutableMap<String,List<Type_Expr>>>()
     val defers: MutableMap<Any, Triple<MutableList<Int>,String,String>> = mutableMapOf()
 
     var datas = 1

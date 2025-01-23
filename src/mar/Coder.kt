@@ -58,7 +58,7 @@ fun Type.coder (tpl: Tpl_Map?, pre: Boolean): String {
         is Type.Tpl        -> if (tpl == null) "_TPL_" else tpl[this.tk.str]!!.first!!.coder(tpl,pre)
         is Type.Nat        -> this.tk.str
         is Type.Prim       -> this.tk.str
-        is Type.Data       -> this.ts.first().str + this.xtpls!!.map { "_tpl_" }.joinToString("")
+        is Type.Data       -> this.ts.first().str + this.xtpls!!.map { (t,e) -> "_" + t.cond { it.to_str() } + e.cond { it.to_str() } }.joinToString("")
         is Type.Unit       -> "_VOID_"
         is Type.Pointer    -> this.ptr.coder(tpl,pre) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "Tuple__${this.ts.map { (id,tp) -> tp.coder(tpl,pre)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
@@ -70,8 +70,13 @@ fun Type.coder (tpl: Tpl_Map?, pre: Boolean): String {
     }
 }
 
-fun List<Tk.Type>.coder (pre: Boolean): String {
-    return this.map { it.str }.joinToString("_")
+fun List<Tk.Type>.coder (tpl: List<Type_Expr>?, pre: Boolean): String {
+    return this.map { it.str }.let {
+        if (tpl == null) it else {
+            val ts = tpl.map { it.first.cond { it.to_str() } + it.second.cond { it.to_str() } }
+            listOf(it.first()) + ts + it.drop(1)
+        }
+    }.joinToString("_")
 }
 
 fun coder_types (pre: Boolean): String {
@@ -94,8 +99,9 @@ fun coder_types (pre: Boolean): String {
 
         val s = me.up_last { it is Stmt.Data } as Stmt.Data?
         val tpls: List<Tpl_Map?> = if (s==null || s.tpls.isEmpty()) listOf(null) else {
-            G.tpls[s]?.map { s.tpls.map{(id,_)->id.str}.zip(it).toMap() } ?: emptyList()
+            G.tpls[s]?.values?.map { s.tpls.map{(id,_)->id.str}.zip(it).toMap() } ?: emptyList()
         }
+        //println(listOf(tpls.size,s?.to_str()))
 
         return tpls.map { tpl ->
             when (me) {
@@ -200,14 +206,17 @@ fun coder_types (pre: Boolean): String {
                 (me.xup is Stmt.Data) -> emptyList()
                 (me.subs == null) -> {
                     fun f(tp: Type, s: List<String>): List<String> {
-                        val ss = s.joinToString("_")
-                        val SS = ss.uppercase()
                         //println(listOf(s, tp.to_str()))
-                        //TODO("map tpls")
                         val tpls: List<Tpl_Map?> = if (me.tpls.isEmpty()) listOf(null) else {
-                            G.tpls[me]?.map { me.tpls.map{(id,_)->id.str}.zip(it).toMap() } ?: emptyList()
+                            G.tpls[me]?.values?.map { me.tpls.map{(id,_)->id.str}.zip(it).toMap() } ?: emptyList()
                         }
                         return tpls.map { tpl ->
+                            val sx = if (tpl == null) s else {
+                                val ts = tpl.values.map { it.first.cond { it.to_str() } + it.second.cond { it.to_str() } }
+                                listOf(s.first()) + ts + s.drop(1)
+                            }
+                            val ss = sx.joinToString("_")
+                            val SS = ss.uppercase()
                             val x1 = "typedef ${tp.coder(tpl,pre)} $ss;\n"
                             val x2 = if (tp !is Type.Union) {
                                 emptyList()
@@ -274,7 +283,7 @@ fun coder_types (pre: Boolean): String {
                         """
                     }
                     val tpls: List<Tpl_Map?> = if (me.tpls.isEmpty()) listOf(null) else {
-                        G.tpls[me]?.map { me.tpls.map{(id,_)->id.str}.zip(it).toMap() } ?: emptyList()
+                        G.tpls[me]?.values?.map { me.tpls.map{(id,_)->id.str}.zip(it).toMap() } ?: emptyList()
                     }
                     tpls.map { tpl ->
                         listOf (f(me, "", listOf(G.datas++)) + """
@@ -411,7 +420,7 @@ fun Stmt.coder (pre: Boolean): String {
                     if (MAR_ESCAPE.tag == __MAR_ESCAPE_NONE__) {
                         // no escape
                     ${this.esc.cond { """
-                        } else if (mar_sup(${it.ts.coder(pre).uppercase()}_TAG, MAR_ESCAPE.tag)) {
+                        } else if (mar_sup(${it.ts.coder(null,pre).uppercase()}_TAG, MAR_ESCAPE.tag)) {
                             MAR_ESCAPE.tag = __MAR_ESCAPE_NONE__;   // caught escape: go ahead
                             ${(it.ts.first().str == "Break").cond { """
                                 goto MAR_LOOP_STOP_${this.xup!!.n};
@@ -426,7 +435,7 @@ fun Stmt.coder (pre: Boolean): String {
         }
         is Stmt.Dcl -> {
             val dcl = if (this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) "" else {
-                this.xtp!!.coder(this.xtp!!.assert_no_tpls(),pre) + " " + this.id.str + ";"
+                this.xtp!!.coder(null,pre) + " " + this.id.str + ";"
             }
             val ini = this.xtp.let {
                 if (it !is Type.Vector) "" else """
@@ -505,7 +514,7 @@ fun Stmt.coder (pre: Boolean): String {
                      }}
                 } else if (
                     ${this.tp.cond2({
-                        "mar_sup(${it.ts.coder(pre).uppercase()}_TAG, MAR_EXCEPTION.tag)"
+                        "mar_sup(${it.ts.coder(TODO(),pre).uppercase()}_TAG, MAR_EXCEPTION.tag)"
                     },{
                         "true"
                     })}
@@ -602,7 +611,7 @@ fun Stmt.coder (pre: Boolean): String {
             // MATCH | ${this.dump()}
             switch (${this.tst.coder(pre)}.tag) {
                 ${this.cases.map { (tst,e) -> """
-                    ${tst.cond2({"case ${it.ts.coder(pre).uppercase()}_TAG"},{"default"})}:
+                    ${tst.cond2({"case ${it.ts.coder(TODO(),pre).uppercase()}_TAG"},{"default"})}:
                         ${e.coder(pre)};
                     break;
                 """ }.joinToString("")}
@@ -693,7 +702,7 @@ fun Stmt.coder (pre: Boolean): String {
                         val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
                         val x = if (s.subs == null) aux(tpx, v) else {
                             val tup = tpx as Type.Tuple
-                            val ts = tp.ts.coder(pre)
+                            val ts = tp.ts.coder(TODO(),pre)
                             """
                             {
                                 printf("[");
@@ -844,7 +853,7 @@ fun Expr.coder (pre: Boolean): String {
                     val sub = tp.ts.drop(1).map { it.str + "." }.joinToString("")
                     "(${this.col.coder(pre)}.$sub$idx)"
                 } else {
-                    val ts = tp.ts.coder(pre)
+                    val ts = tp.ts.coder(TODO(),pre)
                     "(${this.col.coder(pre)}.$ts.$idx)"
                 }
             }
@@ -878,8 +887,8 @@ fun Expr.coder (pre: Boolean): String {
             if (s.subs == null) {
                 var ret = "({"
                 for (i in this.tp.ts.size - 1 downTo 0) {
-                    val tp = this.tp.ts.take(i + 1).coder(pre)
-                    ret = ret + "$tp ceu_$i = " +
+                    val tp = this.tp.ts.take(i + 1).coder(this.tp.xtpls,pre)
+                    ret = ret + "$tp ceu_$i = /* xxx */" +
                             if (i == this.tp.ts.size - 1) {
                                 """
                                 ((${tp}) ${this.e.coder(pre)});
@@ -900,7 +909,7 @@ fun Expr.coder (pre: Boolean): String {
                 val vs = tup.vs.mapIndexed { i,(id,v) ->
                     "."+(id?.str ?: ("_"+(i+1))) + " = " + v.coder(pre)
                 }.joinToString(",")
-                val ts = this.tp.ts.coder(pre)
+                val ts = this.tp.ts.coder(null,pre)
                 "((${this.tp.ts.first().str}) { .tag=${ts.uppercase()}_TAG, .$ts={$vs} })"
             }
         }
@@ -942,7 +951,7 @@ fun Expr.coder (pre: Boolean): String {
             ${this.typex().coder(TODO(),pre)} mar_$n;
             switch (${this.tst.coder(pre)}.tag) {
                 ${this.cases.map { (tst,e) -> """
-                    ${tst.cond2({"case ${it.ts.coder(pre).uppercase()}_TAG"},{"default"})}:
+                    ${tst.cond2({"case ${it.ts.coder(TODO(),pre).uppercase()}_TAG"},{"default"})}:
                         mar_$n = ${e.coder(pre)};
                     break;
                 """ }.joinToString("")}
