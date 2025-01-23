@@ -629,9 +629,10 @@ fun Stmt.coder (pre: Boolean): String {
         """
 
         is Stmt.Print  -> {
-            fun aux (tp: Type, v: String): String {
+            fun aux (tpl: Tpl_Map?, tp: Type, v: String): String {
                 return when (tp) {
                     is Type.Unit -> "printf(\"()\");"
+                    is Type.Tpl  -> aux(tpl, TODO(), v)
                     is Type.Prim -> when (tp.tk_.str) {
                         "Bool" -> """
                             if ($v) {
@@ -721,7 +722,7 @@ fun Stmt.coder (pre: Boolean): String {
                         ${par.cond { "printf(\")\");" }}
                     """
                     }
-                    else -> "printf(\"()\");" //TODO("3")
+                    else -> TODO("3")
                 }
             }
             aux(this.e.typex(), this.e.coder(pre)) + """

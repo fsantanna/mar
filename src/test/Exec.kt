@@ -1563,6 +1563,15 @@ class Exec  {
         val out = test("""
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
             var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
+            print(x!Just)
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun tt_02_tpl () {
+        val out = test("""
+            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
+            var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
             print(x)
         """)
         assert(out == "10\n") { out }
