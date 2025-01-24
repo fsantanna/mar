@@ -1576,6 +1576,27 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun tt_03_catch () {
+        val out = test("""
+            data X.* {{t:Type}}: [{{t}}]
+            catch :X {{:Int}} {
+            }
+            print(10)
+        """)
+        //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun tt_04_field () {
+        val out = test("""
+            data Pos {{t:Type}}: [{{t}}, Int]
+            var p: Pos = Pos [10, 20]:[Int,Int]
+            var x: Int = p.1
+            print(x)
+        """)
+        assert(out == "10\n") { out }
+    }
 
     // TEST
 

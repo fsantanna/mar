@@ -377,8 +377,6 @@ fun infer_apply () {
                 val (s,_,_) = me.walk(false)!!
                 if (s.tpls.isEmpty()) {
                     me.xtpls = emptyList()
-                } else {
-                    //TODO("8")
                 }
             }
             else -> {}

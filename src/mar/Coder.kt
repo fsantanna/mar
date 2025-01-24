@@ -629,10 +629,10 @@ fun Stmt.coder (pre: Boolean): String {
         """
 
         is Stmt.Print  -> {
-            fun aux (tpl: Tpl_Map?, tp: Type, v: String): String {
+            fun aux (tp: Type, v: String): String {
                 return when (tp) {
                     is Type.Unit -> "printf(\"()\");"
-                    is Type.Tpl  -> aux(tpl, TODO(), v)
+                    is Type.Tpl  -> TODO("8") //aux(tpl, TODO(), v)
                     is Type.Prim -> when (tp.tk_.str) {
                         "Bool" -> """
                             if ($v) {
@@ -699,7 +699,7 @@ fun Stmt.coder (pre: Boolean): String {
                         """
                     }
                     is Type.Data -> {
-                        val (s,_,tpx) = tp.walk(false)!!
+                        val (s,_,tpx) = tp.walk(true)!!
                         val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
                         val x = if (s.subs == null) aux(tpx, v) else {
                             val tup = tpx as Type.Tuple
@@ -855,7 +855,7 @@ fun Expr.coder (pre: Boolean): String {
                     "(${this.col.coder(pre)}.$sub$idx)"
                 } else {
                     val ts = tp.ts.coder(TODO(),pre)
-                    "(${this.col.coder(pre)}.$ts.$idx)"
+                    "(${this.col.coder(pre)}.$ts.$idx)" // v.A_B_C.x
                 }
             }
         }
