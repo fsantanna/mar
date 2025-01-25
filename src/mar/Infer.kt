@@ -53,7 +53,14 @@ fun Stmt.infer (tp: Type?): Type? {
    }
 }
 
-fun Expr.infer (tp: Type?): Type? {
+fun Expr.infer (tpx: Type?): Type? {
+    val tp = when {
+        (tpx == null) -> null
+        (tpx.has_tpls_dn()) -> null
+        else -> tpx
+    }
+
+    //tp?.assert_no_tpls()
     when (this) {
         is Expr.Acc, is Expr.Bool, is Expr.Str, is Expr.Chr,
         is Expr.Null, is Expr.Unit, is Expr.Num -> {}
@@ -133,8 +140,21 @@ fun Expr.infer (tp: Type?): Type? {
         is Expr.Pred -> this.col.infer(null)
         is Expr.Disc -> this.col.infer(null)
         is Expr.Cons -> {
-            val e = this.e.infer(this.walk(null,this.tp.ts)!!.third)
-            val t = if (this.tp.xtpls != null) this.tp else Type.Data(this.tp.tk,listOf(Pair(e,null)),this.tp.ts)
+            val (s,_,xtp) = this.walk(null,this.tp.ts)!!
+            val e = this.e.infer(xtp)
+            //println(listOf(this.tp.to_str(), e?.to_str()))
+            val t = if (this.tp.xtpls != null) this.tp else {
+                val tpl = if (e == null) null else {
+                    println(listOf(s.tp.to_str(),e.to_str()))
+                    val m = s.tp.template_unresolve(e)
+                    println(m)
+                    s.tpls.map {
+                        m[it.first.str] ?: Pair(null,null)
+                    }
+                }
+                Type.Data(this.tp.tk, tpl, this.tp.ts)
+            }
+            println(listOf(e?.to_str(), t.to_str()))
             this.tp.infer(t)
         }
 
@@ -288,21 +308,22 @@ fun infer_apply () {
             is Stmt.SetE -> this.dst
             else -> error("impossible case")
         }
-        val tp1 = dst.infer(null)
-        val tp2 = when (this) {
-            is Stmt.SetS -> this.src.infer(tp1)
-            is Stmt.SetE -> this.src.infer(tp1)
+        val xdst = dst.infer(null)
+        val xsrc = when (this) {
+            is Stmt.SetS -> this.src.infer(xdst)
+            is Stmt.SetE -> this.src.infer(xdst)
             else -> error("impossible case")
         }
-        //println(listOf("set",tp1?.to_str()))
-        if (tp2!=null && tp1==null) {
+        //println(listOf("set",xdst?.to_str(),xsrc?.to_str()))
+        val xxdst = (xdst==null || (xdst is Type.Data && xdst.xtpls==null))
+        if (xxdst && xsrc!=null) {
             if (dst is Expr.Acc) {
                 val dcl = dst.to_xdcl()!!.first
                 if (dcl is Stmt.Dcl) {
-                    assert(dcl.xtp == null)
-                    dcl.xtp = dcl.xtp ?: tp2
+                    //assert(dcl.xtp == null)
+                    dcl.xtp = xsrc
                     //println(listOf("xxx",dcl.xtp?.to_str()))
-                    dcl.xtp?.infer(null)
+                    dcl.xtp!!.infer(null)
                 }
            } else {
                 dst.infer(null)

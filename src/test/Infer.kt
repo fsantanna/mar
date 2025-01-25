@@ -894,4 +894,26 @@ class Infer {
            "set x = (##(#[10]:#[Int*1]))\n"+
            "}") { G.outer!!.to_str() }
     }
+
+    // TEMPLATE
+
+    @Test
+    fun tt_01_hier () {
+        val out = infer("""
+            data A {{t:Type}}: [{{t}}]
+            var a: A = A [100]
+            print(a)
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "data A {{t: Type}}: [{{t}}]\n"+
+           "var a: A {{:Int}}\n"+
+           "set a = (A {{:Int}}(([100]:[Int])))\n"+
+           "print(a)\n"+
+           "}") { G.outer!!.to_str() }
+    }
 }

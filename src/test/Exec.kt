@@ -1597,6 +1597,16 @@ class Exec  {
         """)
         assert(out == "10\n") { out }
     }
+    @Test
+    fun tt_05_data () {
+        val out = test("""
+            data A {{t:Type}}: [{{t}}]
+            var a: A = A [100]
+            print(a)
+        """)
+        assert(out == "A [100]\n" +
+                "100\n") { out }
+    }
 
     // TEST
 

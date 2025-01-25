@@ -128,6 +128,55 @@ fun Tk.Var.type (fr: Any): Type? {
     } as Type?
 }
 
+fun Type.template_unresolve (tp: Type): Tpl_Map {
+    return when (this) {
+        is Type.Any -> emptyMap()
+        is Type.Tpl -> mapOf(Pair(this.tk.str, Pair(tp,null)))
+        is Type.Nat -> emptyMap()
+        is Type.Unit -> emptyMap()
+        is Type.Prim -> emptyMap()
+        is Type.Data -> TODO() //this.ts.map { it.template_unresolve(tp) }.flatten()
+        is Type.Pointer -> if (tp !is Type.Pointer) emptyMap() else {
+            this.ptr.template_unresolve(tp.ptr)
+        }
+        is Type.Tuple -> if (tp !is Type.Tuple) emptyMap() else {
+            this.ts.zip(tp.ts).map { (t1,t2) ->
+                t1.second.template_unresolve(t2.second)
+            }.union()
+        }
+        is Type.Vector -> if (tp !is Type.Vector) emptyMap() else {
+            this.tp.template_unresolve(tp.tp)
+        }
+        is Type.Union -> if (tp !is Type.Union) emptyMap() else {
+            this.ts.zip(tp.ts).map { (t1,t2) ->
+                t1.second.template_unresolve(t2.second)
+            }.union()
+        }
+        is Type.Proto.Func -> if (tp !is Type.Proto.Func) emptyMap() else {
+            this.out.template_unresolve(tp.out) +
+                this.inps.zip(tp.inps).map { (t1,t2) ->
+                    t1.template_unresolve(t2)
+                }.union()
+        }
+        is Type.Proto.Coro -> if (tp !is Type.Proto.Coro) emptyMap() else {
+            this.out.template_unresolve(tp.out) +
+                this.inps.zip(tp.inps).map { (t1,t2) ->
+                    t1.template_unresolve(t2)
+                }.union() +
+                this.yld.template_unresolve(tp.yld) +
+                this.res.template_unresolve(tp.res)
+        }
+        is Type.Exec -> if (tp !is Type.Exec) emptyMap() else {
+            this.out.template_unresolve(tp.out) +
+                this.inps.zip(tp.inps).map { (t1,t2) ->
+                    t1.template_unresolve(t2)
+                }.union() +
+                this.yld.template_unresolve(tp.yld) +
+                this.res.template_unresolve(tp.res)
+        }
+    }
+}
+
 fun Type.template_resolve (tpls: List<Pair<Tk.Var,Type_Expr>>): Type {
     //return this
     return when (this) {

@@ -1971,5 +1971,4 @@ class Check {
                 "set y = x\n" +
                 "}") { G.outer!!.to_str() }
     }
-
 }

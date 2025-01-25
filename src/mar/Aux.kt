@@ -2,6 +2,10 @@ package mar
 
 import kotlin.math.min
 
+fun <K,V> List<Map<K,V>>.union (): Map<K,V> {
+    return this.fold(emptyMap()) { acc, value -> acc + value }
+}
+
 fun <T> List<T>.commonPrefix (other: List<T>, fcmp: (T,T)->Boolean): List<T> {
     val l = mutableListOf<T>()
     for (i in 0..min(this.size,other.size) -1) {
