@@ -1,6 +1,15 @@
 package mar
 
-fun Type.assert_no_tpls (): Tpl_Map? {
+fun Type.has_tpls_dn (): Boolean {
+    return this.dn_collect_pos { me ->
+        when (me) {
+            is Type.Tpl -> listOf(Unit)
+            else -> emptyList()
+        }
+    }.isNotEmpty()
+}
+
+fun Type.assert_no_tpls_up (): Tpl_Map? {
     this.dn_visit_pos { me ->
         when (me) {
             is Type.Data -> {
@@ -127,7 +136,7 @@ fun Type.template_resolve (tpls: List<Pair<Tk.Var,Type_Expr>>): Type {
         is Type.Nat -> this
         is Type.Unit -> this
         is Type.Prim -> this
-        is Type.Data -> { this.assert_no_tpls() ; this }
+        is Type.Data -> { this.assert_no_tpls_up() ; this }
         is Type.Pointer -> {
             val tp = this.ptr.template_resolve(tpls)
             Type.Pointer(this.tk, tp)
