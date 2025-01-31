@@ -849,7 +849,7 @@ fun Expr.coder (pre: Boolean): String {
             if (tp !is Type.Data) {
                 "(${this.col.coder(pre)}.$idx)"
             } else {
-                val s = tp.walk(false)!!.first
+                val s = tp.walk()!!.first
                 if (s.subs == null) {
                     val sub = tp.ts.drop(1).map { it.str + "." }.joinToString("")
                     "(${this.col.coder(pre)}.$sub$idx)"
@@ -866,7 +866,7 @@ fun Expr.coder (pre: Boolean): String {
                 val (i,_) = tp.discx(this.idx)!!
                 "${this.col.coder(pre)}._${i+1}"
             } else {
-                val s = tp.walk(false)!!.first
+                val s = tp.walk()!!.first
                 if (s.subs == null) {
                     val (i,_) = tp.discx(this.idx)!!
                     "${this.col.coder(pre)}._${i+1}"
@@ -884,7 +884,7 @@ fun Expr.coder (pre: Boolean): String {
             "(${this.col.coder(pre)}.tag==${i+1})"
         }
         is Expr.Cons   -> {
-            val s = this.walk(null,this.tp.ts)!!.first
+            val s = this.walk(this.tp.ts)!!.first
             if (s.subs == null) {
                 var ret = "({"
                 for (i in this.tp.ts.size - 1 downTo 0) {

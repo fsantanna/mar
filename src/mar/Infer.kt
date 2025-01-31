@@ -285,7 +285,7 @@ fun Type.infer (tp: Type?): Type {
             }
         }
         is Type.Data -> {
-            val (s,_,_) = this.walk(false)!!
+            val (s,_,_) = this.walk()!!
             when {
                 (this.xtpls != null) -> {}
                 s.tpls.isEmpty() -> this.xtpls = emptyList()
@@ -395,7 +395,7 @@ fun infer_apply () {
    }, {}, { me ->
         when (me) {
             is Type.Data -> {
-                val (s,_,_) = me.walk(false)!!
+                val (s,_,_) = me.walk()!!
                 if (s.tpls.isEmpty()) {
                     me.xtpls = emptyList()
                 }

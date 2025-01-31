@@ -47,7 +47,7 @@ fun check_vars () {
             is Stmt.Data -> {
                 val up = me.xup!!
                 if (up !is Stmt.Data) {
-                    val s = up.walk(null,listOf(me.t))?.first
+                    val s = up.walk(listOf(me.t))?.first
                     if (s!=null && s!=me) {
                         err(me.tk, "type error : data \"${me.t.str}\" is already declared")
                     }
@@ -129,7 +129,7 @@ fun check_vars () {
     fun ft (me: Type) {
         when (me) {
             is Type.Data -> {
-                val v = me.walk(false)
+                val v = me.walk()
                 //println(v)
                 if (v == null) {
                     err(me.tk, "type error : data \"${me.to_str()}\" is not declared")
@@ -179,7 +179,7 @@ fun check_types () {
             }
             is Stmt.Block -> {
                 if (me.esc != null) {
-                    val xxx = me.esc.walk(false)
+                    val xxx = me.esc.walk()
                     if (xxx==null || xxx.first.subs==null) {
                         err(me.esc.tk, "block error : expected hierarchical data type")
                     }
@@ -226,7 +226,7 @@ fun check_types () {
             }
             is Stmt.Catch -> {
                 if (me.tp != null) {
-                    val xxx = me.tp.walk(false)
+                    val xxx = me.tp.walk()
                     if (xxx==null || xxx.first.subs==null) {
                         err(me.tp.tk, "catch error : expected hierarchical data type")
                     }
@@ -290,7 +290,7 @@ fun check_types () {
                 val tup = when (tp) {
                     //is Type.Any -> tp
                     is Type.Tuple -> tp
-                    is Type.Data -> tp.walk(false)?.third
+                    is Type.Data -> tp.walk()?.third
                     else -> null
                 }
                 when (tup) {

@@ -223,7 +223,7 @@ fun cache_tpls () {
         when (me) {
             is Type.Data -> {
                 if (!me.xtpls!!.isEmpty()) {
-                    val (s,_,_) = me.walk(false)!!
+                    val (s,_,_) = me.walk()!!
                     if (G.tpls[s] == null) {
                         G.tpls[s] = mutableMapOf()
                     }

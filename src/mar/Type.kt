@@ -177,66 +177,69 @@ fun Type.template_unresolve (tp: Type): Tpl_Map {
     }
 }
 
-fun Type.template_resolve (tpls: List<Pair<Tk.Var,Type_Expr>>): Type {
-    //return this
+fun Type.template_resolve (s: Stmt.Data, tpls: List<Type_Expr>): Type {
+    // s: data X {{a:Type,b:Type}}
+    // tpls: {{Int,Bool}}
+    // Type: [b,a]
+    // --> [Bool,Int]
+    println(listOf(this.to_str(), s.to_str(), tpls))
     return when (this) {
         is Type.Any -> this
-        is Type.Tpl -> tpls.first { it.first.str == this.tk.str }.second.first!!
+        is Type.Tpl -> {
+            val i = s.tpls.indexOfFirst { it.first.str==this.tk.str }
+            tpls[i].first!!
+            //tpls.first { it.first.str == this.tk.str }.second.first!!
+        }
         is Type.Nat -> this
         is Type.Unit -> this
         is Type.Prim -> this
         is Type.Data -> { this.assert_no_tpls_up() ; this }
         is Type.Pointer -> {
-            val tp = this.ptr.template_resolve(tpls)
+            val tp = this.ptr.template_resolve(s, tpls)
             Type.Pointer(this.tk, tp)
         }
         is Type.Tuple -> {
-            val ts = this.ts.map { (id,tp) -> Pair(id, tp.template_resolve(tpls)) }
+            val ts = this.ts.map { (id,tp) -> Pair(id, tp.template_resolve(s, tpls)) }
             Type.Tuple(this.tk, ts)
         }
         is Type.Vector -> {
-            val tp = this.tp.template_resolve(tpls)
+            val tp = this.tp.template_resolve(s, tpls)
             Type.Vector(this.tk, this.max, tp)
         }
         is Type.Union -> {
-            val ts = this.ts.map { (t, tp) -> Pair(t, tp.template_resolve(tpls)) }
+            val ts = this.ts.map { (t, tp) -> Pair(t, tp.template_resolve(s, tpls)) }
             Type.Union(this.tk, this.tagged, ts)
         }
         is Type.Proto.Func -> {
-            val inps = this.inps.map { it.template_resolve(tpls) }
-            val out = this.out.template_resolve(tpls)
+            val inps = this.inps.map { it.template_resolve(s, tpls) }
+            val out = this.out.template_resolve(s, tpls)
             Type.Proto.Func(this.tk, inps, out)
         }
         is Type.Proto.Coro -> {
-            val inps = this.inps.map { it.template_resolve(tpls) }
-            val res = this.res.template_resolve(tpls)
-            val yld = this.yld.template_resolve(tpls)
-            val out = this.out.template_resolve(tpls)
+            val inps = this.inps.map { it.template_resolve(s, tpls) }
+            val res = this.res.template_resolve(s, tpls)
+            val yld = this.yld.template_resolve(s, tpls)
+            val out = this.out.template_resolve(s, tpls)
             Type.Proto.Coro(this.tk, inps, res, yld, out)
         }
         is Type.Exec -> {
-            val inps = this.inps.map { it.template_resolve(tpls) }
-            val res = this.res.template_resolve(tpls)
-            val yld = this.yld.template_resolve(tpls)
-            val out = this.out.template_resolve(tpls)
+            val inps = this.inps.map { it.template_resolve(s, tpls) }
+            val res = this.res.template_resolve(s, tpls)
+            val yld = this.yld.template_resolve(s, tpls)
+            val out = this.out.template_resolve(s, tpls)
             Type.Exec(this.tk, inps, res, yld, out)
         }
     }
 }
 
 @JvmName("Any_walk_List_String")
-fun Any.walk (tpls: List<Type_Expr>?, ts: List<String>): Triple<Stmt.Data,List<Int>,Type>? {
+fun Any.walk (ts: List<String>): Triple<Stmt.Data,List<Int>,Type>? {
     val s = this.up_data(ts.first())
     return when {
         (s == null) -> null
         (s.subs == null) -> {
             val l: MutableList<Int> = mutableListOf()
-            var tp = if (tpls==null) s.tp else {
-                //println(listOf(s.tpls, tpls))
-                s.tp.template_resolve(s.tpls.zip(tpls).map { (v,tpl) ->
-                    Pair(v.first, tpl)
-                })
-            }
+            var tp = s.tp
             for (sub in ts.drop(1)) {
                 if (tp !is Type.Union) {
                     return null
@@ -269,12 +272,12 @@ fun Any.walk (tpls: List<Type_Expr>?, ts: List<String>): Triple<Stmt.Data,List<I
     }
 }
 
-fun Any.walk (tpls: List<Type_Expr>?, ts: List<Tk.Type>): Triple<Stmt.Data,List<Int>,Type>? {
-    return this.walk(tpls, ts.map { it.str })
+fun Any.walk (ts: List<Tk.Type>): Triple<Stmt.Data,List<Int>,Type>? {
+    return this.walk(ts.map { it.str })
 }
 
-fun Type.Data.walk (tpl: Boolean): Triple<Stmt.Data,List<Int>,Type>? {
-    return this.walk(if (tpl) this.xtpls else null, this.ts)
+fun Type.Data.walk (): Triple<Stmt.Data,List<Int>,Type>? {
+    return this.walk(this.ts)
 }
 
 fun Type.Tuple.index (idx: String): Type? {
@@ -295,7 +298,7 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
         }
         is Type.Data -> {
             val xts = this.ts.map { it.str } + listOf(idx)
-            val xxx = this.walk(null,xts)
+            val xxx = this.walk(xts)
             if (xxx == null) null else {
                 val (s,i,tp) = xxx
                 if (s.subs == null) {
@@ -457,7 +460,7 @@ fun Expr.type (): Type? {
             val tup = this.col.type().let {
                 when (it) {
                     is Type.Tuple -> it
-                    is Type.Data  -> it.walk(false)!!.third
+                    is Type.Data  -> it.walk()!!.third
                     else -> null
                 }
             }
@@ -470,7 +473,7 @@ fun Expr.type (): Type? {
         }
         is Expr.Disc  -> this.col.type()?.discx(this.idx)?.second
         is Expr.Pred  -> Type.Prim(Tk.Type("Bool", this.tk.pos))
-        is Expr.Cons  -> this.walk(null,this.tp.ts)!!.let { (s,_,_) ->
+        is Expr.Cons  -> this.walk(this.tp.ts)!!.let { (s,_,_) ->
             if (s.subs == null) {
                 Type.Data(this.tk, this.tp.xtpls, this.tp.ts.take(1))
             } else {
