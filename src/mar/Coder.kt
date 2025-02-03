@@ -70,7 +70,7 @@ fun Type.coder (tpl: Tpl_Map?, pre: Boolean): String {
     }
 }
 
-fun List<Tk.Type>.coder (tpl: List<Type_Expr>?, pre: Boolean): String {
+fun List<Tk.Type>.coder (tpl: List<Tpl_Con>?, pre: Boolean): String {
     return this.map { it.str }.let {
         if (tpl == null) it else {
             val ts = tpl.map { it.first.cond { it.to_str() } + it.second.cond { it.to_str() } }
@@ -699,7 +699,7 @@ fun Stmt.coder (pre: Boolean): String {
                         """
                     }
                     is Type.Data -> {
-                        val (s,_,tpx) = tp.walk(true)!!
+                        val (s,_,tpx) = tp.walk(/*true*/)!!
                         val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
                         val x = if (s.subs == null) aux(tpx, v) else {
                             val tup = tpx as Type.Tuple

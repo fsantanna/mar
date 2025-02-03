@@ -195,7 +195,7 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
             if (PRIMS.contains(tp.str)) {
                 Type.Prim(tp)
             } else {
-                val tpls: List<Type_Expr>? = if (!accept_fix("{{")) null else {
+                val tpls: List<Tpl_Con>? = if (!accept_fix("{{")) null else {
                     val x = parser_list(",", "}") {
                         if (accept_fix(":")) {
                             Pair(parser_type(null, false, false), null)

@@ -140,21 +140,19 @@ fun Expr.infer (tpx: Type?): Type? {
         is Expr.Pred -> this.col.infer(null)
         is Expr.Disc -> this.col.infer(null)
         is Expr.Cons -> {
-            val (s,_,xtp) = this.walk(null,this.tp.ts)!!
+            println(listOf("infer-cons",this.to_str(),tp?.to_str()))
+            val (s,_,xtp) = this.walk(this.tp.ts)!!
             val e = this.e.infer(xtp)
-            //println(listOf(this.tp.to_str(), e?.to_str()))
+            println(listOf(this.tp.to_str(), e?.to_str()))
             val t = if (this.tp.xtpls != null) this.tp else {
-                val tpl = if (e == null) null else {
-                    println(listOf(s.tp.to_str(),e.to_str()))
-                    val m = s.tp.template_unresolve(e)
-                    println(m)
-                    s.tpls.map {
-                        m[it.first.str] ?: Pair(null,null)
-                    }
+                if (e == null) null else {
+                    println(listOf("xtp", xtp.to_str(), s.tp.to_str(),e.to_str()))
+                    val x = e.template_con_abs(xtp)
+                    println(x)
                 }
-                Type.Data(this.tp.tk, tpl, this.tp.ts)
+                TODO()
             }
-            println(listOf(e?.to_str(), t.to_str()))
+            //println(listOf(e?.to_str(), t.to_str()))
             this.tp.infer(t)
         }
 
@@ -291,6 +289,8 @@ fun Type.infer (tp: Type?): Type {
                 s.tpls.isEmpty() -> this.xtpls = emptyList()
                 (tp !is Type.Data) -> {}
                 (tp.xtpls != null) -> {
+                    println(tp.xtpls)
+                    //TODO()
                     this.xtpls = tp.xtpls
                     assert(this.is_same_of(tp), {"TODO: unmatching infer"})
                 }

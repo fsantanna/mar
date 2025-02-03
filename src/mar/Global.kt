@@ -54,8 +54,8 @@ val PRIMS = setOf(
 
 typealias XDcl = Triple<Stmt,Tk.Var,Type?>
 typealias Var_Type = Pair<Tk.Var,Type>
-typealias Type_Expr = Pair<Type?,Expr?>
-typealias Tpl_Map = Map<String, Type_Expr>
+typealias Tpl_Con = Pair<Type?,Expr?>
+typealias Tpl_Map = Map<String, Tpl_Con>
 
 sealed class Tk (val str: String, val pos: Pos) {
     class Eof  (pos: Pos): Tk("", pos)
@@ -76,7 +76,7 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
     class Nat     (val tk_: Tk.Nat): Type(G.N++, null, tk_)
     class Unit    (tk: Tk): Type(G.N++, null, tk)
     class Prim    (val tk_: Tk.Type): Type(G.N++, null, tk_)
-    class Data    (tk: Tk, var xtpls: List<Type_Expr>?, val ts: List<Tk.Type>): Type(G.N++, null, tk)
+    class Data    (tk: Tk, var xtpls: List<Tpl_Con>?, val ts: List<Tk.Type>): Type(G.N++, null, tk)
     class Pointer (tk: Tk, val ptr: Type): Type(G.N++, null, tk)
     class Tuple   (tk: Tk, val ts: List<Pair<Tk.Var?,Type>>): Type(G.N++, null, tk)
     class Union   (tk: Tk, val tagged: Boolean, val ts: List<Pair<Tk.Type?,Type>>): Type(G.N++, null, tk)
@@ -170,7 +170,7 @@ object G {
     var outer: Stmt.Block? = null
 
     val types = mutableSetOf<String>()  // for C generation
-    val tpls  = mutableMapOf<Stmt.Data, MutableMap<String,List<Type_Expr>>>()
+    val tpls  = mutableMapOf<Stmt.Data, MutableMap<String,List<Tpl_Con>>>()
     val defers: MutableMap<Any, Triple<MutableList<Int>,String,String>> = mutableMapOf()
 
     var datas = 1

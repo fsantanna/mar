@@ -128,66 +128,67 @@ fun Tk.Var.type (fr: Any): Type? {
     } as Type?
 }
 
-fun Type.template_unresolve (tp: Type): Tpl_Map {
-    return when (this) {
-        is Type.Any -> emptyMap()
-        is Type.Tpl -> mapOf(Pair(this.tk.str, Pair(tp,null)))
-        is Type.Nat -> emptyMap()
-        is Type.Unit -> emptyMap()
-        is Type.Prim -> emptyMap()
-        is Type.Data -> TODO() //this.ts.map { it.template_unresolve(tp) }.flatten()
-        is Type.Pointer -> if (tp !is Type.Pointer) emptyMap() else {
-            this.ptr.template_unresolve(tp.ptr)
-        }
-        is Type.Tuple -> if (tp !is Type.Tuple) emptyMap() else {
+fun Type.template_con_abs (tp: Type): Tpl_Map {
+    // tp: [b,a]
+    // this: [Bool,Int]
+    // --> {{Int,Bool}
+    return when {
+        (tp is Type.Tpl) -> mapOf(Pair(tp.tk.str, Pair(this,null)))
+        (this is Type.Any || this is Type.Nat || this is Type.Unit || this is Type.Prim) -> emptyMap()
+        (this::class != tp::class) -> emptyMap()
+        (this is Type.Pointer && tp is Type.Pointer) -> this.ptr.template_con_abs(tp.ptr)
+        (this is Type.Tuple   && tp is Type.Tuple)   -> {
             this.ts.zip(tp.ts).map { (t1,t2) ->
-                t1.second.template_unresolve(t2.second)
+                t1.second.template_con_abs(t2.second)
             }.union()
         }
-        is Type.Vector -> if (tp !is Type.Vector) emptyMap() else {
-            this.tp.template_unresolve(tp.tp)
-        }
-        is Type.Union -> if (tp !is Type.Union) emptyMap() else {
+        (this is Type.Vector  && tp is Type.Vector)  -> this.tp.template_con_abs(tp.tp)
+        (this is Type.Union   && tp is Type.Union)   -> {
             this.ts.zip(tp.ts).map { (t1,t2) ->
-                t1.second.template_unresolve(t2.second)
+                t1.second.template_con_abs(t2.second)
             }.union()
         }
-        is Type.Proto.Func -> if (tp !is Type.Proto.Func) emptyMap() else {
-            this.out.template_unresolve(tp.out) +
-                this.inps.zip(tp.inps).map { (t1,t2) ->
-                    t1.template_unresolve(t2)
-                }.union()
+        (this is Type.Exec    && tp is Type.Exec)    -> {
+            this.out.template_con_abs(tp.out) +
+                    this.inps.zip(tp.inps).map { (t1,t2) ->
+                        t1.template_con_abs(t2)
+                    }.union() +
+                    this.yld.template_con_abs(tp.yld) +
+                    this.res.template_con_abs(tp.res)
         }
-        is Type.Proto.Coro -> if (tp !is Type.Proto.Coro) emptyMap() else {
-            this.out.template_unresolve(tp.out) +
-                this.inps.zip(tp.inps).map { (t1,t2) ->
-                    t1.template_unresolve(t2)
-                }.union() +
-                this.yld.template_unresolve(tp.yld) +
-                this.res.template_unresolve(tp.res)
+        (this is Type.Proto.Func && tp is Type.Proto.Func) -> {
+            this.out.template_con_abs(tp.out) +
+                    this.inps.zip(tp.inps).map { (t1,t2) ->
+                        t1.template_con_abs(t2)
+                    }.union()
         }
-        is Type.Exec -> if (tp !is Type.Exec) emptyMap() else {
-            this.out.template_unresolve(tp.out) +
-                this.inps.zip(tp.inps).map { (t1,t2) ->
-                    t1.template_unresolve(t2)
-                }.union() +
-                this.yld.template_unresolve(tp.yld) +
-                this.res.template_unresolve(tp.res)
+        (this is Type.Proto.Coro && tp is Type.Proto.Coro) -> {
+            this.out.template_con_abs(tp.out) +
+                    this.inps.zip(tp.inps).map { (t1,t2) ->
+                        t1.template_con_abs(t2)
+                    }.union() +
+                    this.yld.template_con_abs(tp.yld) +
+                    this.res.template_con_abs(tp.res)
         }
+        else -> error("impossible case")
     }
 }
 
-fun Type.template_resolve (s: Stmt.Data, tpls: List<Type_Expr>): Type {
+fun Stmt.Data.abs_con (con: List<Tpl_Con>): Tpl_Map {
+    this.tpls.
+}
+
+fun Type.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Type {
     // s: data X {{a:Type,b:Type}}
     // tpls: {{Int,Bool}}
-    // Type: [b,a]
+    // this: [b,a]
     // --> [Bool,Int]
-    println(listOf(this.to_str(), s.to_str(), tpls))
+    println(listOf(this.to_str(), s.to_str(), tpl))
     return when (this) {
         is Type.Any -> this
         is Type.Tpl -> {
             val i = s.tpls.indexOfFirst { it.first.str==this.tk.str }
-            tpls[i].first!!
+            tpl[i].first!!
             //tpls.first { it.first.str == this.tk.str }.second.first!!
         }
         is Type.Nat -> this
@@ -195,38 +196,38 @@ fun Type.template_resolve (s: Stmt.Data, tpls: List<Type_Expr>): Type {
         is Type.Prim -> this
         is Type.Data -> { this.assert_no_tpls_up() ; this }
         is Type.Pointer -> {
-            val tp = this.ptr.template_resolve(s, tpls)
+            val tp = this.ptr.template_abs_con(s, tpl)
             Type.Pointer(this.tk, tp)
         }
         is Type.Tuple -> {
-            val ts = this.ts.map { (id,tp) -> Pair(id, tp.template_resolve(s, tpls)) }
+            val ts = this.ts.map { (id,tp) -> Pair(id, tp.template_abs_con(s, tpl)) }
             Type.Tuple(this.tk, ts)
         }
         is Type.Vector -> {
-            val tp = this.tp.template_resolve(s, tpls)
+            val tp = this.tp.template_abs_con(s, tpl)
             Type.Vector(this.tk, this.max, tp)
         }
         is Type.Union -> {
-            val ts = this.ts.map { (t, tp) -> Pair(t, tp.template_resolve(s, tpls)) }
+            val ts = this.ts.map { (t, tp) -> Pair(t, tp.template_abs_con(s, tpl)) }
             Type.Union(this.tk, this.tagged, ts)
         }
         is Type.Proto.Func -> {
-            val inps = this.inps.map { it.template_resolve(s, tpls) }
-            val out = this.out.template_resolve(s, tpls)
+            val inps = this.inps.map { it.template_abs_con(s, tpl) }
+            val out = this.out.template_abs_con(s, tpl)
             Type.Proto.Func(this.tk, inps, out)
         }
         is Type.Proto.Coro -> {
-            val inps = this.inps.map { it.template_resolve(s, tpls) }
-            val res = this.res.template_resolve(s, tpls)
-            val yld = this.yld.template_resolve(s, tpls)
-            val out = this.out.template_resolve(s, tpls)
+            val inps = this.inps.map { it.template_abs_con(s, tpl) }
+            val res = this.res.template_abs_con(s, tpl)
+            val yld = this.yld.template_abs_con(s, tpl)
+            val out = this.out.template_abs_con(s, tpl)
             Type.Proto.Coro(this.tk, inps, res, yld, out)
         }
         is Type.Exec -> {
-            val inps = this.inps.map { it.template_resolve(s, tpls) }
-            val res = this.res.template_resolve(s, tpls)
-            val yld = this.yld.template_resolve(s, tpls)
-            val out = this.out.template_resolve(s, tpls)
+            val inps = this.inps.map { it.template_abs_con(s, tpl) }
+            val res = this.res.template_abs_con(s, tpl)
+            val yld = this.yld.template_abs_con(s, tpl)
+            val out = this.out.template_abs_con(s, tpl)
             Type.Exec(this.tk, inps, res, yld, out)
         }
     }
