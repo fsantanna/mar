@@ -1603,6 +1603,7 @@ class Exec  {
             data A {{t:Type}}: [{{t}}]
             var a: A = A [100]
             print(a)
+            print(a.1)
         """)
         assert(out == "A [100]\n" +
                 "100\n") { out }

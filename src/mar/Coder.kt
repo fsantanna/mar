@@ -702,14 +702,11 @@ fun Stmt.coder (pre: Boolean): String {
                         """
                     }
                     is Type.Data -> {
-                        val (s,_,tp1) = tp.walk()!!
-                        val par = (tp1 !is Type.Tuple) && (tp1 !is Type.Union) && (tp1 !is Type.Unit)
-                        val tp2 = tp.xtpls.let {
-                            if (it==null) tp1 else tp1.template_abs_con(s, it)
-                        }
+                        val (s,_,tpx) = tp.walk_tpl()
+                        val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
                         //println(listOf("XXX", tp2.to_str(), tp.to_str()))
-                        val x = if (s.subs == null) aux(tp2, v) else {
-                            val tup = tp2 as Type.Tuple
+                        val x = if (s.subs == null) aux(tpx, v) else {
+                            val tup = tpx as Type.Tuple
                             val ts = tp.ts.coder(null,pre)
                             """
                             {

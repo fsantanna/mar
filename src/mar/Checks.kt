@@ -327,10 +327,7 @@ fun check_types () {
             }
             is Expr.Cons -> {
                 //println(me.to_str())
-                val (s,_,tpx) = me.walk(/*me.tp.xtpls,*/me.tp.ts)!!
-                val tp = me.tp.xtpls.let {
-                    if (it==null) tpx else tpx.template_abs_con(s, it)
-                }
+                val tp = me.walk_tpl(me.tp.ts, me.tp.xtpls).third
                 val te = me.e.typex()
                 //println(listOf(tp.to_str(), te.to_str()))
                 if (!tp.is_sup_of(te)) {

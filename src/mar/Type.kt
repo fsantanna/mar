@@ -290,6 +290,22 @@ fun Type.Data.walk (): Triple<Stmt.Data,List<Int>,Type>? {
     return this.walk(this.ts)
 }
 
+@JvmName("Any_walk_tpl_List_String")
+fun Any.walk_tpl (ts: List<String>, tpls: List<Tpl_Con>?): Triple<Stmt.Data,List<Int>,Type> {
+    val (s,l,tp) = this.walk(ts)!!
+    return Triple(s, l, tpls.let {
+        if (it==null) tp else tp.template_abs_con(s, it)
+    })
+}
+
+fun Any.walk_tpl (ts: List<Tk.Type>, tpls: List<Tpl_Con>?): Triple<Stmt.Data,List<Int>,Type> {
+    return this.walk_tpl(ts.map { it.str }, tpls)
+}
+
+fun Type.Data.walk_tpl (): Triple<Stmt.Data,List<Int>,Type> {
+    return this.walk_tpl(this.ts, this.xtpls)
+}
+
 fun Type.Tuple.index (idx: String): Type? {
     val v = idx.toIntOrNull().let {
         if (it == null) {
@@ -475,6 +491,7 @@ fun Expr.type (): Type? {
                 when (tp) {
                     is Type.Tuple -> tp
                     is Type.Data  -> {
+                        //tp.walk_tpl()
                         val (s,_,tpx) = tp.walk()!!
                         tp.xtpls.let {
                             if (it==null) tpx else tpx.template_abs_con(s, it)
