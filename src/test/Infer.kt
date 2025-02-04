@@ -916,4 +916,24 @@ class Infer {
            "print(a)\n"+
            "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun tt_02_disc () {
+        val out = infer("""
+            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
+            var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
+            var y = x!Just
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "data Maybe {{t: Type}}: <Nothing:(),Just:{{t}}>\n" +
+                "var x: Maybe {{:Int}}\n" +
+                "set x = (Maybe {{:Int}}.Just(10))\n" +
+                "var y: Int\n" +
+                "set y = (x!Just)\n" +
+                "}") { G.outer!!.to_str() }
+    }
 }

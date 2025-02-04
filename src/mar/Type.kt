@@ -306,7 +306,11 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
             val xts = this.ts.map { it.str } + listOf(idx)
             val xxx = this.walk(xts)
             if (xxx == null) null else {
-                val (s,i,tp) = xxx
+                val (s,i,tpx) = xxx
+                val tp = this.xtpls.let {
+                    if (it==null) tpx else tpx.template_abs_con(s, it)
+                }
+                //println(listOf("discx", tp.to_str()))
                 if (s.subs == null) {
                     Pair(i.last(),tp)
                 } else {
@@ -463,10 +467,15 @@ fun Expr.type (): Type? {
         is Expr.Vector -> this.xtp
         is Expr.Union -> this.xtp
         is Expr.Field -> {
-            val tup = this.col.type().let {
-                when (it) {
-                    is Type.Tuple -> it
-                    is Type.Data  -> it.walk()!!.third
+            val tup = this.col.type().let { tp ->
+                when (tp) {
+                    is Type.Tuple -> tp
+                    is Type.Data  -> {
+                        val (s,_,tpx) = tp.walk()!!
+                        tp.xtpls.let {
+                            if (it==null) tpx else tpx.template_abs_con(s, it)
+                        }
+                    }
                     else -> null
                 }
             }

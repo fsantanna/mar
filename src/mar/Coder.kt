@@ -84,7 +84,6 @@ fun coder_types (pre: Boolean): String {
         when {
             (me is Type.Any) -> return emptyList()
         }
-        //println(me.to_str())
         when (me) {
             is Type.Proto.Func, is Type.Proto.Coro,
             is Type.Tuple, is Type.Vector, is Type.Union -> me.coder(null,pre).let {
@@ -96,6 +95,7 @@ fun coder_types (pre: Boolean): String {
             }
             else -> {}
         }
+        //println(listOf("AAA", me.coder(null,pre)))
 
         val s = me.up_last { it is Stmt.Data } as Stmt.Data?
         val tpls: List<Tpl_Map?> = if (s==null || s.tpls.isEmpty()) listOf(null) else {
@@ -125,6 +125,8 @@ fun coder_types (pre: Boolean): String {
                         ft(Type.Tuple(me.tk, me.ts, null))
                     }
                     ids +*/ listOf("""
+                        #ifndef __${x}__
+                        #define __${x}__
                         typedef struct $x {
                             ${me.ts.mapIndexed { i,id_tp ->
                                 val (id,tp) = id_tp
@@ -136,6 +138,7 @@ fun coder_types (pre: Boolean): String {
                                 """
                             }.joinToString("")}
                         } $x;
+                        #endif
                     """)
                 }
                 is Type.Vector -> {
@@ -514,7 +517,7 @@ fun Stmt.coder (pre: Boolean): String {
                      }}
                 } else if (
                     ${this.tp.cond2({
-                        "mar_sup(${it.ts.coder(TODO(),pre).uppercase()}_TAG, MAR_EXCEPTION.tag)"
+                        "mar_sup(${it.ts.coder(null,pre).uppercase()}_TAG, MAR_EXCEPTION.tag)"
                     },{
                         "true"
                     })}
@@ -699,11 +702,11 @@ fun Stmt.coder (pre: Boolean): String {
                         """
                     }
                     is Type.Data -> {
-                        val (s,_,tpx) = tp.walk(/*true*/)!!
+                        val (s,_,tpx) = tp.walk()!!
                         val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
                         val x = if (s.subs == null) aux(tpx, v) else {
                             val tup = tpx as Type.Tuple
-                            val ts = tp.ts.coder(TODO(),pre)
+                            val ts = tp.ts.coder(null,pre)
                             """
                             {
                                 printf("[");
@@ -854,7 +857,7 @@ fun Expr.coder (pre: Boolean): String {
                     val sub = tp.ts.drop(1).map { it.str + "." }.joinToString("")
                     "(${this.col.coder(pre)}.$sub$idx)"
                 } else {
-                    val ts = tp.ts.coder(TODO(),pre)
+                    val ts = tp.ts.coder(null,pre)
                     "(${this.col.coder(pre)}.$ts.$idx)" // v.A_B_C.x
                 }
             }
