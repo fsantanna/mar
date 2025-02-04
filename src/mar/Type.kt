@@ -129,9 +129,10 @@ fun Tk.Var.type (fr: Any): Type? {
 }
 
 fun Type.template_con_abs (tp: Type): Tpl_Map {
-    // tp: [b,a]
+    // Example: T [Bool,Int] --> T {a=Int,b=Bool}
     // this: [Bool,Int]
-    // --> {{Int,Bool}
+    // tp: [b,a]
+    // --> {a=Int,b=Bool}
     return when {
         (tp is Type.Tpl) -> mapOf(Pair(tp.tk.str, Pair(this,null)))
         (this is Type.Any || this is Type.Nat || this is Type.Unit || this is Type.Prim) -> emptyMap()
@@ -174,16 +175,20 @@ fun Type.template_con_abs (tp: Type): Tpl_Map {
     }
 }
 
-fun Stmt.Data.abs_con (con: List<Tpl_Con>): Tpl_Map {
-    this.tpls.
+fun Type.Data.abs_con (s: Stmt.Data, map: Tpl_Map): Type.Data {
+    val tpls = s.tpls.map {
+        map[it.first.str]!!
+    }
+    return Type.Data(this.tk, tpls, this.ts)
 }
 
 fun Type.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Type {
+    // Example: T [b,a] --> T [Bool,Int]
+    // this: [b,a]
     // s: data X {{a:Type,b:Type}}
     // tpls: {{Int,Bool}}
-    // this: [b,a]
     // --> [Bool,Int]
-    println(listOf(this.to_str(), s.to_str(), tpl))
+    //println(listOf(this.to_str(), s.to_str(), tpl))
     return when (this) {
         is Type.Any -> this
         is Type.Tpl -> {
