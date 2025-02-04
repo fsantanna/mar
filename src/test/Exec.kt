@@ -1574,7 +1574,7 @@ class Exec  {
             var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
             print(x)
         """)
-        assert(out == "10\n") { out }
+        assert(out == "Maybe <.2=10>\n") { out }
     }
     @Test
     fun tt_03_catch () {

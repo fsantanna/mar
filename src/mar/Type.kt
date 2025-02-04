@@ -97,11 +97,15 @@ fun Type.is_sup_sub_of (other: Type): Boolean {
 fun Type.sup_vs (other: Type): Type? {
     return when {
         (this is Type.Data && other is Type.Data) -> {
-            val l = this.ts.commonPrefix(other.ts) { x,y ->
-                (x.str == y.str)
-            }
-            if (l.size == 0) null else {
-                Type.Data(this.tk, TODO("10"), l)
+            if (!this.is_sup_of(other) && !other.is_sup_of(this)) {
+                null    // because of xtpls
+            } else {
+                val l = this.ts.commonPrefix(other.ts) { x, y ->
+                    (x.str == y.str)
+                }
+                if (l.size == 0) null else {
+                    Type.Data(this.tk, this.xtpls, l)
+                }
             }
         }
         (this.is_num() && other.is_num()) -> {
