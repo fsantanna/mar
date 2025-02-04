@@ -490,13 +490,7 @@ fun Expr.type (): Type? {
             val tup = this.col.type().let { tp ->
                 when (tp) {
                     is Type.Tuple -> tp
-                    is Type.Data  -> {
-                        //tp.walk_tpl()
-                        val (s,_,tpx) = tp.walk()!!
-                        tp.xtpls.let {
-                            if (it==null) tpx else tpx.template_abs_con(s, it)
-                        }
-                    }
+                    is Type.Data  -> tp.walk_tpl().third
                     else -> null
                 }
             }
