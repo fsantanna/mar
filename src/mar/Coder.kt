@@ -794,15 +794,6 @@ fun Expr.coder (pre: Boolean): String {
                         typeof($e2) mar_e2_$n = $e2;
                         $xe1
                         $xe2
-                        /*
-                        ${tp.is_str().cond { 
-                            """
-                            if (mar_$n.cur < mar_$n.max) {
-                                mar_$n.buf[mar_$n.cur] = '\0';
-                            }
-                            """
-                         }}
-                        */
                         mar_$n;
                     })
                     """                }

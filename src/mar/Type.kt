@@ -435,7 +435,7 @@ fun Expr.type (): Type? {
                     }
                     (tp1 is Type.Vector && this.e2 is Expr.Str) -> {
                         Type.Vector(this.tk,
-                            Expr.Num(Tk.Num((tp1.max!!.tk.str.toInt() + this.e2.tk.str.length).toString(), this.tk.pos)),
+                            Expr.Num(Tk.Num((tp1.max!!.tk.str.toInt() + this.e2.tk.str.length-2).toString(), this.tk.pos)),
                             /*
                             bin("+",
                                 tp1.max!!,
@@ -447,7 +447,7 @@ fun Expr.type (): Type? {
                     }
                     (tp2 is Type.Vector && this.e1 is Expr.Str) -> {
                         Type.Vector(this.tk,
-                            Expr.Num(Tk.Num((this.e1.tk.str.length + tp2.max!!.tk.str.toInt()).toString(), this.tk.pos)),
+                            Expr.Num(Tk.Num((this.e1.tk.str.length-2 + tp2.max!!.tk.str.toInt()).toString(), this.tk.pos)),
                             /*
                             bin("+",
                                 bin("-", num(this.e1.tk.str.length), num(2)),
@@ -459,7 +459,7 @@ fun Expr.type (): Type? {
                     }
                     (this.e1 is Expr.Str && this.e2 is Expr.Str) -> {
                         Type.Vector(this.tk,
-                            Expr.Num(Tk.Num((this.e1.tk.str.length + this.e2.tk.str.length).toString(), this.tk.pos)),
+                            Expr.Num(Tk.Num((this.e1.tk.str.length-2 + this.e2.tk.str.length-2).toString(), this.tk.pos)),
                             /*
                             bin("+",
                                 bin("-", num(this.e1.tk.str.length), num(2)),

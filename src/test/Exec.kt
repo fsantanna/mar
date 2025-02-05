@@ -740,7 +740,17 @@ class Exec  {
         assert(out == "[5,6]\nabcd\n") { out }
     }
     @Test
-    fun gi_03_concat () {
+    fun TODO_gi_03a_concat () { // missing \0
+        val out = test("""
+            var a: #[Char*3] = #['a','b']
+            var c = a ++ "cd" ;; ++ ""
+            print([#c,##c])
+            `puts(c.buf)`
+        """)
+        assert(out == "[4,5]\nabcd\n") { out }
+    }
+    @Test
+    fun gi_03b_concat () {
         val out = test("""
             var a: #[Char*3] = #['a','b']
             var c = a ++ "cd" ++ #['\0']
