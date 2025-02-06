@@ -24,10 +24,10 @@ fun Type.Proto.Coro.x_out_uni (tpl: Tpl_Map?, pre: Boolean): Pair<String, Type.U
     val id = tp.coder(tpl,pre)
     return Pair(id, tp)
 }
-fun Type.Proto.Coro.x_sig (tpl: Tpl_Map?, pre: Boolean, id: String): String {
+fun Type.Proto.Coro.x_sig (pre: Boolean, id: String): String {
     val x = this.x_coro_exec(null,pre).second
-    val (xiuni,_) = this.x_inp_uni(tpl,pre)
-    val (xouni,_) = this.x_out_uni(tpl,pre)
+    val (xiuni,_) = this.x_inp_uni(null,pre)
+    val (xouni,_) = this.x_out_uni(null,pre)
     return "$xouni $id ($x* mar_exe, $xiuni mar_arg)"
 }
 
@@ -340,7 +340,7 @@ fun Stmt.coder (pre: Boolean): String {
             when (this) {
                 is Stmt.Proto.Func ->
                     this.tp_.out.coder(null,pre) + " " + this.id.str + " (" + this.tp_.inps_.map { it.coder(it.second.assert_no_tpls_up(),pre) }.joinToString(",") + ")"
-                is Stmt.Proto.Coro -> this.tp_.x_sig(null, pre, this.id.str)
+                is Stmt.Proto.Coro -> this.tp_.x_sig(pre, this.id.str)
             } + """
             {
                 ${this.tp.out.coder(null,pre)} mar_ret;
@@ -406,7 +406,7 @@ fun Stmt.coder (pre: Boolean): String {
                     ${this.to_dcls().map { (_,id,tp) ->
                         when (tp) {
                             is Type.Proto.Func -> "auto " + tp.out.coder(null,pre) + " " + id.str + " (" + tp.inps.map { it.coder(it.assert_no_tpls_up(),pre) }.joinToString(",") + ");\n"
-                            is Type.Proto.Coro -> "auto ${tp.x_sig(null,pre,id.str)};\n"
+                            is Type.Proto.Coro -> "auto ${tp.x_sig(pre,id.str)};\n"
                             else -> ""
                         }
                     }.joinToString("")}
