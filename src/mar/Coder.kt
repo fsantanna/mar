@@ -339,11 +339,11 @@ fun Stmt.coder (pre: Boolean): String {
         is Stmt.Proto -> {
             when (this) {
                 is Stmt.Proto.Func ->
-                    this.tp_.out.coder(this.tp_.assert_no_tpls_up(),pre) + " " + this.id.str + " (" + this.tp_.inps_.map { it.coder(it.second.assert_no_tpls_up(),pre) }.joinToString(",") + ")"
-                is Stmt.Proto.Coro -> this.tp_.x_sig(this.tp_.assert_no_tpls_up(), pre, this.id.str)
+                    this.tp_.out.coder(null,pre) + " " + this.id.str + " (" + this.tp_.inps_.map { it.coder(it.second.assert_no_tpls_up(),pre) }.joinToString(",") + ")"
+                is Stmt.Proto.Coro -> this.tp_.x_sig(null, pre, this.id.str)
             } + """
             {
-                ${this.tp.out.coder(this.tp.out.assert_no_tpls_up(),pre)} mar_ret;
+                ${this.tp.out.coder(null,pre)} mar_ret;
                 ${(this is Stmt.Proto.Func).cond {
                     this as Stmt.Proto.Func
                     this.tp_.inps_.map { (id,tp) ->
@@ -375,7 +375,7 @@ fun Stmt.coder (pre: Boolean): String {
                 ${when {
                     (this is Stmt.Proto.Func) -> "return mar_ret;"
                     (this is Stmt.Proto.Coro) -> {
-                        val (xuni,_) = this.tp_.x_out_uni(this.tp_.assert_no_tpls_up(),pre)
+                        val (xuni,_) = this.tp_.x_out_uni(null,pre)
                         "return ($xuni) { .tag=2, ._2=mar_ret };"
                     }
                     else -> error("impossible case")
@@ -405,8 +405,8 @@ fun Stmt.coder (pre: Boolean): String {
                 do {
                     ${this.to_dcls().map { (_,id,tp) ->
                         when (tp) {
-                            is Type.Proto.Func -> "auto " + tp.out.coder(tp.out.assert_no_tpls_up(),pre) + " " + id.str + " (" + tp.inps.map { it.coder(it.assert_no_tpls_up(),pre) }.joinToString(",") + ");\n"
-                            is Type.Proto.Coro -> "auto ${tp.x_sig(tp.assert_no_tpls_up(), pre, id.str)};\n"
+                            is Type.Proto.Func -> "auto " + tp.out.coder(null,pre) + " " + id.str + " (" + tp.inps.map { it.coder(it.assert_no_tpls_up(),pre) }.joinToString(",") + ");\n"
+                            is Type.Proto.Coro -> "auto ${tp.x_sig(null,pre,id.str)};\n"
                             else -> ""
                         }
                     }.joinToString("")}
@@ -464,14 +464,14 @@ fun Stmt.coder (pre: Boolean): String {
                 (tdst is Type.Vector) -> """
                     {
                         typeof($dst)* mar_$n = &$dst;
-                        *mar_$n = CAST(${tdst.coder(tdst.assert_no_tpls_up(),pre)}, $src);
+                        *mar_$n = CAST(${tdst.coder(null,pre)}, $src);
                         mar_$n->max = ${tdst.max!!.tk.str};
                         mar_$n->cur = MIN(mar_$n->max, mar_$n->cur);                        
                     }                        
                 """
                 tdst.is_same_of(tsrc) -> "$dst = $src;"
                 else -> {
-                    "$dst = CAST(${tdst.coder(tdst.assert_no_tpls_up(),pre)}, $src);"
+                    "$dst = CAST(${tdst.coder(null,pre)}, $src);"
                 }
             }
         }
@@ -500,7 +500,7 @@ fun Stmt.coder (pre: Boolean): String {
             """
         }
         is Stmt.Catch -> {
-            val uni  = this.type()?.coder(this.type()?.assert_no_tpls_up(),pre)
+            val uni  = this.type()?.coder(null,pre)
             val xuni = uni?.uppercase()
             """
             { // CATCH | ${this.dump()}
@@ -525,7 +525,7 @@ fun Stmt.coder (pre: Boolean): String {
                     ${(this.xup is Stmt.SetS && this.tp!=null).cond {
                         val set = this.xup as Stmt.SetS
                         """
-                        ${set.dst.coder(pre)} = ($uni) { .tag=${xuni}_ERR_TAG, .Err=CAST(${this.tp!!.coder(this.tp!!.assert_no_tpls_up(),pre)}, MAR_EXCEPTION) };
+                        ${set.dst.coder(pre)} = ($uni) { .tag=${xuni}_ERR_TAG, .Err=CAST(${this.tp!!.coder(null,pre)}, MAR_EXCEPTION) };
                         """
                      }}
                     MAR_EXCEPTION.tag = __MAR_EXCEPTION_NONE__;
@@ -537,7 +537,7 @@ fun Stmt.coder (pre: Boolean): String {
         }
 
         is Stmt.Create -> {
-            val xtp = (this.xup as Stmt.SetS).dst.typex().coder((this.xup as Stmt.SetS).dst.typex().assert_no_tpls_up(),pre)
+            val xtp = (this.xup as Stmt.SetS).dst.typex().coder(null,pre)
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
                 """
@@ -550,7 +550,7 @@ fun Stmt.coder (pre: Boolean): String {
         is Stmt.Start -> {
             val exe = this.exe.coder(pre)
             val tp = this.exe.type() as Type.Exec
-            val (xuni,_) = tp.x_inp_uni(tp.assert_no_tpls_up(),pre)
+            val (xuni,_) = tp.x_inp_uni(null,pre)
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
                 """
@@ -567,7 +567,7 @@ fun Stmt.coder (pre: Boolean): String {
         is Stmt.Resume -> {
             val exe = this.exe.coder(pre)
             val tp = this.exe.type() as Type.Exec
-            val (xuni,_) = tp.x_inp_uni(tp.assert_no_tpls_up(),pre)
+            val (xuni,_) = tp.x_inp_uni(null,pre)
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
                 """
@@ -581,7 +581,7 @@ fun Stmt.coder (pre: Boolean): String {
         }
         is Stmt.Yield -> {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
-            val (xuni,_) = tp.x_out_uni(tp.assert_no_tpls_up(),pre)
+            val (xuni,_) = tp.x_out_uni(null,pre)
             """
                 mar_exe->pc = ${this.n};
                 return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
@@ -660,7 +660,7 @@ fun Stmt.coder (pre: Boolean): String {
                         """
                         {
                             printf("[");
-                            ${tp.coder(tp.assert_no_tpls_up(),pre)} mar_${tp.n} = $v;
+                            ${tp.coder(null,pre)} mar_${tp.n} = $v;
                             ${tp.ts.mapIndexed { i,(_,t) ->
                                 aux(t, "mar_${tp.n}._${i+1}")
                             }.joinToString("printf(\",\");")}
@@ -672,7 +672,7 @@ fun Stmt.coder (pre: Boolean): String {
                         """
                         {
                             printf("#[");
-                            ${tp.coder(tp.assert_no_tpls_up(),pre)} mar_${tp.n} = $v;
+                            ${tp.coder(null,pre)} mar_${tp.n} = $v;
                             for (int i=0; i<mar_${tp.n}.cur; i++) {
                                 if (i > 0) {
                                     printf(",");
@@ -686,7 +686,7 @@ fun Stmt.coder (pre: Boolean): String {
                     is Type.Union -> {
                         """
                         {
-                            ${tp.coder(tp.assert_no_tpls_up(),pre)} mar_${tp.n} = $v;
+                            ${tp.coder(null,pre)} mar_${tp.n} = $v;
                             printf("<.%d=", mar_${tp.n}.tag);
                             switch (mar_${tp.n}.tag) {
                                 ${tp.ts.mapIndexed { i,(_,t) ->
@@ -776,7 +776,7 @@ fun Expr.coder (pre: Boolean): String {
             when (this.tk.str) {
                 "++" -> {
                     val tp = this.typex() as Type.Vector
-                    val one = tp.tp.coder(tp.tp.assert_no_tpls_up(),pre)
+                    val one = tp.tp.coder(null,pre)
                     val xe1 = if (this.e1.typex() is Type.Vector) {
                         "mar_vector_cat_vector((Vector*)&mar_$n, (Vector*)&mar_e1_$n, sizeof($one));"
                     } else {
@@ -789,7 +789,7 @@ fun Expr.coder (pre: Boolean): String {
                     }
                     """
                     ({
-                        ${tp.coder(tp.assert_no_tpls_up(),pre)} mar_$n = { .max=${tp.max!!.tk.str}, .cur=0 };
+                        ${tp.coder(null,pre)} mar_$n = { .max=${tp.max!!.tk.str}, .cur=0 };
                         typeof($e1) mar_e1_$n = $e1;
                         typeof($e2) mar_e2_$n = $e2;
                         $xe1
@@ -823,7 +823,7 @@ fun Expr.coder (pre: Boolean): String {
                     (tdst == null) -> src
                     tdst.is_num() -> src
                     tdst.is_same_of(tsrc) -> src
-                    else -> "CAST(${tdst.coder(tdst.assert_no_tpls_up(),pre)}, $src)"
+                    else -> "CAST(${tdst.coder(null,pre)}, $src)"
                 }
             }.joinToString(",")} )"
             """
@@ -837,13 +837,13 @@ fun Expr.coder (pre: Boolean): String {
             """
         }
 
-        is Expr.Tuple  -> "((${this.typex().coder(this.typex().assert_no_tpls_up(),pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
+        is Expr.Tuple  -> "((${this.typex().coder(null,pre)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
         is Expr.Vector -> (this.typex() as Type.Vector).let {
-            "((${it.coder(it.assert_no_tpls_up(),pre)}) { .max=${it.max!!.tk.str}, .cur=${it.max!!.tk.str}, .buf={${this.vs.map { it.coder(pre) }.joinToString(",") }} })"
+            "((${it.coder(null,pre)}) { .max=${it.max!!.tk.str}, .cur=${it.max!!.tk.str}, .buf={${this.vs.map { it.coder(pre) }.joinToString(",") }} })"
         }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
-            "((${this.typex().coder(this.typex().assert_no_tpls_up(),pre)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"
+            "((${this.typex().coder(null,pre)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"
         }
         is Expr.Field  -> {
             val idx = this.idx.toIntOrNull().let {
@@ -926,8 +926,8 @@ fun Expr.coder (pre: Boolean): String {
             (this.xtp is Type.Any)     -> this.tk.str
             (this.xtp is Type.Nat)     -> this.tk.str
             (this.xtp is Type.Prim)    -> this.tk.str
-            (this.xtp is Type.Data)    -> "CAST(${this.xtp!!.coder(this.xtp!!.assert_no_tpls_up(),pre)}, ${this.tk.str})"
-            else -> "((${this.xtp!!.coder(this.xtp!!.assert_no_tpls_up(),pre)}) ${this.tk.str})"
+            (this.xtp is Type.Data)    -> "CAST(${this.xtp!!.coder(null,pre)}, ${this.tk.str})"
+            else -> "((${this.xtp!!.coder(null,pre)}) ${this.tk.str})"
         }
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> "_void_"
@@ -938,17 +938,17 @@ fun Expr.coder (pre: Boolean): String {
                 val tp = this.typex()
                 val sup = tp.sup_vs(this.xnum!!)
                 if (sup == tp) it else {
-                    "((" + sup!!.coder(sup.assert_no_tpls_up(),pre) + ")" + it + ")"
+                    "((" + sup!!.coder(null,pre) + ")" + it + ")"
                 }
             }
         }
 
         is Expr.Throw -> """
             ({
-                assert(sizeof(Exception) >= sizeof(${this.e.typex().coder(this.e.typex().assert_no_tpls_up(),pre)}));
+                assert(sizeof(Exception) >= sizeof(${this.e.typex().coder(null,pre)}));
                 MAR_EXCEPTION = CAST(Exception, ${this.e.coder(pre)});
                 continue;
-                ${this.xtp!!.coder(this.xtp!!.assert_no_tpls_up(),pre)} mar_$n ; mar_$n;
+                ${this.xtp!!.coder(null,pre)} mar_$n ; mar_$n;
             })
         """
 
@@ -964,7 +964,7 @@ fun Expr.coder (pre: Boolean): String {
             }
         """
         is Expr.MatchE -> """
-            ${this.typex().coder(this.typex().assert_no_tpls_up(),pre)} mar_$n;
+            ${this.typex().coder(null,pre)} mar_$n;
             switch (${this.tst.coder(pre)}) {
                 ${this.cases.map { (tst,e) -> """
                     ${tst.cond2({"case ${it.coder(pre)}"},{"default"})}:
@@ -984,7 +984,7 @@ fun Expr.coder (pre: Boolean): String {
                     else -> {
                         val sup = tp.sup_vs(this.xnum!!)
                         if (sup == tp) it else {
-                            "((" + sup!!.coder(sup.assert_no_tpls_up(),pre) + ")" + it + ")"
+                            "((" + sup!!.coder(null,pre) + ")" + it + ")"
                         }
                     }
                 }
