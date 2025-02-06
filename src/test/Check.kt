@@ -1981,16 +1981,25 @@ class Check {
             var i = 10
             var x: Vec {{i}}
         """)
+        assert(out == "anon : (lin 4, col 26) : type error : expected constant integer expression") { out!! }
+    }
+    @Test
+    fun ts_02_data_num () {
+        val out = check("""
+            data Vec {{n:Int}}: #[Int * {{n}}]
+            var i = 10
+            var x: Vec {{1*10}}
+        """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +
                 "data Return.*: [] {\n" +
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "data Maybe {{t: Type}}: <Nothing:(),Just:{{t}}>\n" +
-                "var x: Maybe {{:Int}}\n" +
-                "var y: Maybe {{:Int}}\n" +
-                "set y = x\n" +
+                "data Vec {{n: Int}}: #[Int*{{n}}]\n" +
+                "var i: Int\n" +
+                "set i = 10\n" +
+                "var x: Vec {{(1 * 10)}}\n" +
                 "}") { G.outer!!.to_str() }
     }
 }

@@ -143,6 +143,14 @@ fun check_vars () {
                 when {
                     (xtpls == null) -> {} // infer
                     (s.tpls.size != xtpls.size) -> err(me.tk, "type error : templates mismatch")
+                    else -> {
+                        val e = xtpls.mapNotNull { it.second }.find {
+                            !it.static_int_is()
+                        }
+                        if (e != null) {
+                            err(e.tk, "type error : expected constant integer expression")
+                        }
+                    }
                 }
             }
             else -> {}
