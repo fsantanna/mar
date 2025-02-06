@@ -33,7 +33,7 @@ fun List<Tk.Type>.to_str (pre: Boolean=false): String {
 fun Type.to_str (pre: Boolean = false): String {
     return when (this) {
         //is Type.Err,
-        is Type.Any -> TODO("7")
+        is Type.Any -> TODO("Type.Any.tostr()")
         is Type.Tpl -> "{{${this.tk.str}}}"
         is Type.Nat -> "`${this.tk.str}`"
         is Type.Prim -> this.tk.str

@@ -184,10 +184,10 @@ fun Expr.infer (tpx: Type?): Type? {
         }
 
         is Expr.If -> {
-            val cnd = this.cnd.infer(null)
+            this.cnd.infer(null)
             val t = this.t.infer(tp)
             val f = this.f.infer(tp)
-            if (cnd!=null && t!=null && f!=null) {
+            if (t!=null && f!=null) {
                 this.xtp = t.sup_vs(f)
             }
             this.xtp?.infer(null)
@@ -287,8 +287,6 @@ fun Type.infer (tp: Type?): Type {
                 s.tpls.isEmpty() -> this.xtpls = emptyList()
                 (tp !is Type.Data) -> {}
                 (tp.xtpls != null) -> {
-                    println(tp.xtpls)
-                    //TODO()
                     this.xtpls = tp.xtpls
                     assert(this.is_same_of(tp), {"TODO: unmatching infer"})
                 }
