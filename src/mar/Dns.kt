@@ -54,7 +54,10 @@ fun <V> Type.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
     return when (this) {
         //is Type.Err,
         is Type.Any, is Type.Tpl, is Type.Nat -> emptyList()
-        is Type.Unit, is Type.Prim, is Type.Data -> emptyList()
+        is Type.Unit, is Type.Prim -> emptyList()
+        is Type.Data -> this.xtpls?.map { (tp,e) ->
+            (tp?.dn_collect_pos(fe,ft) ?: emptyList()) + (e?.dn_collect_pos(fe,ft) ?: emptyList())
+        }?.flatten() ?: emptyList()
         is Type.Pointer -> this.ptr.dn_collect_pos(fe,ft)
         is Type.Tuple -> this.ts.map { (_,tp) -> tp.dn_collect_pos(fe,ft) }.flatten()
         is Type.Union -> this.ts.map { (_,tp) -> tp.dn_collect_pos(fe,ft) }.flatten()
@@ -151,7 +154,10 @@ fun <V> Type.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
     return v + when (this) {
         //is Type.Err,
         is Type.Any, is Type.Tpl, is Type.Nat -> emptyList()
-        is Type.Unit, is Type.Prim, is Type.Data -> emptyList()
+        is Type.Unit, is Type.Prim -> emptyList()
+        is Type.Data -> this.xtpls?.map { (tp,e) ->
+            (tp?.dn_collect_pre(fe,ft) ?: emptyList()) + (e?.dn_collect_pre(fe,ft) ?: emptyList())
+        }?.flatten() ?: emptyList()
         is Type.Pointer -> this.ptr.dn_collect_pre(fe,ft)
         is Type.Tuple -> this.ts.map { (_,tp) -> tp.dn_collect_pre(fe,ft) }.flatten()
         is Type.Union -> this.ts.map { (_,tp) -> tp.dn_collect_pre(fe,ft) }.flatten()
