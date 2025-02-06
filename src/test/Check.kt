@@ -1868,7 +1868,7 @@ class Check {
            "}") { G.outer!!.to_str() }
     }
 
-    // TEMPLATE
+    // TEMPLATE - TYPE
 
     @Test
     fun tt_01_data () {
@@ -1958,6 +1958,28 @@ class Check {
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
             var x: Maybe {{:Int}}
             var y = x
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "data Maybe {{t: Type}}: <Nothing:(),Just:{{t}}>\n" +
+                "var x: Maybe {{:Int}}\n" +
+                "var y: Maybe {{:Int}}\n" +
+                "set y = x\n" +
+                "}") { G.outer!!.to_str() }
+    }
+
+    // TEMPLATE - EXPR
+
+    @Test
+    fun ts_01_data_num () {
+        val out = check("""
+            data Vec {{n:Int}}: #[Int * {{n}}]
+            var i = 10
+            var x: Vec {{i}}
         """)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n" +

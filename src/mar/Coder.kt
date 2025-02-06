@@ -919,6 +919,7 @@ fun Expr.coder (pre: Boolean): String {
             }
         }
 
+        is Expr.Tpl -> TODO("Expr.Tpl.coder()")
         is Expr.Nat -> when {
             (this.tk.str == "mar_ret") -> this.tk.str
             (this.xup is Stmt.Pass)    -> this.tk.str

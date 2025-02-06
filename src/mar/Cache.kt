@@ -141,7 +141,7 @@ fun cache_ups () {
             }
 
             is Expr.Acc, is Expr.Bool, is Expr.Chr, is Expr.Str,
-            is Expr.Null, is Expr.Num, is Expr.Unit -> {}
+            is Expr.Null, is Expr.Num, is Expr.Unit, is Expr.Tpl -> {}
 
             is Expr.Throw -> {
                 me.e.xup = me

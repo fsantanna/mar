@@ -252,6 +252,11 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                 parser_expr()
             }
             accept_fix_err("]")
+            when {
+                (size == null) -> {}
+                size.static_int_is() -> {}
+                else -> err(size.tk, "type error : expected constant integer expression")
+            }
             Type.Vector(tk0, size, tp)
         }
         accept_enu("Nat")  -> Type.Nat(G.tk0 as Tk.Nat)
@@ -268,6 +273,13 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
 
 fun parser_expr_4_prim (): Expr {
     return when {
+        accept_fix("{{") -> {
+            accept_enu_err("Var")
+            val e = Expr.Tpl(G.tk0 as Tk.Var)
+            accept_fix_err("}")
+            accept_fix_err("}")
+            e
+        }
         accept_enu("Nat")  -> {
             val tk0 = G.tk0 as Tk.Nat
             val tp = if (!accept_fix(":")) null else {

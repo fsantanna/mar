@@ -224,9 +224,9 @@ class Parser {
     fun al_03_vec_err () {
         G.tks = ("#[Int*1.1]").lexer()
         parser_lexer()
-        val tp = parser_type(null, false, false)
-        assert(tp.to_str() == "#[Int*1.1]") { tp.to_str() }
-        //assert(trap { } == "anon : (lin 1, col 3) : vector error : expected number")
+        //val tp = parser_type(null, false, false)
+        //assert(tp.to_str() == "#[Int*1.1]") { tp.to_str() }
+        assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 7) : type error : expected constant integer expression")
     }
     @Test
     fun al_04_vec_err () {
@@ -1215,7 +1215,7 @@ class Parser {
     // TEMPLATE
 
     @Test
-    fun tt_01_data () {
+    fun tt_01_data_type () {
         G.tks = ("""
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
         """).lexer()
@@ -1224,7 +1224,7 @@ class Parser {
         assert(ss.to_str() == "data Maybe {{t: Type}}: <Nothing:(),Just:{{t}}>\n") { ss.to_str() }
     }
     @Test
-    fun tt_02_data () {
+    fun tt_02_data_type () {
         G.tks = ("""
             do {
                 var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
@@ -1245,6 +1245,24 @@ class Parser {
             "var x\n"+
             "set x = (Maybe.Just(10))\n"+
             "}\n") { ss.to_str() }
+    }
+    @Test
+    fun tt_03_data_num () {
+        G.tks = ("""
+            data Vec {{n:Int}}: #[Int * {{n}}]
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "data Vec {{n: Int}}: #[Int*{{n}}]\n") { ss.to_str() }
+    }
+    @Test
+    fun tt_04_data_num () {
+        G.tks = ("""
+            var vs: Vec {{n}}
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "var vs: Vec {{n}}\n") { ss.to_str() }
     }
     @Test
     fun TODO_tt_02_func () {

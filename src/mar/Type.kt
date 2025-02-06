@@ -545,13 +545,14 @@ fun Expr.type (): Type? {
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos))
         is Expr.Str -> Type.Pointer(this.tk, Type.Prim(Tk.Type( "Char", this.tk.pos)))
         is Expr.Chr -> Type.Prim(Tk.Type( "Char", this.tk.pos))
-        is Expr.Nat -> this.xtp //?: Type.Nat(Tk.Nat("TODO",this.tk.pos))
         is Expr.Null -> Type.Pointer(this.tk, Type.Any(this.tk))
         is Expr.Unit -> Type.Unit(this.tk)
         is Expr.Num -> {
             val x = if (this.tk.str.contains(".")) "Float" else "Int"
             Type.Prim(Tk.Type(x, this.tk.pos))
         }
+        is Expr.Nat -> this.xtp //?: Type.Nat(Tk.Nat("TODO",this.tk.pos))
+        is Expr.Tpl -> TODO("Expr.Tpl.type()")
 
         is Expr.If -> {
             val tt = this.t.type()
