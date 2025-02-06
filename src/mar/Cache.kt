@@ -19,16 +19,10 @@ fun cache_ups () {
             }
 
             is Stmt.Block -> {
-                if (me.esc != null) {
-                    me.esc.xup = me
-                }
+                me.esc?.xup = me
                 me.ss.forEach { it.xup = me }
             }
-            is Stmt.Dcl -> {
-                if (me.xtp != null) {
-                    me.xtp!!.xup = me
-                }
-            }
+            is Stmt.Dcl -> me.xtp?.xup = me
             is Stmt.SetE -> {
                 me.dst.xup = me
                 me.src.xup = me
@@ -45,9 +39,7 @@ fun cache_ups () {
                 me.blk.xup = me
             }
             is Stmt.Catch -> {
-                if (me.tp != null) {
-                    me.tp.xup = me
-                }
+                me.tp?.xup = me
                 me.blk.xup = me
             }
 
@@ -106,21 +98,15 @@ fun cache_ups () {
             }
 
             is Expr.Tuple -> {
-                if (me.xtp != null) {
-                    me.xtp!!.xup = me
-                }
+                me.xtp?.xup = me
                 me.vs.forEach { (_,e) -> e.xup = me }
             }
             is Expr.Vector -> {
-                if (me.xtp != null) {
-                    me.xtp!!.xup = me
-                }
+                me.xtp?.xup = me
                 me.vs.forEach { it.xup = me }
             }
             is Expr.Union -> {
-                if (me.xtp != null) {
-                    me.xtp!!.xup = me
-                }
+                me.xtp?.xup = me
                 me.v.xup = me
             }
             is Expr.Field -> me.col.xup = me
@@ -135,9 +121,7 @@ fun cache_ups () {
                 me.e.xup = me
             }
             is Expr.Nat -> {
-                if (me.xtp != null) {
-                    me.xtp!!.xup = me
-                }
+                me.xtp?.xup = me
             }
 
             is Expr.Acc, is Expr.Bool, is Expr.Chr, is Expr.Str,
@@ -170,6 +154,12 @@ fun cache_ups () {
     }
     fun ft (me: Type) {
         when (me) {
+            is Type.Data -> {
+                me.xtpls?.forEach { (tp,e) ->
+                    tp?.xup = me
+                    e?.xup = me
+                }
+            }
             is Type.Pointer -> me.ptr.xup = me
             is Type.Tuple -> me.ts.forEach { (_,tp) ->
                 tp.xup = me
