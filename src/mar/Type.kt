@@ -1,23 +1,24 @@
 package mar
 
 fun Type.has_tpls_dn (): Boolean {
-    return this.dn_collect_pos { me ->
-        when (me) {
-            is Type.Tpl -> listOf(Unit)
-            else -> emptyList()
-        }
-    }.isNotEmpty()
+    return this.dn_collect_pos(
+        { if (it is Expr.Tpl) listOf(Unit) else  emptyList() },
+        { if (it is Type.Tpl) listOf(Unit) else  emptyList() }
+    ).isNotEmpty()
 }
 
 fun Type.assert_no_tpls_up (): Tpl_Map? {
-    this.dn_visit_pos { me ->
-        when (me) {
-            is Type.Data -> {
-                assert(me.xtpls!!.isEmpty(), {"TODO: sub tpls"})
+    this.dn_visit_pos(
+        {},
+        { me ->
+            when (me) {
+                is Type.Data -> {
+                    assert(me.xtpls!!.isEmpty(), {"TODO: sub tpls"})
+                }
+                else -> {}
             }
-            else -> {}
         }
-    }
+    )
     return null
 }
 
