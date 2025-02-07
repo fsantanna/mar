@@ -2,21 +2,21 @@ package mar
 
 fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> {
     return when (this) {
-        is Stmt.Data   -> this.tp.dn_collect_pos(ft) + (this.subs?.map { it.dn_collect_pos(fs,fe,ft) }?.flatten() ?: emptyList())
-        is Stmt.Proto  -> this.blk.dn_collect_pos(fs,fe,ft) + this.tp.dn_collect_pos(ft)
+        is Stmt.Data   -> this.tp.dn_collect_pos(fe,ft) + (this.subs?.map { it.dn_collect_pos(fs,fe,ft) }?.flatten() ?: emptyList())
+        is Stmt.Proto  -> this.blk.dn_collect_pos(fs,fe,ft) + this.tp.dn_collect_pos(fe,ft)
 
-        is Stmt.Block -> (this.esc?.dn_collect_pos(ft) ?: emptyList()) + this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
-        is Stmt.Dcl -> this.xtp?.dn_collect_pos(ft) ?: emptyList()
+        is Stmt.Block -> (this.esc?.dn_collect_pos(fe,ft) ?: emptyList()) + this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
+        is Stmt.Dcl -> this.xtp?.dn_collect_pos(fe,ft) ?: emptyList()
         is Stmt.SetE -> this.src.dn_collect_pos(fe,ft) + this.dst.dn_collect_pos(fe,ft)
         is Stmt.SetS -> this.src.dn_collect_pos(fs,fe,ft) + this.dst.dn_collect_pos(fe,ft)
 
         is Stmt.Escape -> this.e.dn_collect_pos(fe,ft)
         is Stmt.Defer -> this.blk.dn_collect_pos(fs,fe,ft)
-        is Stmt.Catch -> (this.tp?.dn_collect_pos(ft) ?: emptyList()) + this.blk.dn_collect_pos(fs,fe,ft)
+        is Stmt.Catch -> (this.tp?.dn_collect_pos(fe,ft) ?: emptyList()) + this.blk.dn_collect_pos(fs,fe,ft)
 
         is Stmt.If    -> this.cnd.dn_collect_pos(fe,ft) + this.t.dn_collect_pos(fs,fe,ft) + this.f.dn_collect_pos(fs,fe,ft)
         is Stmt.Loop  -> this.blk.dn_collect_pos(fs,fe,ft)
-        is Stmt.MatchT-> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(ft) ?: emptyList()) + it.second.dn_collect_pos(fs,fe,ft) }.flatten()
+        is Stmt.MatchT-> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(fe,ft) ?: emptyList()) + it.second.dn_collect_pos(fs,fe,ft) }.flatten()
         is Stmt.MatchE-> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(fe,ft) ?: emptyList()) + it.second.dn_collect_pos(fs,fe,ft) }.flatten()
 
         is Stmt.Create -> this.co.dn_collect_pos(fe,ft)
@@ -32,36 +32,39 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
     return when (this) {
         is Expr.Uno    -> this.e.dn_collect_pos(fe,ft)
         is Expr.Bin    -> this.e1.dn_collect_pos(fe,ft) + this.e2.dn_collect_pos(fe,ft)
-        is Expr.Tuple  -> (this.xtp?.dn_collect_pos(ft) ?: emptyList()) + this.vs.map { (_,tp) -> tp.dn_collect_pos(fe,ft) }.flatten()
-        is Expr.Vector -> (this.xtp?.dn_collect_pos(ft) ?: emptyList()) + this.vs.map { it.dn_collect_pos(fe,ft) }.flatten()
-        is Expr.Union  -> (this.xtp?.dn_collect_pos(ft) ?: emptyList()) + this.v.dn_collect_pos(fe,ft)
+        is Expr.Tuple  -> (this.xtp?.dn_collect_pos(fe,ft) ?: emptyList()) + this.vs.map { (_,tp) -> tp.dn_collect_pos(fe,ft) }.flatten()
+        is Expr.Vector -> (this.xtp?.dn_collect_pos(fe,ft) ?: emptyList()) + this.vs.map { it.dn_collect_pos(fe,ft) }.flatten()
+        is Expr.Union  -> (this.xtp?.dn_collect_pos(fe,ft) ?: emptyList()) + this.v.dn_collect_pos(fe,ft)
         is Expr.Field  -> this.col.dn_collect_pos(fe,ft)
         is Expr.Index  -> this.col.dn_collect_pos(fe,ft) + this.idx.dn_collect_pos(fe,ft)
         is Expr.Disc   -> this.col.dn_collect_pos(fe,ft)
         is Expr.Pred   -> this.col.dn_collect_pos(fe,ft)
-        is Expr.Cons   -> this.tp.dn_collect_pos(ft) + this.e.dn_collect_pos(fe,ft)
+        is Expr.Cons   -> this.tp.dn_collect_pos(fe,ft) + this.e.dn_collect_pos(fe,ft)
         is Expr.Call   -> this.f.dn_collect_pos(fe,ft) + this.args.map { it.dn_collect_pos(fe,ft) }.flatten()
         is Expr.Throw  -> this.e.dn_collect_pos(fe,ft)
         is Expr.If     -> this.cnd.dn_collect_pos(fe,ft) + this.t.dn_collect_pos(fe,ft) + this.f.dn_collect_pos(fe,ft)
-        is Expr.MatchT -> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(ft) ?: emptyList()) + it.second.dn_collect_pos(fe,ft) }.flatten()
+        is Expr.MatchT -> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(fe,ft) ?: emptyList()) + it.second.dn_collect_pos(fe,ft) }.flatten()
         is Expr.MatchE -> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(fe,ft) ?: emptyList()) + it.second.dn_collect_pos(fe,ft) }.flatten()
-        is Expr.Nat    -> (this.xtp?.dn_collect_pos(ft) ?: emptyList())
+        is Expr.Nat    -> (this.xtp?.dn_collect_pos(fe,ft) ?: emptyList())
         is Expr.Acc, is Expr.Null, is Expr.Unit, is Expr.Str,
-        is Expr.Bool, is Expr.Chr, is Expr.Num -> emptyList()
+        is Expr.Bool, is Expr.Chr, is Expr.Num, is Expr.Tpl -> emptyList()
     } + fe(this)
 }
-fun <V> Type.dn_collect_pos (ft: (Type)->List<V>): List<V> {
+fun <V> Type.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> {
     return when (this) {
         //is Type.Err,
         is Type.Any, is Type.Tpl, is Type.Nat -> emptyList()
-        is Type.Unit, is Type.Prim, is Type.Data -> emptyList()
-        is Type.Pointer -> this.ptr.dn_collect_pos(ft)
-        is Type.Tuple -> this.ts.map { (_,tp) -> tp.dn_collect_pos(ft) }.flatten()
-        is Type.Union -> this.ts.map { (_,tp) -> tp.dn_collect_pos(ft) }.flatten()
-        is Type.Vector -> this.tp.dn_collect_pos(ft)
-        is Type.Proto.Func -> (this.inps + listOf(this.out)).map { it.dn_collect_pos(ft) }.flatten()
-        is Type.Proto.Coro -> (this.inps + listOf(this.res, this.yld, this.out)).map { it.dn_collect_pos(ft) }.flatten()
-        is Type.Exec -> (this.inps + listOf(this.res, this.yld, this.out)).map { it.dn_collect_pos(ft) }.flatten()
+        is Type.Unit, is Type.Prim -> emptyList()
+        is Type.Data -> this.xtpls?.map { (tp,e) ->
+            (tp?.dn_collect_pos(fe,ft) ?: emptyList()) + (e?.dn_collect_pos(fe,ft) ?: emptyList())
+        }?.flatten() ?: emptyList()
+        is Type.Pointer -> this.ptr.dn_collect_pos(fe,ft)
+        is Type.Tuple -> this.ts.map { (_,tp) -> tp.dn_collect_pos(fe,ft) }.flatten()
+        is Type.Union -> this.ts.map { (_,tp) -> tp.dn_collect_pos(fe,ft) }.flatten()
+        is Type.Vector -> (this.max?.dn_collect_pos(fe,ft) ?: emptyList()) + this.tp.dn_collect_pos(fe,ft)
+        is Type.Proto.Func -> (this.inps + listOf(this.out)).map { it.dn_collect_pos(fe,ft) }.flatten()
+        is Type.Proto.Coro -> (this.inps + listOf(this.res, this.yld, this.out)).map { it.dn_collect_pos(fe,ft) }.flatten()
+        is Type.Exec -> (this.inps + listOf(this.res, this.yld, this.out)).map { it.dn_collect_pos(fe,ft) }.flatten()
     } + ft(this)
 }
 
@@ -78,8 +81,9 @@ fun Expr.dn_visit_pos (fe: (Expr)->Unit, ft: (Type)->Unit) {
         { ft(it) ; emptyList<Unit>() },
     )
 }
-fun Type.dn_visit_pos (ft: (Type)->Unit) {
+fun Type.dn_visit_pos (fe: (Expr)->Unit, ft: (Type)->Unit) {
     this.dn_collect_pos (
+        { fe(it) ; emptyList<Unit>() },
         { ft(it) ; emptyList<Unit>() },
     )
 }
@@ -90,21 +94,21 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
         return emptyList()
     }
     return v + when (this) {
-        is Stmt.Data   -> this.tp.dn_collect_pre(ft) + (this.subs?.map { it.dn_collect_pre(fs,fe,ft) }?.flatten() ?: emptyList())
-        is Stmt.Proto  -> this.blk.dn_collect_pre(fs,fe,ft) + this.tp.dn_collect_pre(ft)
+        is Stmt.Data   -> this.tp.dn_collect_pre(fe,ft) + (this.subs?.map { it.dn_collect_pre(fs,fe,ft) }?.flatten() ?: emptyList())
+        is Stmt.Proto  -> this.blk.dn_collect_pre(fs,fe,ft) + this.tp.dn_collect_pre(fe,ft)
 
-        is Stmt.Block -> (this.esc?.dn_collect_pre(ft) ?: emptyList()) + this.ss.map { it.dn_collect_pre(fs,fe,ft) }.flatten()
-        is Stmt.Dcl -> this.xtp?.dn_collect_pre(ft) ?: emptyList()
+        is Stmt.Block -> (this.esc?.dn_collect_pre(fe,ft) ?: emptyList()) + this.ss.map { it.dn_collect_pre(fs,fe,ft) }.flatten()
+        is Stmt.Dcl -> this.xtp?.dn_collect_pre(fe,ft) ?: emptyList()
         is Stmt.SetE -> this.dst.dn_collect_pre(fe,ft) + this.src.dn_collect_pre(fe,ft)
         is Stmt.SetS -> this.dst.dn_collect_pre(fe,ft) + this.src.dn_collect_pre(fs,fe,ft)
 
         is Stmt.Escape -> this.e.dn_collect_pre(fe,ft)
         is Stmt.Defer -> this.blk.dn_collect_pre(fs,fe,ft)
-        is Stmt.Catch -> (this.tp?.dn_collect_pre(ft) ?: emptyList()) + this.blk.dn_collect_pre(fs,fe,ft)
+        is Stmt.Catch -> (this.tp?.dn_collect_pre(fe,ft) ?: emptyList()) + this.blk.dn_collect_pre(fs,fe,ft)
 
         is Stmt.If    -> this.cnd.dn_collect_pre(fe,ft) + this.t.dn_collect_pre(fs,fe,ft) + this.f.dn_collect_pre(fs,fe,ft)
         is Stmt.Loop  -> this.blk.dn_collect_pre(fs,fe,ft)
-        is Stmt.MatchT-> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(ft) ?: emptyList()) + it.second.dn_collect_pre(fs,fe,ft) }.flatten()
+        is Stmt.MatchT-> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(fe,ft) ?: emptyList()) + it.second.dn_collect_pre(fs,fe,ft) }.flatten()
         is Stmt.MatchE-> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(fe,ft) ?: emptyList()) + it.second.dn_collect_pre(fs,fe,ft) }.flatten()
 
         is Stmt.Create -> this.co.dn_collect_pre(fe,ft)
@@ -124,25 +128,25 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
     return v + when (this) {
         is Expr.Uno   -> this.e.dn_collect_pre(fe,ft)
         is Expr.Bin   -> this.e1.dn_collect_pre(fe,ft) + this.e2.dn_collect_pre(fe,ft)
-        is Expr.Tuple -> (this.xtp?.dn_collect_pre(ft) ?: emptyList()) + this.vs.map { (_,tp) -> tp.dn_collect_pre(fe,ft) }.flatten()
+        is Expr.Tuple -> (this.xtp?.dn_collect_pre(fe,ft) ?: emptyList()) + this.vs.map { (_,tp) -> tp.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Vector -> this.vs.map { it.dn_collect_pre(fe,ft) }.flatten()
-        is Expr.Union -> (this.xtp?.dn_collect_pre(ft) ?: emptyList()) + this.v.dn_collect_pre(fe,ft)
+        is Expr.Union -> (this.xtp?.dn_collect_pre(fe,ft) ?: emptyList()) + this.v.dn_collect_pre(fe,ft)
         is Expr.Field -> this.col.dn_collect_pre(fe,ft)
         is Expr.Index  -> this.col.dn_collect_pre(fe,ft) + this.idx.dn_collect_pre(fe,ft)
         is Expr.Disc  -> this.col.dn_collect_pre(fe,ft)
         is Expr.Pred  -> this.col.dn_collect_pre(fe,ft)
-        is Expr.Cons  -> this.tp.dn_collect_pre(ft) + this.e.dn_collect_pre(fe,ft)
+        is Expr.Cons  -> this.tp.dn_collect_pre(fe,ft) + this.e.dn_collect_pre(fe,ft)
         is Expr.Call  -> this.f.dn_collect_pre(fe,ft) + this.args.map { it.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Throw -> this.e.dn_collect_pre(fe,ft)
         is Expr.If     -> this.cnd.dn_collect_pre(fe,ft) + this.t.dn_collect_pre(fe,ft) + this.f.dn_collect_pre(fe,ft)
-        is Expr.MatchT -> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(ft) ?: emptyList()) + it.second.dn_collect_pre(fe,ft) }.flatten()
+        is Expr.MatchT -> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(fe,ft) ?: emptyList()) + it.second.dn_collect_pre(fe,ft) }.flatten()
         is Expr.MatchE -> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(fe,ft) ?: emptyList()) + it.second.dn_collect_pre(fe,ft) }.flatten()
-        is Expr.Nat    -> (this.xtp?.dn_collect_pre(ft) ?: emptyList())
+        is Expr.Nat    -> (this.xtp?.dn_collect_pre(fe,ft) ?: emptyList())
         is Expr.Acc, is Expr.Null, is Expr.Unit, is Expr.Str,
-        is Expr.Bool, is Expr.Chr, is Expr.Num -> emptyList()
+        is Expr.Bool, is Expr.Chr, is Expr.Num, is Expr.Tpl -> emptyList()
     }
 }
-fun <V> Type.dn_collect_pre (ft: (Type)->List<V>?): List<V> {
+fun <V> Type.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V> {
     val v = ft(this)
     if (v === null) {
         return emptyList()
@@ -150,14 +154,17 @@ fun <V> Type.dn_collect_pre (ft: (Type)->List<V>?): List<V> {
     return v + when (this) {
         //is Type.Err,
         is Type.Any, is Type.Tpl, is Type.Nat -> emptyList()
-        is Type.Unit, is Type.Prim, is Type.Data -> emptyList()
-        is Type.Pointer -> this.ptr.dn_collect_pre(ft)
-        is Type.Tuple -> this.ts.map { (_,tp) -> tp.dn_collect_pre(ft) }.flatten()
-        is Type.Union -> this.ts.map { (_,tp) -> tp.dn_collect_pre(ft) }.flatten()
-        is Type.Vector -> this.tp.dn_collect_pre(ft)
-        is Type.Proto.Func -> (this.inps + listOf(this.out)).map { it.dn_collect_pre(ft) }.flatten()
-        is Type.Proto.Coro -> (this.inps + listOf(this.res,this.yld,this.out)).map { it.dn_collect_pre(ft) }.flatten()
-        is Type.Exec -> (this.inps + listOf(this.res,this.yld,this.out)).map { it.dn_collect_pre(ft) }.flatten()
+        is Type.Unit, is Type.Prim -> emptyList()
+        is Type.Data -> this.xtpls?.map { (tp,e) ->
+            (tp?.dn_collect_pre(fe,ft) ?: emptyList()) + (e?.dn_collect_pre(fe,ft) ?: emptyList())
+        }?.flatten() ?: emptyList()
+        is Type.Pointer -> this.ptr.dn_collect_pre(fe,ft)
+        is Type.Tuple -> this.ts.map { (_,tp) -> tp.dn_collect_pre(fe,ft) }.flatten()
+        is Type.Union -> this.ts.map { (_,tp) -> tp.dn_collect_pre(fe,ft) }.flatten()
+        is Type.Vector -> this.tp.dn_collect_pre(fe,ft) + (this.max?.dn_collect_pre(fe,ft) ?: emptyList())
+        is Type.Proto.Func -> (this.inps + listOf(this.out)).map { it.dn_collect_pre(fe,ft) }.flatten()
+        is Type.Proto.Coro -> (this.inps + listOf(this.res,this.yld,this.out)).map { it.dn_collect_pre(fe,ft) }.flatten()
+        is Type.Exec -> (this.inps + listOf(this.res,this.yld,this.out)).map { it.dn_collect_pre(fe,ft) }.flatten()
     }
 }
 

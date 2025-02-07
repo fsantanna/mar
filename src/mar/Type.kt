@@ -1,23 +1,24 @@
 package mar
 
 fun Type.has_tpls_dn (): Boolean {
-    return this.dn_collect_pos { me ->
-        when (me) {
-            is Type.Tpl -> listOf(Unit)
-            else -> emptyList()
-        }
-    }.isNotEmpty()
+    return this.dn_collect_pos(
+        { if (it is Expr.Tpl) listOf(Unit) else  emptyList() },
+        { if (it is Type.Tpl) listOf(Unit) else  emptyList() }
+    ).isNotEmpty()
 }
 
 fun Type.assert_no_tpls_up (): Tpl_Map? {
-    this.dn_visit_pos { me ->
-        when (me) {
-            is Type.Data -> {
-                assert(me.xtpls!!.isEmpty(), {"TODO: sub tpls"})
+    this.dn_visit_pos(
+        {},
+        { me ->
+            when (me) {
+                is Type.Data -> {
+                    assert(me.xtpls!!.isEmpty(), {"TODO: sub tpls"})
+                }
+                else -> {}
             }
-            else -> {}
         }
-    }
+    )
     return null
 }
 
@@ -59,6 +60,23 @@ fun Type.is_same_of (other: Type): Boolean {
     }
 }
 
+fun Type.Data.is_tpl_sup_of (other: Type.Data): Boolean {
+    val thi = this.xtpls!!
+    val oth = other.xtpls!!
+    return when {
+        (thi.size != oth.size) -> false
+        else -> thi.zip(oth).all { (thi,oth) ->
+            val (t1,e1) = thi
+            val (t2,e2) = oth
+            when {
+                (t1!=null && t2!=null) -> t1.is_same_of(t2)
+                (e1!=null && e2!=null) -> e1.static_int_eval() == e2.static_int_eval()
+                else -> false
+            }
+        }
+    }
+}
+
 fun Type.is_sup_of (other: Type): Boolean {
     return when {
         (this is Type.Any || other is Type.Any) -> true
@@ -66,18 +84,13 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Unit       && other is Type.Unit)       -> true
         (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
         (this is Type.Data       && other is Type.Data)       -> {
-            //println(listOf(this.to_str(),other.to_str(),this.xtpls,other.xtpls))
-            val tpl = Pair(this.xtpls!!,other.xtpls!!).let { (thi,oth) -> thi.size==oth.size && thi.zip(oth).all { (thi,oth) ->
-                val (t1,e1) = thi
-                val (t2,e2) = oth
-                when {
-                    (t1!=null && t2!=null) -> t1.is_same_of(t2)
-                    (e1!=null && e2!=null) -> e1.static_int_eval() == e2.static_int_eval()
-                    else -> false
+            when {
+                !this.is_tpl_sup_of(other) -> false
+                (this.ts.size > other.ts.size) -> false
+                else -> this.ts.zip(other.ts).all { (thi, oth) ->
+                    (thi.str == oth.str)
                 }
-            }}
-            val sub = this.ts.size<=other.ts.size && this.ts.zip(other.ts).all { (thi,oth) -> thi.str==oth.str }
-            tpl && sub
+            }
         }
         (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
         (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> (thi.first==null||thi.first?.str==oth.first?.str) && thi.second.is_sup_of(oth.second) }
@@ -97,14 +110,32 @@ fun Type.is_sup_sub_of (other: Type): Boolean {
 fun Type.sup_vs (other: Type): Type? {
     return when {
         (this is Type.Data && other is Type.Data) -> {
-            if (!this.is_sup_of(other) && !other.is_sup_of(this)) {
-                null    // because of xtpls
-            } else {
-                val l = this.ts.commonPrefix(other.ts) { x, y ->
-                    (x.str == y.str)
+            //if (!this.is_tpl_sup_of(other) || !other.is_tpl_sup_of(this)) {
+            val l = this.ts.commonPrefix(other.ts) { x, y ->
+                (x.str == y.str)
+            }
+
+            assert(this.xtpls!!.size == other.xtpls!!.size)
+            this.xtpls!!.zip(other.xtpls!!).forEach { (thi, oth) ->
+                val (a1,b1) = thi
+                val (a2,b2) = oth
+                when {
+                    (a1==null && a2==null) -> {}
+                    (a1==null || a2==null) -> TODO("xtpls sup_vs 1")
+                    !a1.is_same_of(a2)     -> TODO("xtpls sup_vs 2")
                 }
-                if (l.size == 0) null else {
-                    Type.Data(this.tk, this.xtpls, l)
+                when {
+                    (b1==null && b2==null) -> {}
+                    (b1==null || b2==null) -> TODO("xtpls sup_vs 3")
+                    else                   -> TODO("xtpls sup_vs 4")
+                }
+            }
+
+            when {
+                (l.size == 0) -> null   // X.* vs Y.*
+                else -> Type.Data(this.tk, this.xtpls, l).let {
+                    it.xup = this.xup
+                    it
                 }
             }
         }
@@ -245,6 +276,7 @@ fun Type.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Type {
 @JvmName("Any_walk_List_String")
 fun Any.walk (ts: List<String>): Triple<Stmt.Data,List<Int>,Type>? {
     val s = this.up_data(ts.first())
+    //println(s)
     return when {
         (s == null) -> null
         (s.subs == null) -> {
@@ -514,13 +546,14 @@ fun Expr.type (): Type? {
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos))
         is Expr.Str -> Type.Pointer(this.tk, Type.Prim(Tk.Type( "Char", this.tk.pos)))
         is Expr.Chr -> Type.Prim(Tk.Type( "Char", this.tk.pos))
-        is Expr.Nat -> this.xtp //?: Type.Nat(Tk.Nat("TODO",this.tk.pos))
         is Expr.Null -> Type.Pointer(this.tk, Type.Any(this.tk))
         is Expr.Unit -> Type.Unit(this.tk)
         is Expr.Num -> {
             val x = if (this.tk.str.contains(".")) "Float" else "Int"
             Type.Prim(Tk.Type(x, this.tk.pos))
         }
+        is Expr.Nat -> this.xtp //?: Type.Nat(Tk.Nat("TODO",this.tk.pos))
+        is Expr.Tpl -> TODO("Expr.Tpl.type()")
 
         is Expr.If -> {
             val tt = this.t.type()

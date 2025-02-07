@@ -143,6 +143,14 @@ fun check_vars () {
                 when {
                     (xtpls == null) -> {} // infer
                     (s.tpls.size != xtpls.size) -> err(me.tk, "type error : templates mismatch")
+                    else -> {
+                        val e = xtpls.mapNotNull { it.second }.find {
+                            !it.static_int_is()
+                        }
+                        if (e != null) {
+                            err(e.tk, "type error : expected constant integer expression")
+                        }
+                    }
                 }
             }
             else -> {}
@@ -155,8 +163,11 @@ fun check_types () {
     fun fs (me: Stmt) {
         when (me) {
             is Stmt.Data -> {
-                val defs = (me.tpls?.map { it.first.str } ?: emptyList()).toSet()
-                val uses = me.tp.dn_collect_pos({if (it is Type.Tpl) listOf(it.tk_.str) else emptyList()}).toSet()
+                val defs = (me.tpls.map { it.first.str }).toSet()
+                val uses = me.tp.dn_collect_pos(
+                    {if (it is Expr.Tpl) listOf(it.tk_.str) else emptyList()},
+                    {if (it is Type.Tpl) listOf(it.tk_.str) else emptyList()}
+                ).toSet()
                 (defs - uses).let {
                     if (it.size > 0) {
                         it.first().let {
