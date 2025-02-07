@@ -1566,7 +1566,7 @@ class Exec  {
         assert(out == "10\n") { out }
     }
 
-    // TEMPLATE
+    // TEMPLATE / TYPE
 
     @Test
     fun tt_01_tpl () {
@@ -1617,6 +1617,18 @@ class Exec  {
         """)
         assert(out == "A [100]\n" +
                 "100\n") { out }
+    }
+
+    // TEMPLATE / NUMBER
+
+    @Test
+    fun ts_01_tpl () {
+        val out = test("""
+            data Vec {{n:Int}}: #[Int * {{n}}]
+            var vs: Vec {{10}}
+            print(##vs)
+        """)
+        assert(out == "10\n") { out }
     }
 
     // TEST

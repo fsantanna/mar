@@ -84,10 +84,12 @@ fun coder_types (pre: Boolean): String {
     fun ft (me: Type): List<String> {
         when {
             (me is Type.Any) -> return emptyList()
+            (me.up_any { it is Stmt.Data }) -> return emptyList()
+                // Stmt.Data is abstract, we use concrete Type.Data
         }
         when (me) {
-            is Type.Proto.Func, is Type.Proto.Coro,
-            is Type.Tuple, is Type.Vector, is Type.Union -> me.coder(null,pre).let {
+            is Type.Proto.Func, is Type.Proto.Coro, is Type.Data,
+            is Type.Tuple, is Type.Vector, is Type.Union -> me.coder(null).let {
                 if (CACHE.contains(it)) {
                     return emptyList()
                 } else {
@@ -98,99 +100,199 @@ fun coder_types (pre: Boolean): String {
         }
         //println(listOf("AAA", me.coder(null,pre)))
 
-        val s = me.up_last { it is Stmt.Data } as Stmt.Data?
-        val tpls: List<Tpl_Map?> = if (s==null || s.tpls.isEmpty()) listOf(null) else {
-            G.tpls[s]?.values?.map { s.tpls.map{(id,_)->id.str}.zip(it).toMap() } ?: emptyList()
-        }
-        //println(listOf(tpls.size,s?.to_str()))
-
-        return tpls.map { tpl ->
-            when (me) {
-                is Type.Proto.Func -> listOf (
-                    "typedef ${me.out.coder(tpl,pre)} (*${me.coder(tpl,pre)}) (${me.inps.map { it.coder(tpl,pre) }.joinToString(",")});\n"
+        return when (me) {
+            is Type.Proto.Func -> listOf(
+                "typedef ${me.out.coder(null)} (*${me.coder(null)}) (${
+                    me.inps.map { it.coder(null) }.joinToString(",")
+                });\n"
+            )
+            is Type.Proto.Coro -> {
+                val (co, exe) = me.x_coro_exec(null)
+                val (_, itup) = me.x_inp_tup(null, pre)
+                val (xiuni, iuni) = me.x_inp_uni(null, pre)
+                val (xouni, ouni) = me.x_out_uni(null, pre)
+                val x = "struct " + exe
+                ft(itup) + ft(iuni) + ft(ouni) + listOf(
+                    x + ";\n",
+                    "typedef $xouni (*$co) ($x*, $xiuni);\n",
                 )
-                is Type.Proto.Coro -> {
-                    val (co,exe) = me.x_coro_exec(tpl,pre)
-                    val (_,itup) = me.x_inp_tup(tpl,pre)
-                    val (xiuni,iuni) = me.x_inp_uni(tpl,pre)
-                    val (xouni,ouni) = me.x_out_uni(tpl,pre)
-                    val x = "struct " + exe
-                    ft(itup) + ft(iuni) + ft(ouni) + listOf (
-                        x + ";\n",
-                        "typedef $xouni (*$co) ($x*, $xiuni);\n",
-                    )
-                }
-                is Type.Tuple -> {
-                    val x = me.coder(tpl,pre)
-                    /*val ids = if (me.ids == null) emptyList() else {
+            }
+            is Type.Tuple -> {
+                val x = me.coder(null)
+                /*val ids = if (me.ids == null) emptyList() else {
                         ft(Type.Tuple(me.tk, me.ts, null))
                     }
-                    ids +*/ listOf("""
-                        #ifndef __${x}__
-                        #define __${x}__
+                    ids +*/ listOf(
+                    """
                         typedef struct $x {
-                            ${me.ts.mapIndexed { i,id_tp ->
-                                val (id,tp) = id_tp
-                                """
+                            ${
+                        me.ts.mapIndexed { i, id_tp ->
+                            val (id, tp) = id_tp
+                            """
                                 union {
-                                    ${tp.coder(tpl,pre)} _${i+1};
-                                    ${id.cond { "${tp.coder(tpl,pre)} ${it.str};" }}
+                                    ${tp.coder(null)} _${i + 1};
+                                    ${id.cond { "${tp.coder(null)} ${it.str};" }}
                                 };                                    
                                 """
-                            }.joinToString("")}
+                        }.joinToString("")
+                    }
                         } $x;
-                        #endif
-                    """)
-                }
-                is Type.Vector -> {
-                    val x = me.coder(tpl,pre)
-                    listOf("""
+                    """
+                )
+            }
+            is Type.Vector -> {
+                val x = me.coder(null)
+                listOf(
+                    """
                         typedef struct $x {
                             int max, cur;
                             ${me.tp.coder(null)} buf[${me.max.cond2({ it.tk.str }, { "" })}];
                         } $x;
-                    """)
-                }
-                is Type.Union -> {
-                    val x = me.coder(tpl,pre)
-                    val xx = x.uppercase()
-                    listOf("""
+                    """
+                )
+            }
+            is Type.Union -> {
+                val x = me.coder(null)
+                val xx = x.uppercase()
+                listOf(
+                    """
                         typedef enum ${xx}_TAGS {
                             __${xx}_TAG__,
-                            ${me.ts.mapIndexed { i, (id, _) ->
-                                """
+                            ${
+                        me.ts.mapIndexed { i, (id, _) ->
+                            """
                                 ${xx}_${if (id == null) i else id.str.uppercase()}_TAG,
                                 """
-                            }.joinToString("")}
+                        }.joinToString("")
+                    }
                         } ${xx}_TAGS;
                         typedef struct $x {
                             ${me.tagged.cond { "int tag;" }}
                             union {
-                                ${me.ts.mapIndexed { i,id_tp ->
-                                    val (id,tp) = id_tp
-                                    id.cond { tp.coder(tpl,pre) + " " + it.str + ";\n" } +
-                                    tp.coder(tpl,pre) + " _" + (i+1) + ";\n"
-                                }.joinToString("")}
+                                ${
+                        me.ts.mapIndexed { i, id_tp ->
+                            val (id, tp) = id_tp
+                            id.cond { tp.coder(null) + " " + it.str + ";\n" } +
+                                    tp.coder(null) + " _" + (i + 1) + ";\n"
+                        }.joinToString("")
+                    }
                             };
                         } $x;
-                    """)
-                }
-                else -> emptyList()
+                    """
+                )
             }
-        }.flatten()
+            is Type.Data -> {
+                val (S, _, tpx) = me.walk_tpl(me.ts.take(1), me.xtpls)
+                val ts = tpx.dn_collect_pos({emptyList()},::ft)
+                val ID = me.coder(null)
+                ts + when {
+                    (S.subs == null) -> {
+                        fun f(tp: Type, s: List<String>): List<String> {
+                            //println(listOf(s, tp.to_str()))
+                            val ss = ID+s.drop(1).map { "_"+it }.joinToString("")
+                            val SS = ss.uppercase()
+                            val x1 = "typedef ${tp.coder(null)} $ss;\n"
+                            val x2 = if (tp !is Type.Union) {
+                                emptyList()
+                            } else {
+                                listOf("""
+                                    typedef enum ${SS}_TAGS {
+                                    __${SS}_TAG__,
+                                    ${tp.ts.mapIndexed { i, (id, _) ->
+                                                    """
+                                            ${SS}_${if (id == null) i else id.str.uppercase()}_TAG,
+                                            """
+                                                }.joinToString("")}
+                                } ${SS}_TAGS;
+                                """) + tp.ts.map { (id, t) ->
+                                    if (id == null) emptyList() else f(t, s + listOf(id.str))
+                                }.flatten()
+                            }
+                            return listOf(x1) + x2
+                        }
+                        f(tpx, listOf(S.t.str))
+                    }
+                    else -> {
+                        val sup = S.t.str
+                        fun f(s: Stmt.Data, sup: String, l: List<Int>): String {
+                            val id = (if (sup == "") "" else sup + "_") + s.t.str.uppercase()
+                            //println(listOf(S.tk.pos, S.to_str()))
+                            assert(l.size <= 6)
+                            var n = 0
+                            var k = 25
+                            for (i in 0..l.size - 1) {
+                                n += l[i] shl k
+                                k -= 5
+                            }
+                            return """
+                            #define ${id}_TAG $n
+                        """ + s.subs!!.mapIndexed { i, ss ->
+                                f(ss, id, l + listOf(i + 1))
+                            }.joinToString("")
+                        }
+
+                        fun g(tpl: Tpl_Map?, sup: Pair<String, String>?, s: Stmt.Data, I: Int): String {
+                            val cur = sup.cond { it.first + "_" } + s.t.str
+                            val tup = s.tp as Type.Tuple
+                            val flds = sup.cond { it.second } + tup.ts.mapIndexed { i, id_tp ->
+                                val (id, tp) = id_tp
+                                """
+                            union {
+                                ${tp.coder(tpl)} _${I + i};
+                                ${id.cond { "${tp.coder(tpl)} ${it.str};" }}
+                            };
+                            """
+                            }.joinToString("")
+                            val subs = s.subs!!.map {
+                                g(tpl, Pair(cur, flds), it, I + tup.ts.size)
+                            }.joinToString("")
+                            return """
+                            struct {
+                                
+                                $flds
+                            } $cur;
+                            $subs
+                        """
+                        }
+
+                        val tpls: List<Tpl_Map?> = if (S.tpls.isEmpty()) listOf(null) else {
+                            G.tpls[S]?.values?.map { S.tpls.map { (id, _) -> id.str }.zip(it).toMap() }
+                                ?: emptyList()
+                        }
+                        tpls.map { tpl ->
+                            listOf(
+                                f(S, "", listOf(G.datas++)) + """
+                            typedef struct ${sup} {
+                                union {
+                                    struct {
+                                        int tag;
+                                        union {
+                                            ${g(tpl, null, S, 1)}
+                                        };
+                                    };
+                                };
+                            } $sup;
+                        """
+                            )
+                        }.flatten()
+                    }
+                }
+            }
+            else -> emptyList()
+        }
     }
     fun fe (me: Expr): List<String> {
         return when (me) {
             is Expr.Bin -> {
                 if (me.tk.str == "++") {
                     val tp = me.typex() as Type.Vector
-                    val x = tp.coder(tp.assert_no_tpls_up(),pre)
+                    val x = tp.coder(tp.assert_no_tpls_up())
                     if (CACHE.contains(x)) {
                         return emptyList()
                     } else {
                         CACHE.add(x)
                     }
-                    val y = tp.tp.coder(tp.tp.assert_no_tpls_up(),pre)
+                    val y = tp.tp.coder(tp.tp.assert_no_tpls_up())
                     return listOf("""
                         typedef struct $x {
                             int max, cur;
@@ -206,105 +308,6 @@ fun coder_types (pre: Boolean): String {
     }
     fun fs (me: Stmt): List<String> {
         return when (me) {
-            is Stmt.Data -> when {
-                (me.xup is Stmt.Data) -> emptyList()
-                (me.subs == null) -> {
-                    fun f(tp: Type, s: List<String>): List<String> {
-                        //println(listOf(s, tp.to_str()))
-                        val tpls: List<Tpl_Map?> = if (me.tpls.isEmpty()) listOf(null) else {
-                            G.tpls[me]?.values?.map { me.tpls.map{(id,_)->id.str}.zip(it).toMap() } ?: emptyList()
-                        }
-                        return tpls.map { tpl ->
-                            val sx = if (tpl == null) s else {
-                                val ts = tpl.values.map { it.first.cond { it.to_str() } + it.second.cond { it.to_str() } }
-                                listOf(s.first()) + ts + s.drop(1)
-                            }
-                            val ss = sx.joinToString("_")
-                            val SS = ss.uppercase()
-                            val x1 = "typedef ${tp.coder(null)} $ss;\n"
-                            val x2 = if (tp !is Type.Union) {
-                                emptyList()
-                            } else {
-                                listOf("""
-                                typedef enum ${SS}_TAGS {
-                                __${SS}_TAG__,
-                                ${
-                                    tp.ts.mapIndexed { i, (id, _) ->
-                                        """
-                                        ${SS}_${if (id == null) i else id.str.uppercase()}_TAG,
-                                        """
-                                    }.joinToString("")
-                                }
-                            } ${SS}_TAGS;
-                            """) + tp.ts.map { (id, t) ->
-                                    if (id == null) emptyList() else f(t, s + listOf(id.str))
-                                }.flatten()
-                            }
-                            listOf(x1) + x2
-                        }.flatten()
-                    }
-                    f(me.tp, listOf(me.t.str))
-                }
-                else -> {
-                    val sup = me.t.str
-                    fun f (s: Stmt.Data, sup: String, l: List<Int>): String {
-                        val id = (if (sup=="") "" else sup+"_") + s.t.str.uppercase()
-                        //println(listOf(me.tk.pos, me.to_str()))
-                        assert(l.size <= 6)
-                        var n = 0
-                        var k = 25
-                        for (i in 0..l.size-1) {
-                            n += l[i] shl k
-                            k -= 5
-                        }
-                        return """
-                            #define ${id}_TAG $n
-                        """ + s.subs!!.mapIndexed { i,ss ->
-                            f(ss, id, l + listOf(i+1))
-                        }.joinToString("")
-                    }
-                    fun g (tpl: Tpl_Map?, sup: Pair<String,String>?, s: Stmt.Data, I: Int): String {
-                        val cur = sup.cond { it.first+"_" } + s.t.str
-                        val tup = s.tp as Type.Tuple
-                        val flds = sup.cond { it.second } + tup.ts.mapIndexed { i, id_tp ->
-                            val (id,tp) = id_tp
-                            """
-                            union {
-                                ${tp.coder(tpl)} _${I + i};
-                                ${id.cond { "${tp.coder(tpl)} ${it.str};" }}
-                            };
-                            """
-                        }.joinToString("")
-                        val subs = s.subs!!.map {
-                            g(tpl,Pair(cur,flds), it, I+tup.ts.size)
-                        }.joinToString("")
-                        return """
-                            struct {
-                                
-                                $flds
-                            } $cur;
-                            $subs
-                        """
-                    }
-                    val tpls: List<Tpl_Map?> = if (me.tpls.isEmpty()) listOf(null) else {
-                        G.tpls[me]?.values?.map { me.tpls.map{(id,_)->id.str}.zip(it).toMap() } ?: emptyList()
-                    }
-                    tpls.map { tpl ->
-                        listOf (f(me, "", listOf(G.datas++)) + """
-                            typedef struct ${sup} {
-                                union {
-                                    struct {
-                                        int tag;
-                                        union {
-                                            ${g(tpl, null, me, 1)}
-                                        };
-                                    };
-                                };
-                            } $sup;
-                        """)
-                    }.flatten()
-                }
-            }
             is Stmt.Proto.Coro -> {
                     fun mem (): String {
                         val blks = me.dn_collect_pre({
@@ -406,7 +409,9 @@ fun Stmt.coder (pre: Boolean): String {
                 do {
                     ${this.to_dcls().map { (_,id,tp) ->
                         when (tp) {
-                            is Type.Proto.Func -> "auto " + tp.out.coder(null,pre) + " " + id.str + " (" + tp.inps.map { it.coder(it.assert_no_tpls_up(),pre) }.joinToString(",") + ");\n"
+                            is Type.Proto.Func -> "auto " + tp.out.coder(null) + " " + id.str + " (" + tp.inps.map { it.coder(
+                                it.assert_no_tpls_up()
+                            ) }.joinToString(",") + ");\n"
                             is Type.Proto.Coro -> "auto ${tp.x_sig(pre,id.str)};\n"
                             else -> ""
                         }

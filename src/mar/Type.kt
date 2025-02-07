@@ -276,6 +276,7 @@ fun Type.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Type {
 @JvmName("Any_walk_List_String")
 fun Any.walk (ts: List<String>): Triple<Stmt.Data,List<Int>,Type>? {
     val s = this.up_data(ts.first())
+    //println(listOf("walk", ts, s?.to_str()))
     //println(s)
     return when {
         (s == null) -> null
