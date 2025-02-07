@@ -80,6 +80,7 @@ fun List<Tk.Type>.coder (tpl: List<Tpl_Con>?, pre: Boolean): String {
 }
 
 fun coder_types (pre: Boolean): String {
+    val CACHE = mutableSetOf<String>()  // for C generation
     fun ft (me: Type): List<String> {
         when {
             (me is Type.Any) -> return emptyList()
@@ -87,10 +88,10 @@ fun coder_types (pre: Boolean): String {
         when (me) {
             is Type.Proto.Func, is Type.Proto.Coro,
             is Type.Tuple, is Type.Vector, is Type.Union -> me.coder(null,pre).let {
-                if (G.types.contains(it)) {
+                if (CACHE.contains(it)) {
                     return emptyList()
                 } else {
-                    G.types.add(it)
+                    CACHE.add(it)
                 }
             }
             else -> {}
@@ -184,10 +185,10 @@ fun coder_types (pre: Boolean): String {
                 if (me.tk.str == "++") {
                     val tp = me.typex() as Type.Vector
                     val x = tp.coder(tp.assert_no_tpls_up(),pre)
-                    if (G.types.contains(x)) {
+                    if (CACHE.contains(x)) {
                         return emptyList()
                     } else {
-                        G.types.add(x)
+                        CACHE.add(x)
                     }
                     val y = tp.tp.coder(tp.tp.assert_no_tpls_up(),pre)
                     return listOf("""

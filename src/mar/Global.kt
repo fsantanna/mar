@@ -170,7 +170,6 @@ object G {
 
     var outer: Stmt.Block? = null
 
-    val types = mutableSetOf<String>()  // for C generation
     val tpls  = mutableMapOf<Stmt.Data, MutableMap<String,List<Tpl_Con>>>()
     val defers: MutableMap<Any, Triple<MutableList<Int>,String,String>> = mutableMapOf()
 
@@ -190,7 +189,6 @@ object G {
         outer = null
 
         //cons.clear()
-        types.clear()
         tpls.clear()
         defers.clear()
 
