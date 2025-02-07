@@ -142,14 +142,12 @@ fun coder_types (pre: Boolean): String {
             }
             is Type.Vector -> {
                 val x = me.coder(null)
-                listOf(
-                    """
-                        typedef struct $x {
-                            int max, cur;
-                            ${me.tp.coder(null)} buf[${me.max.cond2({ it.tk.str }, { "" })}];
-                        } $x;
-                    """
-                )
+                listOf("""
+                    typedef struct $x {
+                        int max, cur;
+                        ${me.tp.coder(null)} buf[${me.max.cond2({ it.tk.str }, { "" })}];
+                    } $x;
+                """)
             }
             is Type.Union -> {
                 val x = me.coder(null)
@@ -185,7 +183,6 @@ fun coder_types (pre: Boolean): String {
                 val ID = me.coder(null)
                 val (_, _, tpx1) = me.walk_tpl()
                 val (S, _, tp2)  = me.walk()!!
-                val ts1 = tpx1.dn_collect_pos({emptyList()},::ft)
                 when {
                     (S.subs == null) -> {
                         fun f(tp: Type, s: List<String>): List<String> {
@@ -214,11 +211,13 @@ fun coder_types (pre: Boolean): String {
                         val tpx2 = if (S.tpls.isEmpty()) tp2 else {
                             tp2.template_abs_con(S, me.xtpls!!)
                         }
+                        tpx2.xup = null
                         val ts2 = tpx2.dn_collect_pos({ emptyList() }, ::ft)
-                        //ts2 + f(tpx2, listOf(S2.t.str))
-                        ts1 + f(tpx1, listOf(S.t.str))
+                        tpx2.xup = null
+                        ts2 + f(tpx2, listOf(S.t.str))
                     }
                     else -> {
+                        val ts1 = tpx1.dn_collect_pos({emptyList()},::ft)
                         val sup = S.t.str
                         fun f(s: Stmt.Data, sup: String, l: List<Int>): String {
                             val id = (if (sup == "") "" else sup + "_") + s.t.str.uppercase()
