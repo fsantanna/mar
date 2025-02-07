@@ -310,7 +310,7 @@ fun Any.walk (ts: List<String>): Triple<Stmt.Data,List<Int>,Type>? {
                 ss = ss.subs!![i]
                 tup.addAll((ss.tp as Type.Tuple).ts)
             }
-            Triple(ss, l, Type.Tuple(ss.tk, tup))
+            Triple(s, l, Type.Tuple(ss.tk, tup))
         }
     }
 }
