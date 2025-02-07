@@ -183,11 +183,11 @@ fun coder_types (pre: Boolean): String {
             }
             is Type.Data -> {
                 val ID = me.coder(null)
-                val (S1, _, tpx1) = me.walk_tpl()
-                val (S2, _, tp2)  = me.walk()!!
+                val (_, _, tpx1) = me.walk_tpl()
+                val (S, _, tp2)  = me.walk()!!
                 val ts1 = tpx1.dn_collect_pos({emptyList()},::ft)
                 when {
-                    (S2.subs == null) -> {
+                    (S.subs == null) -> {
                         fun f(tp: Type, s: List<String>): List<String> {
                             //println(listOf(s, tp.to_str()))
                             val ss = ID+s.drop(1).map { "_"+it }.joinToString("")
@@ -211,15 +211,15 @@ fun coder_types (pre: Boolean): String {
                             }
                             return listOf(x1) + x2
                         }
-                        val tpx2 = if (S2.tpls.isEmpty()) tp2 else {
-                            tp2.template_abs_con(S2, me.xtpls!!)
+                        val tpx2 = if (S.tpls.isEmpty()) tp2 else {
+                            tp2.template_abs_con(S, me.xtpls!!)
                         }
                         val ts2 = tpx2.dn_collect_pos({ emptyList() }, ::ft)
                         //ts2 + f(tpx2, listOf(S2.t.str))
-                        ts1 + f(tpx1, listOf(S2.t.str))
+                        ts1 + f(tpx1, listOf(S.t.str))
                     }
                     else -> {
-                        val sup = S2.t.str
+                        val sup = S.t.str
                         fun f(s: Stmt.Data, sup: String, l: List<Int>): String {
                             val id = (if (sup == "") "" else sup + "_") + s.t.str.uppercase()
                             //println(listOf(S.tk.pos, S.to_str()))
@@ -261,19 +261,19 @@ fun coder_types (pre: Boolean): String {
                         """
                         }
 
-                        val tpls: List<Tpl_Map?> = if (S2.tpls.isEmpty()) listOf(null) else {
-                            G.tpls[S2]?.values?.map { S2.tpls.map { (id, _) -> id.str }.zip(it).toMap() }
+                        val tpls: List<Tpl_Map?> = if (S.tpls.isEmpty()) listOf(null) else {
+                            G.tpls[S]?.values?.map { S.tpls.map { (id, _) -> id.str }.zip(it).toMap() }
                                 ?: emptyList()
                         }
                         ts1 + tpls.map { tpl ->
                             listOf(
-                                f(S2, "", listOf(G.datas++)) + """
+                                f(S, "", listOf(G.datas++)) + """
                             typedef struct ${sup} {
                                 union {
                                     struct {
                                         int tag;
                                         union {
-                                            ${g(tpl, null, S2, 1)}
+                                            ${g(tpl, null, S, 1)}
                                         };
                                     };
                                 };
