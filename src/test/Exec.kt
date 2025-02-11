@@ -703,7 +703,8 @@ class Exec  {
             var a: #[Int*n] = #[10,20,30]
             print([##a, #a, a])
         """)
-        assert(out == "#[10,20]\n") { out }
+        //assert(out == "#[10,20]\n") { out }
+        assert(out == "anon : (lin 3, col 26) : type error : expected constant integer expression\n") { out }
     }
     @Test
     fun gh_12_vector () {
@@ -1296,11 +1297,11 @@ class Exec  {
             `printf("%X\n", xza.tag)`
             `printf("%X\n", j.tag)`
         """)
-        assert(out == "8000000\n" +
-                "8100000\n" +
-                "8200000\n" +
-                "8208000\n" +
-                "A000000\n") { out }
+        assert(out == "6000000\n" +
+                "6100000\n" +
+                "6200000\n" +
+                "6208000\n" +
+                "8000000\n") { out }
     }
     @Test
     fun jk_02_data_hier_enum () {

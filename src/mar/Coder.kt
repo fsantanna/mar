@@ -80,11 +80,12 @@ fun List<Tk.Type>.coder (tpl: List<Tpl_Con>?, pre: Boolean): String {
 }
 
 fun coder_types (pre: Boolean): String {
-    val CACHE = mutableSetOf<String>()  // for C generation
+    val CACHE = mutableSetOf<String>()
+    var FT_DATA = 0
     fun ft (me: Type): List<String> {
         when {
             (me is Type.Any) -> return emptyList()
-            (me.up_any { it is Stmt.Data }) -> return emptyList()
+            (FT_DATA==0 && me.up_any { it is Stmt.Data }) -> return emptyList()
                 // Stmt.Data is abstract, we use concrete Type.Data
         }
         when (me) {
@@ -181,12 +182,10 @@ fun coder_types (pre: Boolean): String {
             }
             is Type.Data -> {
                 val ID = me.coder(null)
-                val (S, _, tp)  = me.walk()!!
-                val tpx = if (S.tpls.isEmpty()) tp else {
-                    tp.template_abs_con(S, me.xtpls!!)
-                }
-                tpx.xup = null  // b/c ::ft rejects xup=Stmt.Data
-                val ts = tpx.dn_collect_pos({ emptyList() }, ::ft)
+                val (S, _, tpc) = me.walk_tpl()
+                FT_DATA++
+                val ts = tpc.dn_collect_pos({ emptyList() }, ::ft)
+                FT_DATA--
                 ts + when {
                     (S.subs == null) -> {
                         fun f(tp: Type, s: List<String>): List<String> {
@@ -212,7 +211,7 @@ fun coder_types (pre: Boolean): String {
                             }
                             return listOf(x1) + x2
                         }
-                        f(tpx, listOf(S.t.str))
+                        f(tpc, listOf(S.t.str))
                     }
                     else -> {
                         val sup = S.t.str
@@ -239,44 +238,38 @@ fun coder_types (pre: Boolean): String {
                             val flds = sup.cond { it.second } + tup.ts.mapIndexed { i, id_tp ->
                                 val (id, tp) = id_tp
                                 """
-                            union {
-                                ${tp.coder(tpl)} _${I + i};
-                                ${id.cond { "${tp.coder(tpl)} ${it.str};" }}
-                            };
-                            """
+                                union {
+                                    ${tp.coder(tpl)} _${I + i};
+                                    ${id.cond { "${tp.coder(tpl)} ${it.str};" }}
+                                };
+                                """
                             }.joinToString("")
                             val subs = s.subs!!.map {
                                 g(tpl, Pair(cur, flds), it, I + tup.ts.size)
                             }.joinToString("")
                             return """
-                            struct {
-                                
-                                $flds
-                            } $cur;
-                            $subs
-                        """
+                                struct {
+                                    $flds
+                                } $cur;
+                                $subs
+                            """
                         }
 
-                        val tpls: List<Tpl_Map?> = if (S.tpls.isEmpty()) listOf(null) else {
-                            G.tpls[S]?.values?.map { S.tpls.map { (id, _) -> id.str }.zip(it).toMap() }
-                                ?: emptyList()
-                        }
-                        tpls.map { tpl ->
-                            listOf(
-                                f(S, "", listOf(G.datas++)) + """
-                            typedef struct ${sup} {
-                                union {
-                                    struct {
-                                        int tag;
-                                        union {
-                                            ${g(tpl, null, S, 1)}
+                        val tpl = S.tpls.map { (id, _) -> id.str }.zip(me.xtpls!!).toMap()
+                        listOf(
+                            f(S, "", listOf(G.datas++)) + """
+                                typedef struct ${sup} {
+                                    union {
+                                        struct {
+                                            int tag;
+                                            union {
+                                                ${g(tpl, null, S, 1)}
+                                            };
                                         };
                                     };
-                                };
-                            } $sup;
-                        """
-                            )
-                        }.flatten()
+                                } $sup;
+                            """
+                        )
                     }
                 }
             }
