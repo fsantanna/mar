@@ -53,11 +53,11 @@ fun Stmt.infer (tp: Type?): Type? {
    }
 }
 
-fun Expr.infer (tpx: Type?): Type? {
-    val tp = when {
-        (tpx == null) -> null
-        (tpx.has_tpls_dn()) -> null
-        else -> tpx
+fun Expr.infer (tpx_: Type?): Type? {
+    val tpx = when {
+        (tpx_ == null) -> null
+        (tpx_.has_tpls_dn()) -> null
+        else -> tpx_
     }
 
     //tp?.assert_no_tpls()
@@ -68,54 +68,38 @@ fun Expr.infer (tpx: Type?): Type? {
         is Expr.Tpl -> TODO("Expr.Tpl.infer()")
         is Expr.Nat -> {
             if (this.xtp == null) {
-                this.xtp = tp ?: Type.Any(this.tk)
+                this.xtp = tpx ?: Type.Any(this.tk)
             }
             this.xtp?.infer(null)
         }
 
         is Expr.Tuple -> {
-            val xdn = run {
-                val vs = this.vs.map { (tk,e) ->
-                    Pair(tk, e.infer(null))
-                }
-                if (vs.any { it.second == null }) null else {
-                    Type.Tuple(this.tk, vs as List<Pair<Tk.Var?, Type>>)
-                }
+            val up = this.xtp ?: tpx
+            val vs = this.vs.mapIndexed { i,(tk,e) ->
+                Pair(tk, e.infer(if (up !is Type.Tuple || up.ts.size<i+1) null else up.ts[i].second))
             }
-
-            val up = this.xtp ?: tp
-            val xup = if (up !is Type.Tuple) null else {
-                val vs = this.vs.mapIndexed { i,(tk,e) ->
-                    Pair(tk, e.infer(if (up.ts.size<i+1) null else up.ts[i].second))
-                }
-                if (vs.any { it.second == null }) null else {
-                    vs as List<Pair<Tk.Var?, Type>>
-                    Type.Tuple(this.tk,
+            if (vs.any { it.second == null }) {
+                // infer error
+            } else {
+                vs as List<Pair<Tk.Var?, Type>>
+                val dn = Type.Tuple(this.tk,
+                    if (up !is Type.Tuple) {
+                        vs
+                    } else {
                         vs.zip(up.ts).map { (vs,ts) ->
                             Pair(vs.first ?: ts.first, vs.second)
                         }
-                    )
+                    }
+                )
+                if (this.xtp == null) {
+                    this.xtp = if (tpx is Type.Tuple) tpx else dn // b/c of int/float
                 }
-            }
-
-            val xtp = when {
-                (xdn == null) -> xup
-                (xup == null) -> xdn
-                else -> {
-                    println(listOf("infer-tuple-xtp",xdn.to_str(),xup.to_str()))
-                    xdn.sup_vs(xup) as Type.Tuple   // TODO: sub_vs?
-                }
-            }
-
-            println(listOf("infer-tuple-xxx",this.to_str(),tp?.to_str(),xtp?.to_str()))
-            if (xtp!=null && this.xtp==null) {
-                this.xtp = if (tp is Type.Tuple && !tp.has_tpls_dn()) tp else xtp // b/c of int/float
             }
             this.xtp?.infer(null)
         }
         is Expr.Vector -> {
             //println(listOf("infer-vector",this.to_str(),tp?.to_str()))
-            val up = this.xtp ?: tp
+            val up = this.xtp ?: tpx
             val xup = if (up !is Type.Vector) null else up.tp
             val dn = if (this.vs.size == 0) null else {
                 val vs = this.vs.map { it.infer(xup) }
@@ -140,7 +124,7 @@ fun Expr.infer (tpx: Type?): Type? {
             this.col.infer(null)
         }
         is Expr.Union -> {
-            val up = this.xtp ?: tp
+            val up = this.xtp ?: tpx
             val sub = if (up !is Type.Union) null else {
                 up.disc(this.idx).nulls().second
             }
@@ -168,10 +152,10 @@ fun Expr.infer (tpx: Type?): Type? {
             this.tp.infer(t)
         }
 
-        is Expr.Uno -> this.e.infer(tp)
+        is Expr.Uno -> this.e.infer(tpx)
         is Expr.Bin -> {
             val xtp = when (this.tk.str) {
-                "+", "-", "*", "/", "%", "++" -> tp
+                "+", "-", "*", "/", "%", "++" -> tpx
                 else -> null
             }
             this.e1.infer(xtp)
@@ -192,15 +176,15 @@ fun Expr.infer (tpx: Type?): Type? {
             }
         }
         is Expr.Throw -> {
-            this.xtp = tp
+            this.xtp = tpx
             this.e.infer(null)
             this.xtp?.infer(null)
         }
 
         is Expr.If -> {
             this.cnd.infer(null)
-            val t = this.t.infer(tp)
-            val f = this.f.infer(tp)
+            val t = this.t.infer(tpx)
+            val f = this.f.infer(tpx)
             if (t!=null && f!=null) {
                 this.xtp = t.sup_vs(f)
             }
@@ -209,7 +193,7 @@ fun Expr.infer (tpx: Type?): Type? {
         is Expr.MatchT -> {
             val tst = this.tst.infer(null)
             val cases = this.cases.map { (dat,e) ->
-                e.infer(tp)
+                e.infer(tpx)
                 val fst = if (dat == null) Type.Any(this.tk) else dat
                 Pair(fst, e.type())
             }
@@ -224,7 +208,7 @@ fun Expr.infer (tpx: Type?): Type? {
             val tst = this.tst.infer(null)
             val cases = this.cases.map { (e1,e2) ->
                 val fst = if (e1 == null) Type.Any(this.tk) else e1.infer(tst)
-                e2.infer(tp)
+                e2.infer(tpx)
                 Pair(fst, e2.type())
             }
             if (tst!=null && !cases.any { (a,b) -> a==null||b==null }) {
@@ -240,10 +224,10 @@ fun Expr.infer (tpx: Type?): Type? {
     //println(xtp)
     this.xnum = when {
         (xtp == null) -> null
-        (tp == null) -> null
+        (tpx == null) -> null
         !xtp.is_num() -> null
-        !tp.is_num() -> null
-        else -> tp
+        !tpx.is_num() -> null
+        else -> tpx
     }
     return xtp
 }
