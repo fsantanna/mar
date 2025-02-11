@@ -217,6 +217,18 @@ fun Type.Data.abs_con (s: Stmt.Data, map: Tpl_Map): Type.Data {
     return Type.Data(this.tk, tpls, this.ts)
 }
 
+fun Expr.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Expr {
+    return when (this) {
+        is Expr.Tpl -> {
+            val i = s.tpls.indexOfFirst { it.first.str==this.tk.str }
+            tpl[i].second!!
+        }
+        is Expr.Uno -> Expr.Uno(this.tk_, this.e.template_abs_con(s,tpl))
+        is Expr.Bin -> Expr.Bin(this.tk_, this.e1.template_abs_con(s,tpl), this.e2.template_abs_con(s,tpl))
+        else        -> this
+    }
+}
+
 fun Type.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Type {
     // Example: T [b,a] --> T [Bool,Int]
     // this: [b,a]
@@ -245,7 +257,7 @@ fun Type.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Type {
         }
         is Type.Vector -> {
             val tp = this.tp.template_abs_con(s, tpl)
-            Type.Vector(this.tk, this.max, tp)
+            Type.Vector(this.tk, this.max?.template_abs_con(s,tpl), tp)
         }
         is Type.Union -> {
             val ts = this.ts.map { (t, tp) -> Pair(t, tp.template_abs_con(s, tpl)) }
@@ -430,6 +442,7 @@ fun Expr.typex (): Type {
 }
 
 fun Expr.type (): Type? {
+    //println(this.to_str())
     return when (this) {
         is Expr.Uno -> when (this.tk_.str) {
             "!" -> Type.Prim(Tk.Type( "Bool", this.tk.pos))

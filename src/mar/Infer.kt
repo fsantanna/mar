@@ -74,15 +74,17 @@ fun Expr.infer (tpx: Type?): Type? {
         }
 
         is Expr.Tuple -> {
-            val up = this.xtp ?: tp
-            val dn = if (up !is Type.Tuple) {
+            val xdn = run {
                 val vs = this.vs.map { (tk,e) ->
                     Pair(tk, e.infer(null))
                 }
                 if (vs.any { it.second == null }) null else {
                     Type.Tuple(this.tk, vs as List<Pair<Tk.Var?, Type>>)
                 }
-            } else {
+            }
+
+            val up = this.xtp ?: tp
+            val xup = if (up !is Type.Tuple) null else {
                 val vs = this.vs.mapIndexed { i,(tk,e) ->
                     Pair(tk, e.infer(if (up.ts.size<i+1) null else up.ts[i].second))
                 }
@@ -95,14 +97,24 @@ fun Expr.infer (tpx: Type?): Type? {
                     )
                 }
             }
-            if (dn == null) null else {
-                if (this.xtp == null) {
-                    this.xtp = if (tp is Type.Tuple) tp else dn // b/c of int/float
+
+            val xtp = when {
+                (xdn == null) -> xup
+                (xup == null) -> xdn
+                else -> {
+                    println(listOf("infer-tuple-xtp",xdn.to_str(),xup.to_str()))
+                    xdn.sup_vs(xup) as Type.Tuple   // TODO: sub_vs?
                 }
+            }
+
+            println(listOf("infer-tuple-xxx",this.to_str(),tp?.to_str(),xtp?.to_str()))
+            if (xtp!=null && this.xtp==null) {
+                this.xtp = if (tp is Type.Tuple && !tp.has_tpls_dn()) tp else xtp // b/c of int/float
             }
             this.xtp?.infer(null)
         }
         is Expr.Vector -> {
+            //println(listOf("infer-vector",this.to_str(),tp?.to_str()))
             val up = this.xtp ?: tp
             val xup = if (up !is Type.Vector) null else up.tp
             val dn = if (this.vs.size == 0) null else {
@@ -143,6 +155,7 @@ fun Expr.infer (tpx: Type?): Type? {
         is Expr.Cons -> {
             //println(listOf("infer-cons",this.to_str(),tp?.to_str()))
             val (s,_,xtp) = this.walk(this.tp.ts)!!
+            //println(listOf("infer-cons-xtp",s.to_str(),xtp.to_str(),this.e.to_str()))
             val e = this.e.infer(xtp)
             //println(listOf("e",this.tp.to_str(), e?.to_str()))
             val t = if (this.tp.xtpls != null) this.tp else {
@@ -420,7 +433,7 @@ fun infer_check () {
                 println(me.to_str())
                 println(it.to_str())
                 println(xtp)
-             */
+            */
             if (xtp == null) {
                 err(it.tk, "inference error : unknown type")
             }

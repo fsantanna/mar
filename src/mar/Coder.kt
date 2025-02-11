@@ -183,6 +183,8 @@ fun coder_types (pre: Boolean): String {
             is Type.Data -> {
                 val ID = me.coder(null)
                 val (S, _, tpc) = me.walk_tpl()
+                //println(me.to_str())
+                //println(tpc.to_str())
                 FT_DATA++
                 val ts = tpc.dn_collect_pos({ emptyList() }, ::ft)
                 FT_DATA--

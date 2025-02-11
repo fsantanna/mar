@@ -1626,7 +1626,7 @@ class Exec  {
     fun ts_01_tpl () {
         val out = test("""
             data Vec {{n:Int}}: #[Int * {{n}}]
-            var vs: Vec {{10}}
+            var vs: Vec {{10}} = Vec {{10}} (#[])
             print(##vs)
         """)
         assert(out == "10\n") { out }

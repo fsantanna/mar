@@ -936,4 +936,20 @@ class Infer {
                 "set y = (x!Just)\n" +
                 "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun tt_03_vec () {
+        val out = infer("""
+            data Vec {{n:Int}}: #[Int * {{n}}]
+            var vs: Vec {{10}} = #[]
+        """)
+        assert(out == "anon : (lin 3, col 34) : inference error : unknown type") { out!! }
+    }
+    @Test
+    fun tt_04_vec () {
+        val out = infer("""
+            data Vec {{n:Int}}: #[Int * {{n}}]
+            var vs: Vec {{10}} = Vec {{10}} (#[])
+        """)
+        assert(out == "anon : (lin 3, col 34) : inference error : unknown type") { out!! }
+    }
 }
