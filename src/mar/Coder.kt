@@ -181,9 +181,13 @@ fun coder_types (pre: Boolean): String {
             }
             is Type.Data -> {
                 val ID = me.coder(null)
-                val (_, _, tpx1) = me.walk_tpl()
-                val (S, _, tp2)  = me.walk()!!
-                when {
+                val (S, _, tp)  = me.walk()!!
+                val tpx = if (S.tpls.isEmpty()) tp else {
+                    tp.template_abs_con(S, me.xtpls!!)
+                }
+                tpx.xup = null  // b/c ::ft rejects xup=Stmt.Data
+                val ts = tpx.dn_collect_pos({ emptyList() }, ::ft)
+                ts + when {
                     (S.subs == null) -> {
                         fun f(tp: Type, s: List<String>): List<String> {
                             //println(listOf(s, tp.to_str()))
@@ -195,29 +199,22 @@ fun coder_types (pre: Boolean): String {
                             } else {
                                 listOf("""
                                     typedef enum ${SS}_TAGS {
-                                    __${SS}_TAG__,
-                                    ${tp.ts.mapIndexed { i, (id, _) ->
-                                                    """
+                                        __${SS}_TAG__,
+                                        ${tp.ts.mapIndexed { i, (id, _) ->
+                                            """
                                             ${SS}_${if (id == null) i else id.str.uppercase()}_TAG,
                                             """
-                                                }.joinToString("")}
-                                } ${SS}_TAGS;
+                                        }.joinToString("")}
+                                    } ${SS}_TAGS;
                                 """) + tp.ts.map { (id, t) ->
                                     if (id == null) emptyList() else f(t, s + listOf(id.str))
                                 }.flatten()
                             }
                             return listOf(x1) + x2
                         }
-                        val tpx2 = if (S.tpls.isEmpty()) tp2 else {
-                            tp2.template_abs_con(S, me.xtpls!!)
-                        }
-                        tpx2.xup = null
-                        val ts2 = tpx2.dn_collect_pos({ emptyList() }, ::ft)
-                        tpx2.xup = null
-                        ts2 + f(tpx2, listOf(S.t.str))
+                        f(tpx, listOf(S.t.str))
                     }
                     else -> {
-                        val ts1 = tpx1.dn_collect_pos({emptyList()},::ft)
                         val sup = S.t.str
                         fun f(s: Stmt.Data, sup: String, l: List<Int>): String {
                             val id = (if (sup == "") "" else sup + "_") + s.t.str.uppercase()
@@ -264,7 +261,7 @@ fun coder_types (pre: Boolean): String {
                             G.tpls[S]?.values?.map { S.tpls.map { (id, _) -> id.str }.zip(it).toMap() }
                                 ?: emptyList()
                         }
-                        ts1 + tpls.map { tpl ->
+                        tpls.map { tpl ->
                             listOf(
                                 f(S, "", listOf(G.datas++)) + """
                             typedef struct ${sup} {
