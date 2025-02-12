@@ -65,9 +65,16 @@ class XType {
     fun bb_03_sub () {
         val tp1 = Type.Any(fix)
         val tp2 = Type.Tuple(fix, emptyList())
-        println(tp1.sub_vs(tp2)!!.to_str())
+        //println(tp1.sub_vs(tp2)!!.to_str())
         assert(tp1.sub_vs(tp2)!!.to_str() == "*")
         assert(tp2.sub_vs(tp1)!!.to_str() == "[]")
+    }
+    @Test
+    fun bb_04_sub () {
+        val tp1 = Type.Tuple(fix, listOf(Pair(null,Type.Any(fix))))
+        val tp2 = Type.Tuple(fix, emptyList())
+        assert(tp1.sub_vs(tp2) == null)
+        assert(tp2.sup_vs(tp1) == null)
     }
 
     // SAME / SUP_SUB

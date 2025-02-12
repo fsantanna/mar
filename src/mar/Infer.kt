@@ -56,7 +56,7 @@ fun Stmt.infer (tp: Type?): Type? {
 fun Expr.infer (tpx_: Type?): Type? {
     val tpx = when {
         (tpx_ == null) -> null
-        (tpx_.has_tpls_dn()) -> null
+        //(tpx_.has_tpls_dn()) -> null
         else -> tpx_
     }
 
@@ -74,7 +74,10 @@ fun Expr.infer (tpx_: Type?): Type? {
         }
 
         is Expr.Tuple -> {
-            val up = this.xtp ?: tpx
+            val up = (this.xtp ?: Type.Top(this.tk)).sub_vs(tpx ?: Type.Top(this.tk))
+            //val up = this.xtp ?: tpx
+            //println(listOf("infer-tuple", this.xtp?.to_str(), tpx?.to_str()))
+            //println(listOf(up?.to_str(), upx?.to_str()))
             val vs = this.vs.mapIndexed { i,(tk,e) ->
                 Pair(tk, e.infer(if (up !is Type.Tuple || up.ts.size<i+1) null else up.ts[i].second))
             }
@@ -91,8 +94,14 @@ fun Expr.infer (tpx_: Type?): Type? {
                         }
                     }
                 )
+                //println(listOf("infer-tuple-dn", dn.to_str()))
                 if (this.xtp == null) {
-                    this.xtp = if (tpx is Type.Tuple) tpx else dn // b/c of int/float
+                    this.xtp = if (up !is Type.Tuple) {
+                        dn
+                    } else {
+                        //println(listOf("infer-tuple-dn", up.to_str(), dn.to_str()))
+                        (up.sub_vs(dn) ?: dn) as Type.Tuple  // up first b/c of int/float
+                    }
                 }
             }
             this.xtp?.infer(null)
