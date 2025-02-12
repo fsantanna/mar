@@ -85,9 +85,11 @@ fun Type.is_sub_of (other: Type): Boolean {
     return when {
         (this is Type.Bot)  -> true
         (other is Type.Top) -> true
-        (this is Type.Top)  -> false
+        (other is Type.Tpl) -> true
         (this is Type.Any || other is Type.Any) -> true
         (this is Type.Nat || other is Type.Nat) -> true
+        (this is Type.Top)  -> false
+        (this is Type.Tpl)  -> false
         (this is Type.Unit       && other is Type.Unit)       -> true
         (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
         (this is Type.Data       && other is Type.Data)       -> {
@@ -110,10 +112,39 @@ fun Type.is_sub_of (other: Type): Boolean {
     }
 }
 
+fun Type.is_sup_of (other: Type): Boolean {
+    return when {
+        (this is Type.Top)  -> true
+        (other is Type.Bot) -> true
+        (this is Type.Tpl)  -> true
+        (this is Type.Any || other is Type.Any) -> true
+        (this is Type.Nat || other is Type.Nat) -> true
+        (this is Type.Bot)  -> false
+        (other is Type.Tpl) -> false
+        (this is Type.Unit       && other is Type.Unit)       -> true
+        (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
+        (this is Type.Data       && other is Type.Data)       -> {
+            when {
+                !this.is_tpl_sup_of(other) -> false
+                (this.ts.size > other.ts.size) -> false
+                else -> this.ts.zip(other.ts).all { (thi, oth) ->
+                    (thi.str == oth.str)
+                }
+            }
+        }
+        (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
+        (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> (thi.first==null||thi.first?.str==oth.first?.str) && thi.second.is_sup_of(oth.second) }
+        (this is Type.Vector     && other is Type.Vector)     -> this.tp.is_same_of(other.tp)
+        (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.second.is_sup_of(oth.second) }
+        (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
+        (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
+        (this is Type.Exec       && other is Type.Exec)       -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
+        else -> false
+    }
+}
+
 fun Type.sub_vs (other: Type): Type? {
     return when {
-        (this is Type.Any) -> other
-        (other is Type.Any) -> this
         (this is Type.Data && other is Type.Data) -> {
             //if (!this.is_tpl_sub_of(other) || !other.is_tpl_sub_of(this)) {
             val l = this.ts.commonPrefix(other.ts) { x, y ->
@@ -160,39 +191,8 @@ fun Type.sub_vs (other: Type): Type? {
     }
 }
 
-fun Type.is_sup_of (other: Type): Boolean {
-    return when {
-        (this is Type.Top)  -> true
-        (other is Type.Bot) -> true
-        (this is Type.Bot)  -> false
-        (this is Type.Any || other is Type.Any) -> true
-        (this is Type.Nat || other is Type.Nat) -> true
-        (this is Type.Unit       && other is Type.Unit)       -> true
-        (this is Type.Prim       && other is Type.Prim)       -> (this.tk.str == other.tk.str) || (this.is_num() && other.is_num())
-        (this is Type.Data       && other is Type.Data)       -> {
-            when {
-                !this.is_tpl_sup_of(other) -> false
-                (this.ts.size > other.ts.size) -> false
-                else -> this.ts.zip(other.ts).all { (thi, oth) ->
-                    (thi.str == oth.str)
-                }
-            }
-        }
-        (this is Type.Pointer    && other is Type.Pointer)    -> this.ptr.is_sup_of(other.ptr)
-        (this is Type.Tuple      && other is Type.Tuple)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> (thi.first==null||thi.first?.str==oth.first?.str) && thi.second.is_sup_of(oth.second) }
-        (this is Type.Vector     && other is Type.Vector)     -> this.tp.is_same_of(other.tp)
-        (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.second.is_sup_of(oth.second) }
-        (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
-        (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
-        (this is Type.Exec       && other is Type.Exec)       -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
-        else -> false
-    }
-}
-
 fun Type.sup_vs (other: Type): Type? {
     return when {
-        (this is Type.Any) -> other
-        (other is Type.Any) -> this
         (this is Type.Data && other is Type.Data) -> {
             //if (!this.is_tpl_sup_of(other) || !other.is_tpl_sup_of(this)) {
             val l = this.ts.commonPrefix(other.ts) { x, y ->

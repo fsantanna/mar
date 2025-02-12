@@ -35,6 +35,15 @@ class XType {
         assert(!tp1.is_sub_of(tp2))
         assert(!tp2.is_sub_of(tp1))
     }
+    @Test
+    fun aa_04_tpl () {
+        val int = Type.Prim(Tk.Type("Int", pos))
+        val tpl = Type.Tpl(Tk.Var("a", pos))
+        assert(!int.is_sup_of(tpl))
+        assert( tpl.is_sup_of(int))
+        assert( int.is_sub_of(tpl))
+        assert(!tpl.is_sub_of(int))
+    }
 
     // SUP_VS / SUB_VS
 
@@ -57,7 +66,7 @@ class XType {
         val tp1 = Type.Any(fix)
         val tp2 = Type.Tuple(fix, emptyList())
         println(tp1.sub_vs(tp2)!!.to_str())
-        assert(tp1.sub_vs(tp2)!!.to_str() == "[]")
+        assert(tp1.sub_vs(tp2)!!.to_str() == "*")
         assert(tp2.sub_vs(tp1)!!.to_str() == "[]")
     }
 
