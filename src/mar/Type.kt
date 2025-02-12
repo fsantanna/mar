@@ -60,6 +60,10 @@ fun Type.is_same_of (other: Type): Boolean {
     }
 }
 
+fun Type.is_sup_sub_of (other: Type): Boolean {
+    return this.is_sup_of(other) && other.is_sup_of(this)
+}
+
 fun Type.Data.is_tpl_sup_of (other: Type.Data): Boolean {
     val thi = this.xtpls!!
     val oth = other.xtpls!!
@@ -101,10 +105,6 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Exec       && other is Type.Exec)       -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
         else -> false
     }
-}
-
-fun Type.is_sup_sub_of (other: Type): Boolean {
-    return this.is_sup_of(other) && other.is_sup_of(this)
 }
 
 fun Type.sup_vs (other: Type): Type? {
