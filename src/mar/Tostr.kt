@@ -34,6 +34,8 @@ fun Type.to_str (pre: Boolean = false): String {
     return when (this) {
         //is Type.Err,
         is Type.Any -> "?"
+        is Type.Bot -> "-"
+        is Type.Top -> "+"
         is Type.Tpl -> "{{${this.tk.str}}}"
         is Type.Nat -> "`${this.tk.str}`"
         is Type.Prim -> this.tk.str

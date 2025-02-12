@@ -83,6 +83,9 @@ fun Type.Data.is_tpl_sup_of (other: Type.Data): Boolean {
 
 fun Type.is_sub_of (other: Type): Boolean {
     return when {
+        (this is Type.Bot)  -> true
+        (other is Type.Top) -> true
+        (this is Type.Top)  -> false
         (this is Type.Any || other is Type.Any) -> true
         (this is Type.Nat || other is Type.Nat) -> true
         (this is Type.Unit       && other is Type.Unit)       -> true
@@ -159,6 +162,9 @@ fun Type.sub_vs (other: Type): Type? {
 
 fun Type.is_sup_of (other: Type): Boolean {
     return when {
+        (this is Type.Top)  -> true
+        (other is Type.Bot) -> true
+        (this is Type.Bot)  -> false
         (this is Type.Any || other is Type.Any) -> true
         (this is Type.Nat || other is Type.Nat) -> true
         (this is Type.Unit       && other is Type.Unit)       -> true
@@ -316,6 +322,8 @@ fun Type.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Type {
     //println(listOf(this.to_str(), s.to_str(), tpl))
     return when (this) {
         is Type.Any -> this
+        is Type.Bot -> this
+        is Type.Top -> this
         is Type.Tpl -> {
             val i = s.tpls.indexOfFirst { it.first.str==this.tk.str }
             tpl[i].first!!

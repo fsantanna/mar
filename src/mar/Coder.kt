@@ -54,7 +54,7 @@ fun Var_Type.coder (tpl: Tpl_Map?, pre: Boolean): String {
 fun Type.coder (tpl: Tpl_Map?): String {
     return when (this) {
         //is Type.Err,
-        is Type.Any -> TODO()
+        is Type.Any, is Type.Bot, is Type.Top -> TODO()
         is Type.Tpl        -> if (tpl == null) "_TPL_" else tpl[this.tk.str]!!.first!!.coder(tpl)
         is Type.Nat        -> this.tk.str
         is Type.Prim       -> this.tk.str

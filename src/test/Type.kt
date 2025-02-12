@@ -84,4 +84,24 @@ class XType {
         assert(tp1.is_sup_sub_of(tp2))
         assert(tp2.is_sup_sub_of(tp1))
     }
+
+    // TOP / BOT
+
+    @Test
+    fun dd_01_top_bot () {
+        val top = Type.Top(fix)
+        val bot = Type.Bot(fix)
+        assert(top.is_sup_of(bot))
+        assert(bot.is_sub_of(top))
+    }
+    @Test
+    fun dd_02_top_bot () {
+        val top = Type.Top(fix)
+        val bot = Type.Bot(fix)
+        val typ = Type.Prim(Tk.Type("Int", pos))
+        assert(top.is_sup_of(typ))
+        assert(typ.is_sub_of(top))
+        assert(bot.is_sub_of(typ))
+        assert(typ.is_sup_of(bot))
+    }
 }

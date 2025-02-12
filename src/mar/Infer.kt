@@ -234,7 +234,8 @@ fun Expr.infer (tpx_: Type?): Type? {
 
 fun Type.infer (tp: Type?): Type {
     when (this) {
-        is Type.Any, is Type.Tpl, is Type.Nat,
+        is Type.Any, is Type.Bot, is Type.Top,
+        is Type.Tpl, is Type.Nat,
         is Type.Unit, is Type.Prim -> {}
         is Type.Pointer -> {
             if (tp is Type.Pointer) {
