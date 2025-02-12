@@ -8,7 +8,7 @@ import org.junit.Test
 val pos = Pos("a",1,1, 0)
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-class Test {
+class XType {
     // SUP / SUB
 
     @Test
