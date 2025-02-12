@@ -109,6 +109,8 @@ fun Type.is_sub_of (other: Type): Boolean {
 
 fun Type.sub_vs (other: Type): Type? {
     return when {
+        (this is Type.Any) -> other
+        (other is Type.Any) -> this
         (this is Type.Data && other is Type.Data) -> {
             //if (!this.is_tpl_sub_of(other) || !other.is_tpl_sub_of(this)) {
             val l = this.ts.commonPrefix(other.ts) { x, y ->
@@ -183,6 +185,8 @@ fun Type.is_sup_of (other: Type): Boolean {
 
 fun Type.sup_vs (other: Type): Type? {
     return when {
+        (this is Type.Any) -> other
+        (other is Type.Any) -> this
         (this is Type.Data && other is Type.Data) -> {
             //if (!this.is_tpl_sup_of(other) || !other.is_tpl_sup_of(this)) {
             val l = this.ts.commonPrefix(other.ts) { x, y ->

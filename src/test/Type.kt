@@ -6,6 +6,7 @@ import org.junit.runners.MethodSorters
 import org.junit.Test
 
 val pos = Pos("a",1,1, 0)
+val fix = Tk.Fix("", pos)
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class XType {
@@ -13,14 +14,14 @@ class XType {
 
     @Test
     fun aa_01_sup () {
-        val tp1 = Type.Any(Tk.Fix("", pos))
+        val tp1 = Type.Any(fix)
         val tp2 = Type.Prim(Tk.Type("Int", pos))
         assert(tp1.is_sup_of(tp2))
         assert(tp2.is_sup_of(tp1))
     }
     @Test
     fun aa_02_sub () {
-        val tp1 = Type.Any(Tk.Fix("", pos))
+        val tp1 = Type.Any(fix)
         val tp2 = Type.Prim(Tk.Type("Int", pos))
         assert(tp1.is_sub_of(tp2))
         assert(tp2.is_sub_of(tp1))
@@ -28,7 +29,7 @@ class XType {
     @Test
     fun aa_03_sup_sub () {
         val tp1 = Type.Prim(Tk.Type("Int", pos))
-        val tp2 = Type.Pointer(Tk.Fix("", pos), tp1)
+        val tp2 = Type.Pointer(fix, tp1)
         assert(!tp1.is_sup_of(tp2))
         assert(!tp2.is_sup_of(tp1))
         assert(!tp1.is_sub_of(tp2))
@@ -39,17 +40,25 @@ class XType {
 
     @Test
     fun bb_01_sup () {
-        val tp1 = Type.Any(Tk.Fix("", pos))
+        val tp1 = Type.Any(fix)
         val tp2 = Type.Prim(Tk.Type("Int", pos))
         assert(tp1.sup_vs(tp2)!!.to_str() == "Int")
         assert(tp2.sup_vs(tp1)!!.to_str() == "Int")
     }
     @Test
     fun bb_02_sub () {
-        val tp1 = Type.Any(Tk.Fix("", pos))
+        val tp1 = Type.Any(fix)
         val tp2 = Type.Prim(Tk.Type("Int", pos))
         assert(tp1.sub_vs(tp2)!!.to_str() == "Int")
         assert(tp2.sub_vs(tp1)!!.to_str() == "Int")
+    }
+    @Test
+    fun bb_03_sub () {
+        val tp1 = Type.Any(fix)
+        val tp2 = Type.Tuple(fix, emptyList())
+        println(tp1.sub_vs(tp2)!!.to_str())
+        assert(tp1.sub_vs(tp2)!!.to_str() == "[]")
+        assert(tp2.sub_vs(tp1)!!.to_str() == "[]")
     }
 
     // SAME / SUP_SUB
