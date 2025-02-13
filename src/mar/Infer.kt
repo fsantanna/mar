@@ -53,13 +53,7 @@ fun Stmt.infer (tp: Type?): Type? {
    }
 }
 
-fun Expr.infer (tpx_: Type?): Type? {
-    val tpx = when {
-        (tpx_ == null) -> null
-        //(tpx_.has_tpls_dn()) -> null
-        else -> tpx_
-    }
-
+fun Expr.infer (tpx: Type?): Type? {
     //tp?.assert_no_tpls()
     when (this) {
         is Expr.Acc, is Expr.Bool, is Expr.Str, is Expr.Chr,
@@ -74,7 +68,7 @@ fun Expr.infer (tpx_: Type?): Type? {
         }
 
         is Expr.Tuple -> {
-            val up = (this.xtp ?: Type.Top(this.tk)).sub_vs(tpx ?: Type.Top(this.tk))
+            val up = this.xtp.sub_vs_top(this.tk, tpx)
             //val up = this.xtp ?: tpx
             //println(listOf("infer-tuple", this.xtp?.to_str(), tpx?.to_str()))
             //println(listOf(up?.to_str(), upx?.to_str()))
@@ -107,9 +101,11 @@ fun Expr.infer (tpx_: Type?): Type? {
             this.xtp?.infer(null)
         }
         is Expr.Vector -> {
-            //println(listOf("infer-vector",this.to_str(),tp?.to_str()))
-            val up = this.xtp ?: tpx
+            val up = this.xtp.sub_vs_top(this.tk, tpx)
             val xup = if (up !is Type.Vector) null else up.tp
+            //println(listOf("infer-vector",this.to_str()))
+            //println(listOf(up?.to_str(), this.xtp?.to_str(), tpx?.to_str()))
+            //println(listOf(xup?.to_str()))
             val dn = if (this.vs.size == 0) null else {
                 val vs = this.vs.map { it.infer(xup) }
                 val v = vs.fold(vs.first()) { a,b ->
@@ -120,10 +116,8 @@ fun Expr.infer (tpx_: Type?): Type? {
                     Type.Vector(this.tk, Expr.Num(Tk.Num(vs.size.toString(),this.tk.pos)), v)
                 }
             }
-            if (dn != null) {
-                if (this.xtp == null) {
-                    this.xtp = dn
-                }
+            if (this.xtp == null) {
+                this.xtp = up.sub_vs_top(this.tk, dn) as Type.Vector?
             }
             this.xtp?.infer(null)
         }

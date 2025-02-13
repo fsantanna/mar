@@ -143,6 +143,10 @@ fun Type.is_sup_of (other: Type): Boolean {
     }
 }
 
+fun Type?.sub_vs_top (tk: Tk, other: Type?): Type? {
+    return (this ?: Type.Top(tk)).sub_vs(other ?: Type.Top(tk))
+}
+
 fun Type.sub_vs (other: Type): Type? {
     return when {
         (this is Type.Data && other is Type.Data) -> {

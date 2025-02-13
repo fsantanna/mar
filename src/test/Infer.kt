@@ -950,6 +950,15 @@ class Infer {
             data Vec {{n:Int}}: #[Int * {{n}}]
             var vs: Vec {{10}} = Vec {{10}} (#[])
         """)
-        assert(out == "anon : (lin 3, col 34) : inference error : unknown type") { out!! }
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+           "data Return.*: [] {\n"+
+           "}\n"+
+           "data Break.*: [] {\n"+
+           "}\n"+
+           "data Vec {{n: Int}}: #[Int*{{n}}]\n"+
+           "var vs: Vec {{10}}\n"+
+           "set vs = (Vec {{10}}((#[]:#[Int*10])))\n"+
+           "}") { G.outer!!.to_str() }
     }
 }
