@@ -181,13 +181,13 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
             val out = parser_type(null, false, fr_pointer)
             when {
                 (tk0.str=="func" &&  req) ->
-                    Type.Proto.Func.Vars(tk0, inps as List<Var_Type>, out)
+                    Type.Proto.Func.Vars(tk0, null, inps as List<Var_Type>, out)
                 (tk0.str=="func" && !req) ->
-                    Type.Proto.Func(tk0, inps as List<Type>, out)
+                    Type.Proto.Func(tk0, null, inps as List<Type>, out)
                 (tk0.str=="coro" &&  req) ->
-                    Type.Proto.Coro.Vars(tk0, inps as List<Var_Type>, res!!, yld!!, out)
+                    Type.Proto.Coro.Vars(tk0, null, inps as List<Var_Type>, res!!, yld!!, out)
                 (tk0.str=="coro" && !req) ->
-                    Type.Proto.Coro(tk0, inps as List<Type>, res!!, yld!!, out)
+                    Type.Proto.Coro(tk0, null, inps as List<Type>, res!!, yld!!, out)
                 else -> error("impossible case")
             }
         }

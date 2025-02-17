@@ -11,7 +11,7 @@ fun Stmt.infer (tpe: Type?): Type? {
 
         is Stmt.Create -> {
             val xtp = if (tpe !is Type.Exec) null else {
-                Type.Proto.Coro(tpe.tk, tpe.inps, tpe.res, tpe.yld, tpe.out)
+                Type.Proto.Coro(tpe.tk, null, tpe.inps, tpe.res, tpe.yld, tpe.out)
             }
             this.co.infer(xtp).let {
                 if (it !is Type.Proto.Coro) tpe else {
