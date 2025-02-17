@@ -942,7 +942,8 @@ class Infer {
             data Vec {{n:Int}}: #[Int * {{n}}]
             var vs: Vec {{10}} = #[]
         """)
-        assert(out == "anon : (lin 3, col 34) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 3, col 34) : inference error : unknown type") { out!! }
+        assert(out == "anon : (lin 3, col 34) : inference error : expected vector type") { out!! }
     }
     @Test
     fun tt_04_vec () {

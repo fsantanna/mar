@@ -68,7 +68,7 @@ fun Expr.infer (tpx: Type?): Type? {
         }
 
         is Expr.Tuple -> {
-            val up = this.xtp.sub_vs_top(this.tk, tpx)
+            val up = this.xtp.sub_vs_null(tpx)
             //val up = this.xtp ?: tpx
             //println(listOf("infer-tuple", this.xtp?.to_str(), tpx?.to_str()))
             //println(listOf(up?.to_str(), upx?.to_str()))
@@ -101,10 +101,9 @@ fun Expr.infer (tpx: Type?): Type? {
             this.xtp?.infer(null)
         }
         is Expr.Vector -> {
-            val up = this.xtp.sub_vs_top(this.tk, tpx)
+            val up = this.xtp.sub_vs_null(tpx)
             val xup = if (up !is Type.Vector) null else up.tp
-            //println(listOf("infer-vector",this.to_str()))
-            //println(listOf(up?.to_str(), this.xtp?.to_str(), tpx?.to_str()))
+            //println(listOf("infer-vector",this.to_str(),this.xtp?.to_str(), tpx?.to_str()))
             //println(listOf(xup?.to_str()))
             val dn = if (this.vs.size == 0) null else {
                 val vs = this.vs.map { it.infer(xup) }
@@ -117,7 +116,14 @@ fun Expr.infer (tpx: Type?): Type? {
                 }
             }
             if (this.xtp == null) {
-                this.xtp = up.sub_vs_top(this.tk, dn) as Type.Vector?
+                //println(listOf("infer-vector", this.to_str(), up?.to_str(), dn?.to_str()))
+                up.sub_vs_null(dn).let {
+                    when {
+                        (it == null) -> {}
+                        (it is Type.Vector) -> this.xtp = it
+                        else -> err(this.tk, "inference error : expected vector type")
+                    }
+                }
             }
             this.xtp?.infer(null)
         }
