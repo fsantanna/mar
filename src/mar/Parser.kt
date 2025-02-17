@@ -362,7 +362,10 @@ fun parser_expr_4_prim (): Expr {
         }
 
         check_enu("Type") -> {
-            val tp = parser_type(null, false, false) as Type.Data
+            val tp = parser_type(null, false, false)
+            if (tp !is Type.Data) {
+                err(G.tk1!!, "constructor error : unexpected primitive type")
+            }
             val e = when {
                 check_fix("[") -> parser_expr()
                 check_op("<") -> parser_expr()

@@ -908,6 +908,14 @@ class Parser {
                 "set r = (Result.Success(10))\n" +
                 "}\n") { ss.to_str() }
     }
+    @Test
+    fun kk_05_data_err () {
+        G.tks = ("""
+            Int(10)
+        """).lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 2, col 16) : constructor error : unexpected primitive type")
+    }
 
     // DATA / HIER
 
