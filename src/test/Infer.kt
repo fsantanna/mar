@@ -977,4 +977,25 @@ class Infer {
            "set vs = (Vec {{10}}((#[]:#[Int*10])))\n"+
            "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun tt_05_func () {
+        val out = infer("""
+            func f {{n:Int}}: () -> Int {
+                return({{n}})
+            }
+            print(f {{10}} ())
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "func f {{n: Int}}: () -> Int {\n" +
+                "set (`mar_ret`: Int) = {{n}}\n" +
+                "escape((Return(([]:[]))))\n" +
+                "}\n" +
+                "print((f {{10}} ()))\n" +
+                "}") { G.outer!!.to_str() }
+    }
 }

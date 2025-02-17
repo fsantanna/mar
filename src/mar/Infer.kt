@@ -59,7 +59,7 @@ fun Expr.infer (tpe: Type?): Type? {
         is Expr.Acc, is Expr.Bool, is Expr.Str, is Expr.Chr,
         is Expr.Null, is Expr.Unit, is Expr.Num -> {}
 
-        is Expr.Tpl -> TODO("Expr.Tpl.infer()")
+        is Expr.Tpl -> this.typex()
         is Expr.Nat -> {
             if (this.xtp == null) {
                 this.xtp = tpe ?: Type.Any(this.tk)

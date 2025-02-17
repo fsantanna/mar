@@ -664,7 +664,11 @@ fun Expr.type (): Type? {
             Type.Prim(Tk.Type(x, this.tk.pos))
         }
         is Expr.Nat -> this.xtp //?: Type.Nat(Tk.Nat("TODO",this.tk.pos))
-        is Expr.Tpl -> TODO("Expr.Tpl.type()")
+        is Expr.Tpl -> {
+            val proto = this.up_first { it is Stmt.Proto } as Stmt.Proto
+            val tpl = proto.tpls.find { it.first.str == this.tk.str }!!
+            tpl.second
+        }
 
         is Expr.If -> {
             val tt = this.t.type()
