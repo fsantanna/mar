@@ -1,6 +1,6 @@
 package mar
 
-fun Stmt.infer (tp: Type?): Type? {
+fun Stmt.infer (tpe: Type?): Type? {
     return when (this) {
         is Stmt.Catch -> if (this.tp == null) null else {
             Type.Union(this.tk, true, listOf(
@@ -10,11 +10,11 @@ fun Stmt.infer (tp: Type?): Type? {
         }
 
         is Stmt.Create -> {
-            val xtp = if (tp !is Type.Exec) null else {
-                Type.Proto.Coro(tp.tk, tp.inps, tp.res, tp.yld, tp.out)
+            val xtp = if (tpe !is Type.Exec) null else {
+                Type.Proto.Coro(tpe.tk, tpe.inps, tpe.res, tpe.yld, tpe.out)
             }
             this.co.infer(xtp).let {
-                if (it !is Type.Proto.Coro) tp else {
+                if (it !is Type.Proto.Coro) tpe else {
                     Type.Exec(co.tk, it.inps, it.res, it.yld, it.out)
                 }
             }
@@ -53,7 +53,7 @@ fun Stmt.infer (tp: Type?): Type? {
    }
 }
 
-fun Expr.infer (tpx: Type?): Type? {
+fun Expr.infer (tpe: Type?): Type? {
     //tp?.assert_no_tpls()
     when (this) {
         is Expr.Acc, is Expr.Bool, is Expr.Str, is Expr.Chr,
@@ -62,13 +62,13 @@ fun Expr.infer (tpx: Type?): Type? {
         is Expr.Tpl -> TODO("Expr.Tpl.infer()")
         is Expr.Nat -> {
             if (this.xtp == null) {
-                this.xtp = tpx ?: Type.Any(this.tk)
+                this.xtp = tpe ?: Type.Any(this.tk)
             }
             this.xtp?.infer(null)
         }
 
         is Expr.Tuple -> {
-            val up = this.xtp.sub_vs_null(tpx)
+            val up = this.xtp.sub_vs_null(tpe)
             //val up = this.xtp ?: tpx
             //println(listOf("infer-tuple", this.xtp?.to_str(), tpx?.to_str()))
             //println(listOf(up?.to_str(), upx?.to_str()))
@@ -101,7 +101,7 @@ fun Expr.infer (tpx: Type?): Type? {
             this.xtp?.infer(null)
         }
         is Expr.Vector -> {
-            val up = this.xtp.sub_vs_null(tpx)
+            val up = this.xtp.sub_vs_null(tpe)
             val xup = if (up !is Type.Vector) null else up.tp
             //println(listOf("infer-vector",this.to_str(),this.xtp?.to_str(), tpx?.to_str()))
             //println(listOf(xup?.to_str()))
@@ -133,7 +133,7 @@ fun Expr.infer (tpx: Type?): Type? {
             this.col.infer(null)
         }
         is Expr.Union -> {
-            val up = this.xtp ?: tpx
+            val up = this.xtp ?: tpe
             val sub = if (up !is Type.Union) null else {
                 up.disc(this.idx).nulls().second
             }
@@ -161,10 +161,10 @@ fun Expr.infer (tpx: Type?): Type? {
             this.tp.infer(t)
         }
 
-        is Expr.Uno -> this.e.infer(tpx)
+        is Expr.Uno -> this.e.infer(tpe)
         is Expr.Bin -> {
             val xtp = when (this.tk.str) {
-                "+", "-", "*", "/", "%", "++" -> tpx
+                "+", "-", "*", "/", "%", "++" -> tpe
                 else -> null
             }
             this.e1.infer(xtp)
@@ -185,15 +185,15 @@ fun Expr.infer (tpx: Type?): Type? {
             }
         }
         is Expr.Throw -> {
-            this.xtp = tpx
+            this.xtp = tpe
             this.e.infer(null)
             this.xtp?.infer(null)
         }
 
         is Expr.If -> {
             this.cnd.infer(null)
-            val t = this.t.infer(tpx)
-            val f = this.f.infer(tpx)
+            val t = this.t.infer(tpe)
+            val f = this.f.infer(tpe)
             if (t!=null && f!=null) {
                 this.xtp = t.sup_vs(f)
             }
@@ -202,7 +202,7 @@ fun Expr.infer (tpx: Type?): Type? {
         is Expr.MatchT -> {
             val tst = this.tst.infer(null)
             val cases = this.cases.map { (dat,e) ->
-                e.infer(tpx)
+                e.infer(tpe)
                 val fst = if (dat == null) Type.Any(this.tk) else dat
                 Pair(fst, e.type())
             }
@@ -217,7 +217,7 @@ fun Expr.infer (tpx: Type?): Type? {
             val tst = this.tst.infer(null)
             val cases = this.cases.map { (e1,e2) ->
                 val fst = if (e1 == null) Type.Any(this.tk) else e1.infer(tst)
-                e2.infer(tpx)
+                e2.infer(tpe)
                 Pair(fst, e2.type())
             }
             if (tst!=null && !cases.any { (a,b) -> a==null||b==null }) {
@@ -233,59 +233,59 @@ fun Expr.infer (tpx: Type?): Type? {
     //println(xtp)
     this.xnum = when {
         (xtp == null) -> null
-        (tpx == null) -> null
+        (tpe == null) -> null
         !xtp.is_num() -> null
-        !tpx.is_num() -> null
-        else -> tpx
+        !tpe.is_num() -> null
+        else -> tpe
     }
     return xtp
 }
 
-fun Type.infer (tp: Type?): Type {
+fun Type.infer (tpe: Type?): Type {
     when (this) {
         is Type.Any, is Type.Bot, is Type.Top,
         is Type.Tpl, is Type.Nat,
         is Type.Unit, is Type.Prim -> {}
         is Type.Pointer -> {
-            if (tp is Type.Pointer) {
-                this.ptr.infer(tp.ptr)
+            if (tpe is Type.Pointer) {
+                this.ptr.infer(tpe.ptr)
             }
         }
         is Type.Tuple -> {
-            if (tp is Type.Tuple) {
-                this.ts.zip(tp.ts).forEach { (a,b) -> a.second.infer(b.second) }
+            if (tpe is Type.Tuple) {
+                this.ts.zip(tpe.ts).forEach { (a,b) -> a.second.infer(b.second) }
             }
         }
         is Type.Vector -> {
-            if (tp is Type.Vector) {
-                this.tp.infer(tp.tp)
+            if (tpe is Type.Vector) {
+                this.tp.infer(tpe.tp)
             }
         }
         is Type.Union -> {
-            if (tp is Type.Union) {
-                this.ts.zip(tp.ts).forEach { (a,b) -> a.second.infer(b.second) }
+            if (tpe is Type.Union) {
+                this.ts.zip(tpe.ts).forEach { (a,b) -> a.second.infer(b.second) }
             }
         }
         is Type.Proto.Func -> {
-            if (tp is Type.Proto.Func) {
-                this.inps.zip(tp.inps).forEach { (a,b) -> a.infer(b) }
-                this.out.infer(tp.out)
+            if (tpe is Type.Proto.Func) {
+                this.inps.zip(tpe.inps).forEach { (a,b) -> a.infer(b) }
+                this.out.infer(tpe.out)
             }
         }
         is Type.Proto.Coro -> {
-            if (tp is Type.Proto.Coro) {
-                this.inps.zip(tp.inps).forEach { (a,b) -> a.infer(b) }
-                this.res.infer(tp.out)
-                this.yld.infer(tp.out)
-                this.out.infer(tp.out)
+            if (tpe is Type.Proto.Coro) {
+                this.inps.zip(tpe.inps).forEach { (a,b) -> a.infer(b) }
+                this.res.infer(tpe.out)
+                this.yld.infer(tpe.out)
+                this.out.infer(tpe.out)
             }
         }
         is Type.Exec -> {
-            if (tp is Type.Exec) {
-                this.inps.zip(tp.inps).forEach { (a,b) -> a.infer(b) }
-                this.res.infer(tp.out)
-                this.yld.infer(tp.out)
-                this.out.infer(tp.out)
+            if (tpe is Type.Exec) {
+                this.inps.zip(tpe.inps).forEach { (a,b) -> a.infer(b) }
+                this.res.infer(tpe.out)
+                this.yld.infer(tpe.out)
+                this.out.infer(tpe.out)
             }
         }
         is Type.Data -> {
@@ -293,10 +293,10 @@ fun Type.infer (tp: Type?): Type {
             when {
                 (this.xtpls != null) -> {}
                 s.tpls.isEmpty() -> this.xtpls = emptyList()
-                (tp !is Type.Data) -> {}
-                (tp.xtpls != null) -> {
-                    this.xtpls = tp.xtpls
-                    assert(this.is_same_of(tp), {"TODO: unmatching infer"})
+                (tpe !is Type.Data) -> {}
+                (tpe.xtpls != null) -> {
+                    this.xtpls = tpe.xtpls
+                    assert(this.is_same_of(tpe), {"TODO: unmatching infer"})
                 }
                 else -> TODO("infer tpls")
             }
