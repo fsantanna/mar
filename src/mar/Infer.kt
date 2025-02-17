@@ -147,18 +147,13 @@ fun Expr.infer (tpe: Type?): Type? {
         is Expr.Disc -> this.col.infer(null)
         is Expr.Cons -> {
             //println(listOf("infer-cons",this.to_str(),tp?.to_str()))
-            val (s,_,xtp) = this.walk(this.tp.ts)!!
-            //println(listOf("infer-cons-xtp",s.to_str(),xtp.to_str(),this.e.to_str()))
+            val (s,_,xtp) = this.tp.walk_tpl()
             val e = this.e.infer(xtp)
-            //println(listOf("e",this.tp.to_str(), e?.to_str()))
-            val t = if (this.tp.xtpls != null) this.tp else {
-                if (e == null) null else {
-                    //println(listOf("xtp", xtp.to_str(), s.tp.to_str(),e.to_str()))
-                    this.tp.abs_con(s, e.template_con_abs(xtp))
-                }
+            when {
+                (this.tp.xtpls != null) -> {}
+                (e == null) -> {}
+                else -> this.tp.infer(this.tp.abs_con(s, e.template_con_abs(xtp)))
             }
-            //println(listOf(e?.to_str(), t.to_str()))
-            this.tp.infer(t)
         }
 
         is Expr.Uno -> this.e.infer(tpe)
