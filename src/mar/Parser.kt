@@ -443,36 +443,38 @@ fun parser_expr_4_prim (): Expr {
 fun parser_expr_3_suf (xe: Expr? = null): Expr {
     val e = if (xe !== null) xe else parser_expr_4_prim()
     val ok = G.tk0!!.pos.is_same_line(G.tk1!!.pos) && (
-        listOf("[",".","(").any { accept_fix(it) } ||
-        listOf("\\","?","!").any { accept_op(it) }
+        listOf("[",".","(","{{").any { check_fix(it) } ||
+        listOf("\\","?","!").any { check_op(it) }
     )
     if (!ok) {
         return e
     }
 
     return parser_expr_3_suf(
-        when (G.tk0!!.str) {
-            "(" -> {
+        when {
+            (check_fix("{{") || check_fix("(")) -> {
+                val tpls = parser_tpls_con()
+                accept_fix_err("(")
                 val args = parser_list(",",")") { parser_expr() }
-                Expr.Call(e.tk, e, null, args)
+                Expr.Call(e.tk, e, tpls, args)
             }
-            "[" -> {
+            accept_fix("[") -> {
                 val idx = parser_expr()
                 accept_fix_err("]")
                 Expr.Index(e.tk, e, idx)
             }
-            "\\" -> Expr.Uno(Tk.Op("deref", G.tk0!!.pos), e)
-            "." -> {
+            accept_op("\\") -> Expr.Uno(Tk.Op("deref", G.tk0!!.pos), e)
+            accept_fix(".") -> {
                 val dot = G.tk0 as Tk.Fix
                 (accept_enu("Var") || accept_enu_err("Num"))
                 Expr.Field(dot, e, G.tk0!!.str)
             }
-            "!" -> {
+            accept_op("!") -> {
                 val dot = G.tk0 as Tk.Op
                 (accept_enu("Type") || accept_enu_err("Num"))
                 Expr.Disc(dot, e, G.tk0!!.str)
             }
-            "?" -> {
+            accept_op("?") -> {
                 val dot = G.tk0 as Tk.Op
                 (accept_enu("Type") || accept_enu_err("Num"))
                 Expr.Pred(dot, e, G.tk0!!.str)
