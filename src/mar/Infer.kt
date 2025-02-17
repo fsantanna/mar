@@ -117,7 +117,8 @@ fun Expr.infer (tpe: Type?): Type? {
             }
             if (this.xtp == null) {
                 //println(listOf("infer-vector", this.to_str(), up?.to_str(), dn?.to_str()))
-                up.sub_vs_null(dn).let {
+                this.xtp.sub_vs_null(dn).sub_vs_null(up).let {
+                    //println(it)
                     when {
                         (it == null) -> {}
                         (it is Type.Vector) -> this.xtp = it

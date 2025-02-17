@@ -894,6 +894,21 @@ class Infer {
            "set x = (##(#[10]:#[Int*1]))\n"+
            "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun ii_05_vector () {
+        val out = infer("""
+            var t: #[Int*10] = #['a']
+        """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n" +
+                "data Return.*: [] {\n" +
+                "}\n" +
+                "data Break.*: [] {\n" +
+                "}\n" +
+                "var t: #[Int*10]\n" +
+                "set t = (#['a']:#[Char*1])\n" +
+                "}") { G.outer!!.to_str() }
+    }
 
     // TEMPLATE
 

@@ -207,8 +207,8 @@ fun check_types () {
                     is Stmt.SetS -> me.src.type()
                     else -> error("impossible case")
                 }
+                //println(listOf(me.to_str(),dst?.to_str(),src?.to_str()))
                 if (dst!=null && src!=null) {
-                    //println(listOf(me.to_str(),dst.to_str(),src.to_str()))
                     if (!dst.is_sup_of(src)) {
                         err(me.tk, "set error : types mismatch")
                     }

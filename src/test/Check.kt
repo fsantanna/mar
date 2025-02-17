@@ -1125,8 +1125,8 @@ class Check {
             }
             var y = X.Y []   ;; missing Int
         """)
-        //assert(out == "anon : (lin 5, col 25) : tuple error : types mismatch") { out!! }
-        assert(out == "anon : (lin 5, col 25) : constructor error : types mismatch") { out!! }
+        assert(out == "anon : (lin 5, col 25) : tuple error : types mismatch") { out!! }
+        //assert(out == "anon : (lin 5, col 25) : constructor error : types mismatch") { out!! }
         //assert(out == "anon : (lin 3, col 21) : constructor error : arity mismatch") { out!! }
     }
     @Test

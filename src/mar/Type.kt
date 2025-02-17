@@ -153,7 +153,8 @@ fun Type?.sub_vs_null (other: Type?): Type? {
     }
 }
 
-fun Type.sub_vs (other: Type): Type? {
+// TODO: favors this over other (if no sub relationship)
+fun Type.sub_vs (other: Type): Type {
     return when {
         (this is Type.Data && other is Type.Data) -> {
             //if (!this.is_tpl_sub_of(other) || !other.is_tpl_sub_of(this)) {
@@ -178,7 +179,7 @@ fun Type.sub_vs (other: Type): Type? {
             }
 
             when {
-                (l.size == 0) -> null   // X.* vs Y.*
+                (l.size == 0) -> this //null   // X.* vs Y.*
                 else -> Type.Data(this.tk, this.xtpls, l).let {
                     it.xup = this.xup
                     it
@@ -197,7 +198,7 @@ fun Type.sub_vs (other: Type): Type? {
         }
         this.is_sub_of(other) -> this
         other.is_sub_of(this) -> other
-        else -> null
+        else -> this //null
     }
 }
 

@@ -73,7 +73,7 @@ class XType {
     fun bb_04_sub () {
         val tp1 = Type.Tuple(fix, listOf(Pair(null,Type.Any(fix))))
         val tp2 = Type.Tuple(fix, emptyList())
-        assert(tp1.sub_vs(tp2) == null)
+        assert(tp1.sub_vs(tp2) == tp1)
         assert(tp2.sup_vs(tp1) == null)
     }
 
