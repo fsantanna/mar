@@ -119,7 +119,7 @@ fun <T> parser_list (sep: String?, close: ()->Boolean, func: () -> T): List<T> {
     return l
 }
 
-fun parser_var_type (pre: Tk.Var?): Tpl_Abs {
+fun parser_var_type (pre: Tk.Var?): Var_Type {
     val id = if (pre != null) pre else {
         accept_enu_err("Var")
         val x = G.tk0 as Tk.Var
@@ -157,11 +157,11 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
             val out = parser_type(null, false, fr_pointer)
             when {
                 (tk0.str=="func" &&  req) ->
-                    Type.Proto.Func.Vars(tk0, inps as List<Tpl_Abs>, out)
+                    Type.Proto.Func.Vars(tk0, inps as List<Var_Type>, out)
                 (tk0.str=="func" && !req) ->
                     Type.Proto.Func(tk0, inps as List<Type>, out)
                 (tk0.str=="coro" &&  req) ->
-                    Type.Proto.Coro.Vars(tk0, inps as List<Tpl_Abs>, res!!, yld!!, out)
+                    Type.Proto.Coro.Vars(tk0, inps as List<Var_Type>, res!!, yld!!, out)
                 (tk0.str=="coro" && !req) ->
                     Type.Proto.Coro(tk0, inps as List<Type>, res!!, yld!!, out)
                 else -> error("impossible case")

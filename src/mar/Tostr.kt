@@ -144,7 +144,7 @@ fun Expr.to_str (pre: Boolean = false): String {
     }
 }
 
-fun Tpl_Abs.to_str (pre: Boolean = false): String {
+fun Var_Type.to_str (pre: Boolean = false): String {
     val (id,tp) = this
     return id.fpre(pre) + id.str + ": " + tp.to_str(pre)
 }
