@@ -39,12 +39,15 @@ fun Type.to_str (pre: Boolean = false): String {
         is Type.Tpl -> "{{${this.tk.str}}}"
         is Type.Nat -> "`${this.tk.str}`"
         is Type.Prim -> this.tk.str
-        is Type.Data -> this.ts.first().str + this.xtpls.let { xtpls ->
-            if (xtpls==null || xtpls.isEmpty()) "" else {
-                val xs = xtpls.map { (t,e) -> if (t==null) e!!.to_str(pre) else ":"+t.to_str(pre) }
-                " {{${xs.joinToString(",")}}}"
+        is Type.Data -> {
+            val tpls = this.xtpls.let { xtpls ->
+                if (xtpls==null || xtpls.isEmpty()) "" else {
+                    val xs = xtpls.map { (t,e) -> if (t==null) e!!.to_str(pre) else ":"+t.to_str(pre) }
+                    " {{${xs.joinToString(",")}}}"
+                }
             }
-        } + this.ts.drop(1).map { "."+it.str }.joinToString("")
+            this.ts.first().str + tpls + this.ts.drop(1).map { "."+it.str }.joinToString("")
+        }
         is Type.Unit -> "()"
         is Type.Pointer -> "\\" + this.ptr.to_str(pre)
         is Type.Tuple -> "[" + this.ts.map { (id,tp) -> id.cond { it.str+":" } + tp.to_str(pre) }.joinToString(",") + "]"
@@ -113,7 +116,15 @@ fun Expr.to_str (pre: Boolean = false): String {
 
         is Expr.Uno    -> "(" + this.tk_.to_str(pre) + this.e.to_str(pre) + ")"
         is Expr.Bin    -> "(" + this.e1.to_str(pre) + " " + this.tk_.to_str(pre) + " " + this.e2.to_str(pre) + ")"
-        is Expr.Call   -> "(" + this.f.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + "))"
+        is Expr.Call   -> {
+            val tpls = this.xtpls.let { xtpls ->
+                if (xtpls==null || xtpls.isEmpty()) "" else {
+                    val xs = xtpls.map { (t,e) -> if (t==null) e!!.to_str(pre) else ":"+t.to_str(pre) }
+                    " {{${xs.joinToString(",")}}} "
+                }
+            }
+            "(" + this.f.to_str(pre) + tpls + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + "))"
+        }
         is Expr.Throw  -> "throw(" + this.e.to_str(pre) + ")"
 
         is Expr.If     -> "if ${this.cnd.to_str(pre)} => ${this.t.to_str(pre)} => ${this.f.to_str(pre)}"
@@ -166,8 +177,14 @@ fun Stmt.to_str (pre: Boolean = false): String {
                 "data " + this.t.str + tpls + ".*: " + this.tp.to_str(pre) + " {\n" + f(this.subs) + "}"
             }
         }
-        is Stmt.Proto.Func -> "func " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
-        is Stmt.Proto.Coro -> "coro " + this.id.str + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
+        is Stmt.Proto.Func -> {
+            val tpls = (this.tpls.size>0).cond { " {{" + this.tpls.map { it.to_str(pre) }.joinToString(",") + "}}" }
+            "func " + this.id.str + tpls + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
+        }
+        is Stmt.Proto.Coro -> {
+            val tpls = (this.tpls.size>0).cond { " {{" + this.tpls.map { it.to_str(pre) }.joinToString(",") + "}}" }
+            "coro " + this.id.str + tpls + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
+        }
         is Stmt.Block  -> "do " + this.esc.cond { ":"+it.to_str(pre)+" " } + "{\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
         is Stmt.Dcl    -> "var ${this.id.str}" + this.xtp.cond { ": ${it.to_str()}" }
         is Stmt.SetE   -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)

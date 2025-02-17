@@ -363,14 +363,14 @@ fun Type.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Type {
         is Type.Proto.Func -> {
             val inps = this.inps.map { it.template_abs_con(s, tpl) }
             val out = this.out.template_abs_con(s, tpl)
-            Type.Proto.Func(this.tk, inps, out)
+            Type.Proto.Func(this.tk, null, inps, out)
         }
         is Type.Proto.Coro -> {
             val inps = this.inps.map { it.template_abs_con(s, tpl) }
             val res = this.res.template_abs_con(s, tpl)
             val yld = this.yld.template_abs_con(s, tpl)
             val out = this.out.template_abs_con(s, tpl)
-            Type.Proto.Coro(this.tk, inps, res, yld, out)
+            Type.Proto.Coro(this.tk, null, inps, res, yld, out)
         }
         is Type.Exec -> {
             val inps = this.inps.map { it.template_abs_con(s, tpl) }

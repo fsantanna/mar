@@ -542,15 +542,16 @@ fun parser_stmt (): List<Stmt> {
             val tk0 = G.tk0 as Tk.Fix
             accept_enu_err("Var")
             val id = G.tk0 as Tk.Var
+            val tpls = parser_tpls_abs()
             accept_fix_err(":")
             val tp = parser_type(tk0, true, false)
             val ss = parser_stmt_block()
             val esc = Type.Data(tk0, null, listOf(Tk.Type("Return",tk0.pos)))
             when (tp) {
                 is Type.Proto.Func.Vars ->
-                    Stmt.Proto.Func(tk0, id, tp, Stmt.Block(tp.tk, esc, ss))
+                    Stmt.Proto.Func(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, ss))
                 is Type.Proto.Coro.Vars ->
-                    Stmt.Proto.Coro(tk0, id, tp, Stmt.Block(tp.tk, esc, ss))
+                    Stmt.Proto.Coro(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, ss))
                 else -> error("impossible case")
             }.let { listOf(it) }
         }

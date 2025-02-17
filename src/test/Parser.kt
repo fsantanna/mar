@@ -1276,15 +1276,20 @@ class Parser {
     fun tt_05_func () {
         G.tks = ("""
             do {
-                func {{t:Type}} f: (v:{{t}}) -> () {
+                func f {{t:Type}}: (v:{{t}}) -> () {
                     print(v)
                 }
-                print(f {{Int}} (10))
+                print(f {{:Int}} (10))
             }
         """).lexer()
         parser_lexer()
         val ss = parser_stmt()
-        assert(ss.to_str() == "data Pos: [Int,Int]\n") { ss.to_str() }
+        assert(ss.to_str() == "do {\n" +
+            "func f {{t: Type}}: (v: {{t}}) -> () {\n" +
+            "print(v)\n" +
+            "}\n" +
+            "print((f {{:Int}} (10)))\n" +
+            "}\n") { ss.to_str() }
     }
     @Test
     fun TODO_tt_XX_func () {
