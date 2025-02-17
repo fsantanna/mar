@@ -86,14 +86,14 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
     class Vector  (tk: Tk, val max: Expr?, val tp: Type): Type(G.N++, null, tk)
     class Tpl     (val tk_: Tk.Var): Type(G.N++, null, tk_)
 
-    sealed class Proto (tk: Tk, val inps: List<Type>, val out: Type): Type(G.N++, null, tk) {
-        open class Func (tk: Tk, inps: List<Type>, out: Type): Proto(tk, inps, out) {
-            class Vars (tk: Tk, val inps_: List<Var_Type>, out: Type) :
-                Func(tk, inps_.map { (_, tp) -> tp }, out)
+    sealed class Proto (tk: Tk, var xtpls: List<Tpl_Con>?, val inps: List<Type>, val out: Type): Type(G.N++, null, tk) {
+        open class Func (tk: Tk, xtpls: List<Tpl_Con>?, inps: List<Type>, out: Type): Proto(tk, xtpls, inps, out) {
+            class Vars (tk: Tk, xtpls: List<Tpl_Con>?, val inps_: List<Var_Type>, out: Type) :
+                Func(tk, xtpls, inps_.map { (_, tp) -> tp }, out)
         }
-        open class Coro (tk: Tk, inps: List<Type>, val res: Type, val yld: Type, out: Type): Proto(tk, inps, out) {
-            class Vars (tk: Tk, val inps_: List<Var_Type>, res: Type, yld: Type, out: Type):
-                Coro(tk, inps_.map { (_, tp) -> tp }, res, yld, out)
+        open class Coro (tk: Tk, xtpls: List<Tpl_Con>?, inps: List<Type>, val res: Type, val yld: Type, out: Type): Proto(tk, xtpls, inps, out) {
+            class Vars (tk: Tk, xtpls: List<Tpl_Con>?, val inps_: List<Var_Type>, res: Type, yld: Type, out: Type):
+                Coro(tk, xtpls, inps_.map { (_, tp) -> tp }, res, yld, out)
         }
     }
     class Exec (tk: Tk, val inps: List<Type>, val res: Type, val yld: Type, val out: Type): Type(G.N++, null, tk)
@@ -132,9 +132,9 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
 
 sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Data   (tk: Tk, val t: Tk.Type, val tpls: List<Tpl_Abs>, val tp: Type, val subs: List<Stmt.Data>?): Stmt(G.N++, null, tk)
-    sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, null, tk) {
-        class Func (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
-        class Coro (tk: Tk.Fix, id: Tk.Var, val tp_: Type.Proto.Coro.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tp_, blk)
+    sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tpls: List<Tpl_Abs>, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, null, tk) {
+        class Func (tk: Tk.Fix, id: Tk.Var, tpls: List<Tpl_Abs>, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tpls, tp_, blk)
+        class Coro (tk: Tk.Fix, id: Tk.Var, tpls: List<Tpl_Abs>, val tp_: Type.Proto.Coro.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tpls, tp_, blk)
     }
 
     class Block  (tk: Tk, val esc: Type.Data?, val ss: List<Stmt>) : Stmt(G.N++, null, tk)

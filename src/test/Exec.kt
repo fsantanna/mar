@@ -1637,10 +1637,10 @@ class Exec  {
     @Test
     fun tu_01_tpl () {
         val out = test("""
-            func {{n:Int}} f () -> Int {
-                return n
+            func f {{n:Int}}: () -> Int {
+                return({{n}})
             }
-            println(f {{10}} ())
+            print(f {{10}} ())
         """)
         assert(out == "10\n") { out }
     }
