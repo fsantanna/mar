@@ -53,6 +53,7 @@ val PRIMS = setOf(
 )
 
 typealias XDcl = Triple<Stmt,Tk.Var,Type?>
+typealias Var_Type = Pair<Tk.Var,Type>
 typealias Tpl_Abs = Pair<Tk.Var,Type>
 typealias Tpl_Con = Pair<Type?,Expr?>
 typealias Tpl_Map = Map<String, Tpl_Con>
@@ -87,11 +88,11 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
 
     sealed class Proto (tk: Tk, val inps: List<Type>, val out: Type): Type(G.N++, null, tk) {
         open class Func (tk: Tk, inps: List<Type>, out: Type): Proto(tk, inps, out) {
-            class Vars (tk: Tk, val inps_: List<Tpl_Abs>, out: Type) :
+            class Vars (tk: Tk, val inps_: List<Var_Type>, out: Type) :
                 Func(tk, inps_.map { (_, tp) -> tp }, out)
         }
         open class Coro (tk: Tk, inps: List<Type>, val res: Type, val yld: Type, out: Type): Proto(tk, inps, out) {
-            class Vars (tk: Tk, val inps_: List<Tpl_Abs>, res: Type, yld: Type, out: Type):
+            class Vars (tk: Tk, val inps_: List<Var_Type>, res: Type, yld: Type, out: Type):
                 Coro(tk, inps_.map { (_, tp) -> tp }, res, yld, out)
         }
     }
