@@ -133,6 +133,30 @@ fun parser_var_type (pre: Tk.Var?): Var_Type {
     return Pair(id, tp)
 }
 
+fun parser_tpls_abs (): List<Tpl_Abs> {
+    return if (!accept_fix("{{")) emptyList() else {
+        val l = parser_list(",", "}") {
+            parser_var_type(null) as Tpl_Abs
+        }
+        accept_fix_err("}")
+        l
+    }
+}
+
+fun parser_tpls_con (): List<Tpl_Con>? {
+    return if (!accept_fix("{{")) null else {
+        val x = parser_list(",", "}") {
+            if (accept_fix(":")) {
+                Pair(parser_type(null, false, false), null)
+            } else {
+                Pair(null, parser_expr())
+            }
+        }
+        accept_fix_err("}")
+        x
+    }
+}
+
 fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
     return when {
         (pre is Tk.Fix || accept_fix("func") || accept_fix("coro")) -> {
@@ -195,17 +219,7 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
             if (PRIMS.contains(tp.str)) {
                 Type.Prim(tp)
             } else {
-                val tpls: List<Tpl_Con>? = if (!accept_fix("{{")) null else {
-                    val x = parser_list(",", "}") {
-                        if (accept_fix(":")) {
-                            Pair(parser_type(null, false, false), null)
-                        } else {
-                            Pair(null, parser_expr())
-                        }
-                    }
-                    accept_fix_err("}")
-                    x
-                }
+                val tpls = parser_tpls_con()
                 val l = mutableListOf(tp)
                 while (accept_fix(".")) {
                     accept_enu_err("Type")
@@ -440,7 +454,7 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
         when (G.tk0!!.str) {
             "(" -> {
                 val args = parser_list(",",")") { parser_expr() }
-                Expr.Call(e.tk, e, args)
+                Expr.Call(e.tk, e, null, args)
             }
             "[" -> {
                 val idx = parser_expr()
@@ -799,13 +813,13 @@ fun parser_stmt (): List<Stmt> {
             accept_enu_err("Type")
             val t = G.tk0 as Tk.Type
             if (!accept_fix(".")) {
-                val xs = parser_tpls()
+                val xs = parser_tpls_abs()
                 accept_fix_err(":")
                 val tp = parser_type(null, false, false)
                 listOf(Stmt.Data(tk0, t, xs, tp, null))
             } else {
                 accept_op_err("*")
-                val xs = parser_tpls()
+                val xs = parser_tpls_abs()
                 accept_fix_err(":")
                 val tp = if (!check_fix_err("[")) {
                     Type.Tuple(G.tk0!!, emptyList())

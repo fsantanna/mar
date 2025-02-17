@@ -1265,7 +1265,21 @@ class Parser {
         assert(ss.to_str() == "var vs: Vec {{n}}\n") { ss.to_str() }
     }
     @Test
-    fun TODO_tt_02_func () {
+    fun tt_05_func () {
+        G.tks = ("""
+            do {
+                func {{t:Type}} f: (v:{{t}}) -> () {
+                    print(v)
+                }
+                print(f {{Int}} (10))
+            }
+        """).lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "data Pos: [Int,Int]\n") { ss.to_str() }
+    }
+    @Test
+    fun TODO_tt_XX_func () {
         G.tks = ("""
             func {{n:Int, t:Type}} f: (v:{{t}}) -> [Int,Int] {
                 var x: #[{{t}}*{{n}}] = #[v]

@@ -121,7 +121,7 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
 
     class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, null, tk_, null)
     class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, null, tk_, null)
-    class Call (tk: Tk, val f: Expr, val args: List<Expr>): Expr(G.N++, null, tk, null)
+    class Call (tk: Tk, val f: Expr, var xtpls: List<Tpl_Con>?, val args: List<Expr>): Expr(G.N++, null, tk, null)
 
     class Throw  (tk: Tk, var xtp: Type?, val e: Expr): Expr(G.N++, null, tk, null)
 

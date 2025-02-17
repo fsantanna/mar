@@ -1632,6 +1632,19 @@ class Exec  {
         assert(out == "10\n") { out }
     }
 
+    // TEMPLATE / FUNC
+
+    @Test
+    fun tu_01_tpl () {
+        val out = test("""
+            func {{n:Int}} f () -> Int {
+                return n
+            }
+            println(f {{10}} ())
+        """)
+        assert(out == "10\n") { out }
+    }
+
     // TEST
 
     @Test
