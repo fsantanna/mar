@@ -47,7 +47,7 @@ fun Type.Exec.x_inp_uni (tpl: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> 
     return Pair(id, tp)
 }
 
-fun Var_Type.coder (tpl: Tpl_Map?, pre: Boolean): String {
+fun Tpl_Abs.coder (tpl: Tpl_Map?, pre: Boolean): String {
     val (id,tp) = this
     return tp.coder(tpl) + " " + id.str
 }
