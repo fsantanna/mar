@@ -4,24 +4,24 @@ fun String.clean (): String {
     return this.replace('*','_')
 }
 
-fun Type.Proto.Coro.x_coro_exec (tpl: Tpl_Map?): Pair<String,String> {
-    val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(tpl) }.joinToString("__").clean()
+fun Type.Proto.Coro.x_coro_exec (tpls: Tpl_Map?): Pair<String,String> {
+    val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(tpls) }.joinToString("__").clean()
     return Pair("Coro__$tps", "Exec__$tps")
 }
-fun Type.Proto.Coro.x_inp_tup (tpl: Tpl_Map?, pre: Boolean): Pair<String, Type.Tuple> {
+fun Type.Proto.Coro.x_inp_tup (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Tuple> {
     val tp = Type.Tuple(this.tk, this.inps.map { Pair(null,it) })
-    val id = tp.coder(tpl)
+    val id = tp.coder(tpls)
     return Pair(id, tp)
 }
-fun Type.Proto.Coro.x_inp_uni (tpl: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
-    val tup = this.x_inp_tup(tpl,pre)
+fun Type.Proto.Coro.x_inp_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
+    val tup = this.x_inp_tup(tpls,pre)
     val tp = Type.Union(this.tk, false, listOf(tup.second, this.res).map { Pair(null,it) })
-    val id = tp.coder(tpl)
+    val id = tp.coder(tpls)
     return Pair(id, tp)
 }
-fun Type.Proto.Coro.x_out_uni (tpl: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
+fun Type.Proto.Coro.x_out_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
     val tp = Type.Union(this.tk, true, listOf(this.yld, this.out).map { Pair(null,it) })
-    val id = tp.coder(tpl)
+    val id = tp.coder(tpls)
     return Pair(id, tp)
 }
 fun Type.Proto.Coro.x_sig (pre: Boolean, id: String): String {
@@ -31,43 +31,43 @@ fun Type.Proto.Coro.x_sig (pre: Boolean, id: String): String {
     return "$xouni $id ($x* mar_exe, $xiuni mar_arg)"
 }
 
-fun Type.Exec.x_exec_coro (tpl: Tpl_Map?): Pair<String,String> {
-    val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(tpl) }.joinToString("__").clean()
+fun Type.Exec.x_exec_coro (tpls: Tpl_Map?): Pair<String,String> {
+    val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(tpls) }.joinToString("__").clean()
     return Pair("Exec__$tps", "Coro__$tps")
 }
-fun Type.Exec.x_inp_tup (tpl: Tpl_Map?, pre: Boolean): Pair<String, Type.Tuple> {
+fun Type.Exec.x_inp_tup (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Tuple> {
     val tp = Type.Tuple(this.tk, this.inps.map { Pair(null,it) })
-    val id = tp.coder(tpl)
+    val id = tp.coder(tpls)
     return Pair(id, tp)
 }
-fun Type.Exec.x_inp_uni (tpl: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
-    val tup = this.x_inp_tup(tpl,pre)
+fun Type.Exec.x_inp_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
+    val tup = this.x_inp_tup(tpls,pre)
     val tp = Type.Union(this.tk, false, mutableListOf(tup.second, this.res).map { Pair(null,it) })
-    val id = tp.coder(tpl)
+    val id = tp.coder(tpls)
     return Pair(id, tp)
 }
 
-fun Var_Type.coder (tpl: Tpl_Map?, pre: Boolean): String {
+fun Var_Type.coder (tpls: Tpl_Map?, pre: Boolean): String {
     val (id,tp) = this
-    return tp.coder(tpl) + " " + id.str
+    return tp.coder(tpls) + " " + id.str
 }
 
-fun Type.coder (tpl: Tpl_Map?): String {
+fun Type.coder (tpls: Tpl_Map?): String {
     return when (this) {
         //is Type.Err,
         is Type.Any, is Type.Bot, is Type.Top -> TODO()
-        is Type.Tpl        -> if (tpl == null) "_TPL_" else tpl[this.tk.str]!!.first!!.coder(tpl)
+        is Type.Tpl        -> if (tpls == null) "_TPL_" else tpls[this.tk.str]!!.first!!.coder(tpls)
         is Type.Nat        -> this.tk.str
         is Type.Prim       -> this.tk.str
         is Type.Data       -> this.ts.first().str + this.xtpls!!.map { (t,e) -> "_" + t.cond { it.to_str() } + e.cond { it.to_str() } }.joinToString("")
         is Type.Unit       -> "_VOID_"
-        is Type.Pointer    -> this.ptr.coder(tpl) + (this.ptr !is Type.Proto).cond { "*" }
-        is Type.Tuple      -> "Tuple__${this.ts.map { (id,tp) -> tp.coder(tpl)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Union      -> "Union__${this.ts.map { (id,tp) -> tp.coder(tpl)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Vector     -> "Vector__${this.max.cond2({it.tk.str},{"0"})}_${this.tp.coder(tpl)}".clean()
-        is Type.Proto.Func -> "Func__${this.inps.to_void().map { it.coder(tpl) }.joinToString("__")}__${this.out.coder(tpl)}".clean()
-        is Type.Proto.Coro -> this.x_coro_exec(tpl).first
-        is Type.Exec       -> this.x_exec_coro(tpl).first
+        is Type.Pointer    -> this.ptr.coder(tpls) + (this.ptr !is Type.Proto).cond { "*" }
+        is Type.Tuple      -> "Tuple__${this.ts.map { (id,tp) -> tp.coder(tpls)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
+        is Type.Union      -> "Union__${this.ts.map { (id,tp) -> tp.coder(tpls)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
+        is Type.Vector     -> "Vector__${this.max.cond2({it.tk.str},{"0"})}_${this.tp.coder(tpls)}".clean()
+        is Type.Proto.Func -> "Func__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean()
+        is Type.Proto.Coro -> this.x_coro_exec(tpls).first
+        is Type.Exec       -> this.x_exec_coro(tpls).first
     }
 }
 
@@ -235,20 +235,20 @@ fun coder_types (pre: Boolean): String {
                             }.joinToString("")
                         }
 
-                        fun g(tpl: Tpl_Map?, sup: Pair<String, String>?, s: Stmt.Data, I: Int): String {
+                        fun g(tpls: Tpl_Map?, sup: Pair<String, String>?, s: Stmt.Data, I: Int): String {
                             val cur = sup.cond { it.first + "_" } + s.t.str
                             val tup = s.tp as Type.Tuple
                             val flds = sup.cond { it.second } + tup.ts.mapIndexed { i, id_tp ->
                                 val (id, tp) = id_tp
                                 """
                                 union {
-                                    ${tp.coder(tpl)} _${I + i};
-                                    ${id.cond { "${tp.coder(tpl)} ${it.str};" }}
+                                    ${tp.coder(tpls)} _${I + i};
+                                    ${id.cond { "${tp.coder(tpls)} ${it.str};" }}
                                 };
                                 """
                             }.joinToString("")
                             val subs = s.subs!!.map {
-                                g(tpl, Pair(cur, flds), it, I + tup.ts.size)
+                                g(tpls, Pair(cur, flds), it, I + tup.ts.size)
                             }.joinToString("")
                             return """
                                 struct {
