@@ -173,7 +173,7 @@ object G {
 
     var outer: Stmt.Block? = null
 
-    val tpls  = mutableMapOf<Stmt.Data, MutableMap<String,List<Tpl_Con>>>()
+    val tpls  = mutableMapOf<Stmt.Proto, MutableMap<String,List<Tpl_Con>>>()
     val defers: MutableMap<Any, Triple<MutableList<Int>,String,String>> = mutableMapOf()
 
     var datas = 1

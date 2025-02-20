@@ -179,6 +179,7 @@ fun Expr.infer (tpe: Type?): Type? {
                     it.infer(null)
                 }
             }
+            this.xtpls = this.xtpls ?: emptyList()  // TODO: infer
         }
         is Expr.Throw -> {
             this.xtp = tpe

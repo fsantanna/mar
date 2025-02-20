@@ -209,20 +209,21 @@ fun cache_ups () {
 }
 
 fun cache_tpls () {
-    fun ft (me: Type) {
+    fun fe (me: Expr) {
         when (me) {
-            is Type.Data -> {
+            is Expr.Call -> {
                 if (!me.xtpls!!.isEmpty()) {
-                    val (s,_,_) = me.walk()!!
-                    if (G.tpls[s] == null) {
-                        G.tpls[s] = mutableMapOf()
+                    val f = me.f as Expr.Acc
+                    val dcl = f.to_xdcl()!!.first as Stmt.Proto
+                    if (G.tpls[dcl] == null) {
+                        G.tpls[dcl] = mutableMapOf()
                     }
-                    val id = me.coder(null)
-                    G.tpls[s]!![id] = me.xtpls!!
+                    val id = me.coder(false)
+                    G.tpls[dcl]!![id] = me.xtpls!!
                 }
             }
             else -> {}
         }
     }
-    G.outer!!.dn_visit_pre({}, {}, ::ft)
+    G.outer!!.dn_visit_pre({}, ::fe, {})
 }
