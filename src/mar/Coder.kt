@@ -56,7 +56,7 @@ fun Type.coder (tpls: Tpl_Map?): String {
     return when (this) {
         //is Type.Err,
         is Type.Any, is Type.Bot, is Type.Top -> TODO()
-        is Type.Tpl        -> if (tpls == null) "_TPL_" else tpls[this.tk.str]!!.first!!.coder(tpls)
+        is Type.Tpl        -> tpls!![this.tk.str]!!.first!!.coder(tpls)
         is Type.Nat        -> this.tk.str
         is Type.Prim       -> this.tk.str
         is Type.Data       -> this.ts.first().str + this.xtpls!!.map { (t,e) -> "_" + t.cond { it.to_str() } + e.cond { it.to_str() } }.joinToString("")
@@ -96,12 +96,10 @@ fun List<Tk.Type>.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
 
 fun coder_types (pre: Boolean): String {
     val CACHE = mutableSetOf<String>()
-    var FT_DATA = 0
     fun ft (me: Type): List<String> {
         when {
             (me is Type.Any) -> return emptyList()
-            (FT_DATA==0 && me.up_any { it is Stmt.Data }) -> return emptyList()
-                // Stmt.Data is abstract, we use concrete Type.Data
+            me.has_tpls_dn() -> return emptyList()
         }
         when (me) {
             is Type.Proto.Func, is Type.Proto.Coro, is Type.Data,
@@ -157,6 +155,7 @@ fun coder_types (pre: Boolean): String {
                 )
             }
             is Type.Vector -> {
+                //println(me.xup!!.to_str())
                 val x = me.coder(null)
                 listOf("""
                     typedef struct $x {
@@ -200,9 +199,7 @@ fun coder_types (pre: Boolean): String {
                 val (S, _, tpc) = me.walk_tpl()
                 //println(me.to_str())
                 //println(tpc.to_str())
-                FT_DATA++
                 val ts = tpc.dn_collect_pos({ emptyList() }, ::ft)
-                FT_DATA--
                 ts + when {
                     (S.subs == null) -> {
                         fun f(tp: Type, s: List<String>): List<String> {

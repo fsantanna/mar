@@ -30,6 +30,15 @@ fun List<Tk.Type>.to_str (pre: Boolean=false): String {
     return this.map { it.str }.joinToString(".")
 }
 
+fun Any.to_str (pre: Boolean = false): String {
+    return when (this) {
+        is Type -> this.to_str(pre)
+        is Expr -> this.to_str(pre)
+        is Stmt -> this.to_str(pre)
+        else -> error("impossible case")
+    }
+}
+
 fun Type.to_str (pre: Boolean = false): String {
     return when (this) {
         //is Type.Err,

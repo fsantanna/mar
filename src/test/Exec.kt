@@ -1645,6 +1645,30 @@ class Exec  {
         """)
         assert(out == "10\n20\n") { out }
     }
+    @Test
+    fun tu_02_tpl () {
+        val out = test("""
+            func f {{n:Int}}: () -> Int {
+                var xs: #[Int*{{n}}]
+                return(##xs+1)
+            }
+            print(f {{10}} ())
+            print(f {{20}} ())
+        """)
+        assert(out == "11\n21\n") { out }
+    }
+    @Test
+    fun tu_03_tpl () {
+        val out = test("""
+            func f {{w:Int,h:Int}}: () -> Int {
+                var xs: #[Int*{{w}}*{{h}}]
+                return(##xs)
+            }
+            print(f {{10,20}} ())
+            print(f {{20,30}} ())
+        """)
+        assert(out == "200\n600\n") { out }
+    }
 
     // TEST
 
