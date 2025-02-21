@@ -369,7 +369,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             if (tp !is Type.Vector) "" else {
                                 val xid = id.str
                                 """
-                                $xid.max = ${tp.max!!.tk.str};
+                                $xid.max = ${tp.max!!.coder(tpls,pre)};
                                 $xid.cur = MIN($xid.max, $xid.cur);                            
                                 """
                             }
@@ -472,7 +472,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
             val ini = this.xtp.let {
                 if (it !is Type.Vector) "" else """
-                    ${this.id.str}.max = ${it.max!!.tk.str};
+                    ${this.id.str}.max = ${it.max!!.coder(tpls,pre)};
                     ${this.id.str}.cur = 0;
                 """
             }
@@ -495,7 +495,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     {
                         typeof($dst)* mar_$n = &$dst;
                         *mar_$n = CAST(${tdst.coder(null)}, $src);
-                        mar_$n->max = ${tdst.max!!.tk.str};
+                        mar_$n->max = ${tdst.max!!.coder(tpls,pre)};
                         mar_$n->cur = MIN(mar_$n->max, mar_$n->cur);                        
                     }                        
                 """

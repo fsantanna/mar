@@ -164,7 +164,10 @@ fun cache_ups () {
             is Type.Tuple -> me.ts.forEach { (_,tp) ->
                 tp.xup = me
             }
-            is Type.Vector -> me.tp.xup = me
+            is Type.Vector -> {
+                me.max?.xup = me
+                me.tp.xup = me
+            }
             is Type.Union -> {
                 me.ts.forEach { (_,tp) ->
                     tp.xup = me
