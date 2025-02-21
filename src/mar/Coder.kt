@@ -71,10 +71,10 @@ fun Type.coder (tpls: Tpl_Map?): String {
     }
 }
 
-fun List<Tk.Type>.coder (tpl: List<Tpl_Con>?, pre: Boolean): String {
+fun List<Tk.Type>.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
     return this.map { it.str }.let {
-        if (tpl == null) it else {
-            val ts = tpl.map { it.first.cond { it.to_str() } + it.second.cond { it.to_str() } }
+        if (tpls == null) it else {
+            val ts = tpls.map { it.first.cond { it.to_str() } + it.second.cond { it.to_str() } }
             listOf(it.first()) + ts + it.drop(1)
         }
     }.joinToString("_")
@@ -335,7 +335,7 @@ fun coder_types (pre: Boolean): String {
     return ts.joinToString("")
 }
 
-fun Stmt.coder (pre: Boolean): String {
+fun Stmt.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
     return when (this) {
         is Stmt.Data -> ""
         is Stmt.Proto -> {
@@ -389,7 +389,7 @@ fun Stmt.coder (pre: Boolean): String {
 
         is Stmt.Block  -> {
             val body = this.ss.map {
-                it.coder(pre) + "\n"
+                it.coder(tpls,pre) + "\n"
             }.joinToString("")
             val escs = this.dn_collect_pre({
                 // TODO: should consider nested matching do/escape
@@ -453,14 +453,14 @@ fun Stmt.coder (pre: Boolean): String {
             dcl + ini
         }
         is Stmt.SetE    -> {
-            val dst = this.dst.coder(pre)
-            val src = this.src.coder(pre)
+            val dst = this.dst.coder(tpls,pre)
+            val src = this.src.coder(tpls,pre)
             val tdst = this.dst.typex()
             val tsrc = this.src.typex()
             when {
                 this.src.let { it is Expr.MatchT || it is Expr.MatchE } -> {
                     assert(tsrc !is Type.Vector)
-                    this.src.coder(pre) + """
+                    this.src.coder(tpls,pre) + """
                         $dst = mar_${this.src.n};
                     """
                 }
@@ -479,10 +479,10 @@ fun Stmt.coder (pre: Boolean): String {
                 }
             }
         }
-        is Stmt.SetS    -> this.src.coder(pre)
+        is Stmt.SetS    -> this.src.coder(tpls,pre)
 
         is Stmt.Escape -> """
-            MAR_ESCAPE = CAST(Escape, ${this.e.coder(pre)});
+            MAR_ESCAPE = CAST(Escape, ${this.e.coder(tpls,pre)});
             continue;            
         """
         is Stmt.Defer -> {
@@ -494,7 +494,7 @@ fun Stmt.coder (pre: Boolean): String {
             """
             val endx = """
                 if ($id) {     // if true: reached, finalize
-                    ${this.blk.coder(pre)}
+                    ${this.blk.coder(tpls,pre)}
                 }
             """
             ns.add(n)
@@ -509,14 +509,14 @@ fun Stmt.coder (pre: Boolean): String {
             """
             { // CATCH | ${this.dump()}
                 do {
-                    ${this.blk.coder(pre)}
+                    ${this.blk.coder(tpls,pre)}
                 } while (0);
                 if (MAR_EXCEPTION.tag == __MAR_EXCEPTION_NONE__) {
                     // no escape
                     ${(this.xup is Stmt.SetS).cond {
                         val set = this.xup as Stmt.SetS
                         """
-                        ${set.dst.coder(pre)} = ($uni) { .tag=${xuni}_OK_TAG };
+                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=${xuni}_OK_TAG };
                         """
                      }}
                 } else if (
@@ -529,7 +529,7 @@ fun Stmt.coder (pre: Boolean): String {
                     ${(this.xup is Stmt.SetS && this.tp!=null).cond {
                         val set = this.xup as Stmt.SetS
                         """
-                        ${set.dst.coder(pre)} = ($uni) { .tag=${xuni}_ERR_TAG, .Err=CAST(${this.tp!!.coder(null)}, MAR_EXCEPTION) };
+                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=${xuni}_ERR_TAG, .Err=CAST(${this.tp!!.coder(null)}, MAR_EXCEPTION) };
                         """
                      }}
                     MAR_EXCEPTION.tag = __MAR_EXCEPTION_NONE__;
@@ -545,41 +545,41 @@ fun Stmt.coder (pre: Boolean): String {
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
                 """
-                ${set.dst.coder(pre)} =
+                ${set.dst.coder(tpls,pre)} =
                 """
             } + """
-            ($xtp) { 0, ${this.co.coder(pre)}, {} };
+            ($xtp) { 0, ${this.co.coder(tpls,pre)}, {} };
             """
         }
         is Stmt.Start -> {
-            val exe = this.exe.coder(pre)
+            val exe = this.exe.coder(tpls,pre)
             val tp = this.exe.type() as Type.Exec
             val (xuni,_) = tp.x_inp_uni(null,pre)
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
                 """
-                ${set.dst.coder(pre)} =
+                ${set.dst.coder(tpls,pre)} =
                 """
             } + """
             $exe.co (
                 &$exe, ($xuni) { ._1 = {
-                    ${this.args.map { it.coder(pre) }.joinToString(",")}
+                    ${this.args.map { it.coder(tpls,pre) }.joinToString(",")}
                 } }
             );
             """
         }
         is Stmt.Resume -> {
-            val exe = this.exe.coder(pre)
+            val exe = this.exe.coder(tpls,pre)
             val tp = this.exe.type() as Type.Exec
             val (xuni,_) = tp.x_inp_uni(null,pre)
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
                 """
-                ${set.dst.coder(pre)} =
+                ${set.dst.coder(tpls,pre)} =
                 """
             } + """
             $exe.co (
-                &$exe, ($xuni) { ._2 = ${this.arg.coder(pre)} }
+                &$exe, ($xuni) { ._2 = ${this.arg.coder(tpls,pre)} }
             );
             """
         }
@@ -588,12 +588,12 @@ fun Stmt.coder (pre: Boolean): String {
             val (xuni,_) = tp.x_out_uni(null,pre)
             """
                 mar_exe->pc = ${this.n};
-                return ($xuni) { .tag=1, ._1=${this.arg.coder(pre)} };
+                return ($xuni) { .tag=1, ._1=${this.arg.coder(tpls,pre)} };
             case ${this.n}:
                 ${(this.xup is Stmt.SetS).cond {
                     val set = this.xup as Stmt.SetS
                     """
-                    ${set.dst.coder(pre)} = mar_arg._2;
+                    ${set.dst.coder(tpls,pre)} = mar_arg._2;
                     """
                 }}
             """
@@ -601,35 +601,35 @@ fun Stmt.coder (pre: Boolean): String {
 
 
         is Stmt.If     -> """
-            if (${this.cnd.coder(pre)}) {
-                ${this.t.coder(pre)}
+            if (${this.cnd.coder(tpls,pre)}) {
+                ${this.t.coder(tpls,pre)}
             } else {
-                ${this.f.coder(pre)}
+                ${this.f.coder(tpls,pre)}
             }
         """
         is Stmt.Loop   -> """
             // LOOP | ${this.dump()}
             MAR_LOOP_START_${this.n}:
-                ${this.blk.coder(pre)}
+                ${this.blk.coder(tpls,pre)}
                 goto MAR_LOOP_START_${this.n};
                 MAR_LOOP_STOP_${this.n}:
         """
         is Stmt.MatchT -> """
             // MATCH | ${this.dump()}
-            switch (${this.tst.coder(pre)}.tag) {
+            switch (${this.tst.coder(tpls,pre)}.tag) {
                 ${this.cases.map { (tst,e) -> """
                     ${tst.cond2({"case ${it.ts.coder(null,pre).uppercase()}_TAG"},{"default"})}:
-                        ${e.coder(pre)};
+                        ${e.coder(tpls,pre)};
                     break;
                 """ }.joinToString("")}
             }
         """
         is Stmt.MatchE -> """
             // MATCH | ${this.dump()}
-            switch (${this.tst.coder(pre)}) {
+            switch (${this.tst.coder(tpls,pre)}) {
                 ${this.cases.map { (tst,e) -> """
-                    ${tst.cond2({"case ${it.coder(pre)}"},{"default"})}:
-                        ${e.coder(pre)};
+                    ${tst.cond2({"case ${it.coder(tpls,pre)}"},{"default"})}:
+                        ${e.coder(tpls,pre)};
                     break;
                 """ }.joinToString("")}
             }
@@ -733,11 +733,11 @@ fun Stmt.coder (pre: Boolean): String {
                     else -> TODO("3")
                 }
             }
-            aux(this.e.typex(), this.e.coder(pre)) + """
+            aux(this.e.typex(), this.e.coder(tpls,pre)) + """
                 puts("");
             """
         }
-        is Stmt.Pass  -> this.e.coder(pre) + ";"
+        is Stmt.Pass  -> this.e.coder(tpls,pre) + ";"
     }
 }
 
@@ -750,7 +750,7 @@ fun Tk.Var.coder (fr: Any, pre: Boolean): String {
     }
 }
 
-fun Expr.coder (pre: Boolean): String {
+fun Expr.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
     fun String.op_mar_to_c (): String {
         return when (this) {
             "ref" -> "&"
@@ -761,22 +761,22 @@ fun Expr.coder (pre: Boolean): String {
     return when (this) {
         is Expr.Uno -> {
             return when (this.tk.str) {
-                "#"  -> "(" + this.e.coder(pre) + ".cur)"
-                "##" -> "(" + this.e.coder(pre) + ".max)"
+                "#"  -> "(" + this.e.coder(tpls,pre) + ".cur)"
+                "##" -> "(" + this.e.coder(tpls,pre) + ".max)"
                 "ref" -> {
-                    val x = this.e.coder(pre)
+                    val x = this.e.coder(tpls,pre)
                     if (this.e.is_lval()) {
                         "(&$x)"
                     } else {
                         "({ typeof($x) mar_$n=$x; &mar_$n; })"
                     }
                 }
-                else -> "(" + this.tk.str.op_mar_to_c() + this.e.coder(pre) + ")"
+                else -> "(" + this.tk.str.op_mar_to_c() + this.e.coder(tpls,pre) + ")"
             }
         }
         is Expr.Bin -> {
-            val e1 = this.e1.coder(pre)
-            val e2 = this.e2.coder(pre)
+            val e1 = this.e1.coder(tpls,pre)
+            val e2 = this.e2.coder(tpls,pre)
             when (this.tk.str) {
                 "++" -> {
                     val tp = this.typex() as Type.Vector
@@ -810,8 +810,8 @@ fun Expr.coder (pre: Boolean): String {
                     it.inps
                 }
             }
-            val call = "${this.f.coder(pre)} ( ${this.args.mapIndexed { i,arg ->
-                val src = arg.coder(pre)
+            val call = "${this.f.coder(tpls,pre)} ( ${this.args.mapIndexed { i,arg ->
+                val src = arg.coder(tpls,pre)
                 val tdst = if (inps == null) null else inps[i]
                 val tsrc = arg.typex()
                 when {
@@ -832,13 +832,13 @@ fun Expr.coder (pre: Boolean): String {
             """
         }
 
-        is Expr.Tuple  -> "((${this.typex().coder(null)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(pre)+"}" }.joinToString(",") } })"
+        is Expr.Tuple  -> "((${this.typex().coder(null)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(tpls,pre)+"}" }.joinToString(",") } })"
         is Expr.Vector -> (this.typex() as Type.Vector).let {
-            "((${it.coder(null)}) { .max=${it.max!!.tk.str}, .cur=${it.max!!.tk.str}, .buf={${this.vs.map { it.coder(pre) }.joinToString(",") }} })"
+            "((${it.coder(null)}) { .max=${it.max!!.tk.str}, .cur=${it.max!!.tk.str}, .buf={${this.vs.map { it.coder(tpls,pre) }.joinToString(",") }} })"
         }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
-            "((${this.typex().coder(null)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(pre) } })"
+            "((${this.typex().coder(null)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(tpls,pre) } })"
         }
         is Expr.Field  -> {
             val idx = this.idx.toIntOrNull().let {
@@ -846,31 +846,31 @@ fun Expr.coder (pre: Boolean): String {
             }
             val tp = this.col.typex()
             if (tp !is Type.Data) {
-                "(${this.col.coder(pre)}.$idx)"
+                "(${this.col.coder(tpls,pre)}.$idx)"
             } else {
                 val s = tp.walk()!!.first
                 if (s.subs == null) {
                     val sub = tp.ts.drop(1).map { it.str + "." }.joinToString("")
-                    "(${this.col.coder(pre)}.$sub$idx)"
+                    "(${this.col.coder(tpls,pre)}.$sub$idx)"
                 } else {
                     val ts = tp.ts.coder(null,pre)
-                    "(${this.col.coder(pre)}.$ts.$idx)" // v.A_B_C.x
+                    "(${this.col.coder(tpls,pre)}.$ts.$idx)" // v.A_B_C.x
                 }
             }
         }
-        is Expr.Index  -> "${this.col.coder(pre)}.buf[${this.idx.coder(pre)}]"
+        is Expr.Index  -> "${this.col.coder(tpls,pre)}.buf[${this.idx.coder(tpls,pre)}]"
         is Expr.Disc   -> {
             val tp = this.col.typex()
             val ret = if (tp !is Type.Data) {
                 val (i,_) = tp.discx(this.idx)!!
-                "${this.col.coder(pre)}._${i+1}"
+                "${this.col.coder(tpls,pre)}._${i+1}"
             } else {
                 val s = tp.walk()!!.first
                 if (s.subs == null) {
                     val (i,_) = tp.discx(this.idx)!!
-                    "${this.col.coder(pre)}._${i+1}"
+                    "${this.col.coder(tpls,pre)}._${i+1}"
                 } else {
-                    this.col.coder(pre)
+                    this.col.coder(tpls,pre)
                 }
             }
             """
@@ -880,7 +880,7 @@ fun Expr.coder (pre: Boolean): String {
         }
         is Expr.Pred   -> {
             val (i,_) = this.col.typex().discx(this.idx)!!
-            "(${this.col.coder(pre)}.tag==${i+1})"
+            "(${this.col.coder(tpls,pre)}.tag==${i+1})"
         }
         is Expr.Cons   -> {
             val s = this.walk(this.tp.ts)!!.first
@@ -891,7 +891,7 @@ fun Expr.coder (pre: Boolean): String {
                     ret = ret + "$tp ceu_$i = /* xxx */" +
                             if (i == this.tp.ts.size - 1) {
                                 """
-                                ((${tp}) ${this.e.coder(pre)});
+                                ((${tp}) ${this.e.coder(tpls,pre)});
                                 """
                             } else {
                                 val nxt = this.tp.ts[i + 1].str
@@ -907,7 +907,7 @@ fun Expr.coder (pre: Boolean): String {
             } else {
                 val tup = this.e as Expr.Tuple
                 val vs = tup.vs.mapIndexed { i,(id,v) ->
-                    "."+(id?.str ?: ("_"+(i+1))) + " = " + v.coder(pre)
+                    "."+(id?.str ?: ("_"+(i+1))) + " = " + v.coder(tpls,pre)
                 }.joinToString(",")
                 val ts = this.tp.ts.coder(null,pre)
                 "((${this.tp.ts.first().str}) { .tag=${ts.uppercase()}_TAG, .$ts={$vs} })"
@@ -941,29 +941,29 @@ fun Expr.coder (pre: Boolean): String {
         is Expr.Throw -> """
             ({
                 assert(sizeof(Exception) >= sizeof(${this.e.typex().coder(null)}));
-                MAR_EXCEPTION = CAST(Exception, ${this.e.coder(pre)});
+                MAR_EXCEPTION = CAST(Exception, ${this.e.coder(tpls,pre)});
                 continue;
                 ${this.xtp!!.coder(null)} mar_$n ; mar_$n;
             })
         """
 
-        is Expr.If -> "((${this.cnd.coder(pre)}) ? (${this.t.coder(pre)}) : (${this.f.coder(pre)}))"
+        is Expr.If -> "((${this.cnd.coder(tpls,pre)}) ? (${this.t.coder(tpls,pre)}) : (${this.f.coder(pre)}))"
         is Expr.MatchT -> """
             ${this.typex().coder(TODO())} mar_$n;
-            switch (${this.tst.coder(pre)}.tag) {
+            switch (${this.tst.coder(tpls,pre)}.tag) {
                 ${this.cases.map { (tst,e) -> """
                     ${tst.cond2({"case ${it.ts.coder(TODO(),pre).uppercase()}_TAG"},{"default"})}:
-                        mar_$n = ${e.coder(pre)};
+                        mar_$n = ${e.coder(tpls,pre)};
                     break;
                 """ }.joinToString("")}
             }
         """
         is Expr.MatchE -> """
             ${this.typex().coder(null)} mar_$n;
-            switch (${this.tst.coder(pre)}) {
+            switch (${this.tst.coder(tpls,pre)}) {
                 ${this.cases.map { (tst,e) -> """
-                    ${tst.cond2({"case ${it.coder(pre)}"},{"default"})}:
-                        mar_$n = ${e.coder(pre)};
+                    ${tst.cond2({"case ${it.coder(tpls,pre)}"},{"default"})}:
+                        mar_$n = ${e.coder(tpls,pre)};
                     break;
                 """ }.joinToString("")}
             }
