@@ -1641,8 +1641,9 @@ class Exec  {
                 return({{n}})
             }
             print(f {{10}} ())
+            print(f {{20}} ())
         """)
-        assert(out == "10\n") { out }
+        assert(out == "10\n20\n") { out }
     }
 
     // TEST

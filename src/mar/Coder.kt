@@ -71,6 +71,20 @@ fun Type.coder (tpls: Tpl_Map?): String {
     }
 }
 
+fun String.proto (tpls: List<Tpl_Con>?): String {
+    return this + tpls!!.map { (t,e) ->
+        "_" + t.cond { it.to_str() } + e.cond { it.to_str() }
+    }.joinToString("")
+}
+
+fun Stmt.Proto.proto (tpls: Map<String,Tpl_Con>?): String {
+    return this.id.str + this.tpls.map {
+        tpls!![it.first.str]!!.let { (t,e) ->
+            "_" + t.cond { it.to_str() } + e.cond { it.to_str() }
+        }
+    }.joinToString("")
+}
+
 fun List<Tk.Type>.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
     return this.map { it.str }.let {
         if (tpls == null) it else {
@@ -335,56 +349,63 @@ fun coder_types (pre: Boolean): String {
     return ts.joinToString("")
 }
 
-fun Stmt.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
+fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
     return when (this) {
         is Stmt.Data -> ""
         is Stmt.Proto -> {
-            when (this) {
-                is Stmt.Proto.Func ->
-                    this.tp_.out.coder(null) + " " + this.id.str + " (" + this.tp_.inps_.map { it.coder(it.second.assert_no_tpls_up(),pre) }.joinToString(",") + ")"
-                is Stmt.Proto.Coro -> this.tp_.x_sig(pre, this.id.str)
-            } + """
-            {
-                ${this.tp.out.coder(null)} mar_ret;
-                ${(this is Stmt.Proto.Func).cond {
-                    this as Stmt.Proto.Func
-                    this.tp_.inps_.map { (id,tp) ->
-                        if (tp !is Type.Vector) "" else {
-                            val xid = id.str
-                            """
-                            $xid.max = ${tp.max!!.tk.str};
-                            $xid.cur = MIN($xid.max, $xid.cur);                            
-                            """
-                        }
-                    }.joinToString("")
-                }}
-                do {
-                    ${(this is Stmt.Proto.Coro).cond {
-                        this as Stmt.Proto.Coro
-                        """                    
-                        switch (mar_exe->pc) {
-                            case 0:
-                                ${this.tp_.inps_.mapIndexed { i,vtp ->
-                                    val (id,tp) = vtp
-                                    assert(tp !is Type.Vector)
-                                    id.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n"                                }.joinToString("")}
-                    """ }}
-                    ${this.blk.coder(pre)}
-                    ${(this is Stmt.Proto.Coro).cond { """
-                        }
-                    """ }}
-                } while (0);
-                ${when {
-                    (this is Stmt.Proto.Func) -> "return mar_ret;"
-                    (this is Stmt.Proto.Coro) -> {
-                        val (xuni,_) = this.tp_.x_out_uni(null,pre)
-                        "return ($xuni) { .tag=2, ._2=mar_ret };"
-                    }
-                    else -> error("impossible case")
-                }}
-                
+            assert((tpls == null) || this.tpls.isEmpty()) { "TODO: merge tpls" }
+            val xtplss: List<Tpl_Map?> = if (this.tpls.isEmpty()) listOf(null) else {
+                G.tpls[this]?.values?.map { this.tpls.map { (id, _) -> id.str }.zip(it).toMap() }
+                    ?: emptyList()
             }
-            """
+            xtplss.map { xtpls ->
+                when (this) {
+                    is Stmt.Proto.Func ->
+                        this.tp_.out.coder(xtpls) + " " + this.proto(xtpls) + " (" + this.tp_.inps_.map { it.coder(it.second.assert_no_tpls_up(),pre) }.joinToString(",") + ")"
+                    is Stmt.Proto.Coro -> this.tp_.x_sig(pre, this.proto(xtpls))
+                } + """
+                {
+                    ${this.tp.out.coder(xtpls)} mar_ret;
+                    ${(this is Stmt.Proto.Func).cond {
+                        this as Stmt.Proto.Func
+                        this.tp_.inps_.map { (id,tp) ->
+                            if (tp !is Type.Vector) "" else {
+                                val xid = id.str
+                                """
+                                $xid.max = ${tp.max!!.tk.str};
+                                $xid.cur = MIN($xid.max, $xid.cur);                            
+                                """
+                            }
+                        }.joinToString("")
+                    }}
+                    do {
+                        ${(this is Stmt.Proto.Coro).cond {
+                            this as Stmt.Proto.Coro
+                            """                    
+                            switch (mar_exe->pc) {
+                                case 0:
+                                    ${this.tp_.inps_.mapIndexed { i,vtp ->
+                                        val (id,tp) = vtp
+                                        assert(tp !is Type.Vector)
+                                        id.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n"                                }.joinToString("")}
+                        """ }}
+                        ${this.blk.coder(xtpls,pre)}
+                        ${(this is Stmt.Proto.Coro).cond { """
+                            }
+                        """ }}
+                    } while (0);
+                    ${when {
+                        (this is Stmt.Proto.Func) -> "return mar_ret;"
+                        (this is Stmt.Proto.Coro) -> {
+                            val (xuni,_) = this.tp_.x_out_uni(null,pre)
+                            "return ($xuni) { .tag=2, ._2=mar_ret };"
+                        }
+                        else -> error("impossible case")
+                    }}
+                    
+                }
+                """
+            }.joinToString("")
         }
 
         is Stmt.Block  -> {
@@ -405,15 +426,23 @@ fun Stmt.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
                     it.second
                 }}
                 do {
-                    ${this.to_dcls().map { (_,id,tp) ->
-                        when (tp) {
-                            is Type.Proto.Func -> "auto " + tp.out.coder(null) + " " + id.str + " (" + tp.inps.map { it.coder(
-                                it.assert_no_tpls_up()
-                            ) }.joinToString(",") + ");\n"
-                            is Type.Proto.Coro -> "auto ${tp.x_sig(pre,id.str)};\n"
-                            else -> ""
+                    ${this.to_dcls().map { (s,_,tp) ->
+                        if (tp !is Type.Proto) emptyList() else {
+                            s as Stmt.Proto
+                            val xtplss: List<Tpl_Map?> = if (s.tpls.isEmpty()) listOf(null) else {
+                                G.tpls[s]?.values?.map { s.tpls.map { (id, _) -> id.str }.zip(it).toMap() }
+                                    ?: emptyList()
+                            }
+                            xtplss.map { xtpls ->
+                                when (tp) {
+                                    is Type.Proto.Func -> "auto " + tp.out.coder(null) + " " + s.proto(xtpls) + " (" + tp.inps.map { it.coder(
+                                        it.assert_no_tpls_up()
+                                    ) }.joinToString(",") + ");\n"
+                                    is Type.Proto.Coro -> "auto ${tp.x_sig(pre,s.proto(xtpls))};\n"
+                                }
+                            }
                         }
-                    }.joinToString("")}
+                    }.flatten().joinToString("")}
                     $body
                 } while (0);
                 ${G.defers[this.n].cond {
@@ -750,7 +779,7 @@ fun Tk.Var.coder (fr: Any, pre: Boolean): String {
     }
 }
 
-fun Expr.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
+fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
     fun String.op_mar_to_c (): String {
         return when (this) {
             "ref" -> "&"
@@ -805,12 +834,23 @@ fun Expr.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
             }
         }
         is Expr.Call -> {
+            val f = this.xtpls.let {
+                val id = this.f.coder(tpls,pre)
+                when {
+                    (it == null) -> id
+                    it.isEmpty() -> id
+                    else -> {
+                        assert(this.f is Expr.Acc)
+                        id.proto(it)
+                    }
+                }
+            }
             val inps = this.f.type().let {
                 if (it !is Type.Proto) null else {
                     it.inps
                 }
             }
-            val call = "${this.f.coder(tpls,pre)} ( ${this.args.mapIndexed { i,arg ->
+            val call = "$f ( ${this.args.mapIndexed { i,arg ->
                 val src = arg.coder(tpls,pre)
                 val tdst = if (inps == null) null else inps[i]
                 val tsrc = arg.typex()
@@ -914,7 +954,7 @@ fun Expr.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
             }
         }
 
-        is Expr.Tpl -> TODO("Expr.Tpl.coder()")
+        is Expr.Tpl -> tpls!![this.tk.str]!!.second!!.coder(tpls,pre)
         is Expr.Nat -> when {
             (this.tk.str == "mar_ret") -> this.tk.str
             (this.xup is Stmt.Pass)    -> this.tk.str
@@ -947,7 +987,7 @@ fun Expr.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
             })
         """
 
-        is Expr.If -> "((${this.cnd.coder(tpls,pre)}) ? (${this.t.coder(tpls,pre)}) : (${this.f.coder(pre)}))"
+        is Expr.If -> "((${this.cnd.coder(tpls,pre)}) ? (${this.t.coder(tpls,pre)}) : (${this.f.coder(tpls,pre)}))"
         is Expr.MatchT -> """
             ${this.typex().coder(TODO())} mar_$n;
             switch (${this.tst.coder(tpls,pre)}.tag) {
@@ -1064,7 +1104,7 @@ fun coder_main (pre: Boolean): String {
         
         int main (void) {
             do {
-                ${G.outer!!.coder(pre)}
+                ${G.outer!!.coder(null,pre)}
             } while (0);
             if (MAR_EXCEPTION.tag != __MAR_EXCEPTION_NONE__) {
                 puts("uncaught exception");

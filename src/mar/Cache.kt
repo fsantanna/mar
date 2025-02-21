@@ -218,7 +218,7 @@ fun cache_tpls () {
                     if (G.tpls[dcl] == null) {
                         G.tpls[dcl] = mutableMapOf()
                     }
-                    val id = me.coder(false)
+                    val id = me.coder(null,false)
                     G.tpls[dcl]!![id] = me.xtpls!!
                 }
             }
