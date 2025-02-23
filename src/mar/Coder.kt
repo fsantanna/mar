@@ -64,7 +64,7 @@ fun Type.coder (tpls: Tpl_Map?): String {
         is Type.Pointer    -> this.ptr.coder(tpls) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "Tuple__${this.ts.map { (id,tp) -> tp.coder(tpls)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
         is Type.Union      -> "Union__${this.ts.map { (id,tp) -> tp.coder(tpls)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Vector     -> "Vector__${this.max.cond2({it.tk.str},{"0"})}_${this.tp.coder(tpls)}".clean()
+        is Type.Vector     -> "Vector__${this.max.cond2({it.coder(tpls,false)},{"0"})}_${this.tp.coder(tpls)}".clean()
         is Type.Proto.Func -> "Func__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(tpls).first
         is Type.Exec       -> this.x_exec_coro(tpls).first
@@ -94,20 +94,19 @@ fun List<Tk.Type>.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
     }.joinToString("_")
 }
 
-fun coder_types (pre: Boolean): String {
-    val CACHE = mutableSetOf<String>()
+fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
     fun ft (me: Type): List<String> {
         when {
             (me is Type.Any) -> return emptyList()
-            me.has_tpls_dn() -> return emptyList()
+            (tpls==null && me.has_tpls_dn()) -> return emptyList()
         }
         when (me) {
             is Type.Proto.Func, is Type.Proto.Coro, is Type.Data,
             is Type.Tuple, is Type.Vector, is Type.Union -> me.coder(null).let {
-                if (CACHE.contains(it)) {
+                if (G.types.contains(it)) {
                     return emptyList()
                 } else {
-                    CACHE.add(it)
+                    G.types.add(it)
                 }
             }
             else -> {}
@@ -115,11 +114,13 @@ fun coder_types (pre: Boolean): String {
         //println(listOf("AAA", me.coder(null,pre)))
 
         return when (me) {
-            is Type.Proto.Func -> listOf(
-                "typedef ${me.out.coder(null)} (*${me.coder(null)}) (${
-                    me.inps.map { it.coder(null) }.joinToString(",")
-                });\n"
-            )
+            is Type.Proto.Func -> {
+                listOf(
+                    "typedef ${me.out.coder(null)} (*${me.coder(null)}) (${
+                        me.inps.map { it.coder(null) }.joinToString(",")
+                    });\n"
+                )
+            }
             is Type.Proto.Coro -> {
                 val (co, exe) = me.x_coro_exec(null)
                 val (_, itup) = me.x_inp_tup(null, pre)
@@ -296,10 +297,10 @@ fun coder_types (pre: Boolean): String {
                 if (me.tk.str == "++") {
                     val tp = me.typex() as Type.Vector
                     val x = tp.coder(tp.assert_no_tpls_up())
-                    if (CACHE.contains(x)) {
+                    if (G.types.contains(x)) {
                         return emptyList()
                     } else {
-                        CACHE.add(x)
+                        G.types.add(x)
                     }
                     val y = tp.tp.coder(tp.tp.assert_no_tpls_up())
                     return listOf("""
@@ -316,33 +317,43 @@ fun coder_types (pre: Boolean): String {
         }
     }
     fun fs (me: Stmt): List<String> {
-        return when (me) {
-            is Stmt.Proto.Coro -> {
-                    fun mem (): String {
-                        val blks = me.dn_collect_pre({
-                            when (it) {
-                                is Stmt.Proto -> if (it == me) emptyList() else null
-                                is Stmt.Block -> listOf(it)
-                                else -> emptyList()
-                            }
-                        }, {null}, {null})
-                        return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n" } }.flatten().joinToString("")
-                    }
-                    val (co,exe) = me.tp_.x_coro_exec(me.tp_.assert_no_tpls_up())
-                    listOf("""
-                    typedef struct $exe {
-                        int pc;
-                        $co co;
-                        struct {
-                            ${mem()}
-                        } mem;
-                    } $exe;
-                """)
-                }
-            else -> emptyList()
+        if (me !is Stmt.Proto) {
+            return emptyList()
         }
+        val xtplss: List<Tpl_Map?> = if (me.tpls.isEmpty()) emptyList() else {
+            G.tpls[me]?.values?.map { me.tpls.map { (id, _) -> id.str }.zip(it).toMap() }
+                ?: emptyList()
+        }
+        val x = xtplss.map { xtpls ->
+            "/* XXX */\n" + coder_types(me.blk, xtpls, pre)
+        }
+
+        if (me !is Stmt.Proto.Coro) {
+            return x
+        }
+
+        fun mem (): String {
+            val blks = me.dn_collect_pre({
+                when (it) {
+                    is Stmt.Proto -> if (it == me) emptyList() else null
+                    is Stmt.Block -> listOf(it)
+                    else -> emptyList()
+                }
+            }, {null}, {null})
+            return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n" } }.flatten().joinToString("")
+        }
+        val (co,exe) = me.tp_.x_coro_exec(me.tp_.assert_no_tpls_up())
+        return x + listOf("""
+            typedef struct $exe {
+                int pc;
+                $co co;
+                struct {
+                    ${mem()}
+                } mem;
+            } $exe;
+        """)
     }
-    val ts = G.outer!!.dn_collect_pos(::fs, ::fe, ::ft)
+    val ts = s.dn_collect_pos(::fs, ::fe, ::ft)
     return ts.joinToString("")
 }
 
@@ -1097,7 +1108,7 @@ fun coder_main (pre: Boolean): String {
             mar_vector_cat_pointer(dst, src->buf, src->cur, size);
         }
         
-        ${coder_types(pre)}
+        ${coder_types(G.outer!!, null, pre)}
         
         int main (void) {
             do {
