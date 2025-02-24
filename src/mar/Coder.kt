@@ -99,10 +99,11 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
         when {
             (me is Type.Any) -> return emptyList()
             (tpls==null && me.has_tpls_dn()) -> return emptyList()
+            (tpls!=null && !me.has_tpls_dn()) -> return emptyList()
         }
         when (me) {
             is Type.Proto.Func, is Type.Proto.Coro, is Type.Data,
-            is Type.Tuple, is Type.Vector, is Type.Union -> me.coder(null).let {
+            is Type.Tuple, is Type.Vector, is Type.Union -> me.coder(tpls).let {
                 if (G.types.contains(it)) {
                     return emptyList()
                 } else {
@@ -116,8 +117,8 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
         return when (me) {
             is Type.Proto.Func -> {
                 listOf(
-                    "typedef ${me.out.coder(null)} (*${me.coder(null)}) (${
-                        me.inps.map { it.coder(null) }.joinToString(",")
+                    "typedef ${me.out.coder(tpls)} (*${me.coder(tpls)}) (${
+                        me.inps.map { it.coder(tpls) }.joinToString(",")
                     });\n"
                 )
             }
@@ -133,7 +134,7 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
                 )
             }
             is Type.Tuple -> {
-                val x = me.coder(null)
+                val x = me.coder(tpls)
                 /*val ids = if (me.ids == null) emptyList() else {
                         ft(Type.Tuple(me.tk, me.ts, null))
                     }
@@ -145,8 +146,8 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
                             val (id, tp) = id_tp
                             """
                                 union {
-                                    ${tp.coder(null)} _${i + 1};
-                                    ${id.cond { "${tp.coder(null)} ${it.str};" }}
+                                    ${tp.coder(tpls)} _${i + 1};
+                                    ${id.cond { "${tp.coder(tpls)} ${it.str};" }}
                                 };                                    
                                 """
                         }.joinToString("")
@@ -157,16 +158,16 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
             }
             is Type.Vector -> {
                 //println(me.xup!!.to_str())
-                val x = me.coder(null)
+                val x = me.coder(tpls)
                 listOf("""
                     typedef struct $x {
                         int max, cur;
-                        ${me.tp.coder(null)} buf[${me.max.cond2({ it.tk.str }, { "" })}];
+                        ${me.tp.coder(tpls)} buf[${me.max.cond2({ it.tk.str }, { "" })}];
                     } $x;
                 """)
             }
             is Type.Union -> {
-                val x = me.coder(null)
+                val x = me.coder(tpls)
                 val xx = x.uppercase()
                 listOf(
                     """
@@ -186,8 +187,8 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
                                 ${
                         me.ts.mapIndexed { i, id_tp ->
                             val (id, tp) = id_tp
-                            id.cond { tp.coder(null) + " " + it.str + ";\n" } +
-                                    tp.coder(null) + " _" + (i + 1) + ";\n"
+                            id.cond { tp.coder(tpls) + " " + it.str + ";\n" } +
+                                    tp.coder(tpls) + " _" + (i + 1) + ";\n"
                         }.joinToString("")
                     }
                             };
@@ -196,7 +197,7 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
                 )
             }
             is Type.Data -> {
-                val ID = me.coder(null)
+                val ID = me.coder(tpls)
                 val (S, _, tpc) = me.walk_tpl()
                 //println(me.to_str())
                 //println(tpc.to_str())
@@ -207,7 +208,7 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
                             //println(listOf(s, tp.to_str()))
                             val ss = ID+s.drop(1).map { "_"+it }.joinToString("")
                             val SS = ss.uppercase()
-                            val x1 = "typedef ${tp.coder(null)} $ss;\n"
+                            val x1 = "typedef ${tp.coder(tpls)} $ss;\n"
                             val x2 = if (tp !is Type.Union) {
                                 emptyList()
                             } else {
@@ -443,7 +444,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             }
                             xtplss.map { xtpls ->
                                 when (tp) {
-                                    is Type.Proto.Func -> "auto " + tp.out.coder(null) + " " + s.proto(xtpls) + " (" + tp.inps.map { it.coder(
+                                    is Type.Proto.Func -> "auto " + tp.out.coder(tpls) + " " + s.proto(xtpls) + " (" + tp.inps.map { it.coder(
                                         it.assert_no_tpls_up()
                                     ) }.joinToString(",") + ");\n"
                                     is Type.Proto.Coro -> "auto ${tp.x_sig(pre,s.proto(xtpls))};\n"
@@ -479,7 +480,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
         is Stmt.Dcl -> {
             val dcl = if (this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) "" else {
-                this.xtp!!.coder(null) + " " + this.id.str + ";"
+                this.xtp!!.coder(tpls) + " " + this.id.str + ";"
             }
             val ini = this.xtp.let {
                 if (it !is Type.Vector) "" else """
@@ -505,14 +506,14 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 (tdst is Type.Vector) -> """
                     {
                         typeof($dst)* mar_$n = &$dst;
-                        *mar_$n = CAST(${tdst.coder(null)}, $src);
+                        *mar_$n = CAST(${tdst.coder(tpls)}, $src);
                         mar_$n->max = ${tdst.max!!.coder(tpls,pre)};
                         mar_$n->cur = MIN(mar_$n->max, mar_$n->cur);                        
                     }                        
                 """
                 tdst.is_same_of(tsrc) -> "$dst = $src;"
                 else -> {
-                    "$dst = CAST(${tdst.coder(null)}, $src);"
+                    "$dst = CAST(${tdst.coder(tpls)}, $src);"
                 }
             }
         }
@@ -541,7 +542,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Catch -> {
-            val uni  = this.type()?.coder(null)
+            val uni  = this.type()?.coder(tpls)
             val xuni = uni?.uppercase()
             """
             { // CATCH | ${this.dump()}
@@ -566,7 +567,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     ${(this.xup is Stmt.SetS && this.tp!=null).cond {
                         val set = this.xup as Stmt.SetS
                         """
-                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=${xuni}_ERR_TAG, .Err=CAST(${this.tp!!.coder(null)}, MAR_EXCEPTION) };
+                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=${xuni}_ERR_TAG, .Err=CAST(${this.tp!!.coder(tpls)}, MAR_EXCEPTION) };
                         """
                      }}
                     MAR_EXCEPTION.tag = __MAR_EXCEPTION_NONE__;
@@ -578,7 +579,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
 
         is Stmt.Create -> {
-            val xtp = (this.xup as Stmt.SetS).dst.typex().coder(null)
+            val xtp = (this.xup as Stmt.SetS).dst.typex().coder(tpls)
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
                 """
@@ -701,7 +702,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         """
                         {
                             printf("[");
-                            ${tp.coder(null)} mar_${tp.n} = $v;
+                            ${tp.coder(tpls)} mar_${tp.n} = $v;
                             ${tp.ts.mapIndexed { i,(_,t) ->
                                 aux(t, "mar_${tp.n}._${i+1}")
                             }.joinToString("printf(\",\");")}
@@ -713,7 +714,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         """
                         {
                             printf("#[");
-                            ${tp.coder(null)} mar_${tp.n} = $v;
+                            ${tp.coder(tpls)} mar_${tp.n} = $v;
                             for (int i=0; i<mar_${tp.n}.cur; i++) {
                                 if (i > 0) {
                                     printf(",");
@@ -727,7 +728,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     is Type.Union -> {
                         """
                         {
-                            ${tp.coder(null)} mar_${tp.n} = $v;
+                            ${tp.coder(tpls)} mar_${tp.n} = $v;
                             printf("<.%d=", mar_${tp.n}.tag);
                             switch (mar_${tp.n}.tag) {
                                 ${tp.ts.mapIndexed { i,(_,t) ->
@@ -817,7 +818,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             when (this.tk.str) {
                 "++" -> {
                     val tp = this.typex() as Type.Vector
-                    val one = tp.tp.coder(null)
+                    val one = tp.tp.coder(tpls)
                     val xe1 = if (this.e1.typex() is Type.Vector) {
                         "mar_vector_cat_vector((Vector*)&mar_$n, (Vector*)&mar_e1_$n, sizeof($one));"
                     } else {
@@ -830,7 +831,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     }
                     """
                     ({
-                        ${tp.coder(null)} mar_$n = { .max=${tp.max!!.tk.str}, .cur=0 };
+                        ${tp.coder(tpls)} mar_$n = { .max=${tp.max!!.tk.str}, .cur=0 };
                         typeof($e1) mar_e1_$n = $e1;
                         typeof($e2) mar_e2_$n = $e2;
                         $xe1
@@ -866,7 +867,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     (tdst == null) -> src
                     tdst.is_num() -> src
                     tdst.is_same_of(tsrc) -> src
-                    else -> "CAST(${tdst.coder(null)}, $src)"
+                    else -> "CAST(${tdst.coder(tpls)}, $src)"
                 }
             }.joinToString(",")} )"
             """
@@ -880,13 +881,13 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
 
-        is Expr.Tuple  -> "((${this.typex().coder(null)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(tpls,pre)+"}" }.joinToString(",") } })"
+        is Expr.Tuple  -> "((${this.typex().coder(tpls)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(tpls,pre)+"}" }.joinToString(",") } })"
         is Expr.Vector -> (this.typex() as Type.Vector).let {
-            "((${it.coder(null)}) { .max=${it.max!!.tk.str}, .cur=${it.max!!.tk.str}, .buf={${this.vs.map { it.coder(tpls,pre) }.joinToString(",") }} })"
+            "((${it.coder(tpls)}) { .max=${it.max!!.tk.str}, .cur=${it.max!!.tk.str}, .buf={${this.vs.map { it.coder(tpls,pre) }.joinToString(",") }} })"
         }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
-            "((${this.typex().coder(null)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(tpls,pre) } })"
+            "((${this.typex().coder(tpls)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(tpls,pre) } })"
         }
         is Expr.Field  -> {
             val idx = this.idx.toIntOrNull().let {
@@ -969,8 +970,8 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             (this.xtp is Type.Any)     -> this.tk.str
             (this.xtp is Type.Nat)     -> this.tk.str
             (this.xtp is Type.Prim)    -> this.tk.str
-            (this.xtp is Type.Data)    -> "CAST(${this.xtp!!.coder(null)}, ${this.tk.str})"
-            else -> "((${this.xtp!!.coder(null)}) ${this.tk.str})"
+            (this.xtp is Type.Data)    -> "CAST(${this.xtp!!.coder(tpls)}, ${this.tk.str})"
+            else -> "((${this.xtp!!.coder(tpls)}) ${this.tk.str})"
         }
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> "_void_"
@@ -981,17 +982,17 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 val tp = this.typex()
                 val sup = tp.sup_vs(this.xnum!!)
                 if (sup == tp) it else {
-                    "((" + sup!!.coder(null) + ")" + it + ")"
+                    "((" + sup!!.coder(tpls) + ")" + it + ")"
                 }
             }
         }
 
         is Expr.Throw -> """
             ({
-                assert(sizeof(Exception) >= sizeof(${this.e.typex().coder(null)}));
+                assert(sizeof(Exception) >= sizeof(${this.e.typex().coder(tpls)}));
                 MAR_EXCEPTION = CAST(Exception, ${this.e.coder(tpls,pre)});
                 continue;
-                ${this.xtp!!.coder(null)} mar_$n ; mar_$n;
+                ${this.xtp!!.coder(tpls)} mar_$n ; mar_$n;
             })
         """
 
@@ -1007,7 +1008,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
         """
         is Expr.MatchE -> """
-            ${this.typex().coder(null)} mar_$n;
+            ${this.typex().coder(tpls)} mar_$n;
             switch (${this.tst.coder(tpls,pre)}) {
                 ${this.cases.map { (tst,e) -> """
                     ${tst.cond2({"case ${it.coder(tpls,pre)}"},{"default"})}:
@@ -1027,7 +1028,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     else -> {
                         val sup = tp.sup_vs(this.xnum!!)
                         if (sup == tp) it else {
-                            "((" + sup!!.coder(null) + ")" + it + ")"
+                            "((" + sup!!.coder(tpls) + ")" + it + ")"
                         }
                     }
                 }

@@ -1653,7 +1653,7 @@ class Exec  {
                 return(##xs+1)
             }
             print(f {{10}} ())
-            print(f {{20}} ())
+            ;;print(f {{20}} ())
         """)
         assert(out == "11\n21\n") { out }
     }
