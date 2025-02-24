@@ -64,7 +64,7 @@ fun Type.coder (tpls: Tpl_Map?): String {
         is Type.Pointer    -> this.ptr.coder(tpls) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "Tuple__${this.ts.map { (id,tp) -> tp.coder(tpls)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
         is Type.Union      -> "Union__${this.ts.map { (id,tp) -> tp.coder(tpls)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
-        is Type.Vector     -> "Vector__${this.max.cond2({it.coder(tpls,false)},{"0"})}_${this.tp.coder(tpls)}".clean()
+        is Type.Vector     -> "Vector__${this.max.cond2({it.static_int_eval(tpls).toString()},{"0"})}_${this.tp.coder(tpls)}".clean()
         is Type.Proto.Func -> "Func__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(tpls).first
         is Type.Exec       -> this.x_exec_coro(tpls).first

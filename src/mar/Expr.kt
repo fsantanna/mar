@@ -21,18 +21,19 @@ fun Expr.static_int_is (): Boolean {
     }
 }
 
-fun Expr.static_int_eval (): Int {
+fun Expr.static_int_eval (tpls: Tpl_Map?): Int {
     assert(this.static_int_is())
     return when (this) {
+        is Expr.Tpl -> tpls!![this.tk.str]!!.second!!.static_int_eval(tpls)
         is Expr.Num -> this.tk.str.toInt()
         is Expr.Uno -> when (this.tk.str) {
-            "-"  -> - this.e.static_int_eval()
+            "-"  -> - this.e.static_int_eval(tpls)
             else -> TODO("5")
         }
         is Expr.Bin -> when (this.tk.str) {
-            "+" -> this.e1.static_int_eval() + this.e2.static_int_eval()
-            "-" -> this.e1.static_int_eval() - this.e2.static_int_eval()
-            "*" -> this.e1.static_int_eval() * this.e2.static_int_eval()
+            "+" -> this.e1.static_int_eval(tpls) + this.e2.static_int_eval(tpls)
+            "-" -> this.e1.static_int_eval(tpls) - this.e2.static_int_eval(tpls)
+            "*" -> this.e1.static_int_eval(tpls) * this.e2.static_int_eval(tpls)
             else -> TODO("5")
         }
         else -> TODO("5")

@@ -74,7 +74,7 @@ fun Type.Data.is_tpl_sup_of (other: Type.Data): Boolean {
             val (t2,e2) = oth
             when {
                 (t1!=null && t2!=null) -> t1.is_same_of(t2)
-                (e1!=null && e2!=null) -> e1.static_int_eval() == e2.static_int_eval()
+                (e1!=null && e2!=null) -> e1.static_int_eval(null) == e2.static_int_eval(null)
                 else -> false
             }
         }
