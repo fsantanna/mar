@@ -162,7 +162,7 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
                 listOf("""
                     typedef struct $x {
                         int max, cur;
-                        ${me.tp.coder(tpls)} buf[${me.max.cond2({ it.tk.str }, { "" })}];
+                        ${me.tp.coder(tpls)} buf[${me.max.cond2({ it.coder(tpls,pre) }, { "" })}];
                     } $x;
                 """)
             }
@@ -307,7 +307,7 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
                     return listOf("""
                         typedef struct $x {
                             int max, cur;
-                            $y buf[${tp.max!!.tk.str}];
+                            $y buf[${tp.max!!.coder(tpls,pre)}];
                         } $x;
                     """)
                 } else {
@@ -831,7 +831,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     }
                     """
                     ({
-                        ${tp.coder(tpls)} mar_$n = { .max=${tp.max!!.tk.str}, .cur=0 };
+                        ${tp.coder(tpls)} mar_$n = { .max=${tp.max!!.coder(tpls,pre)}, .cur=0 };
                         typeof($e1) mar_e1_$n = $e1;
                         typeof($e2) mar_e2_$n = $e2;
                         $xe1
@@ -883,7 +883,8 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
 
         is Expr.Tuple  -> "((${this.typex().coder(tpls)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(tpls,pre)+"}" }.joinToString(",") } })"
         is Expr.Vector -> (this.typex() as Type.Vector).let {
-            "((${it.coder(tpls)}) { .max=${it.max!!.tk.str}, .cur=${it.max!!.tk.str}, .buf={${this.vs.map { it.coder(tpls,pre) }.joinToString(",") }} })"
+            val max = it.max!!.coder(tpls,pre)
+            "((${it.coder(tpls)}) { .max=$max, .cur=$max, .buf={${this.vs.map { it.coder(tpls,pre) }.joinToString(",") }} })"
         }
         is Expr.Union  -> {
             val (i,_) = this.xtp!!.disc(this.idx)!!
