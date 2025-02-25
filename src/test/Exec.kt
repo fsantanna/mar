@@ -286,6 +286,15 @@ class Exec  {
         """)
         assert(out == "0\n1\n") { out }
     }
+    @Test
+    fun cc_09_call_err () {
+        val out = test("""
+            func f: (v: Int) -> () {
+            }
+            f (10, [2,1])
+        """)
+        assert(out == "anon : (lin 4, col 13) : call error : types mismatch\n") { out }
+    }
 
     // BREAK / WHILE / UNTIL
 

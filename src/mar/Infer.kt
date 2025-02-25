@@ -70,7 +70,7 @@ fun Expr.infer (tpe: Type?): Type? {
         is Expr.Tuple -> {
             val up = this.xtp.sub_vs_null(tpe)
             //val up = this.xtp ?: tpx
-            //println(listOf("infer-tuple", this.xtp?.to_str(), tpx?.to_str()))
+            //println(listOf("infer-tuple", this.to_str(), this.xtp?.to_str(), xtp?.to_str()))
             //println(listOf(up?.to_str(), upx?.to_str()))
             val vs = this.vs.mapIndexed { i,(tk,e) ->
                 Pair(tk, e.infer(if (up !is Type.Tuple || up.ts.size<i+1) null else up.ts[i].second))
@@ -169,13 +169,11 @@ fun Expr.infer (tpe: Type?): Type? {
         is Expr.Call -> {
             val f = this.f.infer(null)
             if (f is Type.Proto) {
-                this.args.mapIndexed { i,e ->
-                    if (i < f.inps.size) {
-                        e.infer(f.inps[i])
-                    }
+                this.args.forEachIndexed { i,e ->
+                    e.infer(if (i < f.inps.size) f.inps[i] else null)
                 }
             } else {
-                this.args.map {
+                this.args.forEach {
                     it.infer(null)
                 }
             }
