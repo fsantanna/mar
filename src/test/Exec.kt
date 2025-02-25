@@ -131,6 +131,30 @@ class Exec  {
         """)
         assert(out == "true\nfalse\n") { out }
     }
+    @Test
+    fun ac_04_eq_vec () {
+        val out = test("""
+            print(#[] == #[])
+            print(#[] != #[])
+        """)
+        assert(out == "true\nfalse\n") { out }
+    }
+    @Test
+    fun ac_05_eq_vec () {
+        val out = test("""
+            print(#[1] == #[1])
+            print(#[1] != #[1])
+        """)
+        assert(out == "true\nfalse\n") { out }
+    }
+    @Test
+    fun ac_06_eq_vec () {
+        val out = test("""
+            print(#[#[3],#[]] == #[#[3],#[]])
+            print(#[#[3],#[]] != #[#[3],#[]])
+        """)
+        assert(out == "true\nfalse\n") { out }
+    }
 
     // NAT
 

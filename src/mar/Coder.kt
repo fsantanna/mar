@@ -840,21 +840,41 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     })
                     """                }
                 "==", "!=" -> {
-                    fun f (xtp: Type, xe1: String, xe2: String): String {
+                    fun f (xx: Int, xtp: Type, xe1: String, xe2: String): String {
                         //println(xtp.to_str())
                         return when {
                             (xtp is Type.Tuple) -> {
                                 val (uno,op) = if (this.tk.str == "==") Pair(1,"&&") else Pair(0,"||")
                                 val vs = xtp.ts.mapIndexed { i,(_,xxtp) ->
                                     //println(xxtp.to_str())
-                                    op + " " + f(xxtp, xe1+"._"+(i+1), xe2+"._"+(i+1))
+                                    op + " " + f(xx+1, xxtp, "mar_1_${n}_$xx._"+(i+1), "mar_2_${n}_$xx._"+(i+1))
                                 }.joinToString("")
-                                "($uno $vs)"
+                                """({
+                                    ${xtp.coder(tpls)} mar_1_${n}_$xx = $xe1;
+                                    ${xtp.coder(tpls)} mar_2_${n}_$xx = $xe2;
+                                    $uno $vs;
+                                })"""
+                            }
+                            (xtp is Type.Vector) -> {
+                                """({
+                                    ${xtp.coder(tpls)} mar_1_${n}_$xx = $xe1;
+                                    ${xtp.coder(tpls)} mar_2_${n}_$xx = $xe2;
+                                    (mar_1_${n}_$xx.cur == mar_2_${n}_$xx.cur) && ({
+                                        int mar_ok_${n}_$xx = 1;
+                                        for (int i=0; i<mar_1_$n.cur; i++) {
+                                            if (${f(xx+1, xtp.tp, "mar_1_${n}_$xx.buf[i]", "mar_2_${n}_$xx.buf[i]")}) {
+                                                mar_ok_${n}_$xx = 0;
+                                                break;
+                                            }
+                                        };
+                                        mar_ok_${n}_$xx;
+                                    });
+                                })"""
                             }
                             else -> "($xe1 ${this.tk.str} $xe2)"
                         }
                     }
-                    f(this.e1.typex(), e1, e2)
+                    f(11, this.e1.typex(), e1, e2)
                 }
                 else -> "(" + e1 + " " + this.tk.str.op_mar_to_c() + " " + e2 + ")"
             }
