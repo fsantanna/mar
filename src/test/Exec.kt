@@ -105,6 +105,33 @@ class Exec  {
         assert(out == "true\n") { out }
     }
 
+    // EQUAL
+
+    @Test
+    fun ac_01_eq_tup () {
+        val out = test("""
+            print([] == [])
+            print([] != [])
+        """)
+        assert(out == "true\nfalse\n") { out }
+    }
+    @Test
+    fun ac_02_eq_tup () {
+        val out = test("""
+            print([1] == [1])
+            print([1] != [1])
+        """)
+        assert(out == "true\nfalse\n") { out }
+    }
+    @Test
+    fun ac_03_eq_tup () {
+        val out = test("""
+            print([1,[2],3] == [1,[2],3])
+            print([1,[2],3] != [1,[2],3])
+        """)
+        assert(out == "true\nfalse\n") { out }
+    }
+
     // NAT
 
     @Test

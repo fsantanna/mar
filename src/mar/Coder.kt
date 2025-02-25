@@ -839,6 +839,23 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         mar_$n;
                     })
                     """                }
+                "==", "!=" -> {
+                    fun f (xtp: Type, xe1: String, xe2: String): String {
+                        //println(xtp.to_str())
+                        return when {
+                            (xtp is Type.Tuple) -> {
+                                val (uno,op) = if (this.tk.str == "==") Pair(1,"&&") else Pair(0,"||")
+                                val vs = xtp.ts.mapIndexed { i,(_,xxtp) ->
+                                    //println(xxtp.to_str())
+                                    op + " " + f(xxtp, xe1+"._"+(i+1), xe2+"._"+(i+1))
+                                }.joinToString("")
+                                "($uno $vs)"
+                            }
+                            else -> "($xe1 ${this.tk.str} $xe2)"
+                        }
+                    }
+                    f(this.e1.typex(), e1, e2)
+                }
                 else -> "(" + e1 + " " + this.tk.str.op_mar_to_c() + " " + e2 + ")"
             }
         }
