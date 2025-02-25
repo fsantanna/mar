@@ -21,6 +21,7 @@ fun check (me: String): String? {
         cache_ups()
         check_vars()
         infer_apply()
+        //infer_check()
         check_types()
     }
     //return null
@@ -615,6 +616,13 @@ class Check {
         val out = check("""
             var v: #[Int*1]
             var x: Bool = ##v
+        """)
+        assert(out == "anon : (lin 3, col 25) : set error : types mismatch") { out!! }
+    }
+    @Test
+    fun cd_08_vector_empty () {
+        val out = check("""
+            var x = (#[] == #[])
         """)
         assert(out == "anon : (lin 3, col 25) : set error : types mismatch") { out!! }
     }

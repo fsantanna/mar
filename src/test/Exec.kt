@@ -137,7 +137,7 @@ class Exec  {
             print(#[] == #[])
             print(#[] != #[])
         """)
-        assert(out == "true\nfalse\n") { out }
+        assert(out == "anon : (lin 2, col 19) : inference error : unknown type\n") { out }
     }
     @Test
     fun ac_05_eq_vec () {
@@ -150,8 +150,8 @@ class Exec  {
     @Test
     fun ac_06_eq_vec () {
         val out = test("""
-            print(#[#[3],#[]] == #[#[3],#[]])
-            print(#[#[3],#[]] != #[#[3],#[]])
+            print(#[#[3],#[1]] == #[#[3],#[1]])
+            print(#[#[3],#[1]] != #[#[3],#[1]])
         """)
         assert(out == "true\nfalse\n") { out }
     }
@@ -1803,8 +1803,8 @@ class Exec  {
             var b = []
             var c = b.x     ;; infer exception, do not check infer
         """)
-        assert(out == "anon : (lin 4, col 22) : field error : invalid index\n") { out }
-        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
+        //assert(out == "anon : (lin 4, col 22) : field error : invalid index\n") { out }
+        assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
         //assert(out == "anon : (lin 2, col 17) : inference error : unknown type\n") { out }
     }
     @Test

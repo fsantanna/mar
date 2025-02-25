@@ -861,8 +861,8 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                     ${xtp.coder(tpls)} mar_2_${n}_$xx = $xe2;
                                     (mar_1_${n}_$xx.cur == mar_2_${n}_$xx.cur) && ({
                                         int mar_ok_${n}_$xx = 1;
-                                        for (int i=0; i<mar_1_$n.cur; i++) {
-                                            if (${f(xx+1, xtp.tp, "mar_1_${n}_$xx.buf[i]", "mar_2_${n}_$xx.buf[i]")}) {
+                                        for (int i=0; i<mar_1_${n}_$xx.cur; i++) {
+                                            if (!${f(xx+1, xtp.tp, "mar_1_${n}_$xx.buf[i]", "mar_2_${n}_$xx.buf[i]")}) {
                                                 mar_ok_${n}_$xx = 0;
                                                 break;
                                             }

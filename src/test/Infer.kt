@@ -909,6 +909,13 @@ class Infer {
                 "set t = (#['a']:#[Char*1])\n" +
                 "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun ii_06_vector () {
+        val out = infer("""
+            var x = (#[] == #[])
+        """)
+        assert(out == "anon : (lin 2, col 22) : inference error : unknown type") { out!! }
+    }
 
     // TEMPLATE
 

@@ -118,8 +118,9 @@ fun Expr.infer (tpe: Type?): Type? {
             if (this.xtp == null) {
                 //println(listOf("infer-vector", this.to_str(), up?.to_str(), dn?.to_str()))
                 this.xtp.sub_vs_null(dn).sub_vs_null(up).let {
-                    //println(it)
+                    //println(listOf(it, dn, up))
                     when {
+                        //(dn==null && up==null) -> this.xtp = Type.Vector(this.tk, null, Type.Top(this.tk))
                         (it == null) -> {}
                         (it is Type.Vector) -> this.xtp = it
                         else -> err(this.tk, "inference error : expected vector type")
