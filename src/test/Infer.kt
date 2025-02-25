@@ -21,8 +21,8 @@ fun infer (me: String): String? {
         cache_ups()
         check_vars()
         infer_apply()
-        infer_check()
         //check_types()
+        infer_check()
     }
     //return null
 }

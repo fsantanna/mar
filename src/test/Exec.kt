@@ -156,6 +156,15 @@ class Exec  {
         assert(out == "true\nfalse\n") { out }
     }
     @Test
+    fun ac_07_eq_vec () {
+        val out = test("""
+            var vs: #[Int*2]
+            var ok = (vs == #[3])
+            print(ok)
+        """)
+        assert(out == "false\n") { out }
+    }
+    @Test
     fun ad_01_eq_data () {
         val out = test("""
             data X: Int
@@ -1821,8 +1830,8 @@ class Exec  {
             var b = []
             var c = b.x     ;; infer exception, do not check infer
         """)
-        //assert(out == "anon : (lin 4, col 22) : field error : invalid index\n") { out }
-        assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
+        assert(out == "anon : (lin 4, col 22) : field error : invalid index\n") { out }
+        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
         //assert(out == "anon : (lin 2, col 17) : inference error : unknown type\n") { out }
     }
     @Test

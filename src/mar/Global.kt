@@ -248,8 +248,8 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
         cache_ups()
         check_vars()
         infer_apply()
-        infer_check()
         check_types()
+        infer_check()
         cache_tpls()
     } catch (e: Throwable) {
         if (THROW) {

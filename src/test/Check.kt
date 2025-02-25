@@ -21,8 +21,8 @@ fun check (me: String): String? {
         cache_ups()
         check_vars()
         infer_apply()
-        //infer_check()
         check_types()
+        //infer_check()
     }
     //return null
 }
@@ -624,7 +624,8 @@ class Check {
         val out = check("""
             var x = (#[] == #[])
         """)
-        assert(out == "anon : (lin 3, col 25) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 2, col 22) : inference error : unknown type") { out!! }
+        //assert(out == "anon : (lin 3, col 25) : set error : types mismatch") { out!! }
     }
 
     // CONCATENATE

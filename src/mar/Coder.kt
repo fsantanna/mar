@@ -851,15 +851,15 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                     op + " " + f(xx+1, xxtp, "mar_1_${n}_$xx._"+(i+1), "mar_2_${n}_$xx._"+(i+1))
                                 }.joinToString("")
                                 """({
-                                    ${xtp.coder(tpls)} mar_1_${n}_$xx = $xe1;
-                                    ${xtp.coder(tpls)} mar_2_${n}_$xx = $xe2;
+                                    typeof($xe1) mar_1_${n}_$xx = $xe1;
+                                    typeof($xe2) mar_2_${n}_$xx = $xe2;
                                     $uno $vs;
                                 })"""
                             }
                             (xtp is Type.Vector) -> {
                                 """({
-                                    ${xtp.coder(tpls)} mar_1_${n}_$xx = $xe1;
-                                    ${xtp.coder(tpls)} mar_2_${n}_$xx = $xe2;
+                                    typeof($xe1) mar_1_${n}_$xx = $xe1;
+                                    typeof($xe2) mar_2_${n}_$xx = $xe2;
                                     (mar_1_${n}_$xx.cur == mar_2_${n}_$xx.cur) && ({
                                         int mar_ok_${n}_$xx = 1;
                                         for (int i=0; i<mar_1_${n}_$xx.cur; i++) {
@@ -976,7 +976,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 var ret = "({"
                 for (i in this.tp.ts.size - 1 downTo 0) {
                     val tp = this.tp.ts.take(i + 1).coder(this.tp.xtpls,pre)
-                    ret = ret + "$tp ceu_$i = /* xxx */" +
+                    ret = ret + "$tp ceu_$i = " +
                             if (i == this.tp.ts.size - 1) {
                                 """
                                 ((${tp}) ${this.e.coder(tpls,pre)});

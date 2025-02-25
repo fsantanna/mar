@@ -624,11 +624,11 @@ fun Expr.type (): Type? {
                 else -> null
             }
         }
-        is Expr.Throw -> this.xtp
+        is Expr.Throw -> this.xtp ?: Type.Any(this.tk)
 
-        is Expr.Tuple -> this.xtp
-        is Expr.Vector -> this.xtp
-        is Expr.Union -> this.xtp
+        is Expr.Tuple -> this.xtp ?: Type.Any(this.tk)
+        is Expr.Vector -> this.xtp ?: Type.Any(this.tk)
+        is Expr.Union -> this.xtp ?: Type.Any(this.tk)
         is Expr.Field -> {
             val tup = this.col.type().let { tp ->
                 when (tp) {
@@ -663,7 +663,7 @@ fun Expr.type (): Type? {
             val x = if (this.tk.str.contains(".")) "Float" else "Int"
             Type.Prim(Tk.Type(x, this.tk.pos))
         }
-        is Expr.Nat -> this.xtp //?: Type.Nat(Tk.Nat("TODO",this.tk.pos))
+        is Expr.Nat -> this.xtp ?: Type.Any(this.tk)
         is Expr.Tpl -> {
             val proto = this.up_first { it is Stmt.Proto } as Stmt.Proto
             val tpl = proto.tpls.find { it.first.str == this.tk.str }!!
