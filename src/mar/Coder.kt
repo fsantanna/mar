@@ -843,6 +843,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     fun f (xx: Int, xtp: Type, xe1: String, xe2: String): String {
                         //println(xtp.to_str())
                         return when {
+                            (xtp is Type.Data) -> f(xx, xtp.walk()!!.third, xe1, xe2)
                             (xtp is Type.Tuple) -> {
                                 val (uno,op) = if (this.tk.str == "==") Pair(1,"&&") else Pair(0,"||")
                                 val vs = xtp.ts.mapIndexed { i,(_,xxtp) ->

@@ -367,8 +367,8 @@ fun parser_expr_4_prim (): Expr {
                 err(G.tk1!!, "constructor error : unexpected primitive type")
             }
             val e = when {
-                check_fix("[") -> parser_expr()
-                check_op("<") -> parser_expr()
+                check_fix("[") -> parser_expr_4_prim()
+                check_op("<") -> parser_expr_4_prim()
                 else -> {
                     accept_fix_err("(")
                     val x = if (check_fix(")")) {

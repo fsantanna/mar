@@ -375,6 +375,7 @@ fun check_types () {
                     else -> error("impossible case")
                 }
                 if (!ok) {
+                    //println(listOf(tp1.to_str(), tp2.to_str()))
                     err(me.tk, "operation error : types mismatch")
                 }
             }

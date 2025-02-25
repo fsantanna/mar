@@ -326,6 +326,13 @@ class Parser {
         val e = parser_expr_1_bin()
         assert(e.to_str() == "(a ++ b)") { e.to_str() }
     }
+    @Test
+    fun cc_05_eq() {
+        G.tks = ("X[10] == X[10]").lexer()
+        parser_lexer()
+        val e = parser_expr_1_bin()
+        assert(e.to_str() == "((X(([10]))) == (X(([10]))))") { e.to_str() }
+    }
 
     // DO
 

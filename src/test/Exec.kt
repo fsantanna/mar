@@ -155,6 +155,24 @@ class Exec  {
         """)
         assert(out == "true\nfalse\n") { out }
     }
+    @Test
+    fun ad_01_eq_data () {
+        val out = test("""
+            data X: Int
+            print(X(10) == X(10))
+            print(X(10) != X(10))
+        """)
+        assert(out == "true\nfalse\n") { out }
+    }
+    @Test
+    fun ad_02_eq_data () {
+        val out = test("""
+            data X: [Int]
+            print(X[10] == X[10])
+            print(X[10] != X[10])
+        """)
+        assert(out == "true\nfalse\n") { out }
+    }
 
     // NAT
 
