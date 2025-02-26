@@ -322,7 +322,7 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
             return emptyList()
         }
 
-        val xtplss: List<Tpl_Map> = me.template_con_map() ?: emptyList()
+        val xtplss: List<Tpl_Map> = me.template_map_all() ?: emptyList()
         val x = xtplss.map { xtpls ->
             coder_types(me.blk, xtpls, pre)
         }
@@ -362,7 +362,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Proto -> {
             assert((tpls == null) || this.tpls.isEmpty()) { "TODO: merge tpls" }
 
-            val xtplss: List<Tpl_Map?> = this.template_con_map() ?: listOf(null)
+            val xtplss: List<Tpl_Map?> = this.template_map_all() ?: listOf(null)
             xtplss.map { xtpls ->
                 when (this) {
                     is Stmt.Proto.Func ->
@@ -434,7 +434,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     ${this.to_dcls().map { (s,_,tp) ->
                         if (tp !is Type.Proto) emptyList() else {
                             s as Stmt.Proto
-                            val xtplss: List<Tpl_Map?> = s.template_con_map() ?: listOf(null)
+                            val xtplss: List<Tpl_Map?> = s.template_map_all() ?: listOf(null)
                             xtplss.map { xtpls ->
                                 when (tp) {
                                     is Type.Proto.Func -> "auto " + tp.out.coder(xtpls) + " " + s.proto(xtpls) + " (" + tp.inps.map { it.coder(

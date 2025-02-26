@@ -320,19 +320,19 @@ fun Stmt.to_tpls (): List<Tpl_Abs> {
     }
 }
 
-fun Expr.template_abs_con (s: Stmt, tpl: List<Tpl_Con>): Expr {
+fun Expr.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Expr {
     return when (this) {
         is Expr.Tpl -> {
             val i = s.to_tpls().indexOfFirst { it.first.str==this.tk.str }
-            tpl[i].second!!
+            tpls[i].second!!
         }
-        is Expr.Uno -> Expr.Uno(this.tk_, this.e.template_abs_con(s,tpl))
-        is Expr.Bin -> Expr.Bin(this.tk_, this.e1.template_abs_con(s,tpl), this.e2.template_abs_con(s,tpl))
+        is Expr.Uno -> Expr.Uno(this.tk_, this.e.template_abs_con(s,tpls))
+        is Expr.Bin -> Expr.Bin(this.tk_, this.e1.template_abs_con(s,tpls), this.e2.template_abs_con(s,tpls))
         else        -> this
     }
 }
 
-fun Type.template_abs_con (s: Stmt, tpl: List<Tpl_Con>): Type {
+fun Type.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Type {
     // Example: T [b,a] --> T [Bool,Int]
     // this: [b,a]
     // s: data X {{a:Type,b:Type}}
@@ -345,7 +345,7 @@ fun Type.template_abs_con (s: Stmt, tpl: List<Tpl_Con>): Type {
         is Type.Top -> this
         is Type.Tpl -> {
             val i = s.to_tpls().indexOfFirst { it.first.str==this.tk.str }
-            tpl[i].first!!
+            tpls[i].first!!
             //tpls.first { it.first.str == this.tk.str }.second.first!!
         }
         is Type.Nat -> this
@@ -353,47 +353,51 @@ fun Type.template_abs_con (s: Stmt, tpl: List<Tpl_Con>): Type {
         is Type.Prim -> this
         is Type.Data -> { this.assert_no_tpls_up() ; this }
         is Type.Pointer -> {
-            val tp = this.ptr.template_abs_con(s, tpl)
+            val tp = this.ptr.template_abs_con(s, tpls)
             Type.Pointer(this.tk, tp)
         }
         is Type.Tuple -> {
-            val ts = this.ts.map { (id,tp) -> Pair(id, tp.template_abs_con(s, tpl)) }
+            val ts = this.ts.map { (id,tp) -> Pair(id, tp.template_abs_con(s, tpls)) }
             Type.Tuple(this.tk, ts)
         }
         is Type.Vector -> {
-            val tp = this.tp.template_abs_con(s, tpl)
-            Type.Vector(this.tk, this.max?.template_abs_con(s,tpl), tp)
+            val tp = this.tp.template_abs_con(s, tpls)
+            Type.Vector(this.tk, this.max?.template_abs_con(s,tpls), tp)
         }
         is Type.Union -> {
-            val ts = this.ts.map { (t, tp) -> Pair(t, tp.template_abs_con(s, tpl)) }
+            val ts = this.ts.map { (t, tp) -> Pair(t, tp.template_abs_con(s, tpls)) }
             Type.Union(this.tk, this.tagged, ts)
         }
         is Type.Proto.Func -> {
-            val inps = this.inps.map { it.template_abs_con(s, tpl) }
-            val out = this.out.template_abs_con(s, tpl)
+            val inps = this.inps.map { it.template_abs_con(s, tpls) }
+            val out = this.out.template_abs_con(s, tpls)
             Type.Proto.Func(this.tk, null, inps, out)
         }
         is Type.Proto.Coro -> {
-            val inps = this.inps.map { it.template_abs_con(s, tpl) }
-            val res = this.res.template_abs_con(s, tpl)
-            val yld = this.yld.template_abs_con(s, tpl)
-            val out = this.out.template_abs_con(s, tpl)
+            val inps = this.inps.map { it.template_abs_con(s, tpls) }
+            val res = this.res.template_abs_con(s, tpls)
+            val yld = this.yld.template_abs_con(s, tpls)
+            val out = this.out.template_abs_con(s, tpls)
             Type.Proto.Coro(this.tk, null, inps, res, yld, out)
         }
         is Type.Exec -> {
-            val inps = this.inps.map { it.template_abs_con(s, tpl) }
-            val res = this.res.template_abs_con(s, tpl)
-            val yld = this.yld.template_abs_con(s, tpl)
-            val out = this.out.template_abs_con(s, tpl)
+            val inps = this.inps.map { it.template_abs_con(s, tpls) }
+            val res = this.res.template_abs_con(s, tpls)
+            val yld = this.yld.template_abs_con(s, tpls)
+            val out = this.out.template_abs_con(s, tpls)
             Type.Exec(this.tk, inps, res, yld, out)
         }
     }
 }
 
-fun Stmt.template_con_map (): List<Tpl_Map>? {
+fun List<Tpl_Abs>.template_map_one (cons: List<Tpl_Con>): Tpl_Map {
+    return this.map { (id, _) -> id.str }.zip(cons).toMap()
+}
+
+fun Stmt.template_map_all (): List<Tpl_Map>? {
     val tpls = this.to_tpls()
     return if (tpls.isEmpty()) null else {
-        G.tpls[this]?.values?.map { tpls.map { (id, _) -> id.str }.zip(it).toMap() }
+        G.tpls[this]?.values?.map { tpls.template_map_one(it) }
             ?: emptyList()
     }
 }
