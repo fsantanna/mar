@@ -1769,10 +1769,10 @@ class Exec  {
     @Test
     fun tu_05_tpl () {
         val out = test("""
-            func f {{n:Int}}: (xs: #[Int*({{n}})]) -> () {
+            func f {{n:Int}}: (xs: #[Int*({{n}})]) -> Int {
                 return (##xs)
             }
-            print(f {{10}} (#[])
+            print(f {{10}} (#[]))
         """)
         assert(out == "10\n") { out }
     }

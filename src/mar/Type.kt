@@ -390,6 +390,14 @@ fun Type.template_abs_con (s: Stmt, tpl: List<Tpl_Con>): Type {
     }
 }
 
+fun Stmt.template_con_map (): List<Tpl_Map>? {
+    val tpls = this.to_tpls()
+    return if (tpls.isEmpty()) null else {
+        G.tpls[this]?.values?.map { tpls.map { (id, _) -> id.str }.zip(it).toMap() }
+            ?: emptyList()
+    }
+}
+
 @JvmName("Any_walk_List_String")
 fun Any.walk (ts: List<String>): Triple<Stmt.Data,List<Int>,Type>? {
     val s = this.up_data(ts.first())

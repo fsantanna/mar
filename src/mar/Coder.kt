@@ -321,12 +321,10 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
         if (me !is Stmt.Proto) {
             return emptyList()
         }
-        val xtplss: List<Tpl_Map?> = if (me.tpls.isEmpty()) emptyList() else {
-            G.tpls[me]?.values?.map { me.tpls.map { (id, _) -> id.str }.zip(it).toMap() }
-                ?: emptyList()
-        }
+
+        val xtplss: List<Tpl_Map> = me.template_con_map() ?: emptyList()
         val x = xtplss.map { xtpls ->
-            "/* XXX */\n" + coder_types(me.blk, xtpls, pre)
+            coder_types(me.blk, xtpls, pre)
         }
 
         if (me !is Stmt.Proto.Coro) {
@@ -363,10 +361,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Data -> ""
         is Stmt.Proto -> {
             assert((tpls == null) || this.tpls.isEmpty()) { "TODO: merge tpls" }
-            val xtplss: List<Tpl_Map?> = if (this.tpls.isEmpty()) listOf(null) else {
-                G.tpls[this]?.values?.map { this.tpls.map { (id, _) -> id.str }.zip(it).toMap() }
-                    ?: emptyList()
-            }
+
+            val xtplss: List<Tpl_Map?> = this.template_con_map() ?: listOf(null)
             xtplss.map { xtpls ->
                 when (this) {
                     is Stmt.Proto.Func ->
@@ -438,10 +434,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     ${this.to_dcls().map { (s,_,tp) ->
                         if (tp !is Type.Proto) emptyList() else {
                             s as Stmt.Proto
-                            val xtplss: List<Tpl_Map?> = if (s.tpls.isEmpty()) listOf(null) else {
-                                G.tpls[s]?.values?.map { s.tpls.map { (id, _) -> id.str }.zip(it).toMap() }
-                                    ?: emptyList()
-                            }
+                            val xtplss: List<Tpl_Map?> = s.template_con_map() ?: listOf(null)
                             xtplss.map { xtpls ->
                                 when (tp) {
                                     is Type.Proto.Func -> "auto " + tp.out.coder(xtpls) + " " + s.proto(xtpls) + " (" + tp.inps.map { it.coder(
