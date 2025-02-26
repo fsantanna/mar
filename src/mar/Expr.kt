@@ -39,3 +39,13 @@ fun Expr.static_int_eval (tpls: Tpl_Map?): Int {
         else -> TODO("5")
     }
 }
+
+fun Expr.template_apply (map: Tpl_Map): Expr {
+    return when (this) {
+        is Expr.Tpl -> map[this.tk.str]!!.second!!.template_apply(map)
+        is Expr.Num -> this
+        is Expr.Uno -> Expr.Uno(this.tk_, this.e.template_apply(map))
+        is Expr.Bin -> Expr.Bin(this.tk_, this.e1.template_apply(map), this.e2.template_apply(map))
+        else        -> TODO()
+    }
+}

@@ -366,7 +366,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             xtplss.map { xtpls ->
                 when (this) {
                     is Stmt.Proto.Func ->
-                        this.tp_.out.coder(xtpls) + " " + this.proto(xtpls) + " (" + this.tp_.inps_.map { it.coder(it.second.assert_no_tpls_up(),pre) }.joinToString(",") + ")"
+                        this.tp_.out.coder(xtpls) + " " + this.proto(xtpls) + " (" + this.tp_.inps_.map { it.coder(xtpls,pre) }.joinToString(",") + ")"
                     is Stmt.Proto.Coro -> this.tp_.x_sig(pre, this.proto(xtpls))
                 } + """
                 {
@@ -874,14 +874,17 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
         }
         is Expr.Call -> {
-            val f = this.xtpls.let {
+            val (f,xxx) = this.xtpls.let {
                 val id = this.f.coder(tpls,pre)
                 when {
-                    (it == null) -> id
-                    it.isEmpty() -> id
+                    (it == null) -> Pair(id, tpls)
+                    it.isEmpty() -> Pair(id, tpls)
                     else -> {
-                        assert(this.f is Expr.Acc)
-                        id.proto(it)
+                        val f = this.f as Expr.Acc
+                        Pair (
+                            id.proto(it),
+                            (f.to_xdcl()!!.first as Stmt.Proto).tpls.template_map_one(it)
+                        )
                     }
                 }
             }
@@ -891,14 +894,22 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }
             }
             val call = "$f ( ${this.args.mapIndexed { i,arg ->
-                val src = arg.coder(tpls,pre)
-                val tdst = if (inps == null) null else inps[i]
-                val tsrc = arg.typex()
+                val src = arg.coder(xxx,pre)
+                val tdst = when {
+                    (inps == null) -> null
+                    inps[i].has_tpls_dn() -> inps[i].template_apply(xxx!!)
+                    else -> inps[i]
+                }
+                val tsrc = arg.typex().let { 
+                    if (!it.has_tpls_dn()) it else {
+                        it.template_apply(xxx!!)
+                    }
+                 }
                 when {
                     (tdst == null) -> src
                     tdst.is_num() -> src
                     tdst.is_same_of(tsrc) -> src
-                    else -> "CAST(${tdst.coder(tpls)}, $src)"
+                    else -> "CAST(${tdst.coder(xxx)}, $src)"
                 }
             }.joinToString(",")} )"
             """

@@ -258,6 +258,54 @@ fun Tk.Var.type (fr: Any): Type? {
     } as Type?
 }
 
+fun Type.template_apply (map: Tpl_Map): Type {
+    return when (this) {
+        is Type.Any -> this
+        is Type.Bot -> this
+        is Type.Top -> this
+        is Type.Tpl -> map[this.tk.str]!!.first!!
+        is Type.Nat -> this
+        is Type.Unit -> this
+        is Type.Prim -> this
+        is Type.Data -> this
+        is Type.Pointer -> {
+            val tp = this.ptr.template_apply(map)
+            Type.Pointer(this.tk, tp)
+        }
+        is Type.Tuple -> {
+            val ts = this.ts.map { (id,tp) -> Pair(id, tp.template_apply(map)) }
+            Type.Tuple(this.tk, ts)
+        }
+        is Type.Vector -> {
+            val tp = this.tp.template_apply(map)
+            Type.Vector(this.tk, this.max?.template_apply(map), tp)
+        }
+        is Type.Union -> {
+            val ts = this.ts.map { (t, tp) -> Pair(t, tp.template_apply(map)) }
+            Type.Union(this.tk, this.tagged, ts)
+        }
+        is Type.Proto.Func -> {
+            val inps = this.inps.map { it.template_apply(map) }
+            val out = this.out.template_apply(map)
+            Type.Proto.Func(this.tk, null, inps, out)
+        }
+        is Type.Proto.Coro -> {
+            val inps = this.inps.map { it.template_apply(map) }
+            val res = this.res.template_apply(map)
+            val yld = this.yld.template_apply(map)
+            val out = this.out.template_apply(map)
+            Type.Proto.Coro(this.tk, null, inps, res, yld, out)
+        }
+        is Type.Exec -> {
+            val inps = this.inps.map { it.template_apply(map) }
+            val res = this.res.template_apply(map)
+            val yld = this.yld.template_apply(map)
+            val out = this.out.template_apply(map)
+            Type.Exec(this.tk, inps, res, yld, out)
+        }
+    }
+}
+
 fun Type.template_con_abs (tp: Type): Tpl_Map {
     // Example: T [Bool,Int] --> T {a=Int,b=Bool}
     // this: [Bool,Int]
