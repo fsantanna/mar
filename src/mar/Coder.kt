@@ -377,7 +377,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             if (tp !is Type.Vector) "" else {
                                 val xid = id.str
                                 """
-                                $xid.max = ${tp.max!!.coder(tpls,pre)};
+                                $xid.max = ${tp.max!!.coder(xtpls,pre)};
                                 $xid.cur = MIN($xid.max, $xid.cur);                            
                                 """
                             }
@@ -437,9 +437,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             val xtplss: List<Tpl_Map?> = s.template_map_all() ?: listOf(null)
                             xtplss.map { xtpls ->
                                 when (tp) {
-                                    is Type.Proto.Func -> "auto " + tp.out.coder(xtpls) + " " + s.proto(xtpls) + " (" + tp.inps.map { it.coder(
-                                        it.assert_no_tpls_up()
-                                    ) }.joinToString(",") + ");\n"
+                                    is Type.Proto.Func -> "auto " + tp.out.coder(xtpls) + " " + s.proto(xtpls) + " (" + tp.inps.map { it.coder(xtpls) }.joinToString(",") + ");\n"
                                     is Type.Proto.Coro -> "auto ${tp.x_sig(pre,s.proto(xtpls))};\n"
                                 }
                             }

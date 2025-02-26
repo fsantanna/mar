@@ -1833,7 +1833,7 @@ class Check {
         val out = check("""
             match 10 { else { do(10) } }
         """)
-        println(out)
+        //println(out)
         assert(out == null) { out!! }
         assert(G.outer!!.to_str() == "do {\n"+
            "data Return.*: [] {\n"+
