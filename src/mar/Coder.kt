@@ -444,7 +444,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             }
                             xtplss.map { xtpls ->
                                 when (tp) {
-                                    is Type.Proto.Func -> "auto " + tp.out.coder(tpls) + " " + s.proto(xtpls) + " (" + tp.inps.map { it.coder(
+                                    is Type.Proto.Func -> "auto " + tp.out.coder(xtpls) + " " + s.proto(xtpls) + " (" + tp.inps.map { it.coder(
                                         it.assert_no_tpls_up()
                                     ) }.joinToString(",") + ");\n"
                                     is Type.Proto.Coro -> "auto ${tp.x_sig(pre,s.proto(xtpls))};\n"

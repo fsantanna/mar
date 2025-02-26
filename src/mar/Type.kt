@@ -312,10 +312,18 @@ fun Type.Data.abs_con (s: Stmt.Data, map: Tpl_Map): Type.Data {
     return Type.Data(this.tk, tpls, this.ts)
 }
 
-fun Expr.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Expr {
+fun Stmt.to_tpls (): List<Tpl_Abs> {
+    return when (this) {
+        is Stmt.Data -> this.tpls
+        is Stmt.Proto -> this.tpls
+        else -> error("impossible case")
+    }
+}
+
+fun Expr.template_abs_con (s: Stmt, tpl: List<Tpl_Con>): Expr {
     return when (this) {
         is Expr.Tpl -> {
-            val i = s.tpls.indexOfFirst { it.first.str==this.tk.str }
+            val i = s.to_tpls().indexOfFirst { it.first.str==this.tk.str }
             tpl[i].second!!
         }
         is Expr.Uno -> Expr.Uno(this.tk_, this.e.template_abs_con(s,tpl))
@@ -324,7 +332,7 @@ fun Expr.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Expr {
     }
 }
 
-fun Type.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Type {
+fun Type.template_abs_con (s: Stmt, tpl: List<Tpl_Con>): Type {
     // Example: T [b,a] --> T [Bool,Int]
     // this: [b,a]
     // s: data X {{a:Type,b:Type}}
@@ -336,7 +344,7 @@ fun Type.template_abs_con (s: Stmt.Data, tpl: List<Tpl_Con>): Type {
         is Type.Bot -> this
         is Type.Top -> this
         is Type.Tpl -> {
-            val i = s.tpls.indexOfFirst { it.first.str==this.tk.str }
+            val i = s.to_tpls().indexOfFirst { it.first.str==this.tk.str }
             tpl[i].first!!
             //tpls.first { it.first.str == this.tk.str }.second.first!!
         }
@@ -620,7 +628,16 @@ fun Expr.type (): Type? {
         is Expr.Call -> this.f.type().let {
             when (it) {
                 is Type.Nat, is Type.Any -> it
-                is Type.Proto.Func -> it.out
+                is Type.Proto.Func -> {
+                    this.f.let { f ->
+                        if (f is Expr.Acc) {
+                            val dcl = f.to_xdcl()!!.first as Stmt.Proto
+                            it.out.template_abs_con(dcl, this.xtpls!!)
+                        } else {
+                            it.out
+                        }
+                    }
+                }
                 else -> null
             }
         }
