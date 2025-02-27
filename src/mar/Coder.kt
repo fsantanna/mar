@@ -94,7 +94,7 @@ fun List<Tk.Type>.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
     }.joinToString("_")
 }
 
-fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
+fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
     fun ft (me: Type): List<String> {
         when {
             (me is Type.Any) -> return emptyList()
@@ -318,13 +318,13 @@ fun coder_types (s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
         }
     }
     fun fs (me: Stmt): List<String> {
-        if (me !is Stmt.Proto) {
+        if (me !is Stmt.Proto || me===x /* HACK-01 */) {
             return emptyList()
         }
 
         val xtplss: List<Tpl_Map> = me.template_map_all() ?: emptyList()
         val x = xtplss.map { xtpls ->
-            coder_types(me.blk, xtpls, pre)
+            coder_types(me, me, xtpls, pre) // HACK-01: x===me above prevents stack overflow
         }
 
         if (me !is Stmt.Proto.Coro) {
@@ -1150,7 +1150,7 @@ fun coder_main (pre: Boolean): String {
             mar_vector_cat_pointer(dst, src->buf, src->cur, size);
         }
         
-        ${coder_types(G.outer!!, null, pre)}
+        ${coder_types(null, G.outer!!, null, pre)}
         
         int main (void) {
             do {
