@@ -372,7 +372,7 @@ fun Expr.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Expr? {
     return when (this) {
         is Expr.Tpl -> {
             val i = s.to_tpls().indexOfFirst { it.first.str==this.tk.str }
-            if (tpls.size >= i) null else {
+            if (tpls.size <= i) null else {
                 tpls[i].second
             }
         }
@@ -398,7 +398,7 @@ fun Type.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Type? {
     // s: data X {{a:Type,b:Type}}
     // tpls: {{Int,Bool}}
     // --> [Bool,Int]
-    //println(listOf(this.to_str(), s.to_str(), tpl))
+    //println(listOf("abs-con", this.to_str(), s.to_str(), tpls))
     if (!this.has_tpls_dn()) {
         return this
     }
@@ -408,7 +408,7 @@ fun Type.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Type? {
         is Type.Top -> this
         is Type.Tpl -> {
             val i = s.to_tpls().indexOfFirst { it.first.str==this.tk.str }
-            if (i >= tpls.size) null else {
+            if (tpls.size <= i) null else {
                 tpls[i].first!!
             }
         }
