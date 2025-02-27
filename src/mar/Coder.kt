@@ -881,7 +881,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         val f = this.f as Expr.Acc
                         Pair (
                             id.proto(it),
-                            (f.to_xdcl()!!.first as Stmt.Proto).tpls.template_map_one(it)
+                            template_map(f.to_xdcl()!!.first.to_tpl_abss(), it)
                         )
                     }
                 }

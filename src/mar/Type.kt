@@ -306,6 +306,16 @@ fun Type.template_apply (map: Tpl_Map): Type {
     }
 }
 
+fun Expr.template_apply (map: Tpl_Map): Expr {
+    return when (this) {
+        is Expr.Tpl -> map[this.tk.str]!!.second!!.template_apply(map)
+        is Expr.Num -> this
+        is Expr.Uno -> Expr.Uno(this.tk_, this.e.template_apply(map))
+        is Expr.Bin -> Expr.Bin(this.tk_, this.e1.template_apply(map), this.e2.template_apply(map))
+        else        -> TODO()
+    }
+}
+
 fun Type.template_con_abs (tp: Type): Tpl_Map {
     // Example: T [Bool,Int] --> T {a=Int,b=Bool}
     // this: [Bool,Int]
@@ -360,7 +370,7 @@ fun Type.Data.abs_con (s: Stmt.Data, map: Tpl_Map): Type.Data {
     return Type.Data(this.tk, tpls, this.ts)
 }
 
-fun Stmt.to_tpls (): List<Tpl_Abs> {
+fun Stmt.to_tpl_abss (): List<Tpl_Abs> {
     return when (this) {
         is Stmt.Data -> this.tpls
         is Stmt.Proto -> this.tpls
@@ -371,7 +381,7 @@ fun Stmt.to_tpls (): List<Tpl_Abs> {
 fun Expr.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Expr? {
     return when (this) {
         is Expr.Tpl -> {
-            val i = s.to_tpls().indexOfFirst { it.first.str==this.tk.str }
+            val i = s.to_tpl_abss().indexOfFirst { it.first.str==this.tk.str }
             if (tpls.size <= i) null else {
                 tpls[i].second
             }
@@ -407,7 +417,7 @@ fun Type.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Type? {
         is Type.Bot -> this
         is Type.Top -> this
         is Type.Tpl -> {
-            val i = s.to_tpls().indexOfFirst { it.first.str==this.tk.str }
+            val i = s.to_tpl_abss().indexOfFirst { it.first.str==this.tk.str }
             if (tpls.size <= i) null else {
                 tpls[i].first!!
             }
@@ -475,14 +485,14 @@ fun Type.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Type? {
     }
 }
 
-fun List<Tpl_Abs>.template_map_one (cons: List<Tpl_Con>): Tpl_Map {
-    return this.map { (id, _) -> id.str }.zip(cons).toMap()
+fun template_map (abss: List<Tpl_Abs>, cons: List<Tpl_Con>): Tpl_Map {
+    return abss.map { (id, _) -> id.str }.zip(cons).toMap()
 }
 
 fun Stmt.template_map_all (): List<Tpl_Map>? {
-    val tpls = this.to_tpls()
-    return if (tpls.isEmpty()) null else {
-        G.tpls[this]?.values?.map { tpls.template_map_one(it) }
+    val abss = this.to_tpl_abss()
+    return if (abss.isEmpty()) null else {
+        G.tpls[this]?.values?.map { template_map(abss,it) }
             ?: emptyList()
     }
 }
