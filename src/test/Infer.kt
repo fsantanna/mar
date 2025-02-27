@@ -1005,4 +1005,13 @@ class Infer {
                 "print((f {{10}} ()))\n" +
                 "}") { G.outer!!.to_str() }
     }
+    @Test
+    fun tt_06_func () {
+        val out = infer("""
+            func f {{w:Int}}: () -> #[Int*{{w}}] {
+            }
+            var rs = f()
+        """)
+        assert(out == "anon : (lin 4, col 17) : inference error : unknown type") { out!! }
+    }
 }
