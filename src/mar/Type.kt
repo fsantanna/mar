@@ -399,6 +399,9 @@ fun Type.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Type? {
     // tpls: {{Int,Bool}}
     // --> [Bool,Int]
     //println(listOf(this.to_str(), s.to_str(), tpl))
+    if (!this.has_tpls_dn()) {
+        return this
+    }
     return when (this) {
         is Type.Any -> this
         is Type.Bot -> this
@@ -421,7 +424,7 @@ fun Type.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Type? {
         }
         is Type.Tuple -> {
             val ts = this.ts.map { (id,tp) -> Pair(id, tp.template_abs_con(s, tpls)) }
-            if (ts.any { it.first==null }) null else {
+            if (ts.any { it.second==null }) null else {
                 Type.Tuple(this.tk, ts as List<Pair<Tk.Var?, Type>>)
             }
         }

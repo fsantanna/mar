@@ -148,7 +148,7 @@ fun Expr.infer (tpe: Type?): Type? {
         is Expr.Pred -> this.col.infer(null)
         is Expr.Disc -> this.col.infer(null)
         is Expr.Cons -> {
-            //println(listOf("infer-cons",this.to_str(),tp?.to_str()))
+            //println(listOf("infer-cons",this.to_str(),tp.to_str()))
             val (s,_,xtp) = this.tp.walk_tpl()
             val e = this.e.infer(xtp)
             when {
