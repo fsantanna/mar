@@ -900,7 +900,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }
                 val tsrc = arg.typex().let { 
                     if (!it.has_tpls_dn()) it else {
-                        it.template_apply(xxx!!)
+                        it.template_apply(xxx!!)!!
                     }
                  }
                 when {

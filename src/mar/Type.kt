@@ -258,7 +258,10 @@ fun Tk.Var.type (fr: Any): Type? {
     } as Type?
 }
 
-fun Type.template_apply (map: Tpl_Map): Type {
+fun Type.template_apply (map: Tpl_Map): Type? {
+    if (!this.has_tpls_dn()) {
+        return this
+    }
     return when (this) {
         is Type.Any -> this
         is Type.Bot -> this
@@ -270,48 +273,79 @@ fun Type.template_apply (map: Tpl_Map): Type {
         is Type.Data -> this
         is Type.Pointer -> {
             val tp = this.ptr.template_apply(map)
-            Type.Pointer(this.tk, tp)
+            if (tp == null) null else {
+                Type.Pointer(this.tk, tp)
+            }
         }
         is Type.Tuple -> {
             val ts = this.ts.map { (id,tp) -> Pair(id, tp.template_apply(map)) }
-            Type.Tuple(this.tk, ts)
+            if (ts.any { it.second==null }) null else {
+                Type.Tuple(this.tk, ts as List<Pair<Tk.Var?, Type>>)
+            }
         }
         is Type.Vector -> {
             val tp = this.tp.template_apply(map)
-            Type.Vector(this.tk, this.max?.template_apply(map), tp)
+            when {
+                (tp == null) -> null
+                (this.max == null) -> null
+                else -> {
+                    val max = this.max.template_apply(map)
+                    if (max == null) null else {
+                        Type.Vector(this.tk, max, tp)
+                    }
+                }
+            }
         }
         is Type.Union -> {
             val ts = this.ts.map { (t, tp) -> Pair(t, tp.template_apply(map)) }
-            Type.Union(this.tk, this.tagged, ts)
+            if (ts.any { it.first==null }) null else {
+                Type.Union(this.tk, this.tagged, ts as List<Pair<Tk.Type?, Type>>)
+            }
         }
         is Type.Proto.Func -> {
             val inps = this.inps.map { it.template_apply(map) }
             val out = this.out.template_apply(map)
-            Type.Proto.Func(this.tk, null, inps, out)
+            if (inps.any { it==null } || out==null) null else {
+                Type.Proto.Func(this.tk, null, inps as List<Type>, out)
+            }
         }
         is Type.Proto.Coro -> {
             val inps = this.inps.map { it.template_apply(map) }
             val res = this.res.template_apply(map)
             val yld = this.yld.template_apply(map)
             val out = this.out.template_apply(map)
-            Type.Proto.Coro(this.tk, null, inps, res, yld, out)
+            if (inps.any { it==null } || res==null || yld==null || out==null) null else {
+                Type.Proto.Coro(this.tk, null, inps as List<Type>, res, yld, out)
+            }
         }
         is Type.Exec -> {
             val inps = this.inps.map { it.template_apply(map) }
             val res = this.res.template_apply(map)
             val yld = this.yld.template_apply(map)
             val out = this.out.template_apply(map)
-            Type.Exec(this.tk, inps, res, yld, out)
+            if (inps.any { it==null } || res==null || yld==null || out==null) null else {
+                Type.Exec(this.tk, inps as List<Type>, res, yld, out)
+            }
         }
     }
 }
 
-fun Expr.template_apply (map: Tpl_Map): Expr {
+fun Expr.template_apply (map: Tpl_Map): Expr? {
     return when (this) {
-        is Expr.Tpl -> map[this.tk.str]!!.second!!.template_apply(map)
+        is Expr.Tpl -> map[this.tk.str]?.second?.template_apply(map)
         is Expr.Num -> this
-        is Expr.Uno -> Expr.Uno(this.tk_, this.e.template_apply(map))
-        is Expr.Bin -> Expr.Bin(this.tk_, this.e1.template_apply(map), this.e2.template_apply(map))
+        is Expr.Uno -> this.e.template_apply(map).let {
+            if (it == null) null else {
+                Expr.Uno(this.tk_, it)
+            }
+        }
+        is Expr.Bin -> {
+            val e1 = this.e1.template_apply(map)
+            val e2 = this.e2.template_apply(map)
+            if (e1==null || e2==null) null else {
+                Expr.Bin(this.tk_, e1, e2)
+            }
+        }
         else        -> TODO()
     }
 }
@@ -375,113 +409,6 @@ fun Stmt.to_tpl_abss (): List<Tpl_Abs> {
         is Stmt.Data -> this.tpls
         is Stmt.Proto -> this.tpls
         else -> error("impossible case")
-    }
-}
-
-fun Expr.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Expr? {
-    return when (this) {
-        is Expr.Tpl -> {
-            val i = s.to_tpl_abss().indexOfFirst { it.first.str==this.tk.str }
-            if (tpls.size <= i) null else {
-                tpls[i].second
-            }
-        }
-        is Expr.Uno -> this.e.template_abs_con(s,tpls).let {
-            if (it == null) null else {
-                Expr.Uno(this.tk_, it)
-            }
-        }
-        is Expr.Bin -> {
-            val e1 = this.e1.template_abs_con(s,tpls)
-            val e2 = this.e2.template_abs_con(s,tpls)
-            if (e1==null || e2==null) null else {
-                Expr.Bin(this.tk_, e1, e2)
-            }
-        }
-        else        -> this
-    }
-}
-
-fun Type.template_abs_con (s: Stmt, tpls: List<Tpl_Con>): Type? {
-    // Example: T [b,a] --> T [Bool,Int]
-    // this: [b,a]
-    // s: data X {{a:Type,b:Type}}
-    // tpls: {{Int,Bool}}
-    // --> [Bool,Int]
-    //println(listOf("abs-con", this.to_str(), s.to_str(), tpls))
-    if (!this.has_tpls_dn()) {
-        return this
-    }
-    return when (this) {
-        is Type.Any -> this
-        is Type.Bot -> this
-        is Type.Top -> this
-        is Type.Tpl -> {
-            val i = s.to_tpl_abss().indexOfFirst { it.first.str==this.tk.str }
-            if (tpls.size <= i) null else {
-                tpls[i].first!!
-            }
-        }
-        is Type.Nat -> this
-        is Type.Unit -> this
-        is Type.Prim -> this
-        is Type.Data -> { this.assert_no_tpls_up() ; this }
-        is Type.Pointer -> {
-            val tp = this.ptr.template_abs_con(s, tpls)
-            if (tp == null) null else {
-                Type.Pointer(this.tk, tp)
-            }
-        }
-        is Type.Tuple -> {
-            val ts = this.ts.map { (id,tp) -> Pair(id, tp.template_abs_con(s, tpls)) }
-            if (ts.any { it.second==null }) null else {
-                Type.Tuple(this.tk, ts as List<Pair<Tk.Var?, Type>>)
-            }
-        }
-        is Type.Vector -> {
-            val tp = this.tp.template_abs_con(s, tpls)
-            when {
-                (tp == null) -> null
-                (this.max == null) -> null
-                else -> {
-                    val max = this.max.template_abs_con(s,tpls)
-                    if (max == null) null else {
-                        Type.Vector(this.tk, max, tp)
-                    }
-                }
-            }
-        }
-        is Type.Union -> {
-            val ts = this.ts.map { (t, tp) -> Pair(t, tp.template_abs_con(s, tpls)) }
-            if (ts.any { it.first==null }) null else {
-                Type.Union(this.tk, this.tagged, ts as List<Pair<Tk.Type?, Type>>)
-            }
-        }
-        is Type.Proto.Func -> {
-            val inps = this.inps.map { it.template_abs_con(s, tpls) }
-            val out = this.out.template_abs_con(s, tpls)
-            if (inps.any { it==null } || out==null) null else {
-                Type.Proto.Func(this.tk, null, inps as List<Type>, out)
-            }
-        }
-        is Type.Proto.Coro -> {
-            val inps = this.inps.map { it.template_abs_con(s, tpls) }
-            val res = this.res.template_abs_con(s, tpls)
-            val yld = this.yld.template_abs_con(s, tpls)
-            val out = this.out.template_abs_con(s, tpls)
-            if (inps.any { it==null } || res==null || yld==null || out==null) null else {
-                Type.Proto.Coro(this.tk, null, inps as List<Type>, res, yld, out)
-            }
-        }
-        is Type.Exec -> {
-            val inps = this.inps.map { it.template_abs_con(s, tpls) }
-            val res = this.res.template_abs_con(s, tpls)
-            val yld = this.yld.template_abs_con(s, tpls)
-            val out = this.out.template_abs_con(s, tpls)
-            if (inps.any { it==null } || res==null || yld==null || out==null) null else {
-                Type.Exec(this.tk, inps as List<Type>, res, yld, out)
-            }
-        }
     }
 }
 
@@ -551,7 +478,7 @@ fun Type.Data.walk (): Triple<Stmt.Data,List<Int>,Type>? {
 fun Any.walk_tpl (ts: List<String>, tpls: List<Tpl_Con>?): Triple<Stmt.Data,List<Int>,Type> {
     val (s,l,tp) = this.walk(ts)!!
     return Triple(s, l, tpls.let {
-        if (it==null) tp else tp.template_abs_con(s, it)!!
+        if (it==null) tp else tp.template_apply(template_map(s.to_tpl_abss(),it))!!
     })
 }
 
@@ -585,7 +512,7 @@ fun Type.discx (idx: String): Pair<Int, Type>? {
             if (xxx == null) null else {
                 val (s,i,tpx) = xxx
                 val tp = this.xtpls.let {
-                    if (it==null) tpx else tpx.template_abs_con(s, it)!!
+                    if (it==null) tpx else tpx.template_apply(template_map(s.to_tpl_abss(), it))!!
                 }
                 //println(listOf("discx", tp.to_str()))
                 if (s.subs == null) {
@@ -739,7 +666,7 @@ fun Expr.type (): Type? {
                     this.f.let { f ->
                         if (f is Expr.Acc) {
                             val dcl = f.to_xdcl()!!.first as Stmt.Proto
-                            it.out.template_abs_con(dcl, this.xtpls!!)
+                            it.out.template_apply(template_map(dcl.to_tpl_abss(),this.xtpls!!))
                         } else {
                             it.out
                         }

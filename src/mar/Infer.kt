@@ -314,7 +314,7 @@ fun infer_apply () {
             is Stmt.SetE -> this.src.infer(xdst)
             else -> error("impossible case")
         }
-        //println(listOf("set",xdst?.to_str(),xsrc?.to_str()))
+        //println(listOf("set", this.to_str(), xdst?.to_str(), xsrc?.to_str()))
         val xxdst = (xdst==null || (xdst is Type.Data && xdst.xtpls==null))
         if (xxdst && xsrc!=null) {
             if (dst is Expr.Acc) {
