@@ -1014,4 +1014,16 @@ class Infer {
         """)
         assert(out == "anon : (lin 4, col 17) : inference error : unknown type") { out!! }
     }
+    @Test
+    fun tt_07_func () {
+        val out = infer("""
+            func f {{w:Int}}: () -> #[Int*({{w}})] {
+            }
+            func g: (rs: \#[Int]) -> () {
+            }
+            var rs = f()
+            g(\rs)
+        """)
+        assert(out == "anon : (lin 6, col 17) : inference error : unknown type") { out!! }
+    }
 }

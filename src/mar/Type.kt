@@ -586,8 +586,12 @@ fun Expr.type (): Type? {
         is Expr.Uno -> when (this.tk_.str) {
             "!" -> Type.Prim(Tk.Type( "Bool", this.tk.pos))
             "-" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
-            "ref" -> Type.Pointer(this.tk, this.e.type()!!)
-            "deref" -> this.e.type().let { if (it !is Type.Pointer) null else it.ptr }
+            "ref" -> this.e.type().let {
+                if (it == null) null else Type.Pointer(this.tk, it)
+            }
+            "deref" -> this.e.type().let {
+                if (it !is Type.Pointer) null else it.ptr
+            }
             "#" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
             "##" -> Type.Prim(Tk.Type( "Int", this.tk.pos))
             else -> error("impossible case")
