@@ -363,11 +363,14 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             assert((tpls == null) || this.tpls.isEmpty()) { "TODO: merge tpls" }
 
             val xtplss: List<Tpl_Map?> = this.template_map_all() ?: listOf(null)
-            xtplss.map { xtpls ->
+            xtplss.distinctBy {
+                this.proto(it)
+            }.map { xtpls ->
+                val xid = this.proto(xtpls)
                 when (this) {
                     is Stmt.Proto.Func ->
-                        this.tp_.out.coder(xtpls) + " " + this.proto(xtpls) + " (" + this.tp_.inps_.map { it.coder(xtpls,pre) }.joinToString(",") + ")"
-                    is Stmt.Proto.Coro -> this.tp_.x_sig(pre, this.proto(xtpls))
+                        this.tp_.out.coder(xtpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(xtpls,pre) }.joinToString(",") + ")"
+                    is Stmt.Proto.Coro -> this.tp_.x_sig(pre, xid)
                 } + """
                 {
                     ${this.tp.out.coder(xtpls)} mar_ret;
@@ -435,10 +438,13 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         if (tp !is Type.Proto) emptyList() else {
                             s as Stmt.Proto
                             val xtplss: List<Tpl_Map?> = s.template_map_all() ?: listOf(null)
-                            xtplss.map { xtpls ->
+                            xtplss.distinctBy {
+                                s.proto(it)
+                            }.map { xtpls ->
+                                val xid = s.proto(xtpls)
                                 when (tp) {
-                                    is Type.Proto.Func -> "auto " + tp.out.coder(xtpls) + " " + s.proto(xtpls) + " (" + tp.inps.map { it.coder(xtpls) }.joinToString(",") + ");\n"
-                                    is Type.Proto.Coro -> "auto ${tp.x_sig(pre,s.proto(xtpls))};\n"
+                                    is Type.Proto.Func -> "auto " + tp.out.coder(xtpls) + " " + xid + " (" + tp.inps.map { it.coder(xtpls) }.joinToString(",") + ");\n"
+                                    is Type.Proto.Coro -> "auto ${tp.x_sig(pre,xid)};\n"
                                 }
                             }
                         }
