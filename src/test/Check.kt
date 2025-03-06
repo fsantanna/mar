@@ -281,7 +281,7 @@ class Check {
         val out = check("""
             coro f: (x: Int) -> () -> () -> Int {
             }
-            var z: exec (Int) -> () -> () -> Int = create(f)
+            var z: exec coro (Int) -> () -> () -> Int = create(f)
             start z()  ;; err f(Int)
         """)
         assert(out == "anon : (lin 5, col 13) : start error : types mismatch") { out!! }
@@ -291,7 +291,7 @@ class Check {
         val out = check("""
             coro f: (x: Int) -> () -> () -> Int {
             }
-            var z: exec (Int) -> () -> () -> Int = create(f)
+            var z: exec coro (Int) -> () -> () -> Int = create(f)
             resume z(10)  ;; err f(Int)
         """)
         assert(out == "anon : (lin 5, col 13) : resume error : types mismatch") { out!! }
@@ -301,7 +301,7 @@ class Check {
         val out = check("""
             coro f: (v: Int) -> () -> () -> Int {
             }
-            var x: exec (Int) -> () -> () -> Int = create(f)
+            var x: exec coro (Int) -> () -> () -> Int = create(f)
             start x(10)
             resume x()
         """)
@@ -312,7 +312,7 @@ class Check {
         val out = check("""
             coro f: (v: Int) -> () -> () -> Int {
             }
-            var x: exec (Int) -> () -> () -> Int = create(f)
+            var x: exec coro (Int) -> () -> () -> Int = create(f)
             resume x(<.1=10>: <Int>)
         """)
         assert(out == "anon : (lin 5, col 13) : resume error : types mismatch") { out!! }
@@ -322,9 +322,9 @@ class Check {
         val out = check("""
             coro co: () -> () -> () -> () {
             }
-            var exe: exec (Int) -> () -> () -> () = create(co)
+            var exe: exec coro (Int) -> () -> () -> () = create(co)
         """)
-        assert(out == "anon : (lin 4, col 51) : set error : types mismatch") { out!! }
+        assert(out == "anon : (lin 4, col 56) : set error : types mismatch") { out!! }
     }
     @Test
     fun bc_05_exe_coro_err () {
@@ -339,7 +339,7 @@ class Check {
     fun bc_06_exe_coro_ok () {
         val out = check("""
             coro co: () -> () -> () -> () {}
-            var exe: exec () -> () -> () -> ()
+            var exe: exec coro () -> () -> () -> ()
             set exe = create(co)
             start exe()
             resume exe()
@@ -350,7 +350,7 @@ class Check {
     fun bc_07_exe_resume_ok () {
         val out = check("""
             coro co: () -> () -> () -> Int {}
-            var exe: exec () -> () -> () -> Int
+            var exe: exec coro () -> () -> () -> Int
             set exe = create(co)
             start exe()
             resume exe()
@@ -370,7 +370,7 @@ class Check {
     fun bc_09_exe_resume_err () {
         val out = check("""
             coro co: () -> () -> () -> () {}
-            var exe: exec () -> () -> () -> ()
+            var exe: exec coro () -> () -> () -> ()
             set exe = create(co)
             resume exe(1)
         """)
@@ -380,7 +380,7 @@ class Check {
     fun bc_10_exe_resume_err () {
         val out = check("""
             coro co: () -> () -> () -> () {}
-            var exe: exec () -> () -> () -> ()
+            var exe: exec coro () -> () -> () -> ()
             set exe = create(co)
             var v: Int = resume exe(<.1=()>: <(),()>)
         """)
@@ -390,7 +390,7 @@ class Check {
     fun bc_11_exe_resume () {
         val out = check("""
             coro co: (x:()) -> () -> () -> () {}
-            var exe: exec () -> () -> () -> ()
+            var exe: exec coro () -> () -> () -> ()
             set exe = create(co)
             start exe()
             resume exe()

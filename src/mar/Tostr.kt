@@ -77,8 +77,8 @@ fun Type.to_str (pre: Boolean = false): String {
                 is Type.Proto.Task -> "task ($inps) -> ${this.out.to_str(pre)}"
             }
         }
-        is Type.Exec.Coro -> "exec (${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.res.to_str(pre)} -> ${this.yld.to_str(pre)} -> ${this.out.to_str(pre)}"
-        is Type.Exec.Task -> "exec (${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.out.to_str(pre)}"
+        is Type.Exec.Coro -> "exec coro (${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.res.to_str(pre)} -> ${this.yld.to_str(pre)} -> ${this.out.to_str(pre)}"
+        is Type.Exec.Task -> "exec task (${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.out.to_str(pre)}"
     }.let {
         when {
             !pre -> it

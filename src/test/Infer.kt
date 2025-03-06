@@ -149,7 +149,7 @@ class Infer {
                 "}\n" +
                 "coro genFunc: () -> () -> () -> () {\n" +
                 "}\n" +
-                "var genObj: exec () -> () -> () -> ()\n" +
+                "var genObj: exec coro () -> () -> () -> ()\n" +
                 "set genObj = create(genFunc)\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -254,7 +254,7 @@ class Infer {
                 "}\n" +
                 "coro co: (v: <(),Int>) -> () -> () -> () {\n" +
                 "}\n" +
-                "var exe: exec (<(),Int>) -> () -> () -> ()\n" +
+                "var exe: exec coro (<(),Int>) -> () -> () -> ()\n" +
                 "set exe = create(co)\n" +
                 "start exe(<.1=()>:<(),Int>)\n" +
                 "}") { G.outer!!.to_str() }
@@ -276,7 +276,7 @@ class Infer {
                 "}\n" +
                 "coro co: () -> <(),Int> -> () -> () {\n" +
                 "}\n" +
-                "var exe: exec () -> <(),Int> -> () -> ()\n" +
+                "var exe: exec coro () -> <(),Int> -> () -> ()\n" +
                 "set exe = create(co)\n" +
                 "start exe()\n" +
                 "resume exe(<.1=()>:<(),Int>)\n" +
@@ -301,7 +301,7 @@ class Infer {
                 "var x: ()\n" +
                 "set x = yield(<.1=()>:<(),Int>)\n" +
                 "}\n" +
-                "var exe: exec () -> () -> <(),Int> -> ()\n" +
+                "var exe: exec coro () -> () -> <(),Int> -> ()\n" +
                 "set exe = create(co)\n" +
                 "start exe()\n" +
                 "}") { G.outer!!.to_str() }
@@ -334,7 +334,7 @@ class Infer {
                 "var x: B\n" +
                 "set x = yield((`x`: C))\n" +
                 "}\n" +
-                "var exe: exec (A) -> B -> C -> D\n" +
+                "var exe: exec coro (A) -> B -> C -> D\n" +
                 "set exe = create(co)\n" +
                 "var y: <C,D>\n" +
                 "set y = start exe((`x`: A))\n" +
@@ -373,7 +373,7 @@ class Infer {
                 "coro gen1: (v: Int) -> () -> () -> () {\n" +
                 "do((`printf(\"%d\\n\", mar_exe->mem.v);`: ()))\n" +
                 "}\n" +
-                "var co1: exec (Int) -> () -> () -> ()\n" +
+                "var co1: exec coro (Int) -> () -> () -> ()\n" +
                 "set co1 = create(gen1)\n" +
                 "start co1(([]:[]))\n" +
                 "}") { G.outer!!.to_str() }

@@ -105,11 +105,11 @@ class Parser {
     }
     @Test
     fun aj_09_type_exec () {
-        G.tks = ("exec (Int) -> () -> () -> Int").lexer()
+        G.tks = ("exec coro (Int) -> () -> () -> Int").lexer()
         parser_lexer()
         val tp = parser_type(null, false, false)
         assert(tp is Type.Exec.Coro && tp.inps.size==1 && tp.res is Type.Unit && tp.yld is Type.Unit && tp.out is Type.Prim)
-        assert(tp.to_str() == "exec (Int) -> () -> () -> Int") { tp.to_str() }
+        assert(tp.to_str() == "exec coro (Int) -> () -> () -> Int") { tp.to_str() }
     }
     @Test
     fun aj_10_type_coro_err () {
@@ -121,11 +121,11 @@ class Parser {
     }
     @Test
     fun aj_11_type_exec_err () {
-        G.tks = ("exec (Int,Int) -> Int").lexer()
+        G.tks = ("exec coro (Int,Int) -> Int").lexer()
         parser_lexer()
-        assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 22) : expected \"->\" : have end of file")
+        assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 27) : expected \"->\" : have end of file")
         //assert(trap { parser_type(false) } == "anon : (lin 1, col 7) : expected \"<\" : have \"Int\"")
-        //assert(trap { parser_type(false) } == "anon : (lin 1, col 1) : exec error : unexpected second argument")
+        //assert(trap { parser_type(false) } == "anon : (lin 1, col 1) : exec coro error : unexpected second argument")
     }
     @Test
     fun aj_12_data_hier () {
@@ -1333,6 +1333,14 @@ class Parser {
     }
 
     // CORO: CREATE / SPAWN / AWAIT
+
+    @Test
+    fun uu_01_exec_err() {
+        G.tks = ("exec ()").lexer()
+        parser_lexer()
+        //parser_type(null, false, false)
+        assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 6) : exec error : expected coro or task")
+    }
 
     @Test
     fun uu_01_spawn() {

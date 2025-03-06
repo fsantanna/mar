@@ -196,7 +196,8 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
             }
         }
         accept_fix("exec") -> {
-            val tk0 = pre ?: (G.tk0 as Tk.Fix)
+            val tk0 = G.tk0 as Tk.Fix
+            accept_fix("coro") || accept_fix("exec") || err(G.tk1!!, "exec error : expected coro or task")
             accept_fix_err("(")
             val inps = parser_list(",", ")") {
                 parser_type(null, false, fr_pointer)

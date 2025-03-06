@@ -513,7 +513,7 @@ class Exec  {
                 coro co: () -> () -> () -> () {
                     `puts("OK");`
                 }
-                var exe: exec () -> () -> () -> () = create(co)
+                var exe: exec coro () -> () -> () -> () = create(co)
                 `puts("END");`
             }
         """)
@@ -525,7 +525,7 @@ class Exec  {
             coro co: () -> () -> () -> () {
                 `puts("OK");`
             }
-            var exe: exec () -> () -> () -> () = create(co)
+            var exe: exec coro () -> () -> () -> () = create(co)
             start exe()
             ;;resume exe()
         """)
@@ -537,7 +537,7 @@ class Exec  {
             coro co: (v: Int) -> () -> () -> () {
                 `printf("%d\n", mar_exe->mem.v);`
             }
-            var exe: exec (Int) -> () -> () -> () = create(co)
+            var exe: exec coro (Int) -> () -> () -> () = create(co)
             start exe(10)
         """)
         assert(out == "10\n") { out }
@@ -551,7 +551,7 @@ class Exec  {
                 set v = v + 10
                 `printf("%d\n", mar_exe->mem.v);`
             }
-            var exe: exec (Int) -> Int -> () -> () = create(co)
+            var exe: exec coro (Int) -> Int -> () -> () = create(co)
             start exe(10)
             resume exe(99)
         """)
@@ -565,7 +565,7 @@ class Exec  {
                     var y2:Int = yield(x2*2)
                     return(y2 * 2)
                 }
-                var exe: exec (Int) -> Int -> Int -> Int = create(co)
+                var exe: exec coro (Int) -> Int -> Int -> Int = create(co)
                 var x1: <Int,Int> = start exe(5)
                 var y1: <Int,Int> = resume exe(x1!1 + 10)
                 print(y1!2)
@@ -582,7 +582,7 @@ class Exec  {
                     var y2:Int = yield(x2*2)
                     return((y2 * 2) + x)
                 }
-                var exe: exec (Int) -> Int -> Int -> Int = create(co)
+                var exe: exec coro (Int) -> Int -> Int -> Int = create(co)
                 var x1: <Int,Int> = start exe(5)
                 var y1: <Int,Int> = resume exe(x1!1 + 10)
                 print(y1!2)
