@@ -261,7 +261,7 @@ fun check_types () {
             }
             is Stmt.Resume -> {
                 val exe = me.exe.typex()
-                if (exe !is Type.Exec) {
+                if (exe !is Type.Exec.Coro) {
                     err(me.tk, "resume error : expected active coroutine")
                 }
                 if (!exe.res.is_sup_of(me.arg.typex())) {

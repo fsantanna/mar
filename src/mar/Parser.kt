@@ -159,7 +159,7 @@ fun parser_tpls_con (): List<Tpl_Con>? {
 
 fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
     return when {
-        (pre is Tk.Fix || accept_fix("func") || accept_fix("coro")) -> {
+        (pre is Tk.Fix || accept_fix("func") || accept_fix("coro") || accept_fix("task")) -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
             accept_fix_err("(")
             val req = fr_proto || check_enu("Var")
@@ -188,6 +188,10 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                     Type.Proto.Coro.Vars(tk0, null, inps as List<Var_Type>, res!!, yld!!, out)
                 (tk0.str=="coro" && !req) ->
                     Type.Proto.Coro(tk0, null, inps as List<Type>, res!!, yld!!, out)
+                (tk0.str=="task" &&  req) ->
+                    Type.Proto.Task.Vars(tk0, null, inps as List<Var_Type>, out)
+                (tk0.str=="task" && !req) ->
+                    Type.Proto.Task(tk0, null, inps as List<Type>, out)
                 else -> error("impossible case")
             }
         }
@@ -203,7 +207,7 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
             val yld = parser_type(null, false, fr_pointer)
             accept_fix_err("->")
             val out = parser_type(null, false, fr_pointer)
-            Type.Exec(tk0, inps, res, yld, out)
+            Type.Exec.Coro(tk0, inps, res, yld, out)
         }
         accept_fix("(") -> {
             val tp = if (check_fix(")")) {
@@ -538,7 +542,7 @@ fun parser_stmt_block (): List<Stmt> {
 
 fun parser_stmt (): List<Stmt> {
     return when {
-        (accept_fix("func") || accept_fix("coro")) -> {
+        (accept_fix("func") || accept_fix("coro") || accept_fix("task")) -> {
             val tk0 = G.tk0 as Tk.Fix
             accept_enu_err("Var")
             val id = G.tk0 as Tk.Var
@@ -552,6 +556,8 @@ fun parser_stmt (): List<Stmt> {
                     Stmt.Proto.Func(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, ss))
                 is Type.Proto.Coro.Vars ->
                     Stmt.Proto.Coro(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, ss))
+                is Type.Proto.Task.Vars ->
+                    Stmt.Proto.Task(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, ss))
                 else -> error("impossible case")
             }.let { listOf(it) }
         }

@@ -15,6 +15,7 @@ fun cache_ups () {
                 when (me) {
                     is Stmt.Proto.Func -> me.tp_.xup = me
                     is Stmt.Proto.Coro -> me.tp_.xup = me
+                    is Stmt.Proto.Task -> me.tp_.xup = me
                 }
             }
 
@@ -177,9 +178,14 @@ fun cache_ups () {
                 me.inps.forEach {
                     it.xup = me
                 }
-                me.res.xup = me
-                me.yld.xup = me
                 me.out.xup = me
+                when (me) {
+                    is Type.Exec.Coro -> {
+                        me.res.xup = me
+                        me.yld.xup = me
+                    }
+                    is Type.Exec.Task -> {}
+                }
             }
             is Type.Proto -> {
                 me.inps.forEach {
@@ -198,6 +204,13 @@ fun cache_ups () {
                         me.res.xup = me
                         me.yld.xup = me
                         if (me is Type.Proto.Coro.Vars) {
+                            me.inps_.forEach { (_,tp) ->
+                                tp.xup = me
+                            }
+                        }
+                    }
+                    is Type.Proto.Task -> {
+                        if (me is Type.Proto.Task.Vars) {
                             me.inps_.forEach { (_,tp) ->
                                 tp.xup = me
                             }

@@ -10,37 +10,49 @@ fun Stmt.infer (tpe: Type?): Type? {
         }
 
         is Stmt.Create -> {
-            val xtp = if (tpe !is Type.Exec) null else {
-                Type.Proto.Coro(tpe.tk, null, tpe.inps, tpe.res, tpe.yld, tpe.out)
+            val xtp = when (tpe) {
+                !is Type.Exec -> null
+                is Type.Exec.Coro -> Type.Proto.Coro(tpe.tk, null, tpe.inps, tpe.res, tpe.yld, tpe.out)
+                is Type.Exec.Task -> TODO()
+                else -> error("impossible case")
             }
             this.co.infer(xtp).let {
-                if (it !is Type.Proto.Coro) tpe else {
-                    Type.Exec(co.tk, it.inps, it.res, it.yld, it.out)
+                when (it) {
+                    is Type.Proto.Coro -> Type.Exec.Coro(co.tk, it.inps, it.res, it.yld, it.out)
+                    is Type.Proto.Task -> TODO()
+                    else -> tpe
                 }
             }
         }
         is Stmt.Start -> {
             val exe = this.exe.infer(null)
-            if (exe is Type.Exec) {
-                this.args.mapIndexed { i,e ->
-                    e.infer(exe.inps[i])
+            when (exe) {
+                is Type.Exec.Coro -> {
+                    this.args.mapIndexed { i,e ->
+                        e.infer(exe.inps[i])
+                    }
+                    Type.Union(this.tk, true, listOf(exe.yld,exe.out).map { Pair(null,it) })
                 }
-                Type.Union(this.tk, true, listOf(exe.yld,exe.out).map { Pair(null,it) })
-            } else {
-                this.args.map {
-                    it.infer(null)
+                is Type.Exec.Task -> TODO()
+                else -> {
+                    this.args.map {
+                        it.infer(null)
+                    }
+                    null
                 }
-                null
             }
         }
         is Stmt.Resume -> {
-           val exe = this.exe.infer(null)
-           if (exe is Type.Exec) {
-               this.arg.infer(exe.res)
-                Type.Union(this.tk, true, listOf(exe.yld,exe.out).map { Pair(null,it) })
-           } else {
-               this.arg.infer(null)
-               null
+            val exe = this.exe.infer(null)
+            when (exe) {
+                is Type.Exec.Coro -> {
+                    this.arg.infer(exe.res)
+                    Type.Union(this.tk, true, listOf(exe.yld,exe.out).map { Pair(null,it) })
+                }
+                else -> {
+                    this.arg.infer(null)
+                    null
+                }
            }
         }
         is Stmt.Yield -> {
@@ -276,7 +288,13 @@ fun Type.infer (tpe: Type?): Type {
                 this.out.infer(tpe.out)
             }
         }
-        is Type.Exec -> {
+        is Type.Proto.Task -> {
+            if (tpe is Type.Proto.Task) {
+                this.inps.zip(tpe.inps).forEach { (a,b) -> a.infer(b) }
+                this.out.infer(tpe.out)
+            }
+        }
+        is Type.Exec.Coro -> {
             if (tpe is Type.Exec) {
                 this.inps.zip(tpe.inps).forEach { (a,b) -> a.infer(b) }
                 this.res.infer(tpe.out)
@@ -284,6 +302,7 @@ fun Type.infer (tpe: Type?): Type {
                 this.out.infer(tpe.out)
             }
         }
+        is Type.Exec.Task -> TODO()
         is Type.Data -> {
             val (s,_,_) = this.walk()!!
             when {
@@ -336,6 +355,7 @@ fun infer_apply () {
            is Stmt.Data, -> {}
            is Stmt.Proto.Func -> me.tp_.infer(null)
            is Stmt.Proto.Coro -> me.tp_.infer(null)
+           is Stmt.Proto.Task -> me.tp_.infer(null)
 
            is Stmt.Block -> {
                me.esc?.infer(null)

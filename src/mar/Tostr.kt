@@ -66,15 +66,19 @@ fun Type.to_str (pre: Boolean = false): String {
             val inps = when (this) {
                 is Type.Proto.Func.Vars -> this.inps_.map { it.to_str(pre) }.joinToString(",")
                 is Type.Proto.Coro.Vars -> this.inps_.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Task.Vars -> this.inps_.map { it.to_str(pre) }.joinToString(",")
                 is Type.Proto.Func -> this.inps.map { it.to_str(pre) }.joinToString(",")
                 is Type.Proto.Coro -> this.inps.map { it.to_str(pre) }.joinToString(",")
+                is Type.Proto.Task -> this.inps.map { it.to_str(pre) }.joinToString(",")
             }
             when (this) {
                 is Type.Proto.Func -> "func ($inps) -> ${this.out.to_str(pre)}"
                 is Type.Proto.Coro -> "coro ($inps) -> ${this.res.to_str(pre)} -> ${this.yld.to_str(pre)} -> ${this.out.to_str(pre)}"
+                is Type.Proto.Task -> "task ($inps) -> ${this.out.to_str(pre)}"
             }
         }
-        is Type.Exec -> "exec (${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.res.to_str(pre)} -> ${this.yld.to_str(pre)} -> ${this.out.to_str(pre)}"
+        is Type.Exec.Coro -> "exec (${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.res.to_str(pre)} -> ${this.yld.to_str(pre)} -> ${this.out.to_str(pre)}"
+        is Type.Exec.Task -> "exec (${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.out.to_str(pre)}"
     }.let {
         when {
             !pre -> it
@@ -193,6 +197,10 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Proto.Coro -> {
             val tpls = (this.tpls.size>0).cond { " {{" + this.tpls.map { it.to_str(pre) }.joinToString(",") + "}}" }
             "coro " + this.id.str + tpls + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
+        }
+        is Stmt.Proto.Task -> {
+            val tpls = (this.tpls.size>0).cond { " {{" + this.tpls.map { it.to_str(pre) }.joinToString(",") + "}}" }
+            "task " + this.id.str + tpls + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
         }
         is Stmt.Block  -> "do " + this.esc.cond { ":"+it.to_str(pre)+" " } + "{\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
         is Stmt.Dcl    -> "var ${this.id.str}" + this.xtp.cond { ": ${it.to_str()}" }

@@ -42,7 +42,7 @@ val KEYWORDS: SortedSet<String> = (
         "break", "do", "catch", "coro", "compile", "create", "defer",
         "data", "else", "escape", "exec", "false", "func", "if", "in",
         "include", "loop", "match", "null", "print", "resume",
-        "return", "set", "start", "test", "throw", "true",
+        "return", "set", "start", "task", "test", "throw", "true",
         "until", "var", "yield", "where", "while"
     ).toSortedSet()
 )
@@ -95,8 +95,15 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
             class Vars (tk: Tk, xtpls: List<Tpl_Con>?, val inps_: List<Var_Type>, res: Type, yld: Type, out: Type):
                 Coro(tk, xtpls, inps_.map { (_, tp) -> tp }, res, yld, out)
         }
+        open class Task (tk: Tk, xtpls: List<Tpl_Con>?, inps: List<Type>, out: Type): Proto(tk, xtpls, inps, out) {
+            class Vars (tk: Tk, xtpls: List<Tpl_Con>?, val inps_: List<Var_Type>, out: Type):
+                Task(tk, xtpls, inps_.map { (_, tp) -> tp }, out)
+        }
     }
-    class Exec (tk: Tk, val inps: List<Type>, val res: Type, val yld: Type, val out: Type): Type(G.N++, null, tk)
+    sealed class Exec (tk: Tk, val inps: List<Type>, val out: Type): Type(G.N++, null, tk) {
+        class Coro (tk: Tk, inps: List<Type>, val res: Type, val yld: Type, out: Type): Exec(tk, inps, out)
+        class Task (tk: Tk, inps: List<Type>, out: Type): Exec(tk, inps, out)
+    }
 }
 
 sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
@@ -135,6 +142,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     sealed class Proto (tk: Tk.Fix, val id: Tk.Var, val tpls: List<Tpl_Abs>, val tp: Type.Proto, val blk: Stmt.Block) : Stmt(G.N++, null, tk) {
         class Func (tk: Tk.Fix, id: Tk.Var, tpls: List<Tpl_Abs>, val tp_: Type.Proto.Func.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tpls, tp_, blk)
         class Coro (tk: Tk.Fix, id: Tk.Var, tpls: List<Tpl_Abs>, val tp_: Type.Proto.Coro.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tpls, tp_, blk)
+        class Task (tk: Tk.Fix, id: Tk.Var, tpls: List<Tpl_Abs>, val tp_: Type.Proto.Task.Vars, blk: Stmt.Block) : Stmt.Proto(tk, id, tpls, tp_, blk)
     }
 
     class Block  (tk: Tk, val esc: Type.Data?, val ss: List<Stmt>) : Stmt(G.N++, null, tk)

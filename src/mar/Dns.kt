@@ -64,7 +64,9 @@ fun <V> Type.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
         is Type.Vector -> (this.max?.dn_collect_pos(fe,ft) ?: emptyList()) + this.tp.dn_collect_pos(fe,ft)
         is Type.Proto.Func -> (this.inps + listOf(this.out)).map { it.dn_collect_pos(fe,ft) }.flatten()
         is Type.Proto.Coro -> (this.inps + listOf(this.res, this.yld, this.out)).map { it.dn_collect_pos(fe,ft) }.flatten()
-        is Type.Exec -> (this.inps + listOf(this.res, this.yld, this.out)).map { it.dn_collect_pos(fe,ft) }.flatten()
+        is Type.Proto.Task -> (this.inps + listOf(this.out)).map { it.dn_collect_pos(fe,ft) }.flatten()
+        is Type.Exec.Coro -> (this.inps + listOf(this.res, this.yld, this.out)).map { it.dn_collect_pos(fe,ft) }.flatten()
+        is Type.Exec.Task -> (this.inps + listOf(this.out)).map { it.dn_collect_pos(fe,ft) }.flatten()
     } + ft(this)
 }
 
@@ -165,7 +167,9 @@ fun <V> Type.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
         is Type.Vector -> this.tp.dn_collect_pre(fe,ft) + (this.max?.dn_collect_pre(fe,ft) ?: emptyList())
         is Type.Proto.Func -> (this.inps + listOf(this.out)).map { it.dn_collect_pre(fe,ft) }.flatten()
         is Type.Proto.Coro -> (this.inps + listOf(this.res,this.yld,this.out)).map { it.dn_collect_pre(fe,ft) }.flatten()
-        is Type.Exec -> (this.inps + listOf(this.res,this.yld,this.out)).map { it.dn_collect_pre(fe,ft) }.flatten()
+        is Type.Proto.Task -> (this.inps + listOf(this.out)).map { it.dn_collect_pre(fe,ft) }.flatten()
+        is Type.Exec.Coro -> (this.inps + listOf(this.res,this.yld,this.out)).map { it.dn_collect_pre(fe,ft) }.flatten()
+        is Type.Exec.Task -> TODO()
     }
 }
 
