@@ -136,7 +136,7 @@ fun parser_var_type (pre: Tk.Var?): Var_Type {
 fun parser_tpls_abs (): List<Tpl_Abs> {
     return if (!accept_fix("{{")) emptyList() else {
         val l = parser_list(",", "}") {
-            parser_var_type(null) as Tpl_Abs
+            parser_var_type(null)
         }
         accept_fix_err("}")
         l
@@ -528,7 +528,7 @@ fun parser_expr (): Expr {
 }
 
 fun check_stmt_as_set_src (): Boolean {
-    return listOf("create","start","resume","yield","catch").any {
+    return listOf("create","start","resume","yield","await","catch").any {
         check_fix(it)
     }
 }
@@ -781,6 +781,17 @@ fun parser_stmt (): List<Stmt> {
             }
             accept_fix_err(")")
             listOf(Stmt.Yield(tk0, arg))
+        }
+        accept_fix("await") -> {
+            val tk0 = G.tk0 as Tk.Fix
+            accept_fix_err("(")
+            accept_fix_err(":")
+            val tp = parser_type(null, false, false)
+            if (tp !is Type.Data) {
+                err(tp.tk, "exception error : expected data type")
+            }
+            accept_fix_err(")")
+            listOf(Stmt.Await(tk0, tp))
         }
 
         (accept_fix("match")) -> {
