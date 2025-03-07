@@ -643,6 +643,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Await -> TODO()
+        is Stmt.Emit -> TODO()
 
         is Stmt.If     -> """
             if (${this.cnd.coder(tpls,pre)}) {

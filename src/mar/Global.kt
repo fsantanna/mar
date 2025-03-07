@@ -40,7 +40,7 @@ val BINS = listOf (
 val KEYWORDS: SortedSet<String> = (
     setOf (
         "await", "break", "do", "catch", "coro", "compile", "create", "defer",
-        "data", "else", "escape", "exec", "false", "func", "if", "in",
+        "data", "else", "emit", "escape", "exec", "false", "func", "if", "in",
         "include", "loop", "match", "null", "print", "resume",
         "return", "set", "start", "task", "test", "throw", "true",
         "until", "var", "yield", "where", "while"
@@ -163,6 +163,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Stmt(G.N++, null, tk)
     class Yield   (tk: Tk, val arg: Expr): Stmt(G.N++, null, tk)
     class Await   (tk: Tk, val tp: Type.Data): Stmt(G.N++, null, tk)
+    class Emit    (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
 
     class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
     class Pass  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)

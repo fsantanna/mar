@@ -1333,7 +1333,7 @@ class Parser {
         assert(ss.to_str() == "data Pos: [Int,Int]\n") { ss.to_str() }
     }
 
-    // CORO: CREATE / SPAWN / AWAIT
+    // TASK: CREATE / START / SPAWN? / AWAIT / EMIT
 
     @Test
     fun uu_01_exec_err() {
@@ -1392,6 +1392,14 @@ class Parser {
         val s = parser_stmt().first()
         assert(s is Stmt.SetS && s.src is Stmt.Await)
         assert(s.to_str() == "set y = await(:X)") { s.to_str() }
+    }
+    @Test
+    fun uu_06_emit() {
+        G.tks = ("emit(X[])").lexer()
+        parser_lexer()
+        val s = parser_stmt().first()
+        assert(s is Stmt.Emit)
+        assert(s.to_str() == "emit((X(([]))))") { s.to_str() }
     }
 
     @Test

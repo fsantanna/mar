@@ -43,10 +43,7 @@ fun cache_ups () {
                 me.tp?.xup = me
                 me.blk.xup = me
             }
-            is Stmt.Throw -> {
-                me.e.xup = me
-            }
-
+            is Stmt.Throw -> me.e.xup = me
 
             is Stmt.If -> {
                 me.cnd.xup = me
@@ -85,9 +82,8 @@ fun cache_ups () {
             is Stmt.Yield -> {
                 me.arg.xup = me
             }
-            is Stmt.Await -> {
-                me.tp.xup = me
-            }
+            is Stmt.Await -> me.tp.xup = me
+            is Stmt.Emit -> me.e.xup = me
 
             is Stmt.Print -> me.e.xup = me
             is Stmt.Pass -> me.e.xup = me

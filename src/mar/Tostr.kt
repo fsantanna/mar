@@ -235,7 +235,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Resume -> "resume " + this.exe.to_str(pre) + "(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
         is Stmt.Yield  -> "yield(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
         is Stmt.Await  -> "await(:" + this.tp.to_str() + ")"
-
+        is Stmt.Emit   -> "emit(" + this.e.to_str(pre) + ")"
 
         is Stmt.Print  -> "print(" + this.e.to_str(pre) + ")"
         is Stmt.Pass   -> "do(" + this.e.to_str(pre) + ")"

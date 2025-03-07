@@ -409,6 +409,7 @@ fun infer_apply () {
                    me.infer(null)
                }
            }
+           is Stmt.Emit -> me.e.infer(null)
 
            is Stmt.Print -> me.e.infer(null)
            is Stmt.Pass -> me.e.infer(Type.Unit(me.tk))

@@ -788,6 +788,17 @@ fun parser_stmt (): List<Stmt> {
             accept_fix_err(")")
             listOf(Stmt.Await(tk0, tp))
         }
+        accept_fix("emit") -> {
+            val tk0 = G.tk0!!
+            accept_fix_err("(")
+            val e = if (check_fix(")")) {
+                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Tuple(tk0, null, emptyList()))
+            } else {
+                parser_expr()
+            }
+            accept_fix_err(")")
+            listOf(Stmt.Emit(tk0, e))
+        }
 
         (accept_fix("match")) -> {
             val tk0 = G.tk0!!
