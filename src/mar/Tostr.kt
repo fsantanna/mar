@@ -138,7 +138,6 @@ fun Expr.to_str (pre: Boolean = false): String {
             }
             "(" + this.f.to_str(pre) + tpls + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + "))"
         }
-        is Expr.Throw  -> "throw(" + this.e.to_str(pre) + ")"
 
         is Expr.If     -> "if ${this.cnd.to_str(pre)} => ${this.t.to_str(pre)} => ${this.f.to_str(pre)}"
         is Expr.MatchT -> {
@@ -209,6 +208,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
         is Stmt.Escape -> "escape(" + this.e.to_str(pre) + ")"
         is Stmt.Defer  -> "defer {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.Catch  -> "catch " + this.tp.cond { ":"+it.to_str(pre)+" " } + "{\n" + this.blk.ss.to_str(pre) + "}"
+        is Stmt.Throw  -> "throw(" + this.e.to_str(pre) + ")"
         is Stmt.If     -> "if " + this.cnd.to_str(pre) + " {\n" + this.t.ss.to_str(pre) + "} else {\n" + this.f.ss.to_str(pre) + "}"
         is Stmt.Loop   -> "loop {\n" + this.blk.ss.to_str(pre) + "}"
         is Stmt.MatchT -> {

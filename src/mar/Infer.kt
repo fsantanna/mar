@@ -192,11 +192,6 @@ fun Expr.infer (tpe: Type?): Type? {
             }
             this.xtpls = this.xtpls ?: emptyList()  // TODO: infer
         }
-        is Expr.Throw -> {
-            this.xtp = tpe
-            this.e.infer(null)
-            this.xtp?.infer(null)
-        }
 
         is Expr.If -> {
             this.cnd.infer(null)
@@ -374,6 +369,7 @@ fun infer_apply () {
                    me.infer(null)
                }
            }
+           is Stmt.Throw -> me.e.infer(null)
 
            is Stmt.If -> me.cnd.infer(Type.Prim(Tk.Type("Bool",me.tk.pos)))
            is Stmt.Loop -> {}
@@ -437,7 +433,6 @@ fun infer_check () {
                 is Expr.Tuple  -> it.xtp
                 is Expr.Vector -> it.xtp
                 is Expr.Union  -> it.xtp
-                is Expr.Throw  -> it.xtp
                 is Expr.If     -> it.xtp
                 is Expr.MatchT -> it.xtp
                 is Expr.MatchE -> it.xtp

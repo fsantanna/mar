@@ -388,17 +388,6 @@ fun parser_expr_4_prim (): Expr {
             Expr.Cons(tp.tk, tp, e)
         }
 
-        accept_fix("throw") -> {
-            val tk0 = G.tk0!!
-            accept_fix_err("(")
-            val e = if (check_fix(")")) {
-                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Tuple(tk0, null, emptyList()))
-            } else {
-                parser_expr()
-            }
-            accept_fix_err(")")
-            Expr.Throw(tk0, null, e)
-        }
         accept_fix("if")    -> {
             val tk0 = G.tk0!!
             val cnd = parser_expr()
@@ -663,10 +652,16 @@ fun parser_stmt (): List<Stmt> {
             val blk = parser_stmt_block()
             listOf(Stmt.Catch(tk0, tp, Stmt.Block(tk0, null, blk)))
         }
-        check_fix("throw") -> {
+        accept_fix("throw") -> {
             val tk0 = G.tk0!!
-            val e = parser_expr()
-            listOf(Stmt.Pass(tk0, e))
+            accept_fix_err("(")
+            val e = if (check_fix(")")) {
+                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Tuple(tk0, null, emptyList()))
+            } else {
+                parser_expr()
+            }
+            accept_fix_err(")")
+            listOf(Stmt.Throw(tk0, e))
         }
 
         accept_fix("if") -> {

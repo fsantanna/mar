@@ -578,6 +578,11 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
             """
         }
+        is Stmt.Throw -> """
+            assert(sizeof(Exception) >= sizeof(${this.e.typex().coder(tpls)}));
+            MAR_EXCEPTION = CAST(Exception, ${this.e.coder(tpls,pre)});
+            continue;
+        """
 
         is Stmt.Create -> {
             val xtp = (this.xup as Stmt.SetS).dst.typex().coder(tpls)
@@ -638,7 +643,6 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Await -> TODO()
-
 
         is Stmt.If     -> """
             if (${this.cnd.coder(tpls,pre)}) {
@@ -1038,15 +1042,6 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }
             }
         }
-
-        is Expr.Throw -> """
-            ({
-                assert(sizeof(Exception) >= sizeof(${this.e.typex().coder(tpls)}));
-                MAR_EXCEPTION = CAST(Exception, ${this.e.coder(tpls,pre)});
-                continue;
-                ${this.xtp!!.coder(tpls)} mar_$n ; mar_$n;
-            })
-        """
 
         is Expr.If -> "((${this.cnd.coder(tpls,pre)}) ? (${this.t.coder(tpls,pre)}) : (${this.f.coder(tpls,pre)}))"
         is Expr.MatchT -> """

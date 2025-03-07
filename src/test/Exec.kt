@@ -1500,7 +1500,7 @@ class Exec  {
     @Test
     fun kk_07_throw () {
         val out = test("""
-            var x: Int = throw()
+            ;;;var x: Int =;;; throw()
         """)
         assert(out == "uncaught exception\n") { out }
     }
@@ -1648,7 +1648,7 @@ class Exec  {
     @Test
     fun nn_04_match () {
         val out = test("""
-            var x: Int = match 10 { 10 => 10 ; else => throw() }
+            var x: Int = match 10 { 10 => 10 ; else => 99 ;;;throw();;; }
             print(x)
         """)
         assert(out == "10\n") { out }

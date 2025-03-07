@@ -714,6 +714,9 @@ class Infer {
                 "set x = if true => (X.A(([]:[]))) => (X.B(([]:[])))\n" +
                 "}") { G.outer!!.to_str() }
     }
+
+    /*
+    // throw is no longer an expression
     @Test
     fun ff_07_if_throw_err () {
         val out = infer("""
@@ -741,9 +744,12 @@ class Infer {
                 "set x = if true => 10 => throw((Error(([]:[]))))\n" +
                 "}") { G.outer!!.to_str() }
     }
+     */
 
     // THROW / CATCH
 
+    /*
+    // throw is no longer an expression
     @Test
     fun gg_01_throw_err () {
         val out = infer("""
@@ -771,6 +777,8 @@ class Infer {
            "set x = throw((Error(([]:[]))))\n"+
            "}") { G.outer!!.to_str() }
     }
+     */
+
     @Test
     fun gg_03_throw_err () {
         val out = infer("""

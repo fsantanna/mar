@@ -1806,7 +1806,7 @@ class Check {
             var v: `T`
             var ret: Int = match v {
                 `SDL_QUIT` => 10
-                else => throw()
+                else => 10 ;;throw()
             }
         """)
         assert(out == null) { out!! }
@@ -1821,7 +1821,7 @@ class Check {
            "var ret: Int\n"+
            "set ret = match v {\n"+
            "(`SDL_QUIT`: `T`) => 10\n"+
-           "else => throw((Error(([]:[]))))\n"+
+           "else => 10\n"+
            "}\n"+
            "}") { G.outer!!.to_str() }
     }
@@ -1873,7 +1873,7 @@ class Check {
            "var v: `T`\n"+
            "match v {\n"+
            "(`SDL_QUIT`: `T`) {  }\n"+
-           "else { do(throw((Error(([]:[]))))) }\n"+
+           "else { throw((Error(([]:[])))) }\n"+
            "}\n"+
            "}") { G.outer!!.to_str() }
     }

@@ -709,7 +709,6 @@ fun Expr.type (): Type? {
                 else -> null
             }
         }
-        is Expr.Throw -> this.xtp ?: Type.Any(this.tk)
 
         is Expr.Tuple -> this.xtp ?: Type.Any(this.tk)
         is Expr.Vector -> this.xtp ?: Type.Any(this.tk)

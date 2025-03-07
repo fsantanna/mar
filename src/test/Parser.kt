@@ -1134,15 +1134,16 @@ class Parser {
         parser_lexer()
         val ss = parser_stmt()
         assert(ss.to_str() == "catch :X {\n" +
-                "do(throw((X(([])))))\n" +
+                "throw((X(([]))))\n" +
                 "}\n") { ss.to_str() }
     }
     @Test
     fun ll_06_throw_as_expr () {
         G.tks = ("pass(throw()) }").lexer()
         parser_lexer()
-        val ss = parser_stmt()
-        assert(ss.to_str() == "do((pass(throw((Error(([])))))))\n") { ss.to_str() }
+        //val ss = parser_stmt()
+        //assert(ss.to_str() == "do((pass(throw((Error(([])))))))\n") { ss.to_str() }
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 6) : expected expression : have \"throw\"")
     }
 
     // DEFER
