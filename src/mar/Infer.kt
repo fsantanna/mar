@@ -13,13 +13,13 @@ fun Stmt.infer (tpe: Type?): Type? {
             val xtp = when (tpe) {
                 !is Type.Exec -> null
                 is Type.Exec.Coro -> Type.Proto.Coro(tpe.tk, null, tpe.inps, tpe.res, tpe.yld, tpe.out)
-                is Type.Exec.Task -> TODO()
+                is Type.Exec.Task -> Type.Proto.Task(tpe.tk, null, tpe.inps, tpe.out)
                 else -> error("impossible case")
             }
-            this.co.infer(xtp).let {
+            this.proto.infer(xtp).let {
                 when (it) {
-                    is Type.Proto.Coro -> Type.Exec.Coro(co.tk, it.inps, it.res, it.yld, it.out)
-                    is Type.Proto.Task -> TODO()
+                    is Type.Proto.Coro -> Type.Exec.Coro(proto.tk, it.inps, it.res, it.yld, it.out)
+                    is Type.Proto.Task -> Type.Exec.Task(proto.tk, it.inps, it.out)
                     else -> tpe
                 }
             }
@@ -290,14 +290,19 @@ fun Type.infer (tpe: Type?): Type {
             }
         }
         is Type.Exec.Coro -> {
-            if (tpe is Type.Exec) {
+            if (tpe is Type.Exec.Coro) {
                 this.inps.zip(tpe.inps).forEach { (a,b) -> a.infer(b) }
                 this.res.infer(tpe.out)
                 this.yld.infer(tpe.out)
                 this.out.infer(tpe.out)
             }
         }
-        is Type.Exec.Task -> TODO()
+        is Type.Exec.Task -> {
+            if (tpe is Type.Exec.Task) {
+                this.inps.zip(tpe.inps).forEach { (a,b) -> a.infer(b) }
+                this.out.infer(tpe.out)
+            }
+        }
         is Type.Data -> {
             val (s,_,_) = this.walk()!!
             when {

@@ -466,7 +466,7 @@ class Exec  {
         assert(out == "15\n") { out }
     }
 
-    // PROTOS / TYPES / NORMAL / NESTED / CLOSURE
+    // PROTO / TYPES / NORMAL / NESTED / CLOSURE
 
     @Test
     fun ef_01_func_nested() {
@@ -504,7 +504,7 @@ class Exec  {
         assert(out == "30\n") { out }
     }
 
-    // COROS
+    // CORO
 
     @Test
     fun ff_01_coro () {
@@ -1652,6 +1652,93 @@ class Exec  {
             print(x)
         """)
         assert(out == "10\n") { out }
+    }
+
+    // TASK / AWAIT / EMIT
+
+    @Test
+    fun oo_01_task () {
+        val out = test("""
+            do {
+                task tsk: () -> () {
+                    `puts("OK");`
+                }
+                var exe: exec task () -> () = create(tsk)
+                `puts("END");`
+            }
+        """)
+        assert(out == "END\n") { out }
+    }
+    @Test
+    fun oo_02_coro () {
+        val out = test("""
+            coro co: () -> () -> () -> () {
+                `puts("OK");`
+            }
+            var exe: exec coro () -> () -> () -> () = create(co)
+            start exe()
+            ;;resume exe()
+        """)
+        assert(out == "OK\n") { out }
+    }
+    @Test
+    fun oo_03_coro () {
+        val out = test("""
+            coro co: (v: Int) -> () -> () -> () {
+                `printf("%d\n", mar_exe->mem.v);`
+            }
+            var exe: exec coro (Int) -> () -> () -> () = create(co)
+            start exe(10)
+        """)
+        assert(out == "10\n") { out }
+    }
+    @Test
+    fun oo_04_coro () {
+        val out = test("""
+            coro co: (v: Int) -> Int -> () -> () {
+                `printf("%d\n", mar_exe->mem.v);`
+                yield()
+                set v = v + 10
+                `printf("%d\n", mar_exe->mem.v);`
+            }
+            var exe: exec coro (Int) -> Int -> () -> () = create(co)
+            start exe(10)
+            resume exe(99)
+        """)
+        assert(out == "10\n20\n") { out }
+    }
+    @Test
+    fun oo_05_coro () {
+        val out = test("""
+            do {
+                coro co: (x2: Int) -> Int -> Int -> Int {
+                    var y2:Int = yield(x2*2)
+                    return(y2 * 2)
+                }
+                var exe: exec coro (Int) -> Int -> Int -> Int = create(co)
+                var x1: <Int,Int> = start exe(5)
+                var y1: <Int,Int> = resume exe(x1!1 + 10)
+                print(y1!2)
+            }
+        """)
+        assert(out == "40\n") { out }
+    }
+    @Test
+    fun oo_06_coro_global () {
+        val out = test("""
+            var x = 10
+            do {
+                coro co: (x2: Int) -> Int -> Int -> Int {
+                    var y2:Int = yield(x2*2)
+                    return((y2 * 2) + x)
+                }
+                var exe: exec coro (Int) -> Int -> Int -> Int = create(co)
+                var x1: <Int,Int> = start exe(5)
+                var y1: <Int,Int> = resume exe(x1!1 + 10)
+                print(y1!2)
+            }
+        """)
+        assert(out == "50\n") { out }
     }
 
     // TEMPLATE / TYPE

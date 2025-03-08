@@ -67,9 +67,7 @@ fun Type.to_str (pre: Boolean = false): String {
                 is Type.Proto.Func.Vars -> this.inps_.map { it.to_str(pre) }.joinToString(",")
                 is Type.Proto.Coro.Vars -> this.inps_.map { it.to_str(pre) }.joinToString(",")
                 is Type.Proto.Task.Vars -> this.inps_.map { it.to_str(pre) }.joinToString(",")
-                is Type.Proto.Func -> this.inps.map { it.to_str(pre) }.joinToString(",")
-                is Type.Proto.Coro -> this.inps.map { it.to_str(pre) }.joinToString(",")
-                is Type.Proto.Task -> this.inps.map { it.to_str(pre) }.joinToString(",")
+                else -> this.inps.map { it.to_str(pre) }.joinToString(",")
             }
             when (this) {
                 is Type.Proto.Func -> "func ($inps) -> ${this.out.to_str(pre)}"
@@ -230,7 +228,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
             "match $tst {\n$cases}"
         }
 
-        is Stmt.Create -> "create(" + this.co.to_str(pre) + ")"
+        is Stmt.Create -> "create(" + this.proto.to_str(pre) + ")"
         is Stmt.Start  -> "start " + this.exe.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
         is Stmt.Resume -> "resume " + this.exe.to_str(pre) + "(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
         is Stmt.Yield  -> "yield(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"

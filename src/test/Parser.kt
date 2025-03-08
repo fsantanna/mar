@@ -549,7 +549,7 @@ class Parser {
         G.tks = ("create(f)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Create && s.co is Expr.Acc)
+        assert(s is Stmt.Create && s.proto is Expr.Acc)
         //assert(trap { parser_stmt() } == "anon : (lin 1, col 1) : expected expression : have \"create\"")
     }
     @Test
@@ -573,7 +573,7 @@ class Parser {
         G.tks = ("set x = create(f)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.SetS && s.src is Stmt.Create && s.src.co is Expr.Acc)
+        assert(s is Stmt.SetS && s.src is Stmt.Create && s.src.proto is Expr.Acc)
         assert(s.to_str() == "set x = create(f)")
     }
     @Test
@@ -1415,7 +1415,7 @@ class Parser {
         G.tks = ("set x = spawn f()").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.SetS && s.src is Stmt.Create && s.src.co is Expr.Acc)
+        assert(s is Stmt.SetS && s.src is Stmt.Create && s.src.proto is Expr.Acc)
         assert(s.to_str() == "set x = create(f)")
     }
 

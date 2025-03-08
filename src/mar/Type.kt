@@ -57,7 +57,7 @@ fun Type.is_same_of (other: Type): Boolean {
         (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_same_of(oth) } && this.res.is_same_of(other.res) && other.yld.is_same_of(this.yld) && other.out.is_same_of(this.out)
         (this is Type.Proto.Task && other is Type.Proto.Task) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_same_of(oth) } && other.out.is_same_of(this.out)
         (this is Type.Exec.Coro  && other is Type.Exec.Coro)  -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_same_of(oth) } && this.res.is_same_of(other.res) && other.yld.is_same_of(this.yld) && other.out.is_same_of(this.out)
-        (this is Type.Exec.Task  && other is Type.Exec.Task)  -> TODO()
+        (this is Type.Exec.Task  && other is Type.Exec.Task)  -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_same_of(oth) } && other.out.is_same_of(this.out)
         else -> false
     }
 }
@@ -111,7 +111,7 @@ fun Type.is_sub_of (other: Type): Boolean {
         (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sub_of(oth) } && this.res.is_sub_of(other.res) && other.yld.is_sub_of(this.yld) && other.out.is_sub_of(this.out)
         (this is Type.Proto.Task && other is Type.Proto.Task) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sub_of(oth) } && other.out.is_sub_of(this.out)
         (this is Type.Exec.Coro  && other is Type.Exec.Coro)  -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sub_of(oth) } && this.res.is_sub_of(other.res) && other.yld.is_sub_of(this.yld) && other.out.is_sub_of(this.out)
-        (this is Type.Exec.Task  && other is Type.Exec.Task)  -> TODO()
+        (this is Type.Exec.Task  && other is Type.Exec.Task)  -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sub_of(oth) } && other.out.is_sub_of(this.out)
         else -> false
     }
 }
@@ -144,7 +144,7 @@ fun Type.is_sup_of (other: Type): Boolean {
         (this is Type.Proto.Coro && other is Type.Proto.Coro) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
         (this is Type.Proto.Task && other is Type.Proto.Task) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
         (this is Type.Exec.Coro  && other is Type.Exec.Coro)  -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && this.res.is_sup_of(other.res) && other.yld.is_sup_of(this.yld) && other.out.is_sup_of(this.out)
-        (this is Type.Exec.Task  && other is Type.Exec.Task)  -> TODO()
+        (this is Type.Exec.Task  && other is Type.Exec.Task)  -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sup_of(oth) } && other.out.is_sup_of(this.out)
         else -> false
     }
 }
@@ -340,7 +340,13 @@ fun Type.template_apply (map: Tpl_Map): Type? {
                 Type.Exec.Coro(this.tk, inps as List<Type>, res, yld, out)
             }
         }
-        is Type.Exec.Task -> TODO()
+        is Type.Exec.Task -> {
+            val inps = this.inps.map { it.template_apply(map) }
+            val out = this.out.template_apply(map)
+            if (inps.any { it==null } || out==null) null else {
+                Type.Exec.Task(this.tk, inps as List<Type>, out)
+            }
+        }
     }
 }
 
@@ -413,7 +419,12 @@ fun Type.template_con_abs (tp: Type): Tpl_Map {
                     this.yld.template_con_abs(tp.yld) +
                     this.res.template_con_abs(tp.res)
         }
-        (this is Type.Exec.Task && tp is Type.Exec.Task)    -> TODO()
+        (this is Type.Exec.Task && tp is Type.Exec.Task)    -> {
+            this.out.template_con_abs(tp.out) +
+                    this.inps.zip(tp.inps).map { (t1,t2) ->
+                        t1.template_con_abs(t2)
+                    }.union()
+        }
         else -> error("impossible case")
     }
 }
@@ -579,12 +590,12 @@ fun Stmt.type (): Type? {
             ))
         }
         is Stmt.Create -> {
-            val co = this.co.type()
+            val co = this.proto.type()
             when (co) {
                 !is Type.Proto -> null
                 is Type.Proto.Func -> null
                 is Type.Proto.Coro -> Type.Exec.Coro(co.tk, co.inps, co.res, co.yld, co.out)
-                is Type.Proto.Task -> TODO()
+                is Type.Proto.Task -> Type.Exec.Task(co.tk, co.inps, co.out)
                 else -> error("impossible case")
             }
         }
@@ -592,7 +603,7 @@ fun Stmt.type (): Type? {
             val tp = this.exe.type()
             when (tp) {
                 is Type.Exec.Coro -> Type.Union(this.tk, true, listOf(tp.yld, tp.out).map { Pair(null,it) })
-                is Type.Exec.Task -> TODO()
+                is Type.Exec.Task -> TODO() // Maybe(tp.out)
                 else -> error("impossible case")
             }
         }

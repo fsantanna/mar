@@ -244,9 +244,11 @@ fun check_types () {
                 }
             }
             is Stmt.Create -> {
-                val co = me.co.type()
-                if (co !is Type.Proto.Coro) {
-                    err(me.tk, "create error : expected coroutine prototype")
+                val co = me.proto.type()
+                when (co) {
+                    is Type.Proto.Coro -> {}
+                    is Type.Proto.Task -> {}
+                    else -> err(me.tk, "create error : expected coroutine prototype")
                 }
             }
             is Stmt.Start -> {

@@ -158,7 +158,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class MatchT (tk: Tk, val tst: Expr, val cases: List<Pair<Type.Data?,Stmt.Block>>): Stmt(G.N++, null, tk)
     class MatchE (tk: Tk, val tst: Expr, val cases: List<Pair<Expr?,Stmt.Block>>): Stmt(G.N++, null, tk)
 
-    class Create  (tk: Tk, val co: Expr): Stmt(G.N++, null, tk)
+    class Create  (tk: Tk, val proto: Expr): Stmt(G.N++, null, tk)
     class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Stmt(G.N++, null, tk)
     class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Stmt(G.N++, null, tk)
     class Yield   (tk: Tk, val arg: Expr): Stmt(G.N++, null, tk)
