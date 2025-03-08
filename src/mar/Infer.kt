@@ -16,10 +16,10 @@ fun Stmt.infer (tpe: Type?): Type? {
                 is Type.Exec.Task -> Type.Proto.Task(tpe.tk, null, tpe.inps, tpe.out)
                 else -> error("impossible case")
             }
-            this.proto.infer(xtp).let {
+            this.pro.infer(xtp).let {
                 when (it) {
-                    is Type.Proto.Coro -> Type.Exec.Coro(proto.tk, it.inps, it.res, it.yld, it.out)
-                    is Type.Proto.Task -> Type.Exec.Task(proto.tk, it.inps, it.out)
+                    is Type.Proto.Coro -> Type.Exec.Coro(pro.tk, it.inps, it.res, it.yld, it.out)
+                    is Type.Proto.Task -> Type.Exec.Task(pro.tk, it.inps, it.out)
                     else -> tpe
                 }
             }

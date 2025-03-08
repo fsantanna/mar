@@ -228,7 +228,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
             "match $tst {\n$cases}"
         }
 
-        is Stmt.Create -> "create(" + this.proto.to_str(pre) + ")"
+        is Stmt.Create -> "create(" + this.pro.to_str(pre) + ")"
         is Stmt.Start  -> "start " + this.exe.to_str(pre) + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + ")"
         is Stmt.Resume -> "resume " + this.exe.to_str(pre) + "(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"
         is Stmt.Yield  -> "yield(" + this.arg.let { if (it is Expr.Unit) "" else it.to_str(pre) } + ")"

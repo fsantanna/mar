@@ -590,7 +590,7 @@ fun Stmt.type (): Type? {
             ))
         }
         is Stmt.Create -> {
-            val co = this.proto.type()
+            val co = this.pro.type()
             when (co) {
                 !is Type.Proto -> null
                 is Type.Proto.Func -> null

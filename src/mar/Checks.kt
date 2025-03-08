@@ -244,7 +244,7 @@ fun check_types () {
                 }
             }
             is Stmt.Create -> {
-                val co = me.proto.type()
+                val co = me.pro.type()
                 when (co) {
                     is Type.Proto.Coro -> {}
                     is Type.Proto.Task -> {}

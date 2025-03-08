@@ -4,62 +4,6 @@ fun String.clean (): String {
     return this.replace('*','_')
 }
 
-fun Type.Proto.Coro.x_coro_exec (tpls: Tpl_Map?): Pair<String,String> {
-    val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(tpls) }.joinToString("__").clean()
-    return Pair("Coro__$tps", "Exec__Coro__$tps")
-}
-fun Type.Proto.Coro.x_inp_tup (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Tuple> {
-    val tp = Type.Tuple(this.tk, this.inps.map { Pair(null,it) })
-    val id = tp.coder(tpls)
-    return Pair(id, tp)
-}
-fun Type.Proto.Coro.x_inp_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
-    val tup = this.x_inp_tup(tpls,pre)
-    val tp = Type.Union(this.tk, false, listOf(tup.second, this.res).map { Pair(null,it) })
-    val id = tp.coder(tpls)
-    return Pair(id, tp)
-}
-fun Type.Proto.Coro.x_out_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
-    val tp = Type.Union(this.tk, true, listOf(this.yld, this.out).map { Pair(null,it) })
-    val id = tp.coder(tpls)
-    return Pair(id, tp)
-}
-fun Type.Proto.Coro.x_sig (pre: Boolean, id: String): String {
-    val x = this.x_coro_exec(null).second
-    val (xiuni,_) = this.x_inp_uni(null,pre)
-    val (xouni,_) = this.x_out_uni(null,pre)
-    return "$xouni $id ($x* mar_exe, $xiuni mar_arg)"
-}
-
-fun Type.Exec.Coro.x_exec_coro (tpls: Tpl_Map?): Pair<String,String> {
-    val tps = (this.inps.to_void() + listOf(this.res,this.yld,this.out)).map { it.coder(tpls) }.joinToString("__").clean()
-    return Pair("Exec__Coro__$tps", "Coro__$tps")
-}
-fun Type.Exec.Coro.x_inp_tup (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Tuple> {
-    val tp = Type.Tuple(this.tk, this.inps.map { Pair(null,it) })
-    val id = tp.coder(tpls)
-    return Pair(id, tp)
-}
-fun Type.Exec.Coro.x_inp_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
-    val tup = this.x_inp_tup(tpls,pre)
-    val tp = Type.Union(this.tk, false, mutableListOf(tup.second, this.res).map { Pair(null,it) })
-    val id = tp.coder(tpls)
-    return Pair(id, tp)
-}
-
-fun Type.Proto.Task.x_coro_exec (tpls: Tpl_Map?): Pair<String,String> {
-    return Pair (
-        "Task__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean(),
-        "Exec__Task__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean(),
-    )
-}
-fun Type.Exec.Task.x_exec_coro (tpls: Tpl_Map?): Pair<String,String> {
-    return Pair (
-        "Exec__Task__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean(),
-        "Task__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean(),
-    )
-}
-
 fun Var_Type.coder (tpls: Tpl_Map?, pre: Boolean): String {
     val (id,tp) = this
     return tp.coder(tpls) + " " + id.str
@@ -79,10 +23,10 @@ fun Type.coder (tpls: Tpl_Map?): String {
         is Type.Union      -> "Union__${this.ts.map { (id,tp) -> tp.coder(tpls)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
         is Type.Vector     -> "Vector__${this.max.cond2({it.static_int_eval(tpls).toString()},{"0"})}_${this.tp.coder(tpls)}".clean()
         is Type.Proto.Func -> "Func__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean()
-        is Type.Proto.Coro -> this.x_coro_exec(tpls).first
-        is Type.Proto.Task -> this.x_coro_exec(tpls).first
-        is Type.Exec.Coro  -> this.x_exec_coro(tpls).first
-        is Type.Exec.Task  -> this.x_exec_coro(tpls).first
+        is Type.Proto.Coro -> this.x_pro_exe(tpls).first
+        is Type.Proto.Task -> this.x_pro_exe(tpls).first
+        is Type.Exec.Coro  -> this.x_pro_exe(tpls).second
+        is Type.Exec.Task  -> this.x_pro_exe(tpls).second
     }
 }
 
@@ -117,7 +61,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             (tpls!=null && !me.has_tpls_dn()) -> return emptyList()
         }
         when (me) {
-            is Type.Proto, is Type.Data, is Type.Tuple,
+            is Type.Proto, is Type.Exec, is Type.Data, is Type.Tuple,
             is Type.Vector, is Type.Union -> me.coder(tpls).let {
                 if (G.types.contains(it)) {
                     return emptyList()
@@ -130,22 +74,22 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
         //println(listOf("AAA", me.coder(null,pre)))
 
         return when (me) {
-            is Type.Proto.Coro -> {
-                val (co, exe) = me.x_coro_exec(null)
-                val (_, itup) = me.x_inp_tup(null, pre)
-                val (xiuni, iuni) = me.x_inp_uni(null, pre)
-                val (xouni, ouni) = me.x_out_uni(null, pre)
-                val x = "struct " + exe
-                ft(itup) + ft(iuni) + ft(ouni) + listOf(
-                    x + ";\n",
-                    "typedef $xouni (*$co) ($x*, $xiuni);\n",
-                )
-            }
             is Type.Proto.Func -> {
                 listOf(
                     "typedef ${me.out.coder(tpls)} (*${me.coder(tpls)}) (${
                         me.inps.map { it.coder(tpls) }.joinToString(",")
                     });\n"
+                )
+            }
+            is Type.Proto.Coro, is Type.Exec.Coro, is Type.Proto.Task, is Type.Exec.Task -> {
+                val (pro, exe) = me.x_pro_exe(null)
+                val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
+                val (xiuni, iuni) = me.x_inp_uni(null, pre)
+                val (xouni, ouni) = me.x_out_uni(null, pre)
+                val x = "struct " + exe
+                ft(itup) + ft(iuni) + ft(ouni) + listOf(
+                    x + ";\n",
+                    "typedef $xouni (*$pro) ($x*, $xiuni);\n",
                 )
             }
             is Type.Tuple -> {
@@ -358,15 +302,15 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             }, {null}, {null})
             return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n" } }.flatten().joinToString("")
         }
-        val (proto,exe) = when (me) {
-            is Stmt.Proto.Coro -> me.tp_.x_coro_exec(me.tp_.assert_no_tpls_up())
-            is Stmt.Proto.Task -> me.tp_.x_coro_exec(me.tp_.assert_no_tpls_up())
+        val (pro,exe) = when (me) {
+            is Stmt.Proto.Coro -> me.tp_.x_pro_exe(me.tp_.assert_no_tpls_up())
+            is Stmt.Proto.Task -> me.tp_.x_pro_exe(me.tp_.assert_no_tpls_up())
             else -> error("impossible case")
         }
         return x + listOf("""
             typedef struct $exe {
                 int pc;
-                $proto proto;
+                $pro pro;
                 struct {
                     ${mem()}
                 } mem;
@@ -612,7 +556,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
-            ($xtp) { 0, ${this.proto.coder(tpls,pre)}, {} };
+            ($xtp) { 0, ${this.pro.coder(tpls,pre)}, {} };
             """
         }
         is Stmt.Start -> {
@@ -625,7 +569,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
-            $exe.proto (
+            $exe.pro (
                 &$exe, ($xuni) { ._1 = {
                     ${this.args.map { it.coder(tpls,pre) }.joinToString(",")}
                 } }
@@ -642,7 +586,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
-            $exe.proto (
+            $exe.pro (
                 &$exe, ($xuni) { ._2 = ${this.arg.coder(tpls,pre)} }
             );
             """

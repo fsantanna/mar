@@ -68,7 +68,7 @@ fun cache_ups () {
                 }
             }
 
-            is Stmt.Create -> me.proto.xup = me
+            is Stmt.Create -> me.pro.xup = me
             is Stmt.Start -> {
                 me.exe.xup = me
                 me.args.forEach {
