@@ -590,6 +590,14 @@ class Exec  {
         """)
         assert(out == "50\n") { out }
     }
+    @Test
+    fun ff_06_exec_no_coro () {
+        val out = test("""
+            var exe: exec coro (Int) -> Int -> Int -> Int
+            print(10)
+        """)
+        assert(out == "10\n") { out }
+    }
 
     // TUPLE
 

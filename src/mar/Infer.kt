@@ -33,7 +33,12 @@ fun Stmt.infer (tpe: Type?): Type? {
                     }
                     Type.Union(this.tk, true, listOf(exe.yld,exe.out).map { Pair(null,it) })
                 }
-                is Type.Exec.Task -> TODO()
+                is Type.Exec.Task -> {
+                    this.args.mapIndexed { i,e ->
+                        e.infer(exe.inps[i])
+                    }
+                    Type.Union(this.tk, true, listOf(Type.Unit(this.tk),exe.out).map { Pair(null,it) })
+                }
                 else -> {
                     this.args.map {
                         it.infer(null)

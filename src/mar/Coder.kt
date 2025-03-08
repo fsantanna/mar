@@ -141,7 +141,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     "typedef $xouni (*$co) ($x*, $xiuni);\n",
                 )
             }
-            is Type.Proto -> {
+            is Type.Proto.Func -> {
                 listOf(
                     "typedef ${me.out.coder(tpls)} (*${me.coder(tpls)}) (${
                         me.inps.map { it.coder(tpls) }.joinToString(",")
@@ -617,7 +617,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
         is Stmt.Start -> {
             val exe = this.exe.coder(tpls,pre)
-            val tp = this.exe.type() as Type.Exec.Coro
+            val tp = this.exe.type() as Type.Exec
             val (xuni,_) = tp.x_inp_uni(null,pre)
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
