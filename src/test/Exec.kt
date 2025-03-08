@@ -1657,7 +1657,7 @@ class Exec  {
     // TASK / AWAIT / EMIT
 
     @Test
-    fun oo_01_task () {
+    fun oo_01_task_create () {
         val out = test("""
             do {
                 task tsk: () -> () {
@@ -1670,12 +1670,12 @@ class Exec  {
         assert(out == "END\n") { out }
     }
     @Test
-    fun oo_02_coro () {
+    fun oo_02_task_create_start () {
         val out = test("""
-            coro co: () -> () -> () -> () {
+            task tsk: () -> () {
                 `puts("OK");`
             }
-            var exe: exec coro () -> () -> () -> () = create(co)
+            var exe: exec task () -> () = create(tsk)
             start exe()
             ;;resume exe()
         """)

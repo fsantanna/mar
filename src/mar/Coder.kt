@@ -47,6 +47,19 @@ fun Type.Exec.Coro.x_inp_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.U
     return Pair(id, tp)
 }
 
+fun Type.Proto.Task.x_coro_exec (tpls: Tpl_Map?): Pair<String,String> {
+    return Pair (
+        "Task__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean(),
+        "Exec__Task__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean(),
+    )
+}
+fun Type.Exec.Task.x_exec_coro (tpls: Tpl_Map?): Pair<String,String> {
+    return Pair (
+        "Exec__Task__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean(),
+        "Task__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean(),
+    )
+}
+
 fun Var_Type.coder (tpls: Tpl_Map?, pre: Boolean): String {
     val (id,tp) = this
     return tp.coder(tpls) + " " + id.str
@@ -67,9 +80,9 @@ fun Type.coder (tpls: Tpl_Map?): String {
         is Type.Vector     -> "Vector__${this.max.cond2({it.static_int_eval(tpls).toString()},{"0"})}_${this.tp.coder(tpls)}".clean()
         is Type.Proto.Func -> "Func__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean()
         is Type.Proto.Coro -> this.x_coro_exec(tpls).first
-        is Type.Proto.Task -> "Task__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean()
+        is Type.Proto.Task -> this.x_coro_exec(tpls).first
         is Type.Exec.Coro  -> this.x_exec_coro(tpls).first
-        is Type.Exec.Task  -> "Exec__Task__${this.inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${this.out.coder(tpls)}".clean()
+        is Type.Exec.Task  -> this.x_exec_coro(tpls).first
     }
 }
 
@@ -329,8 +342,10 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             coder_types(me, me, xtpls, pre) // HACK-01: x===me above prevents stack overflow
         }
 
-        if (me !is Stmt.Proto.Coro) {
-            return x
+        when (me) {
+            is Stmt.Proto.Coro -> {}
+            is Stmt.Proto.Task -> {}
+            else -> return x
         }
 
         fun mem (): String {
@@ -343,11 +358,15 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             }, {null}, {null})
             return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n" } }.flatten().joinToString("")
         }
-        val (co,exe) = me.tp_.x_coro_exec(me.tp_.assert_no_tpls_up())
+        val (proto,exe) = when (me) {
+            is Stmt.Proto.Coro -> me.tp_.x_coro_exec(me.tp_.assert_no_tpls_up())
+            is Stmt.Proto.Task -> me.tp_.x_coro_exec(me.tp_.assert_no_tpls_up())
+            else -> error("impossible case")
+        }
         return x + listOf("""
             typedef struct $exe {
                 int pc;
-                $co co;
+                $proto proto;
                 struct {
                     ${mem()}
                 } mem;
@@ -606,7 +625,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
-            $exe.co (
+            $exe.proto (
                 &$exe, ($xuni) { ._1 = {
                     ${this.args.map { it.coder(tpls,pre) }.joinToString(",")}
                 } }
@@ -623,7 +642,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
-            $exe.co (
+            $exe.proto (
                 &$exe, ($xuni) { ._2 = ${this.arg.coder(tpls,pre)} }
             );
             """
