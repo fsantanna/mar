@@ -81,7 +81,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     });\n"
                 )
             }
-            is Type.Proto.Coro, is Type.Exec.Coro, is Type.Proto.Task, is Type.Exec.Task -> {
+            is Type.Proto.Coro, is Type.Proto.Task -> {
                 val (pro, exe) = me.x_pro_exe(null)
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
                 val (xiuni, iuni) = me.x_inp_uni(null, pre)
@@ -90,6 +90,24 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 ft(itup) + ft(iuni) + ft(ouni) + listOf(
                     x + ";\n",
                     "typedef $xouni (*$pro) ($x*, $xiuni);\n",
+                )
+            }
+            is Type.Exec.Coro, is Type.Exec.Task -> {
+                val (pro, exe) = me.x_pro_exe(null)
+                val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
+                val (xiuni, iuni) = me.x_inp_uni(null, pre)
+                val (xouni, ouni) = me.x_out_uni(null, pre)
+                val x = "struct " + exe
+                ft(itup) + ft(iuni) + ft(ouni) + listOf(
+                    x + ";\n",
+                    "typedef $xouni (*$pro) ($x*, $xiuni);\n",
+                    """
+                    typedef struct $exe {
+                        int pc;
+                        $pro pro;
+                        char mem[0];
+                    } $exe;
+                    """
                 )
             }
             is Type.Tuple -> {
