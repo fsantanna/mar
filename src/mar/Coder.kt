@@ -300,14 +300,14 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
         }
 
         val xtplss: List<Tpl_Map> = me.template_map_all() ?: emptyList()
-        val x = xtplss.map { xtpls ->
+        val xx = xtplss.map { xtpls ->
             coder_types(me, me, xtpls, pre) // HACK-01: x===me above prevents stack overflow
         }
 
         when (me) {
             is Stmt.Proto.Coro -> {}
             is Stmt.Proto.Task -> {}
-            else -> return x
+            else -> return xx
         }
 
         fun mem (): String {
@@ -325,14 +325,14 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             is Stmt.Proto.Task -> me.tp_.x_pro_exe(me.tp_.assert_no_tpls_up())
             else -> error("impossible case")
         }
-        return x + listOf("""
-            typedef struct $exe {
+        return xx + listOf("""
+            typedef struct ${me.id.str}__$exe {
                 int pc;
                 $pro pro;
                 struct {
                     ${mem()}
                 } mem;
-            } $exe;
+            } ${me.id.str}__$exe;
         """)
     }
     val ts = s.dn_collect_pos(::fs, ::fe, ::ft)
@@ -353,7 +353,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 when (this) {
                     is Stmt.Proto.Func ->
                         this.tp_.out.coder(xtpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(xtpls,pre) }.joinToString(",") + ")"
-                    is Stmt.Proto.Coro -> this.tp_.x_sig(pre, xid)
+                    is Stmt.Proto.Coro -> this.x_sig(pre)
                     is Stmt.Proto.Task ->
                         this.tp_.out.coder(xtpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(xtpls,pre) }.joinToString(",") + ")"
                 } + """
@@ -363,10 +363,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         this as Stmt.Proto.Func
                         this.tp_.inps_.map { (id,tp) ->
                             if (tp !is Type.Vector) "" else {
-                                val xid = id.str
+                                val xxid = id.str
                                 """
-                                $xid.max = ${tp.max!!.coder(xtpls,pre)};
-                                $xid.cur = MIN($xid.max, $xid.cur);                            
+                                $xxid.max = ${tp.max!!.coder(xtpls,pre)};
+                                $xxid.cur = MIN($xxid.max, $xxid.cur);                            
                                 """
                             }
                         }.joinToString("")
@@ -429,7 +429,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             }.map { xtpls ->
                                 val xid = s.proto(xtpls)
                                 when (tp) {
-                                    is Type.Proto.Coro -> "auto ${tp.x_sig(pre,xid)};\n"
+                                    is Type.Proto.Coro -> "auto ${(s as Stmt.Proto.Coro).x_sig(pre)};\n"
                                     else -> "auto " + tp.out.coder(xtpls) + " " + xid + " (" + tp.inps.map { it.coder(xtpls) }.joinToString(",") + ");\n"
                                 }
                             }
@@ -574,7 +574,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
-            ($xtp) { 0, ${this.pro.coder(tpls,pre)}, {} };
+            ($xtp) { 0, (${(this.pro.typex() as Type.Proto.Coro).x_sig(pre)}) ${this.pro.coder(tpls,pre)}, {} };
             """
         }
         is Stmt.Start -> {

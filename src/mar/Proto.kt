@@ -6,11 +6,18 @@ fun List<Type>.x_inp_tup (tk: Tk, tpls: Tpl_Map?, pre: Boolean): Pair<String, Ty
     return Pair(id, tp)
 }
 
-fun Type.Proto.Coro.x_sig (pre: Boolean, id: String): String {
+fun Type.Proto.Coro.x_sig (pre: Boolean): String {
     val (_,exe) = this.x_pro_exe(null)
     val (xiuni,_) = this.x_inp_uni(null,pre)
     val (xouni,_) = this.x_out_uni(null,pre)
-    return "$xouni $id ($exe* mar_exe, $xiuni mar_arg)"
+    return "$xouni (*) ($exe* mar_exe, $xiuni mar_arg)"
+}
+
+fun Stmt.Proto.Coro.x_sig (pre: Boolean): String {
+    val (_,exe) = this.tp_.x_pro_exe(null)
+    val (xiuni,_) = this.tp_.x_inp_uni(null,pre)
+    val (xouni,_) = this.tp_.x_out_uni(null,pre)
+    return "$xouni ${this.id.str} (${this.id.str}__$exe* mar_exe, $xiuni mar_arg)"
 }
 
 // Type.*.inps()
