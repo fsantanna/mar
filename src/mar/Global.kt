@@ -91,18 +91,18 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
             class Vars (tk: Tk, xtpls: List<Tpl_Con>?, val inps_: List<Var_Type>, out: Type) :
                 Func(tk, xtpls, inps_.map { (_, tp) -> tp }, out)
         }
-        open class Coro (tk: Tk, var xn: Int?, xtpls: List<Tpl_Con>?, inps: List<Type>, val res: Type, val yld: Type, out: Type): Proto(tk, xtpls, inps, out) {
-            class Vars (tk: Tk, xn: Int?, xtpls: List<Tpl_Con>?, val inps_: List<Var_Type>, res: Type, yld: Type, out: Type):
+        open class Coro (tk: Tk, var xn: Expr?, xtpls: List<Tpl_Con>?, inps: List<Type>, val res: Type, val yld: Type, out: Type): Proto(tk, xtpls, inps, out) {
+            class Vars (tk: Tk, xn: Expr?, xtpls: List<Tpl_Con>?, val inps_: List<Var_Type>, res: Type, yld: Type, out: Type):
                 Coro(tk, xn, xtpls, inps_.map { (_, tp) -> tp }, res, yld, out)
         }
-        open class Task (tk: Tk, var xn: Int?, xtpls: List<Tpl_Con>?, inps: List<Type>, out: Type): Proto(tk, xtpls, inps, out) {
-            class Vars (tk: Tk, xn: Int?, xtpls: List<Tpl_Con>?, val inps_: List<Var_Type>, out: Type):
+        open class Task (tk: Tk, var xn: Expr?, xtpls: List<Tpl_Con>?, inps: List<Type>, out: Type): Proto(tk, xtpls, inps, out) {
+            class Vars (tk: Tk, xn: Expr?, xtpls: List<Tpl_Con>?, val inps_: List<Var_Type>, out: Type):
                 Task(tk, xn, xtpls, inps_.map { (_, tp) -> tp }, out)
         }
     }
-    sealed class Exec (tk: Tk, var xn: Int?, val inps: List<Type>, val out: Type): Type(G.N++, null, tk) {
-        class Coro (tk: Tk, xn: Int?, inps: List<Type>, val res: Type, val yld: Type, out: Type): Exec(tk, xn, inps, out)
-        class Task (tk: Tk, xn: Int?, inps: List<Type>, out: Type): Exec(tk, xn, inps, out)
+    sealed class Exec (tk: Tk, var xn: Expr?, val inps: List<Type>, val out: Type): Type(G.N++, null, tk) {
+        class Coro (tk: Tk, xn: Expr?, inps: List<Type>, val res: Type, val yld: Type, out: Type): Exec(tk, xn, inps, out)
+        class Task (tk: Tk, xn: Expr?, inps: List<Type>, out: Type): Exec(tk, xn, inps, out)
     }
 }
 

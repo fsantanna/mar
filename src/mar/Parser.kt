@@ -181,7 +181,7 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                         err(n.tk, "type error : expected constant integer expression")
                     }
                     accept_fix_err("]")
-                    n.static_int_eval(null)
+                    n
                 }
             }
 

@@ -20,11 +20,21 @@ fun Stmt.Proto.Coro.x_sig (pre: Boolean): String {
     return "$xouni ${this.id.str} (${this.id.str}__$exe* mar_exe, $xiuni mar_arg)"
 }
 
+// Type.*.xn()
 // Type.*.inps()
 // Type.*.out()
 // Type.*.res()
 // Type.*.yld()
 
+fun Type.xn (): Expr {
+    return when (this) {
+        is Type.Proto.Coro -> this.xn
+        is Type.Exec.Coro -> this.xn
+        is Type.Proto.Task -> this.xn
+        is Type.Exec.Task -> this.xn
+        else -> error("impossible case")
+    }!!
+}
 fun Type.inps (): List<Type> {
     return when (this) {
         is Type.Proto.Coro -> this.inps

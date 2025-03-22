@@ -105,7 +105,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     typedef struct $exe {
                         int pc;
                         $pro pro;
-                        char mem[0];
+                        char mem[${me.xn().static_int_eval(null)}];
                     } $exe;
                     """
                 )
