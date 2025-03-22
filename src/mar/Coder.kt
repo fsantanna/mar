@@ -330,7 +330,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 int pc;
                 $pro pro;
                 struct {
-                    ${mem()}
+                    ${mem()}    // TODO: unions for non-coexisting blocks
                 } mem;
             } ${me.id.str}__$exe;
         """)

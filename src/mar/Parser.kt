@@ -185,13 +185,13 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                 (tk0.str=="func" && !req) ->
                     Type.Proto.Func(tk0, null, inps as List<Type>, out)
                 (tk0.str=="coro" &&  req) ->
-                    Type.Proto.Coro.Vars(tk0, null, inps as List<Var_Type>, res!!, yld!!, out)
+                    Type.Proto.Coro.Vars(tk0, null, null, inps as List<Var_Type>, res!!, yld!!, out)
                 (tk0.str=="coro" && !req) ->
-                    Type.Proto.Coro(tk0, null, inps as List<Type>, res!!, yld!!, out)
+                    Type.Proto.Coro(tk0, null, null, inps as List<Type>, res!!, yld!!, out)
                 (tk0.str=="task" &&  req) ->
-                    Type.Proto.Task.Vars(tk0, null, inps as List<Var_Type>, out)
+                    Type.Proto.Task.Vars(tk0, null, null, inps as List<Var_Type>, out)
                 (tk0.str=="task" && !req) ->
-                    Type.Proto.Task(tk0, null, inps as List<Type>, out)
+                    Type.Proto.Task(tk0, null, null, inps as List<Type>, out)
                 else -> error("impossible case")
             }
         }
@@ -210,10 +210,10 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                 val yld = parser_type(null, false, fr_pointer)
                 accept_fix_err("->")
                 val out = parser_type(null, false, fr_pointer)
-                Type.Exec.Coro(tk0, inps, res, yld, out)
+                Type.Exec.Coro(tk0, null, inps, res, yld, out)
             } else {
                 val out = parser_type(null, false, fr_pointer)
-                Type.Exec.Task(tk0, inps, out)
+                Type.Exec.Task(tk0, null, inps, out)
             }
         }
         accept_fix("(") -> {

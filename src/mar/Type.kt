@@ -321,14 +321,14 @@ fun Type.template_apply (map: Tpl_Map): Type? {
             val yld = this.yld.template_apply(map)
             val out = this.out.template_apply(map)
             if (inps.any { it==null } || res==null || yld==null || out==null) null else {
-                Type.Proto.Coro(this.tk, null, inps as List<Type>, res, yld, out)
+                Type.Proto.Coro(this.tk, null, null, inps as List<Type>, res, yld, out)
             }
         }
         is Type.Proto.Task -> {
             val inps = this.inps.map { it.template_apply(map) }
             val out = this.out.template_apply(map)
             if (inps.any { it==null } || out==null) null else {
-                Type.Proto.Task(this.tk, null, inps as List<Type>, out)
+                Type.Proto.Task(this.tk, null, null, inps as List<Type>, out)
             }
         }
         is Type.Exec.Coro -> {
@@ -337,14 +337,14 @@ fun Type.template_apply (map: Tpl_Map): Type? {
             val yld = this.yld.template_apply(map)
             val out = this.out.template_apply(map)
             if (inps.any { it==null } || res==null || yld==null || out==null) null else {
-                Type.Exec.Coro(this.tk, inps as List<Type>, res, yld, out)
+                Type.Exec.Coro(this.tk, null, inps as List<Type>, res, yld, out)
             }
         }
         is Type.Exec.Task -> {
             val inps = this.inps.map { it.template_apply(map) }
             val out = this.out.template_apply(map)
             if (inps.any { it==null } || out==null) null else {
-                Type.Exec.Task(this.tk, inps as List<Type>, out)
+                Type.Exec.Task(this.tk, null, inps as List<Type>, out)
             }
         }
     }
@@ -594,8 +594,8 @@ fun Stmt.type (): Type? {
             when (co) {
                 !is Type.Proto -> null
                 is Type.Proto.Func -> null
-                is Type.Proto.Coro -> Type.Exec.Coro(co.tk, co.inps, co.res, co.yld, co.out)
-                is Type.Proto.Task -> Type.Exec.Task(co.tk, co.inps, co.out)
+                is Type.Proto.Coro -> Type.Exec.Coro(co.tk, null, co.inps, co.res, co.yld, co.out)
+                is Type.Proto.Task -> Type.Exec.Task(co.tk, null, co.inps, co.out)
                 else -> error("impossible case")
             }
         }

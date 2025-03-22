@@ -12,14 +12,14 @@ fun Stmt.infer (tpe: Type?): Type? {
         is Stmt.Create -> {
             val xtp = when (tpe) {
                 !is Type.Exec -> null
-                is Type.Exec.Coro -> Type.Proto.Coro(tpe.tk, null, tpe.inps, tpe.res, tpe.yld, tpe.out)
-                is Type.Exec.Task -> Type.Proto.Task(tpe.tk, null, tpe.inps, tpe.out)
+                is Type.Exec.Coro -> Type.Proto.Coro(tpe.tk, null, null, tpe.inps, tpe.res, tpe.yld, tpe.out)
+                is Type.Exec.Task -> Type.Proto.Task(tpe.tk, null, null, tpe.inps, tpe.out)
                 else -> error("impossible case")
             }
             this.pro.infer(xtp).let {
                 when (it) {
-                    is Type.Proto.Coro -> Type.Exec.Coro(pro.tk, it.inps, it.res, it.yld, it.out)
-                    is Type.Proto.Task -> Type.Exec.Task(pro.tk, it.inps, it.out)
+                    is Type.Proto.Coro -> Type.Exec.Coro(pro.tk, null, it.inps, it.res, it.yld, it.out)
+                    is Type.Proto.Task -> Type.Exec.Task(pro.tk, null, it.inps, it.out)
                     else -> tpe
                 }
             }
