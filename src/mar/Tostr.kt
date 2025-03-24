@@ -40,6 +40,11 @@ fun Any.to_str (pre: Boolean = false): String {
 }
 
 fun Type.to_str (pre: Boolean = false): String {
+    fun XN (e: Expr?): String {
+        return if (e == null) "" else {
+            "[" + e.to_str(pre) + "] "
+        }
+    }
     return when (this) {
         //is Type.Err,
         is Type.Any -> "*"
@@ -71,12 +76,12 @@ fun Type.to_str (pre: Boolean = false): String {
             }
             when (this) {
                 is Type.Proto.Func -> "func ($inps) -> ${this.out.to_str(pre)}"
-                is Type.Proto.Coro -> "coro ($inps) -> ${this.res.to_str(pre)} -> ${this.yld.to_str(pre)} -> ${this.out.to_str(pre)}"
-                is Type.Proto.Task -> "task ($inps) -> ${this.out.to_str(pre)}"
+                is Type.Proto.Coro -> "coro ${XN(this.xn)}($inps) -> ${this.res.to_str(pre)} -> ${this.yld.to_str(pre)} -> ${this.out.to_str(pre)}"
+                is Type.Proto.Task -> "task ${XN(this.xn)}($inps) -> ${this.out.to_str(pre)}"
             }
         }
-        is Type.Exec.Coro -> "exec coro (${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.res.to_str(pre)} -> ${this.yld.to_str(pre)} -> ${this.out.to_str(pre)}"
-        is Type.Exec.Task -> "exec task (${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.out.to_str(pre)}"
+        is Type.Exec.Coro -> "exec coro ${XN(this.xn)}(${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.res.to_str(pre)} -> ${this.yld.to_str(pre)} -> ${this.out.to_str(pre)}"
+        is Type.Exec.Task -> "exec task ${XN(this.xn)}(${this.inps.map { it.to_str(pre) }.joinToString(",")}) -> ${this.out.to_str(pre)}"
     }.let {
         when {
             !pre -> it
