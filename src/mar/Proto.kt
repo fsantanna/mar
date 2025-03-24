@@ -117,6 +117,12 @@ fun Type.x_out_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
             val id = tp.coder(tpls)
             Pair(id, tp)
         }
+        is Type.Proto.Task, is Type.Exec.Task -> {
+            val void = Type.Prim(Tk.Type("void",this.tk.pos))
+            val tp = Type.Union(this.tk, false, listOf(void, out).map { Pair(null, it) })
+            val id = tp.coder(tpls)
+            Pair(id, tp)
+        }
         else -> error("impossible case")
     }
 }
