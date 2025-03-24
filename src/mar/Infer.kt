@@ -373,12 +373,12 @@ fun infer_apply () {
                     }
                     is Stmt.Proto.Coro -> {
                         if (dcl.tp_.xn == null) {
-                            dcl.tp_.xn = xsrc.xn()
+                            dcl.tp_.xn = xsrc.xn()!!
                         }
                     }
                     is Stmt.Proto.Task -> {
                         if (dcl.tp_.xn == null) {
-                            dcl.tp_.xn = xsrc.xn()
+                            dcl.tp_.xn = xsrc.xn()!!
                         }
                     }
                     else -> {}
@@ -517,12 +517,12 @@ fun infer_check () {
             else -> {}
         }
     }, {}, {
-        when (it) {
-            is Type.Proto.Coro -> assert(it.xn != null)
-            is Type.Proto.Task -> assert(it.xn != null)
-            is Type.Exec.Coro -> assert(it.xn != null)
-            is Type.Exec.Task -> assert(it.xn != null)
-            else -> {}
+        val ok = when (it) {
+            is Type.Proto.Coro, is Type.Proto.Task, is Type.Exec.Coro, is Type.Exec.Task -> (it.xn() != null)
+            else -> true
+        }
+        if (!ok) {
+            err(it.tk, "inference error : unknown size")
         }
     })
 }

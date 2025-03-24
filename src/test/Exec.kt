@@ -596,7 +596,7 @@ class Exec  {
             var exe: exec coro (Int) -> Int -> Int -> Int
             print(10)
         """)
-        assert(out == "10\n") { out }
+        assert(out == "anon : (lin 2, col 22) : inference error : unknown size\n") { out }
     }
 
     // TUPLE

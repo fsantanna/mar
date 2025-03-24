@@ -26,12 +26,12 @@ fun Stmt.Proto.Coro.x_sig (pre: Boolean): String {
 // Type.*.res()
 // Type.*.yld()
 
-fun Type.xn (): Expr {
+fun Type.xn (): Expr? {
     return when (this) {
-        is Type.Proto.Coro -> this.xn!!
-        is Type.Exec.Coro -> this.xn!!
-        is Type.Proto.Task -> this.xn!!
-        is Type.Exec.Task -> this.xn!!
+        is Type.Proto.Coro -> this.xn
+        is Type.Exec.Coro -> this.xn
+        is Type.Proto.Task -> this.xn
+        is Type.Exec.Task -> this.xn
         else -> error("impossible case")
     }
 }
