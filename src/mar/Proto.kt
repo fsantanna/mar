@@ -28,12 +28,12 @@ fun Stmt.Proto.Coro.x_sig (pre: Boolean): String {
 
 fun Type.xn (): Expr {
     return when (this) {
-        is Type.Proto.Coro -> this.xn
-        is Type.Exec.Coro -> this.xn
-        is Type.Proto.Task -> this.xn
-        is Type.Exec.Task -> this.xn
+        is Type.Proto.Coro -> this.xn!!
+        is Type.Exec.Coro -> this.xn!!
+        is Type.Proto.Task -> this.xn!!
+        is Type.Exec.Task -> this.xn!!
         else -> error("impossible case")
-    }!!
+    }
 }
 fun Type.inps (): List<Type> {
     return when (this) {

@@ -161,16 +161,6 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
     return when {
         (pre is Tk.Fix || accept_fix("func") || accept_fix("coro") || accept_fix("task")) -> {
             val tk0 = pre ?: (G.tk0 as Tk.Fix)
-            accept_fix_err("(")
-            val req = fr_proto || check_enu("Var")
-            val inps = parser_list(",", ")") {
-                if (req) {
-                    parser_var_type(null)
-                } else {
-                    parser_type(null, false, fr_pointer)
-                }
-            }
-            accept_fix_err("->")
 
             val xn = when {
                 (tk0.str == "func") -> null
@@ -184,6 +174,17 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                     n
                 }
             }
+
+            accept_fix_err("(")
+            val req = fr_proto || check_enu("Var")
+            val inps = parser_list(",", ")") {
+                if (req) {
+                    parser_var_type(null)
+                } else {
+                    parser_type(null, false, fr_pointer)
+                }
+            }
+            accept_fix_err("->")
 
             val (res,yld) = if (tk0.str != "coro") Pair(null,null) else {
                 val res = parser_type(null, false, fr_pointer)
@@ -213,6 +214,19 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
             val tk0 = G.tk0 as Tk.Fix
             accept_fix("coro") || accept_fix("task") || err(G.tk1!!, "exec error : expected coro or task")
             val is_coro = (G.tk0!!.str == "coro")
+
+            val xn = when {
+                !accept_fix("[") -> null
+                else -> {
+                    val n = parser_expr()
+                    if (!n.static_int_is()) {
+                        err(n.tk, "type error : expected constant integer expression")
+                    }
+                    accept_fix_err("]")
+                    n
+                }
+            }
+
             accept_fix_err("(")
             val inps = parser_list(",", ")") {
                 parser_type(null, false, fr_pointer)
@@ -224,10 +238,10 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                 val yld = parser_type(null, false, fr_pointer)
                 accept_fix_err("->")
                 val out = parser_type(null, false, fr_pointer)
-                Type.Exec.Coro(tk0, null, inps, res, yld, out)
+                Type.Exec.Coro(tk0, xn, inps, res, yld, out)
             } else {
                 val out = parser_type(null, false, fr_pointer)
-                Type.Exec.Task(tk0, null, inps, out)
+                Type.Exec.Task(tk0, xn, inps, out)
             }
         }
         accept_fix("(") -> {

@@ -510,10 +510,10 @@ class Exec  {
     fun ff_01_coro () {
         val out = test("""
             do {
-                coro co: () -> () -> () -> () {
+                coro co: [0] () -> () -> () -> () {
                     `puts("OK");`
                 }
-                var exe: exec coro () -> () -> () -> () = create(co)
+                var exe: exec coro [0] () -> () -> () -> () = create(co)
                 `puts("END");`
             }
         """)
