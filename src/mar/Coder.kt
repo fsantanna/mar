@@ -341,14 +341,13 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         this as Stmt.Proto.Coro
                         val (pro,exe) = this.tp_.x_pro_exe(this.tp_.assert_no_tpls_up())
                         """
-                        typedef struct Mem_${this.id.str} {
+                        struct {
                             int pc;
                             $pro pro;
                             struct {
                                 ${mem()}    // TODO: unions for non-coexisting blocks
                             } mem;
-                        } Mem_${this.id.str};
-                        Mem_${this.id.str}* mar_exe = (Mem_${this.id.str}*) _mar_exe_;
+                        }* mar_exe = (typeof(mar_exe)) _mar_exe_;
                         """
                     }}
                     ${this.tp.out.coder(xtpls)} mar_ret;
