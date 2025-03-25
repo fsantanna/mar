@@ -85,7 +85,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val (pro, exe) = me.x_pro_exe(null)
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
                 val (xiuni, iuni) = me.x_inp_uni(null, pre)
-                val (xouni, ouni) = me.x_out_uni(null, pre)
+                val (xouni, ouni) = me.x_out(null, pre)
                 val x = "struct " + exe
                 ft(itup) + ft(iuni) + ft(ouni) + listOf(
                     x + ";\n",
@@ -96,7 +96,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val (pro, exe) = me.x_pro_exe(null)
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
                 val (xiuni, iuni) = me.x_inp_uni(null, pre)
-                val (xouni, ouni) = me.x_out_uni(null, pre)
+                val (xouni, ouni) = me.x_out(null, pre)
                 val x = "struct " + exe
                 ft(itup) + ft(iuni) + ft(ouni) + listOf(
                     x + ";\n",
@@ -333,8 +333,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 when (this) {
                     is Stmt.Proto.Func ->
                         this.tp_.out.coder(xtpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(xtpls,pre) }.joinToString(",") + ")"
-                    is Stmt.Proto.Coro -> this.x_sig(pre)
-                    is Stmt.Proto.Task -> TODO() //this.x_sig(pre)
+                    else -> this.x_sig(pre)
                 } + """
                 {
                     ${(this is Stmt.Proto.Coro).cond {
@@ -380,13 +379,11 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         """ }}
                     } while (0);
                     ${when {
-                        (this is Stmt.Proto.Func) -> "return mar_ret;"
                         (this is Stmt.Proto.Coro) -> {
-                            val (xuni,_) = this.tp_.x_out_uni(null,pre)
+                            val (xuni,_) = this.tp_.x_out(null,pre)
                             "return ($xuni) { .tag=2, ._2=mar_ret };"
                         }
-                        (this is Stmt.Proto.Task) -> "return mar_ret;"
-                        else -> error("impossible case")
+                        else -> "return mar_ret;"
                     }}
                     
                 }
@@ -421,8 +418,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             }.map { xtpls ->
                                 val xid = s.proto(xtpls)
                                 when (tp) {
-                                    is Type.Proto.Coro -> "auto ${(s as Stmt.Proto.Coro).x_sig(pre)};\n"
-                                    else -> "auto " + tp.out.coder(xtpls) + " " + xid + " (" + tp.inps.map { it.coder(xtpls) }.joinToString(",") + ");\n"
+                                    is Type.Proto.Func -> "auto " + tp.out.coder(xtpls) + " " + xid + " (" + tp.inps.map { it.coder(xtpls) }.joinToString(",") + ");\n"
+                                    else -> "auto ${s.x_sig(pre)};\n"
                                 }
                             }
                         }
@@ -566,7 +563,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
-            ($xtp) { 0, (${(this.pro.typex() as Type.Proto.Coro).x_sig(pre)}) ${this.pro.coder(tpls,pre)}, {} };
+            ($xtp) { 0, (${(this.pro.typex() as Type.Proto).x_sig(pre)}) ${this.pro.coder(tpls,pre)}, {} };
             """
         }
         is Stmt.Start -> {
@@ -603,7 +600,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
         is Stmt.Yield -> {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
-            val (xuni,_) = tp.x_out_uni(null,pre)
+            val (xuni,_) = tp.x_out(null,pre)
             """
                 mar_exe->pc = ${this.n};
                 return ($xuni) { .tag=1, ._1=${this.arg.coder(tpls,pre)} };

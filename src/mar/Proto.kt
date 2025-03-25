@@ -6,17 +6,17 @@ fun List<Type>.x_inp_tup (tk: Tk, tpls: Tpl_Map?, pre: Boolean): Pair<String, Ty
     return Pair(id, tp)
 }
 
-fun Type.Proto.Coro.x_sig (pre: Boolean): String {
+fun Type.Proto.x_sig (pre: Boolean): String {
     val (_,exe) = this.x_pro_exe(null)
     val (xiuni,_) = this.x_inp_uni(null,pre)
-    val (xouni,_) = this.x_out_uni(null,pre)
+    val (xouni,_) = this.x_out(null,pre)
     return "$xouni (*) ($exe* mar_exe, $xiuni mar_arg)"
 }
 
-fun Stmt.Proto.Coro.x_sig (pre: Boolean): String {
-    val (_,exe) = this.tp_.x_pro_exe(null)
-    val (xiuni,_) = this.tp_.x_inp_uni(null,pre)
-    val (xouni,_) = this.tp_.x_out_uni(null,pre)
+fun Stmt.Proto.x_sig (pre: Boolean): String {
+    val (_,exe) = this.tp.x_pro_exe(null)
+    val (xiuni,_) = this.tp.x_inp_uni(null,pre)
+    val (xouni,_) = this.tp.x_out(null,pre)
     return "$xouni ${this.id.str} ($exe* _mar_exe_, $xiuni mar_arg)"
 }
 
@@ -102,15 +102,14 @@ fun Type.x_inp_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
             Pair(id, tp)
         }
         is Type.Proto.Task, is Type.Exec.Task -> {
-            val void = Type.Prim(Tk.Type("void",this.tk.pos))
-            val tp = Type.Union(this.tk, false, listOf(tup, Type.Pointer(this.tk,void)).map { Pair(null,it) })
+            val tp = Type.Union(this.tk, false, listOf(tup, Type.Pointer(this.tk,Type.Unit(this.tk))).map { Pair(null,it) })
             val id = tp.coder(tpls)
             Pair(id, tp)
         }
         else -> error("impossible case")
     }
 }
-fun Type.x_out_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
+fun Type.x_out (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type> {
     val out = this.out()
     return when (this) {
         is Type.Proto.Coro, is Type.Exec.Coro -> {
@@ -119,10 +118,8 @@ fun Type.x_out_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
             Pair(id, tp)
         }
         is Type.Proto.Task, is Type.Exec.Task -> {
-            val void = Type.Prim(Tk.Type("void",this.tk.pos))
-            val tp = Type.Union(this.tk, false, listOf(void, out).map { Pair(null, it) })
-            val id = tp.coder(tpls)
-            Pair(id, tp)
+            val id = out.coder(tpls)
+            Pair(id, out)
         }
         else -> error("impossible case")
     }
