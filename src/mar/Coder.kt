@@ -354,10 +354,14 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     is Stmt.Proto.Func ->
                         this.tp_.out.coder(xtpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(xtpls,pre) }.joinToString(",") + ")"
                     is Stmt.Proto.Coro -> this.x_sig(pre)
-                    is Stmt.Proto.Task ->
-                        this.tp_.out.coder(xtpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(xtpls,pre) }.joinToString(",") + ")"
+                    is Stmt.Proto.Task -> TODO() //this.x_sig(pre)
                 } + """
                 {
+                    ${(this is Stmt.Proto.Coro).cond {
+                        this as Stmt.Proto.Coro
+                        val (_,exe) = this.tp_.x_pro_exe(null)
+                        "${this.id.str}__${exe}* mar_exe = (${this.id.str}__${exe}*) _mar_exe_;"
+                    }}
                     ${this.tp.out.coder(xtpls)} mar_ret;
                     ${(this is Stmt.Proto.Func).cond {
                         this as Stmt.Proto.Func

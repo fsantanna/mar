@@ -17,7 +17,7 @@ fun Stmt.Proto.Coro.x_sig (pre: Boolean): String {
     val (_,exe) = this.tp_.x_pro_exe(null)
     val (xiuni,_) = this.tp_.x_inp_uni(null,pre)
     val (xouni,_) = this.tp_.x_out_uni(null,pre)
-    return "$xouni ${this.id.str} (${this.id.str}__$exe* mar_exe, $xiuni mar_arg)"
+    return "$xouni ${this.id.str} ($exe* _mar_exe_, $xiuni mar_arg)"
 }
 
 // Type.*.xn()
@@ -73,15 +73,16 @@ fun Type.yld (): Type {
 fun Type.x_pro_exe (tpls: Tpl_Map?): Pair<String,String> {
     val inps = this.inps()
     val out  = this.out()
+    val xn   = this.xn()!!.static_int_eval(null)
     return when (this) {
         is Type.Proto.Coro, is Type.Exec.Coro -> {
             val tps = (inps.to_void() + listOf(this.res(), this.yld(), out)).map { it.coder(tpls) }.joinToString("__").clean()
-            Pair("Coro__$tps", "Exec__Coro__$tps")
+            Pair("Coro_${xn}__$tps", "Exec__Coro__$tps")
         }
         is Type.Proto.Task, is Type.Exec.Task -> {
             Pair (
-                "Task__${inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${out.coder(tpls)}".clean(),
-                "Exec__Task__${inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${out.coder(tpls)}".clean(),
+                "Task_${xn}__${inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${out.coder(tpls)}".clean(),
+                "Exec__Task_${xn}__${inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${out.coder(tpls)}".clean(),
             )
         }
         else -> error("impossible case")
