@@ -295,45 +295,14 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
         }
     }
     fun fs (me: Stmt): List<String> {
-        if (me !is Stmt.Proto || me===x /* HACK-01 */) {
-            return emptyList()
+        return if (me !is Stmt.Proto || me===x /* HACK-01 */) {
+            emptyList()
+        } else {
+            val xtplss: List<Tpl_Map> = me.template_map_all() ?: emptyList()
+            xtplss.map { xtpls ->
+                coder_types(me, me, xtpls, pre) // HACK-01: x===me above prevents stack overflow
+            }
         }
-
-        val xtplss: List<Tpl_Map> = me.template_map_all() ?: emptyList()
-        val xx = xtplss.map { xtpls ->
-            coder_types(me, me, xtpls, pre) // HACK-01: x===me above prevents stack overflow
-        }
-
-        when (me) {
-            is Stmt.Proto.Coro -> {}
-            is Stmt.Proto.Task -> {}
-            else -> return xx
-        }
-
-        fun mem (): String {
-            val blks = me.dn_collect_pre({
-                when (it) {
-                    is Stmt.Proto -> if (it == me) emptyList() else null
-                    is Stmt.Block -> listOf(it)
-                    else -> emptyList()
-                }
-            }, {null}, {null})
-            return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n" } }.flatten().joinToString("")
-        }
-        val (pro,exe) = when (me) {
-            is Stmt.Proto.Coro -> me.tp_.x_pro_exe(me.tp_.assert_no_tpls_up())
-            is Stmt.Proto.Task -> me.tp_.x_pro_exe(me.tp_.assert_no_tpls_up())
-            else -> error("impossible case")
-        }
-        return xx + listOf("""
-            typedef struct ${me.id.str}__$exe {
-                int pc;
-                $pro pro;
-                struct {
-                    ${mem()}    // TODO: unions for non-coexisting blocks
-                } mem;
-            } ${me.id.str}__$exe;
-        """)
     }
     val ts = s.dn_collect_pos(::fs, ::fe, ::ft)
     return ts.joinToString("")
@@ -344,6 +313,17 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Data -> ""
         is Stmt.Proto -> {
             assert((tpls == null) || this.tpls.isEmpty()) { "TODO: merge tpls" }
+
+            fun mem (): String {
+                val blks = this.dn_collect_pre({
+                    when (it) {
+                        is Stmt.Proto -> if (it == this) emptyList() else null
+                        is Stmt.Block -> listOf(it)
+                        else -> emptyList()
+                    }
+                }, {null}, {null})
+                return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n" } }.flatten().joinToString("")
+            }
 
             val xtplss: List<Tpl_Map?> = this.template_map_all() ?: listOf(null)
             xtplss.distinctBy {
@@ -359,8 +339,17 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 {
                     ${(this is Stmt.Proto.Coro).cond {
                         this as Stmt.Proto.Coro
-                        val (_,exe) = this.tp_.x_pro_exe(null)
-                        "${this.id.str}__${exe}* mar_exe = (${this.id.str}__${exe}*) _mar_exe_;"
+                        val (pro,exe) = this.tp_.x_pro_exe(this.tp_.assert_no_tpls_up())
+                        """
+                        typedef struct Mem_${this.id.str} {
+                            int pc;
+                            $pro pro;
+                            struct {
+                                ${mem()}    // TODO: unions for non-coexisting blocks
+                            } mem;
+                        } Mem_${this.id.str};
+                        Mem_${this.id.str}* mar_exe = (Mem_${this.id.str}*) _mar_exe_;
+                        """
                     }}
                     ${this.tp.out.coder(xtpls)} mar_ret;
                     ${(this is Stmt.Proto.Func).cond {
