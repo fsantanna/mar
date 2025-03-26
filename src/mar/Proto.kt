@@ -8,16 +8,18 @@ fun List<Type>.x_inp_tup (tk: Tk, tpls: Tpl_Map?, pre: Boolean): Pair<String, Ty
 
 fun Type.Proto.x_sig (pre: Boolean): String {
     val (_,exe) = this.x_pro_exe(null)
-    val (xiuni,_) = this.x_inp_uni(null,pre)
+    val inps = this.inps.x_inp_tup(this.tk,null, pre).first
+    val res = this.res().coder(null)
     val (xouni,_) = this.x_out(null,pre)
-    return "$xouni (*) ($exe* mar_exe, $xiuni mar_arg)"
+    return "void (*) ($exe*, ${inps}*, ${res}*, $xouni*)"
 }
 
 fun Stmt.Proto.x_sig (pre: Boolean): String {
     val (_,exe) = this.tp.x_pro_exe(null)
-    val (xiuni,_) = this.tp.x_inp_uni(null,pre)
+    val inps = this.tp.inps.x_inp_tup(this.tp.tk,null, pre).first
+    val res = this.tp.res().coder(null)
     val (xouni,_) = this.tp.x_out(null,pre)
-    return "$xouni ${this.id.str} ($exe* _mar_exe_, $xiuni mar_arg)"
+    return "void ${this.id.str} ($exe* _mar_exe_, ${inps}* mar_inps, ${res}* mar_res, $xouni* mar_out)"
 }
 
 // Type.*.xn()

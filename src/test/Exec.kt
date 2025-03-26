@@ -520,6 +520,15 @@ class Exec  {
         assert(out == "END\n") { out }
     }
     @Test
+    fun ff_02x_coro () {
+        val out = test("""
+            coro co: () -> () -> () -> () {
+            }
+            `puts("OK");`
+        """)
+        assert(out == "OK\n") { out }
+    }
+    @Test
     fun ff_02_coro () {
         val out = test("""
             coro co: () -> () -> () -> () {

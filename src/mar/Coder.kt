@@ -81,26 +81,31 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     });\n"
                 )
             }
-            is Type.Proto.Coro, is Type.Proto.Task -> {
+            is Type.Proto.Coro -> {
                 val (pro, exe) = me.x_pro_exe(null)
+                val xexe = Type.Exec.Coro(me.tk, me.xn, me.inps, me.res, me.yld, me.out)
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
-                val (xiuni, iuni) = me.x_inp_uni(null, pre)
+                val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
+                val res = me.res().coder(null)
                 val (xouni, ouni) = me.x_out(null, pre)
                 val x = "struct " + exe
-                ft(itup) + ft(iuni) + ft(ouni) + listOf(
+                ft(itup) + ft(inps) + ft(ouni) + ft(xexe) + listOf(
                     x + ";\n",
-                    "typedef $xouni (*$pro) ($x*, $xiuni);\n",
+                    "typedef void (*$pro) ($x*, $xinps*, $res*, $xouni*);\n",
                 )
             }
-            is Type.Exec.Coro, is Type.Exec.Task -> {
+            is Type.Proto.Task -> TODO()
+            is Type.Exec.Coro -> {
                 val (pro, exe) = me.x_pro_exe(null)
+                val xpro = Type.Proto.Coro(me.tk, me.xn, null, me.inps, me.res, me.yld, me.out)
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
-                val (xiuni, iuni) = me.x_inp_uni(null, pre)
+                val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
+                val res = me.res().coder(null)
                 val (xouni, ouni) = me.x_out(null, pre)
                 val x = "struct " + exe
-                ft(itup) + ft(iuni) + ft(ouni) + listOf(
+                ft(itup) + ft(inps) + ft(ouni) + ft(xpro) + listOf(
                     x + ";\n",
-                    "typedef $xouni (*$pro) ($x*, $xiuni);\n",
+                    "typedef void (*$pro) ($x*, $xinps*, $res*, $xouni*);\n",
                     """
                     typedef struct $exe {
                         int pc;
@@ -110,6 +115,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     """
                 )
             }
+            is Type.Exec.Task -> TODO()
             is Type.Tuple -> {
                 val x = me.coder(tpls)
                 /*val ids = if (me.ids == null) emptyList() else {
@@ -369,7 +375,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                     ${this.tp.inps_().mapIndexed { i,vtp ->
                                         val (id,tp) = vtp
                                         assert(tp !is Type.Vector)
-                                        id.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n"                                }.joinToString("")}
+                                        id.coder(this.blk,pre) + " = mar_inps->_${i+1};\n"                                }.joinToString("")}
                         """ }}
                         ${this.blk.coder(xtpls,pre)}
                         ${(this !is Stmt.Proto.Func).cond { """
@@ -379,7 +385,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     ${when {
                         (this is Stmt.Proto.Coro) -> {
                             val (xuni,_) = this.tp.x_out(null,pre)
-                            "return ($xuni) { .tag=2, ._2=mar_ret };"
+                            "*mar_out = ($xuni) { .tag=2, ._2=mar_ret };"
                         }
                         else -> "return mar_ret;"
                     }}
@@ -567,18 +573,20 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Start -> {
             val exe = this.exe.coder(tpls,pre)
             val tp = this.exe.type() as Type.Exec
-            val (xuni,_) = tp.x_inp_uni(null,pre)
+            val (xinps,_) = tp.inps().x_inp_tup(tp.tk,null,pre)
+            val (xouni,_) = tp.x_out(null,pre)
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
                 """
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
-            $exe.pro (
-                &$exe, ($xuni) { ._1 = {
-                    ${this.args.map { it.coder(tpls,pre) }.joinToString(",")}
-                } }
-            );
+            ({
+                $xinps mar_inps_$n = { ${this.args.map { it.coder(tpls,pre) }.joinToString(",")} };
+                $xouni mar_out_$n;
+                $exe.pro(&$exe, &mar_inps_$n, NULL, &mar_out_$n);
+                mar_out_$n;
+            });
             """
         }
         is Stmt.Resume -> {
@@ -606,7 +614,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${(this.xup is Stmt.SetS).cond {
                     val set = this.xup as Stmt.SetS
                     """
-                    ${set.dst.coder(tpls,pre)} = mar_arg._2;
+                    ${set.dst.coder(tpls,pre)} = *mar_res;
                     """
                 }}
             """
