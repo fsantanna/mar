@@ -126,7 +126,25 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     """
                 )
             }
-            is Type.Exec.Task -> TODO()
+            is Type.Exec.Task -> {
+                val (pro, exe) = me.x_pro_exe(null)
+                val xpro = Type.Proto.Task(me.tk, me.xn, null, me.inps, me.out)
+                val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
+                val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
+                val (xout, out) = me.x_out(null, pre)
+                val x = "struct " + exe
+                ft(itup) + ft(inps) + ft(out) + ft(xpro) + listOf(
+                    x + ";\n",
+                    "typedef void (*$pro) ($x*, $xinps*, void*, $xout*);\n",
+                    """
+                    typedef struct $exe {
+                        int pc;
+                        $pro pro;
+                        char mem[${me.xn()!!.static_int_eval(null)}];
+                    } $exe;
+                    """
+                )
+            }
             is Type.Tuple -> {
                 val x = me.coder(tpls)
                 /*val ids = if (me.ids == null) emptyList() else {
@@ -394,12 +412,13 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             }
                         """ }}
                     } while (0);
-                    ${when {
-                        (this is Stmt.Proto.Coro) -> {
+                    ${when (this) {
+                        is Stmt.Proto.Func -> "return mar_ret;"
+                        is Stmt.Proto.Coro -> {
                             val (xuni,_) = this.tp.x_out(null,pre)
                             "*mar_out = ($xuni) { .tag=2, ._2=mar_ret };"
                         }
-                        else -> "return mar_ret;"
+                        is Stmt.Proto.Task -> "*mar_out = mar_ret;"
                     }}
                     
                 }

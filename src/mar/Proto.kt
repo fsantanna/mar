@@ -9,27 +9,33 @@ fun List<Type>.x_inp_tup (tk: Tk, tpls: Tpl_Map?, pre: Boolean): Pair<String, Ty
 fun Type.Proto.x_sig (pre: Boolean): String {
     val (_,exe) = this.x_pro_exe(null)
     val inps = this.inps.x_inp_tup(this.tk,null, pre).first
-    val res = this.res().coder(null)
-    val (xouni,_) = this.x_out(null,pre)
+    val (xout,_) = this.x_out(null,pre)
     return when (this) {
         is Type.Proto.Func -> TODO() //this.out.coder(tpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(xtpls,pre) }.joinToString(",") + ")"
-        is Type.Proto.Coro -> "void (*) ($exe*, ${inps}*, ${res}*, $xouni*)"
-        is Type.Proto.Task -> TODO()
+        is Type.Proto.Coro -> {
+            val res = this.res().coder(null)
+            "void (*) ($exe*, ${inps}*, ${res}*, $xout*)"
+        }
+        is Type.Proto.Task -> "void (*) ($exe*, ${inps}*, void*, $xout*)"
     }
 }
 
 fun Stmt.Proto.x_sig (tpls: Tpl_Map?, pre: Boolean): String {
     val xid = this.proto(tpls)
-    val (xouni,_) = this.tp.x_out(null,pre)
+    val (xout,_) = this.tp.x_out(tpls, pre)
     return when (this) {
         is Stmt.Proto.Func -> this.tp.out.coder(tpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(tpls,pre) }.joinToString(", ") + ")"
         is Stmt.Proto.Coro -> {
             val (_,exe) = this.tp.x_pro_exe(null)
             val inps = this.tp.inps.x_inp_tup(this.tp.tk,null, pre).first
             val res = this.tp.res().coder(null)
-            "void $xid ($exe* _mar_exe_, ${inps}* mar_inps, ${res}* mar_res, $xouni* mar_out)"
+            "void $xid ($exe* _mar_exe_, ${inps}* mar_inps, ${res}* mar_res, $xout* mar_out)"
         }
-        is Stmt.Proto.Task -> TODO()
+        is Stmt.Proto.Task -> {
+            val (_,exe) = this.tp.x_pro_exe(null)
+            val inps = this.tp.inps.x_inp_tup(this.tp.tk,null, pre).first
+            "void $xid ($exe* _mar_exe_, ${inps}* mar_inps, void* mar_evt, $xout* mar_out)"
+      }
     }
 }
 
