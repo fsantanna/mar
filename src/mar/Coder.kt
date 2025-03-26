@@ -94,7 +94,18 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     "typedef void (*$pro) ($x*, $xinps*, $res*, $xouni*);\n",
                 )
             }
-            is Type.Proto.Task -> TODO()
+            is Type.Proto.Task -> {
+                val (pro, exe) = me.x_pro_exe(null)
+                val xexe = Type.Exec.Task(me.tk, me.xn, me.inps, me.out)
+                val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
+                val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
+                val (xout,out) = me.x_out(null, pre)
+                val x = "struct " + exe
+                ft(itup) + ft(inps) + ft(out) + ft(xexe) + listOf(
+                    x + ";\n",
+                    "typedef void (*$pro) ($x*, $xinps*, void*, $xout*);\n",
+                )
+            }
             is Type.Exec.Coro -> {
                 val (pro, exe) = me.x_pro_exe(null)
                 val xpro = Type.Proto.Coro(me.tk, me.xn, null, me.inps, me.res, me.yld, me.out)
@@ -334,14 +345,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             val xtplss: List<Tpl_Map?> = this.template_map_all() ?: listOf(null)
             xtplss.distinctBy {
                 this.proto(it)
-            }.map { xtpls ->
-                val xid = this.proto(xtpls)
-                when (this) {
-                    is Stmt.Proto.Func ->
-                        this.tp_.out.coder(xtpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(xtpls,pre) }.joinToString(",") + ")"
-                    else -> this.x_sig(pre)
-                } + """
-                {
+            }.map { xtpls -> """
+                ${this.x_sig(xtpls, pre)} {
                     ${(this !is Stmt.Proto.Func).cond {
                         val (pro,_) = this.tp.x_pro_exe(this.tp.assert_no_tpls_up())
                         """
@@ -398,8 +403,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     }}
                     
                 }
-                """
-            }.joinToString("")
+            """ }.joinToString("")
         }
 
         is Stmt.Block  -> {
@@ -426,12 +430,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             val xtplss: List<Tpl_Map?> = s.template_map_all() ?: listOf(null)
                             xtplss.distinctBy {
                                 s.proto(it)
-                            }.map { xtpls ->
-                                val xid = s.proto(xtpls)
-                                when (tp) {
-                                    is Type.Proto.Func -> "auto " + tp.out.coder(xtpls) + " " + xid + " (" + tp.inps.map { it.coder(xtpls) }.joinToString(",") + ");\n"
-                                    else -> "auto ${s.x_sig(pre)};\n"
-                                }
+                            }.map {
+                                "auto " + s.x_sig(it, pre) + ";\n"
                             }
                         }
                     }.flatten().joinToString("")}

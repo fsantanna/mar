@@ -11,15 +11,26 @@ fun Type.Proto.x_sig (pre: Boolean): String {
     val inps = this.inps.x_inp_tup(this.tk,null, pre).first
     val res = this.res().coder(null)
     val (xouni,_) = this.x_out(null,pre)
-    return "void (*) ($exe*, ${inps}*, ${res}*, $xouni*)"
+    return when (this) {
+        is Type.Proto.Func -> TODO() //this.out.coder(tpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(xtpls,pre) }.joinToString(",") + ")"
+        is Type.Proto.Coro -> "void (*) ($exe*, ${inps}*, ${res}*, $xouni*)"
+        is Type.Proto.Task -> TODO()
+    }
 }
 
-fun Stmt.Proto.x_sig (pre: Boolean): String {
-    val (_,exe) = this.tp.x_pro_exe(null)
-    val inps = this.tp.inps.x_inp_tup(this.tp.tk,null, pre).first
-    val res = this.tp.res().coder(null)
+fun Stmt.Proto.x_sig (tpls: Tpl_Map?, pre: Boolean): String {
+    val xid = this.proto(tpls)
     val (xouni,_) = this.tp.x_out(null,pre)
-    return "void ${this.id.str} ($exe* _mar_exe_, ${inps}* mar_inps, ${res}* mar_res, $xouni* mar_out)"
+    return when (this) {
+        is Stmt.Proto.Func -> this.tp.out.coder(tpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(tpls,pre) }.joinToString(", ") + ")"
+        is Stmt.Proto.Coro -> {
+            val (_,exe) = this.tp.x_pro_exe(null)
+            val inps = this.tp.inps.x_inp_tup(this.tp.tk,null, pre).first
+            val res = this.tp.res().coder(null)
+            "void $xid ($exe* _mar_exe_, ${inps}* mar_inps, ${res}* mar_res, $xouni* mar_out)"
+        }
+        is Stmt.Proto.Task -> TODO()
+    }
 }
 
 // Type.*.xn()
@@ -55,6 +66,7 @@ fun Type.inps_ (): List<Var_Type> {
 }
 fun Type.out (): Type {
     return when (this) {
+        is Type.Proto.Func -> this.out
         is Type.Proto.Coro -> this.out
         is Type.Exec.Coro -> this.out
         is Type.Proto.Task -> this.out
@@ -98,26 +110,8 @@ fun Type.x_pro_exe (tpls: Tpl_Map?): Pair<String,String> {
     }
 }
 
-// Type.*.x_inp_uni
-// Type.*.x_out_uni
+// Type.*.x_out
 
-fun Type.x_inp_uni (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type.Union> {
-    val (_,tup) = this.inps().x_inp_tup(this.tk, tpls, pre)
-    return when (this) {
-        is Type.Proto.Coro, is Type.Exec.Coro -> {
-            val res = this.res()
-            val tp = Type.Union(this.tk, false, listOf(tup,res).map { Pair(null, it) })
-            val id = tp.coder(tpls)
-            Pair(id, tp)
-        }
-        is Type.Proto.Task, is Type.Exec.Task -> {
-            val tp = Type.Union(this.tk, false, listOf(tup, Type.Pointer(this.tk,Type.Unit(this.tk))).map { Pair(null,it) })
-            val id = tp.coder(tpls)
-            Pair(id, tp)
-        }
-        else -> error("impossible case")
-    }
-}
 fun Type.x_out (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type> {
     val out = this.out()
     return when (this) {
@@ -126,7 +120,7 @@ fun Type.x_out (tpls: Tpl_Map?, pre: Boolean): Pair<String, Type> {
             val id = tp.coder(tpls)
             Pair(id, tp)
         }
-        is Type.Proto.Task, is Type.Exec.Task -> {
+        is Type.Proto.Func, is Type.Proto.Task, is Type.Exec.Task -> {
             val id = out.coder(tpls)
             Pair(id, out)
         }
