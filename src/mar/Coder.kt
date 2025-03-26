@@ -599,16 +599,20 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Resume -> {
             val exe = this.exe.coder(tpls,pre)
             val tp = this.exe.type() as Type.Exec.Coro
-            val (xuni,_) = tp.x_inp_uni(null,pre)
+            val res = tp.res().coder(null)
+            val (xouni,_) = tp.x_out(null, pre)
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
                 """
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
-            $exe.pro (
-                &$exe, ($xuni) { ._2 = ${this.arg.coder(tpls,pre)} }
-            );
+            ({
+                $xouni mar_out_$n;
+                $res mar_res_$n = ${this.arg.coder(tpls,pre)};
+                $exe.pro(&$exe, NULL, &mar_res_$n, &mar_out_$n);
+                mar_out_$n;
+            });
             """
         }
         is Stmt.Yield -> {
@@ -616,7 +620,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             val (xuni,_) = tp.x_out(null,pre)
             """
                 mar_exe->pc = ${this.n};
-                return ($xuni) { .tag=1, ._1=${this.arg.coder(tpls,pre)} };
+                *mar_out = ($xuni) { .tag=1, ._1=${this.arg.coder(tpls,pre)} };
+                return;
             case ${this.n}:
                 ${(this.xup is Stmt.SetS).cond {
                     val set = this.xup as Stmt.SetS
