@@ -44,6 +44,13 @@ fun Type.inps (): List<Type> {
         else -> error("impossible case")
     }
 }
+fun Type.inps_ (): List<Var_Type> {
+    return when (this) {
+        is Type.Proto.Coro.Vars -> this.inps_
+        is Type.Proto.Task.Vars -> this.inps_
+        else -> error("impossible case")
+    }
+}
 fun Type.out (): Type {
     return when (this) {
         is Type.Proto.Coro -> this.out

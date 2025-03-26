@@ -336,9 +336,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     else -> this.x_sig(pre)
                 } + """
                 {
-                    ${(this is Stmt.Proto.Coro).cond {
-                        this as Stmt.Proto.Coro
-                        val (pro,exe) = this.tp_.x_pro_exe(this.tp_.assert_no_tpls_up())
+                    ${(this !is Stmt.Proto.Func).cond {
+                        val (pro,_) = this.tp.x_pro_exe(this.tp.assert_no_tpls_up())
                         """
                         struct {
                             int pc;
@@ -363,24 +362,23 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         }.joinToString("")
                     }}
                     do {
-                        ${(this is Stmt.Proto.Coro).cond {
-                            this as Stmt.Proto.Coro
+                        ${(this !is Stmt.Proto.Func).cond {
                             """                    
                             switch (mar_exe->pc) {
                                 case 0:
-                                    ${this.tp_.inps_.mapIndexed { i,vtp ->
+                                    ${this.tp.inps_().mapIndexed { i,vtp ->
                                         val (id,tp) = vtp
                                         assert(tp !is Type.Vector)
                                         id.coder(this.blk,pre) + " = mar_arg._1._${i+1};\n"                                }.joinToString("")}
                         """ }}
                         ${this.blk.coder(xtpls,pre)}
-                        ${(this is Stmt.Proto.Coro).cond { """
+                        ${(this !is Stmt.Proto.Func).cond { """
                             }
                         """ }}
                     } while (0);
                     ${when {
                         (this is Stmt.Proto.Coro) -> {
-                            val (xuni,_) = this.tp_.x_out(null,pre)
+                            val (xuni,_) = this.tp.x_out(null,pre)
                             "return ($xuni) { .tag=2, ._2=mar_ret };"
                         }
                         else -> "return mar_ret;"
