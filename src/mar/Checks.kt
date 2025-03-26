@@ -104,6 +104,12 @@ fun check_vars () {
                     err(me.tk, "yield error : expected enclosing coro")
                 }
             }
+            is Stmt.Await -> {
+                val up = me.up_first { it is Stmt.Proto }
+                if (up !is Stmt.Proto.Task) {
+                    err(me.tk, "await error : expected enclosing task")
+                }
+            }
             else -> {}
         }
     }

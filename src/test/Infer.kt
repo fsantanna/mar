@@ -379,6 +379,30 @@ class Infer {
                 "}") { G.outer!!.to_str() }
     }
 
+    // TASK
+
+    @Test
+    fun cd_01_infer_await () {
+        val out = infer("""
+                data X: Int
+                task tsk: () -> () {
+                    var x = await(:X)
+                }
+            """)
+        assert(out == null) { out!! }
+        assert(G.outer!!.to_str() == "do {\n"+
+               "data Return.*: [] {\n"+
+               "}\n"+
+               "data Break.*: [] {\n"+
+               "}\n"+
+               "data X: Int\n"+
+               "task tsk: [10] () -> () {\n"+
+               "var x: X\n"+
+               "set x = await(:X)\n"+
+               "}\n"+
+               "}") { G.outer!!.to_str() }
+    }
+
     // DATA / TUPLE / UNION
 
     @Test

@@ -1363,15 +1363,16 @@ class Parser {
         G.tks = ("await(:X)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Await && s.tp.ts.size==1)
+        assert(s is Stmt.Await && s.tp?.ts?.size==1)
         assert(s.to_str() == "await(:X)") { s.to_str() }
     }
     @Test
     fun uu_04_await_err() {
         G.tks = ("await()").lexer()
         parser_lexer()
-        //parser_stmt()
-        assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : expected \":\" : have \")\"")
+        val s = parser_stmt().first()
+        assert(s is Stmt.Await && s.tp==null)
+        assert(s.to_str() == "await()") { s.to_str() }
     }
     @Test
     fun uu_05_await_err() {
@@ -1397,15 +1398,6 @@ class Parser {
     fun uu_06_emit() {
         G.tks = ("emit(X[])").lexer()
         parser_lexer()
-        val s = parser_stmt().first()
-        assert(s is Stmt.Emit)
-        assert(s.to_str() == "emit((X(([]))))") { s.to_str() }
-    }
-    @Test
-    fun uu_07_await_no_task_err() {
-        G.tks = ("emit(X[])").lexer()
-        parser_lexer()
-        TODO()
         val s = parser_stmt().first()
         assert(s is Stmt.Emit)
         assert(s.to_str() == "emit((X(([]))))") { s.to_str() }

@@ -814,10 +814,13 @@ fun parser_stmt (): List<Stmt> {
         accept_fix("await") -> {
             val tk0 = G.tk0 as Tk.Fix
             accept_fix_err("(")
-            accept_fix_err(":")
-            val tp = parser_type(null, false, false)
-            if (tp !is Type.Data) {
-                err(tp.tk, "exception error : expected data type")
+            val tp = if (!check_fix(":")) null else {
+                accept_fix_err(":")
+                val x = parser_type(null, false, false)
+                if (x !is Type.Data) {
+                    err(x.tk, "exception error : expected data type")
+                }
+                x
             }
             accept_fix_err(")")
             listOf(Stmt.Await(tk0, tp))

@@ -431,6 +431,17 @@ class Check {
         assert(out == "anon : (lin 4, col 21) : yield error : types mismatch") { out!! }
     }
 
+    // TASK / AWAIT
+
+    @Test
+    fun bd_01_await_no_task_ee () {
+        val out = check("""
+            do {
+                await()
+            }
+        """)
+        assert(out == "anon : (lin 3, col 17) : await error : expected enclosing task") { out!! }
+    }
     // TUPLE
 
     @Test

@@ -641,6 +641,7 @@ fun Stmt.type (): Type? {
             }
         }
         is Stmt.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
+        is Stmt.Await -> this.tp
         else -> error("impossible case")
     }
 }
