@@ -1401,6 +1401,15 @@ class Parser {
         assert(s is Stmt.Emit)
         assert(s.to_str() == "emit((X(([]))))") { s.to_str() }
     }
+    @Test
+    fun uu_07_await_no_task_err() {
+        G.tks = ("emit(X[])").lexer()
+        parser_lexer()
+        TODO()
+        val s = parser_stmt().first()
+        assert(s is Stmt.Emit)
+        assert(s.to_str() == "emit((X(([]))))") { s.to_str() }
+    }
 
     @Test
     fun uu_X1_spawn() {

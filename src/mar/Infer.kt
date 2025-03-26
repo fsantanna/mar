@@ -65,6 +65,7 @@ fun Stmt.infer (tpe: Type?): Type? {
             this.arg.infer(coro.yld)
             coro.res
         }
+        is Stmt.Await -> (this.up_first { it is Stmt.Proto.Task } as Stmt.Proto.Task).tp_.out
 
        else -> error("impossible case")
    }

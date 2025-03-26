@@ -1690,13 +1690,16 @@ class Exec  {
         assert(out == "OK\n") { out }
     }
     @Test
-    fun oo_03_coro () {
+    fun oo_03_task_await_emit () {
         val out = test("""
-            coro co: (v: Int) -> () -> () -> () {
-                `printf("%d\n", mar_exe->mem.v);`
+            data X: Int
+            task tsk: () -> () {
+                var e = await(:X)
+                print(e)
             }
-            var exe: exec coro (Int) -> () -> () -> () = create(co)
-            start exe(10)
+            var exe: exec task () -> () = create(tsk)
+            start exe()
+            emit(X(10))
         """)
         assert(out == "10\n") { out }
     }
