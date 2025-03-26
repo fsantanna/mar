@@ -121,6 +121,11 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     typedef struct $exe {
                         int pc;
                         $pro pro;
+                        struct {
+                            int evt;
+                            struct Task* prv;
+                            struct Task* nxt;
+                        } awt;
                         char mem[${me.xn()!!.static_int_eval(null)}];
                     } $exe;
                     """
@@ -655,7 +660,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 mar_exe->pc = ${this.n};
                 mar_exe->awt.evt = 1;
                 mar_awaits_add((Task*)mar_exe);
-                return mar_ret;
+                return;
             case ${this.n}:
                 // remove from list (TODO: also on task kill defer)
                 ${(this.xup is Stmt.SetS).cond {
@@ -1187,7 +1192,7 @@ fun coder_main (pre: Boolean): String {
         
         typedef struct Task {
             int pc;
-            int (*pro) (struct Task*, void*);
+            void (*pro) (struct Task*, void*, void*, void*);
             struct {
                 int evt;
                 struct Task* prv;
