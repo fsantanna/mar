@@ -611,8 +611,26 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }}
             """
         }
-        is Stmt.Await -> TODO()
-        is Stmt.Emit -> TODO()
+        is Stmt.Await -> {
+            """
+                mar_exe->pc = ${this.n};
+                // add to list
+                return mar_ret;
+            case ${this.n}:
+                // remove from list (TODO: also on task kill defer)
+                ${(this.xup is Stmt.SetS).cond {
+                    val set = this.xup as Stmt.SetS
+                    """
+                    //${set.dst.coder(tpls,pre)} = mar_arg._2;
+                    """
+                }}
+            """
+        }
+        is Stmt.Emit -> """
+            // declare event
+            // traverse list
+            // pass pointer
+        """
 
         is Stmt.If     -> """
             if (${this.cnd.coder(tpls,pre)}) {
