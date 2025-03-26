@@ -348,6 +348,13 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         struct {
                             int pc;
                             $pro pro;
+                            ${(this is Stmt.Proto.Task).cond { """
+                                struct {
+                                    int evt;
+                                    struct Task* prv;
+                                    struct Task* nxt;
+                                } awt;
+                            """ }}
                             struct {
                                 ${mem()}    // TODO: unions for non-coexisting blocks
                             } mem;
@@ -622,7 +629,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Await -> {
             """
                 mar_exe->pc = ${this.n};
-                // add to list
+                mar_exe->awt.evt = 1;
+                mar_awaits_add((Task*)mar_exe);
                 return mar_ret;
             case ${this.n}:
                 // remove from list (TODO: also on task kill defer)
@@ -635,6 +643,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Emit -> """
+            mar_awaits_emt(1);
             // declare event
             // traverse list
             // pass pointer
@@ -1150,6 +1159,44 @@ fun coder_main (pre: Boolean): String {
         
         void mar_vector_cat_vector (Vector* dst, Vector* src, int size) {
             mar_vector_cat_pointer(dst, src->buf, src->cur, size);
+        }
+        
+        typedef struct Task {
+            int pc;
+            int (*pro) (struct Task*, void*);
+            struct {
+                int evt;
+                struct Task* prv;
+                struct Task* nxt;
+            } awt;
+        } Task;
+
+        Task* MAR_AWAITS = NULL;
+
+        void mar_awaits_add (Task* tsk) {
+            if (MAR_AWAITS == NULL) {
+                tsk->awt.prv = tsk;
+                tsk->awt.nxt = tsk;
+                MAR_AWAITS = tsk;
+            } else {
+                MAR_AWAITS->awt.prv->awt.nxt = tsk;
+                tsk->awt.prv = MAR_AWAITS->awt.prv;
+                tsk->awt.nxt = MAR_AWAITS;
+                MAR_AWAITS->awt.prv = tsk;
+            }
+        }
+        
+        void mar_awaits_emt (int evt) {
+            Task* tsk = MAR_AWAITS;
+            while (tsk != NULL) {
+                if (tsk->awt.evt == evt) {
+                    tsk->pro(tsk, NULL);
+                }
+                tsk = tsk->awt.nxt;
+                if (tsk == MAR_AWAITS) {
+                    break;
+                }
+            }
         }
         
         ${coder_types(null, G.outer!!, null, pre)}
