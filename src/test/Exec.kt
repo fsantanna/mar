@@ -1749,6 +1749,25 @@ class Exec  {
         assert(out == "X(10)\nY(10)\n") { out }
     }
 
+    // SPAWN
+
+    @Test
+    fun op_01_task_spawn () {
+        val out = test("""
+            data X: Int
+            data Y: Int
+            spawn {
+                var e = await(:X)
+                print(e)
+                var f = await(:Y)
+                print(f)
+            }
+            emit(X(10))
+            emit(Y(10))
+        """)
+        assert(out == "X(10)\nY(10)\n") { out }
+    }
+
     // TEMPLATE / TYPE
 
     @Test

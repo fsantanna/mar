@@ -25,8 +25,8 @@ syn match   Statement '[\+\-\*\/\%\>\<\=\|\&\~]'
 
 syn keyword Statement await break do catch compile coro create data defer else
 syn keyword Statement emit exec escape false func if in include loop match null
-syn keyword Statement print resume return set start task test throw true until
-syn keyword Statement var yield where while
+syn keyword Statement print resume return set spawn start task test throw true
+syn keyword Statement until var yield where while
 
 syn keyword Todo      TODO FIXME XXX
 syn region  String    start='"' end='"'

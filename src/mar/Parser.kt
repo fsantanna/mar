@@ -836,6 +836,28 @@ fun parser_stmt (): List<Stmt> {
             accept_fix_err(")")
             listOf(Stmt.Emit(tk0, e))
         }
+        accept_fix("spawn") -> {
+            check_fix_err("{")
+            val tk = G.tk1!!
+            val blk = parser_stmt_block()
+            val N = G.N
+            listOf(
+                Stmt.Proto.Task (
+                    Tk.Fix("task", tk.pos),
+                    Tk.Var("mar_pro_$N",tk.pos),
+                    emptyList(),
+                    Type.Proto.Task.Vars(tk, null, emptyList(), emptyList(), Type.Unit(tk)),
+                    Stmt.Block(tk, null, blk)
+                ),
+                Stmt.Dcl(tk, Tk.Var("mar_exe_$N",tk.pos), null),
+                Stmt.SetS (
+                    tk,
+                    Expr.Acc(Tk.Var("mar_exe_$N",tk.pos)),
+                    Stmt.Create(tk, Expr.Acc(Tk.Var("mar_pro_$N",tk.pos))),
+                ),
+                Stmt.Start(tk, Expr.Acc(Tk.Var("mar_exe_$N",tk.pos)), emptyList())
+            )
+        }
 
         (accept_fix("match")) -> {
             val tk0 = G.tk0!!
