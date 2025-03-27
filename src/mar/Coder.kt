@@ -145,6 +145,11 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     typedef struct $exe {
                         int pc;
                         $pro pro;
+                        struct {
+                            int evt;
+                            struct Task* prv;
+                            struct Task* nxt;
+                        } awt;
                         char mem[${me.xn()!!.static_int_eval(null)}];
                     } $exe;
                     """
@@ -665,18 +670,23 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 // remove from list (TODO: also on task kill defer)
                 ${(this.xup is Stmt.SetS).cond {
                     val set = this.xup as Stmt.SetS
+                    val dst = set.dst.coder(tpls,pre)
                     """
-                    //${set.dst.coder(tpls,pre)} = mar_arg._2;
+                    $dst = * (typeof($dst)*) mar_evt;
                     """
                 }}
             """
         }
-        is Stmt.Emit -> """
-            mar_awaits_emt(1);
+        is Stmt.Emit -> {
+            val e = this.e.coder(tpls, pre)
+            """
+            typeof($e) mar_$n = $e;
+            mar_awaits_emt(&mar_$n);
             // declare event
             // traverse list
             // pass pointer
-        """
+            """
+        }
 
         is Stmt.If     -> """
             if (${this.cnd.coder(tpls,pre)}) {
@@ -1215,7 +1225,7 @@ fun coder_main (pre: Boolean): String {
             }
         }
         
-        void mar_awaits_emt (int evt) {
+        void mar_awaits_emt (void* evt) {
             Task* tsk = MAR_AWAITS;
             while (tsk != NULL) {
                 if (tsk->awt.evt == evt) {
