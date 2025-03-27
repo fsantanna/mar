@@ -671,9 +671,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Await -> {
+            val idx = G.awts.keys.indexOf(this.tp!!.coder(null))
             """
                 mar_exe->pc = ${this.n};
-                return 1;
+                return $idx;
             case ${this.n}:
                 // remove from list (TODO: also on task kill defer)
                 ${(this.xup is Stmt.SetS).cond {
@@ -687,9 +688,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
         is Stmt.Emit -> {
             val e = this.e.coder(tpls, pre)
+            val idx = G.awts.keys.indexOf(this.e.typex().coder(null))
             """
             typeof($e) mar_$n = $e;
-            mar_awaits_emt(1, &mar_$n);
+            mar_awaits_emt($idx, &mar_$n);
             // declare event
             // traverse list
             // pass pointer

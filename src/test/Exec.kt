@@ -1713,52 +1713,40 @@ class Exec  {
         assert(out == "X(10)\n") { out }
     }
     @Test
-    fun oo_04_coro () {
+    fun oo_04_task_await_emit () {
         val out = test("""
-            coro co: (v: Int) -> Int -> () -> () {
-                `printf("%d\n", mar_exe->mem.v);`
-                yield()
-                set v = v + 10
-                `printf("%d\n", mar_exe->mem.v);`
+            data X: Int
+            data Y: Int
+            task tsk: () -> () {
+                var e = await(:X)
+                print(e)
+                var f = await(:Y)
+                print(f)
             }
-            var exe: exec coro (Int) -> Int -> () -> () = create(co)
-            start exe(10)
-            resume exe(99)
+            var exe: exec task () -> () = create(tsk)
+            start exe()
+            emit(X(10))
+            emit(X(10))
         """)
-        assert(out == "10\n20\n") { out }
+        assert(out == "X(10)\n") { out }
     }
     @Test
-    fun oo_05_coro () {
+    fun oo_05_task_await_emit () {
         val out = test("""
-            do {
-                coro co: (x2: Int) -> Int -> Int -> Int {
-                    var y2:Int = yield(x2*2)
-                    return(y2 * 2)
-                }
-                var exe: exec coro (Int) -> Int -> Int -> Int = create(co)
-                var x1: <Int,Int> = start exe(5)
-                var y1: <Int,Int> = resume exe(x1!1 + 10)
-                print(y1!2)
+            data X: Int
+            data Y: Int
+            task tsk: () -> () {
+                var e = await(:X)
+                print(e)
+                var f = await(:Y)
+                print(f)
             }
+            var exe: exec task () -> () = create(tsk)
+            start exe()
+            emit(X(10))
+            emit(Y(10))
         """)
-        assert(out == "40\n") { out }
-    }
-    @Test
-    fun oo_06_coro_global () {
-        val out = test("""
-            var x = 10
-            do {
-                coro co: (x2: Int) -> Int -> Int -> Int {
-                    var y2:Int = yield(x2*2)
-                    return((y2 * 2) + x)
-                }
-                var exe: exec coro (Int) -> Int -> Int -> Int = create(co)
-                var x1: <Int,Int> = start exe(5)
-                var y1: <Int,Int> = resume exe(x1!1 + 10)
-                print(y1!2)
-            }
-        """)
-        assert(out == "50\n") { out }
+        assert(out == "X(10)\nY(10)\n") { out }
     }
 
     // TEMPLATE / TYPE
