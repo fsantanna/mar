@@ -683,7 +683,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             val e = this.e.coder(tpls, pre)
             """
             typeof($e) mar_$n = $e;
-            mar_awaits_emt(&mar_$n);
+            mar_awaits_emt(1, &mar_$n);
             // declare event
             // traverse list
             // pass pointer
