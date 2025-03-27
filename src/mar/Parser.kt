@@ -551,7 +551,7 @@ fun parser_expr (): Expr {
 }
 
 fun check_stmt_as_set_src (): Boolean {
-    return listOf("create","start","resume","yield","await","catch").any {
+    return listOf("await","catch","create","resume","spawn","start","yield").any {
         check_fix(it)
     }
 }
@@ -629,9 +629,8 @@ fun parser_stmt (): List<Stmt> {
             val tk0 = G.tk0 as Tk.Fix
             when {
                 check_stmt_as_set_src() -> {
-                    val src = parser_stmt()
-                    assert(src.size == 1)
-                    listOf(Stmt.SetS(tk0, dst, src.first()))
+                    val ss = parser_stmt()
+                    ss.take(ss.size-1) + Stmt.SetS(tk0, dst, ss.last())
                 }
                 else -> {
                     val src = parser_expr()
@@ -651,8 +650,7 @@ fun parser_stmt (): List<Stmt> {
                 !accept_fix("=") -> emptyList()
                 check_stmt_as_set_src() -> {
                     val ss = parser_stmt()
-                    assert(ss.size == 1)
-                    listOf(Stmt.SetS(tk1!!, Expr.Acc(id), ss.first()))
+                    ss.take(ss.size-1) + Stmt.SetS(tk1!!, Expr.Acc(id), ss.last())
                 }
                 else -> listOf(Stmt.SetE(tk1!!, Expr.Acc(id), parser_expr()))
             }

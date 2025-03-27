@@ -1766,14 +1766,31 @@ class Exec  {
         assert(out == "X(10)\nY(10)\n") { out }
     }
     @Test
-    fun oo_07_task_term () {
+    fun oo_07_task_spawn () {
+        val out = test("""
+            data X: Int
+            data Y: Int
+            task tsk: () -> () {
+                var e = await(:X)
+                print(e)
+                var f = await(:Y)
+                print(f)
+            }
+            var e = spawn tsk()
+            emit(X(10))
+            emit(Y(10))
+        """)
+        assert(out == "X(10)\nY(10)\n") { out }
+    }
+    @Test
+    fun oo_08_task_term () {
         val out = test("""
             data X: ()
-            task t1: () -> () {
+            spawn {
                 task t2: () -> () {
                     await(:X)
                 }
-                var exe: exec task () -> () = create(t2)
+                var exe = create(t2)
                 start exe()
                 print("start")
                 await(Event.Task[\exe])

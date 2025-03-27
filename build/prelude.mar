@@ -2,6 +2,11 @@ data Error.*: [] {
     Expect: [\Char]
 }
 
+data Event.*: [] {
+    Task: [\()]
+    Clock: [Int]
+}
+
 ;;data String: #[Char]
 
 ;; EXPECT
