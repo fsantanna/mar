@@ -1212,7 +1212,8 @@ fun coder_main (pre: Boolean): String {
 
         Task* MAR_AWAITS = NULL;
 
-        void mar_awaits_add (Task* tsk) {
+        void mar_awaits_add (Task* tsk, int evt_id) {
+            tsk->awt.evt = evt_id;
             if (MAR_AWAITS == NULL) {
                 tsk->awt.prv = tsk;
                 tsk->awt.nxt = tsk;
@@ -1225,15 +1226,27 @@ fun coder_main (pre: Boolean): String {
             }
         }
         
-        void mar_awaits_emt (void* evt) {
+        void mar_awaits_rem (Task* tsk) {
+            if (MAR_AWAITS == tsk) {
+                MAR_AWAITS = (tsk->awt.nxt == tsk) ? NULL : tsk->awt.nxt;
+            }
+            tsk->awt.prv->awt.nxt = tsk->awt.nxt;
+            tsk->awt.nxt->awt.prv = tsk->awt.prv;
+        }
+
+        void mar_awaits_emt (int evt_id, void* evt_pay) {
             Task* tsk = MAR_AWAITS;
             while (tsk != NULL) {
-                if (tsk->awt.evt == evt) {
-                    tsk->pro(tsk, NULL);
-                }
-                tsk = tsk->awt.nxt;
-                if (tsk == MAR_AWAITS) {
-                    break;
+                if (tsk->awt.evt == evt_id) {
+                    int x = tsk->pro(tsk, NULL, evt_pay, NULL);
+                    Task* cur = tsk;
+                    tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
+                    mar_await_rem(cur);
+                    if (x != 0) {
+                        mar_await_add(cur, x);
+                    }                    
+                } else {
+                    tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
                 }
             }
         }
