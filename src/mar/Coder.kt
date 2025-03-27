@@ -103,7 +103,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(out) + ft(xexe) + listOf(
                     x + ";\n",
-                    "typedef void (*$pro) ($x*, $xinps*, void*, $xout*);\n",
+                    "typedef int (*$pro) ($x*, $xinps*, void*, $xout*);\n",
                 )
             }
             is Type.Exec.Coro -> {
@@ -140,7 +140,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(out) + ft(xpro) + listOf(
                     x + ";\n",
-                    "typedef void (*$pro) ($x*, $xinps*, void*, $xout*);\n",
+                    "typedef int (*$pro) ($x*, $xinps*, void*, $xout*);\n",
                     """
                     typedef struct $exe {
                         int pc;
@@ -428,7 +428,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             val (xuni,_) = this.tp.x_out(null,pre)
                             "*mar_out = ($xuni) { .tag=2, ._2=mar_ret };"
                         }
-                        is Stmt.Proto.Task -> "*mar_out = mar_ret;"
+                        is Stmt.Proto.Task -> """
+                            *mar_out = mar_ret;
+                            return 0;
+                        """
                     }}
                     
                 }
@@ -663,9 +666,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Await -> {
             """
                 mar_exe->pc = ${this.n};
-                mar_exe->awt.evt = 1;
-                mar_awaits_add((Task*)mar_exe);
-                return;
+                mar_awaits_add((Task*)mar_exe, 1);
+                return 1;
             case ${this.n}:
                 // remove from list (TODO: also on task kill defer)
                 ${(this.xup is Stmt.SetS).cond {
@@ -1202,7 +1204,7 @@ fun coder_main (pre: Boolean): String {
         
         typedef struct Task {
             int pc;
-            void (*pro) (struct Task*, void*, void*, void*);
+            int (*pro) (struct Task*, void*, void*, void*);
             struct {
                 int evt;
                 struct Task* prv;
@@ -1241,9 +1243,9 @@ fun coder_main (pre: Boolean): String {
                     int x = tsk->pro(tsk, NULL, evt_pay, NULL);
                     Task* cur = tsk;
                     tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
-                    mar_await_rem(cur);
+                    mar_awaits_rem(cur);
                     if (x != 0) {
-                        mar_await_add(cur, x);
+                        mar_awaits_add(cur, x);
                     }                    
                 } else {
                     tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
