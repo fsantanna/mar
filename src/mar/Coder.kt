@@ -99,11 +99,11 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val xexe = Type.Exec.Task(me.tk, me.xn, me.inps, me.out)
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
                 val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
-                val (xout,out) = me.x_out(null, pre)
+                val (_,out) = me.x_out(null, pre)
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(out) + ft(xexe) + listOf(
                     x + ";\n",
-                    "typedef int (*$pro) ($x*, $xinps*, void*, $xout*);\n",
+                    "typedef int (*$pro) ($x*, $xinps*, void*);\n",
                 )
             }
             is Type.Exec.Coro -> {
@@ -136,11 +136,11 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val xpro = Type.Proto.Task(me.tk, me.xn, null, me.inps, me.out)
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
                 val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
-                val (xout, out) = me.x_out(null, pre)
+                val (_, out) = me.x_out(null, pre)
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(out) + ft(xpro) + listOf(
                     x + ";\n",
-                    "typedef int (*$pro) ($x*, $xinps*, void*, $xout*);\n",
+                    "typedef int (*$pro) ($x*, $xinps*, void*);\n",
                     """
                     typedef struct $exe {
                         int pc;
@@ -429,7 +429,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             "*mar_out = ($xuni) { .tag=2, ._2=mar_ret };"
                         }
                         is Stmt.Proto.Task -> """
-                            *mar_out = mar_ret;
+                            //*mar_out = mar_ret;
                             return 0;
                         """
                     }}
@@ -623,7 +623,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             ({
                 $xinps mar_inps_$n = { ${this.args.map { it.coder(tpls,pre) }.joinToString(",")} };
                 $xouni mar_out_$n;
-                $exe.pro(&$exe, &mar_inps_$n, NULL, &mar_out_$n);
+                $exe.pro(&$exe, &mar_inps_$n, NULL ${(tp is Type.Exec.Coro).cond {", &mar_out_$n"}});
                 mar_out_$n;
             });
             """
@@ -1204,7 +1204,7 @@ fun coder_main (pre: Boolean): String {
         
         typedef struct Task {
             int pc;
-            int (*pro) (struct Task*, void*, void*, void*);
+            int (*pro) (struct Task*, void*, void*);
             struct {
                 int evt;
                 struct Task* prv;
@@ -1240,7 +1240,7 @@ fun coder_main (pre: Boolean): String {
             Task* tsk = MAR_AWAITS;
             while (tsk != NULL) {
                 if (tsk->awt.evt == evt_id) {
-                    int x = tsk->pro(tsk, NULL, evt_pay, NULL);
+                    int x = tsk->pro(tsk, NULL, evt_pay);
                     Task* cur = tsk;
                     tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
                     mar_awaits_rem(cur);

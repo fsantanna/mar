@@ -1710,7 +1710,7 @@ class Exec  {
             start exe()
             emit(X(10))
         """)
-        assert(out == "10\n") { out }
+        assert(out == "X(10)\n") { out }
     }
     @Test
     fun oo_04_coro () {
