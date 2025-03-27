@@ -610,8 +610,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Start -> {
-            val exe = this.exe.coder(tpls,pre)
             val tp = this.exe.type() as Type.Exec
+            val exe = this.exe.coder(tpls,pre)
             val (xinps,_) = tp.inps().x_inp_tup(tp.tk,null,pre)
             val (xouni,_) = tp.x_out(null,pre)
             (this.xup is Stmt.SetS).cond {
@@ -621,10 +621,17 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 """
             } + """
             ({
+                typeof($exe)* mar_exe_$n = &$exe;
                 $xinps mar_inps_$n = { ${this.args.map { it.coder(tpls,pre) }.joinToString(",")} };
-                $xouni mar_out_$n;
-                $exe.pro(&$exe, &mar_inps_$n, NULL ${(tp is Type.Exec.Coro).cond {", &mar_out_$n"}});
-                mar_out_$n;
+                ${(tp is Type.Exec.Coro).cond { """
+                    $xouni mar_out_$n;
+                    mar_exe_$n->pro(mar_exe_$n, &mar_inps_$n, NULL, &mar_out_$n);
+                    mar_out_$n;
+                """}}
+                ${(tp is Type.Exec.Task).cond { """
+                    int mar_evt_$n = mar_exe_$n->pro(mar_exe_$n, &mar_inps_$n, NULL);
+                    mar_awaits_add((Task*)mar_exe_$n, mar_evt_$n);
+                """}}
             });
             """
         }
@@ -666,7 +673,6 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Await -> {
             """
                 mar_exe->pc = ${this.n};
-                mar_awaits_add((Task*)mar_exe, 1);
                 return 1;
             case ${this.n}:
                 // remove from list (TODO: also on task kill defer)
@@ -1240,6 +1246,7 @@ fun coder_main (pre: Boolean): String {
             Task* tsk = MAR_AWAITS;
             while (tsk != NULL) {
                 if (tsk->awt.evt == evt_id) {
+                    tsk->awt.evt = 0;
                     int x = tsk->pro(tsk, NULL, evt_pay);
                     Task* cur = tsk;
                     tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
