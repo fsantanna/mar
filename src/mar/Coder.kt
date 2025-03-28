@@ -354,7 +354,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
 
 fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
     return when (this) {
-        is Stmt.Data -> ""
+        is Stmt.Data  -> ""
         is Stmt.Proto -> {
             assert((tpls == null) || this.tpls.isEmpty()) { "TODO: merge tpls" }
 
@@ -489,7 +489,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
         """
         }
-        is Stmt.Dcl -> {
+        is Stmt.Dcl    -> {
             val dcl = if (this.up_first { it is Stmt.Proto }.let { it is Stmt.Proto.Coro || it is Stmt.Proto.Task }) "" else {
                 this.xtp!!.coder(tpls) + " " + this.id.str + ";"
             }
@@ -501,7 +501,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
             dcl + ini
         }
-        is Stmt.SetE    -> {
+        is Stmt.SetE   -> {
             val dst = this.dst.coder(tpls,pre)
             val src = this.src.coder(tpls,pre)
             val tdst = this.dst.typex()
@@ -528,13 +528,13 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }
             }
         }
-        is Stmt.SetS    -> this.src.coder(tpls,pre)
+        is Stmt.SetS   -> this.src.coder(tpls,pre)
 
         is Stmt.Escape -> """
             MAR_ESCAPE = CAST(Escape, ${this.e.coder(tpls,pre)});
             continue;            
         """
-        is Stmt.Defer -> {
+        is Stmt.Defer  -> {
             val bup = this.up_first { it is Stmt.Block } as Stmt.Block
             val (ns,ini,end) = G.defers.getOrDefault(bup.n, Triple(mutableListOf(),"",""))
             val id = "mar_defer_$n"
@@ -552,7 +552,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             $id = 1;   // now reached
             """
         }
-        is Stmt.Catch -> {
+        is Stmt.Catch  -> {
             val uni  = this.type()?.coder(tpls)
             val xuni = uni?.uppercase()
             """
@@ -588,7 +588,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
             """
         }
-        is Stmt.Throw -> """
+        is Stmt.Throw  -> """
             assert(sizeof(Exception) >= sizeof(${this.e.typex().coder(tpls)}));
             MAR_EXCEPTION = CAST(Exception, ${this.e.coder(tpls,pre)});
             continue;
@@ -605,7 +605,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             ($xtp) { 0, (${(this.pro.typex() as Type.Proto).x_sig(pre)}) ${this.pro.coder(tpls,pre)}, {} };
             """
         }
-        is Stmt.Start -> {
+        is Stmt.Start  -> {
             val tp = this.exe.type() as Type.Exec
             val exe = this.exe.coder(tpls,pre)
             val (xinps,_) = tp.inps().x_inp_tup(tp.tk,null,pre)
@@ -651,7 +651,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             });
             """
         }
-        is Stmt.Yield -> {
+        is Stmt.Yield  -> {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
             val (xuni,_) = tp.x_out(null,pre)
             """
@@ -667,7 +667,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }}
             """
         }
-        is Stmt.Await -> {
+        is Stmt.Await  -> {
             """
                 mar_exe->pc = ${this.n};
                 return MAR_EVENT_${this.tp!!.path()};
@@ -682,7 +682,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }}
             """
         }
-        is Stmt.Emit -> {
+        is Stmt.Emit   -> {
             val e = this.e.coder(tpls, pre)
             """
             typeof($e) mar_$n = $e;
@@ -728,7 +728,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
         """
 
-        is Stmt.Print  -> {
+        is Stmt.Print -> {
             fun aux (tp: Type, v: String): String {
                 return when (tp) {
                     is Type.Unit -> "printf(\"()\");"

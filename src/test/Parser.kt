@@ -1348,7 +1348,7 @@ class Parser {
         parser_lexer()
         val s = parser_stmt().first()
         assert(s is Stmt.Proto.Task && s.tp.inps.size==0)
-        assert(s.to_str() == "task co: () -> () {\n}") { s.to_str() }
+        assert(s.to_str() == "task co: () -> () {\nemit((Event.Task(([`((void*) mar_exe)`]))))\n}") { s.to_str() }
     }
     @Test
     fun uu_03_task() {
@@ -1356,7 +1356,7 @@ class Parser {
         parser_lexer()
         val s = parser_stmt().first()
         assert(s is Stmt.Proto.Task && s.tp.out is Type.Unit)
-        assert(s.to_str() == "task co: (x: ()) -> () {\n}") { s.to_str() }
+        assert(s.to_str() == "task co: (x: ()) -> () {\nemit((Event.Task(([`((void*) mar_exe)`]))))\n}") { s.to_str() }
     }
     @Test
     fun uu_03_await() {
@@ -1428,6 +1428,7 @@ class Parser {
             do(1 /= 1)
         """).lexer()
         parser_lexer()
+        //parser_stmt()
         assert(trap { parser_stmt() } == "anon : (lin 2, col 19) : expected expression : have \"=\"")
     }
 }
