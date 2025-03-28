@@ -567,10 +567,22 @@ fun check_stmt_as_set_src (): Boolean {
 fun set_stmt_as_set_src (tk0: Tk, dst: Expr): List<Stmt> {
     val cmd = G.tk1!!.str
     val ss = parser_stmt()
-    return when (cmd) {
-        "spawn" -> {
+    return when {
+        (cmd == "spawn") -> {
             val x = (ss[0] as Stmt.Dcl).id
             ss + Stmt.SetE(tk0, dst, Expr.Acc(x))
+        }
+        (cmd=="await" && ss[0] is Stmt.Loop) -> {
+            assert(ss.size == 1)
+            val lop = ss[0] as Stmt.Loop
+            val blk = lop.blk
+            val awt = blk.ss[0] as Stmt.Await
+            listOf (
+                Stmt.Loop (
+                    lop.tk,
+                    Stmt.Block(blk.tk, blk.esc,
+                        listOf(Stmt.SetS(tk0, dst, awt)) + blk.ss.drop(1)))
+            )
         }
         else -> {
             assert(ss.size == 1)
@@ -829,7 +841,30 @@ fun parser_stmt (): List<Stmt> {
                 x
             }
             accept_fix_err(")")
-            listOf(Stmt.Await(tk0, tp))
+            val cnd = if (!(accept_fix("while") || accept_fix("until"))) null else {
+                val is_until = (G.tk0!!.str == "until")
+                val x = parser_expr()
+                if (is_until) x else {
+                    Expr.Uno(Tk.Op("!", tk0.pos), x)
+                }
+            }
+            if (cnd == null) {
+                listOf(Stmt.Await(tk0, tp))
+            } else {
+                listOf(Stmt.Loop(tk0,
+                    Stmt.Block(tk0, Type.Data(tk0, null, listOf(Tk.Type("Break",tk0.pos))), listOf(
+                        Stmt.Await(tk0, tp),
+                        Stmt.If(tk0, cnd,
+                            Stmt.Block(tk0, null, listOf(
+                                Stmt.Escape(tk0,
+                                    Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
+                                        Expr.Tuple(tk0,null, emptyList())))
+                                )
+                            ),
+                            Stmt.Block(tk0, null, emptyList()))
+                    ))
+                ))
+            }
         }
         accept_fix("emit") -> {
             val tk0 = G.tk0!!

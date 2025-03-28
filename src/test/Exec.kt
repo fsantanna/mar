@@ -1784,7 +1784,23 @@ class Exec  {
         assert(out == "X(10)\nY(10)\n") { out }
     }
     @Test
-    fun oo_08_task_term () {
+    fun oo_08_task_await_until () {
+        val out = test("""
+            data X: Int
+            data Y: Int
+            task tsk: () -> () {
+                var e = await(:X) until e==X(10)
+                print(e)
+            }
+            spawn tsk()
+            emit(X(99))
+            emit(X(10))
+            emit(X(99))
+        """)
+        assert(out == "X(10)\n") { out }
+    }
+    @Test
+    fun oo_09_task_term () {
         val out = test("""
             data X: ()
             spawn {
@@ -1794,7 +1810,7 @@ class Exec  {
                 var exe = create(t2)
                 start exe()
                 print("start")
-                await(Event.Task[\exe])
+                var e = await(:Event.Task) until e.tsk==\exe)
                 print("term")
             }
             emit(X())
