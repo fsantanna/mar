@@ -565,14 +565,17 @@ fun check_stmt_as_set_src (): Boolean {
 }
 
 fun set_stmt_as_set_src (tk0: Tk, dst: Expr): List<Stmt> {
-    val is_spawn = check_fix("spawn")
+    val cmd = G.tk1!!.str
     val ss = parser_stmt()
-    return if (is_spawn) {
-        val x = (ss[0] as Stmt.Dcl).id
-        ss + Stmt.SetE(tk0, dst, Expr.Acc(x))
-    } else {
-        assert(ss.size == 1)
-        listOf(Stmt.SetS(tk0, dst, ss.first()))
+    return when (cmd) {
+        "spawn" -> {
+            val x = (ss[0] as Stmt.Dcl).id
+            ss + Stmt.SetE(tk0, dst, Expr.Acc(x))
+        }
+        else -> {
+            assert(ss.size == 1)
+            listOf(Stmt.SetS(tk0, dst, ss.first()))
+        }
     }
 }
 
