@@ -843,7 +843,9 @@ fun parser_stmt (): List<Stmt> {
             accept_fix_err(")")
             val cnd = if (!(accept_fix("while") || accept_fix("until"))) null else {
                 val is_until = (G.tk0!!.str == "until")
+                accept_fix_err("(")
                 val x = parser_expr()
+                accept_fix_err(")")
                 if (is_until) x else {
                     Expr.Uno(Tk.Op("!", tk0.pos), x)
                 }

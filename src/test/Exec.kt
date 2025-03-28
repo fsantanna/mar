@@ -1789,7 +1789,7 @@ class Exec  {
             data X: Int
             data Y: Int
             task tsk: () -> () {
-                var e = await(:X) until e==X(10)
+                var e = await(:X) until (e==X(10))
                 print(e)
             }
             spawn tsk()
@@ -1810,7 +1810,7 @@ class Exec  {
                 var exe = create(t2)
                 start exe()
                 print("start")
-                var e = await(:Event.Task) until e.tsk==\exe)
+                var e = await(:Event.Task) until (e.tsk == \exe)
                 print("term")
             }
             emit(X())
