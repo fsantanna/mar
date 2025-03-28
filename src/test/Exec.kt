@@ -1676,6 +1676,7 @@ class Exec  {
     @Test
     fun oo_01_task_create () {
         val out = test("""
+            ;;var x: Event
             do {
                 task tsk: () -> () {
                     `puts("OK");`
@@ -1806,12 +1807,13 @@ class Exec  {
             spawn {
                 task t2: () -> () {
                     await(:X)
+                    ;;emit(Event.Task [`mar_exe`])
                 }
                 var exe = create(t2)
                 start exe()
-                print("start")
+                ;;print("start")
                 var e = await(:Event.Task) until (e.tsk == \exe)
-                print("term")
+                ;;print("term")
             }
             emit(X())
         """)

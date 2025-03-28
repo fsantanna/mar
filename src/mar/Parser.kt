@@ -607,8 +607,18 @@ fun parser_stmt (): List<Stmt> {
                     Stmt.Proto.Func(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, ss))
                 is Type.Proto.Coro.Vars ->
                     Stmt.Proto.Coro(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, ss))
-                is Type.Proto.Task.Vars ->
-                    Stmt.Proto.Task(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, ss))
+                is Type.Proto.Task.Vars -> {
+                    val xss = ss + listOf(
+                        Stmt.Emit(tk0,
+                            Expr.Cons(tk0,
+                                Type.Data(tk0,null,listOf(Tk.Type("Event",tk0.pos),(Tk.Type("Task",tk0.pos)))),
+                                Expr.Tuple(tk0,null, listOf(
+                                    Pair(null, Expr.Nat(Tk.Nat("((void*) mar_exe)", tk0.pos), null))))
+                            )
+                        )
+                    )
+                    Stmt.Proto.Task(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, xss))
+                }
                 else -> error("impossible case")
             }.let { listOf(it) }
         }

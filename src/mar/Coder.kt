@@ -124,11 +124,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     typedef struct $exe {
                         int pc;
                         $pro pro;
-                        struct {
-                            int evt;
-                            struct Task* prv;
-                            struct Task* nxt;
-                        } awt;
+                        Task_Await awt;
                         char mem[${me.xn()!!.static_int_eval(null)}];
                     } $exe;
                     """
@@ -431,10 +427,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             val (xuni,_) = this.tp.x_out(null,pre)
                             "*mar_out = ($xuni) { .tag=2, ._2=mar_ret };"
                         }
-                        is Stmt.Proto.Task -> """
-                            //*mar_out = mar_ret;
-                            return 0;
-                        """
+                        is Stmt.Proto.Task -> "return 0;"
                     }}
                     
                 }
@@ -497,7 +490,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         """
         }
         is Stmt.Dcl -> {
-            val dcl = if (this.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) "" else {
+            val dcl = if (this.up_first { it is Stmt.Proto }.let { it is Stmt.Proto.Coro || it is Stmt.Proto.Task }) "" else {
                 this.xtp!!.coder(tpls) + " " + this.id.str + ";"
             }
             val ini = this.xtp.let {
@@ -623,6 +616,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
+            // START | ${this.dump()}
             ({
                 typeof($exe)* mar_exe_$n = &$exe;
                 $xinps mar_inps_$n = { ${this.args.map { it.coder(tpls,pre) }.joinToString(",")} };
@@ -842,7 +836,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
 
 fun Tk.Var.coder (fr: Any, pre: Boolean): String {
     val dcl = this.to_xdcl(fr)!!.first
-    return if (dcl.xup!!.up_first { it is Stmt.Proto } is Stmt.Proto.Coro) {
+    return if (dcl.xup!!.up_first { it is Stmt.Proto }.let { it is Stmt.Proto.Coro || it is Stmt.Proto.Task }) {
         "mar_exe->mem.${this.str}"
     } else {
         this.str
@@ -1222,14 +1216,16 @@ fun coder_main (pre: Boolean): String {
             mar_vector_cat_pointer(dst, src->buf, src->cur, size);
         }
         
+        typedef struct Task_Await {
+            int evt;
+            struct Task* prv;
+            struct Task* nxt;
+        } Task_Await;
+        
         typedef struct Task {
             int pc;
             int (*pro) (struct Task*, void*, void*);
-            struct {
-                int evt;
-                struct Task* prv;
-                struct Task* nxt;
-            } awt;
+            Task_Await awt;
         } Task;
 
         Task* MAR_AWAITS = NULL;
@@ -1273,6 +1269,16 @@ fun coder_main (pre: Boolean): String {
                 }
             }
         }
+        
+        #if 0
+        void mar_awaits_dmp () {
+            Task* tsk = MAR_AWAITS;
+            while (tsk != NULL) {
+                printf("%p <= %p => %p\n", tsk->awt.prv, tsk, tsk->awt.nxt);
+                tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
+            }
+        }
+        #endif
         
         ${coder_types(null, G.outer!!, null, pre)}
         
