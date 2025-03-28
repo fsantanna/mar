@@ -144,11 +144,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     typedef struct $exe {
                         int pc;
                         $pro pro;
-                        struct {
-                            int evt;
-                            struct Task* prv;
-                            struct Task* nxt;
-                        } awt;
+                        Task_Await awt;
                         char mem[${me.xn()!!.static_int_eval(null)}];
                     } $exe;
                     """
@@ -381,11 +377,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             int pc;
                             $pro pro;
                             ${(this is Stmt.Proto.Task).cond { """
-                                struct {
-                                    int evt;
-                                    struct Task* prv;
-                                    struct Task* nxt;
-                                } awt;
+                                Task_Await awt;
                             """ }}
                             struct {
                                 ${mem()}    // TODO: unions for non-coexisting blocks
