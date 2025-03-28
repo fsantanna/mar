@@ -232,19 +232,27 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                 }
             }
             (x in OPERATORS.first) -> {
-                val op = x + read2While { it in OPERATORS.first }
-                when {
-                    (op == "=") -> yield(Tk.Fix(op, pos))
-                    (op == "=>") -> yield(Tk.Fix(op, pos))
-                    (op == "->") -> yield(Tk.Fix(op, pos))
-                    (op in OPERATORS.second) -> yield(Tk.Op(op, pos))
-                    (op == "<>") -> {   // special case union <>
-                        yield(Tk.Op("<", pos))
-                        yield(Tk.Op(">", pos.copy(lin=pos.col+1)))
-                    }
-                    else -> {
-                        for (i in 0..op.length-1) {
-                            yield(Tk.Op(op[i].toString(), pos.copy(col=pos.col+i)))
+                var op = x.toString()
+                while (true) {
+                    val (n1,x1) = read2()
+                    if (x1 in OPERATORS.first) {
+                        val tmp = op
+                        op += x1
+                        when {
+                            (op in OPERATORS.second) -> {}
+                            (tmp in OPERATORS.second) -> {
+                                yield(Tk.Op(tmp, pos))
+                                op = x1.toString()
+                            }
+                            else -> op = tmp
+                        }
+                    } else {
+                        unread2(n1)
+                        if (op in OPERATORS.second) {
+                            yield(Tk.Op(op, pos))
+                            break
+                        } else {
+                            err(pos, "token error : unexpected $op")
                         }
                     }
                 }

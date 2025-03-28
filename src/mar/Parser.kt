@@ -184,13 +184,13 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                     parser_type(null, false, fr_pointer)
                 }
             }
-            accept_fix_err("->")
+            accept_op_err("->")
 
             val (res,yld) = if (tk0.str != "coro") Pair(null,null) else {
                 val res = parser_type(null, false, fr_pointer)
-                accept_fix_err("->")
+                accept_op_err("->")
                 val yld = parser_type(null, false, fr_pointer)
-                accept_fix_err("->")
+                accept_op_err("->")
                 Pair(res, yld)
             }
             val out = parser_type(null, false, fr_pointer)
@@ -231,12 +231,12 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
             val inps = parser_list(",", ")") {
                 parser_type(null, false, fr_pointer)
             }
-            accept_fix_err("->")
+            accept_op_err("->")
             if (is_coro) {
                 val res = parser_type(null, false, fr_pointer)
-                accept_fix_err("->")
+                accept_op_err("->")
                 val yld = parser_type(null, false, fr_pointer)
-                accept_fix_err("->")
+                accept_op_err("->")
                 val out = parser_type(null, false, fr_pointer)
                 Type.Exec.Coro(tk0, xn, inps, res, yld, out)
             } else {
@@ -362,7 +362,7 @@ fun parser_expr_4_prim (): Expr {
                 val x = if (!accept_fix(".")) null else {
                     (accept_enu("Var") || accept_enu_err("Num"))
                     val idx = G.tk0!! as Tk.Var
-                    accept_fix_err("=")
+                    accept_op_err("=")
                     idx
                 }
                 val e = parser_expr()
@@ -390,7 +390,7 @@ fun parser_expr_4_prim (): Expr {
             accept_fix_err(".")
             (accept_enu("Type") || accept_enu_err("Num"))
             val idx = G.tk0!!.str
-            accept_fix_err("=")
+            accept_op_err("=")
             val v = parser_expr_2_pre() // avoid bin `>` (x>10)
             accept_op_err(">")
             val tp = if (!accept_fix(":")) null else {
@@ -425,9 +425,9 @@ fun parser_expr_4_prim (): Expr {
         accept_fix("if")    -> {
             val tk0 = G.tk0!!
             val cnd = parser_expr()
-            accept_fix_err("=>")
+            accept_op_err("=>")
             val t = parser_expr()
-            accept_fix_err("=>")
+            accept_op_err("=>")
             val f = parser_expr()
             Expr.If(tk0, null, cnd, t, f)
         }
@@ -456,7 +456,7 @@ fun parser_expr_4_prim (): Expr {
                         parser_expr()
                     }
                 }
-                accept_fix_err("=>")
+                accept_op_err("=>")
                 val se = parser_expr()
                 Pair(cnd, se)
             }
@@ -652,8 +652,8 @@ fun parser_stmt (): List<Stmt> {
             if (!dst.is_lval()) {
                 err(dst.tk, "set error : expected assignable destination")
             }
-            accept_fix_err("=")
-            val tk0 = G.tk0 as Tk.Fix
+            accept_op_err("=")
+            val tk0 = G.tk0 as Tk.Op
             if (check_stmt_as_set_src()) {
                 set_stmt_as_set_src(tk0, dst)
             } else {
@@ -670,7 +670,7 @@ fun parser_stmt (): List<Stmt> {
             }
             val tk1 = G.tk1
             listOf(Stmt.Dcl(tk0, id, tp)) + when {
-                !accept_fix("=") -> emptyList()
+                !accept_op("=") -> emptyList()
                 check_stmt_as_set_src() -> set_stmt_as_set_src(tk1!!, Expr.Acc(id))
                 else -> listOf(Stmt.SetE(tk1!!, Expr.Acc(id), parser_expr()))
             }
@@ -1031,7 +1031,7 @@ fun parser_stmt (): List<Stmt> {
             val ss = parser_list(null, "}") {
                 accept_enu_err("Var")
                 val id = G.tk0 as Tk.Var
-                accept_fix_err("=")
+                accept_op_err("=")
                 val e = parser_expr()
                 listOf (
                     Stmt.Dcl(tk0, id, null),

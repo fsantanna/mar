@@ -20,6 +20,7 @@ val OPERATORS = Pair (
     setOf('+', '-', '*', '/', '%', '>', '<', '=', '|', '&', '\\', '?', '!' /*,'#'*/),
     setOf(
         //"#", "##",
+        "=", "=>", "->",
         "==", "!=",
         ">", "<", ">=", "<=",
         "||", "&&",
@@ -255,6 +256,7 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
             Stmt.Data(tk0, Tk.Type("Return", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
             Stmt.Data(tk0, Tk.Type("Break", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
         ) + ss)
+        //println(G.outer!!.to_str())
         cache_ups()
         check_vars()
         infer_apply()
