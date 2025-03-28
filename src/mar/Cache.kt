@@ -239,20 +239,3 @@ fun cache_tpls () {
     }
     G.outer!!.dn_visit_pre({}, ::fe, {})
 }
-
-fun cache_awts () {
-    fun fs (me: Stmt) {
-        when (me) {
-            is Stmt.Emit -> (me.e.typex() as Type.Data).let {
-                G.awts[it.coder(null)] = it
-            }
-            is Stmt.Await -> me.tp.let {
-                if (it != null) {
-                    G.awts[it.coder(null)] = it
-                }
-            }
-            else -> {}
-        }
-    }
-    G.outer!!.dn_visit_pre(::fs, {}, {})
-}

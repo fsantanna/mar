@@ -42,6 +42,10 @@ fun Type.is_str (): Boolean {
     }
 }
 
+fun Type.Data.path (): String {
+    return this.ts.map { it.str }.joinToString("_")
+}
+
 fun Type.is_same_of (other: Type): Boolean {
     return when {
         (this is Type.Any && other is Type.Any) -> true

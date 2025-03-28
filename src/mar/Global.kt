@@ -186,7 +186,6 @@ object G {
     val types = mutableSetOf<String>()
     val tpls  = mutableMapOf<Stmt.Proto, MutableMap<String,List<Tpl_Con>>>()
     val defers: MutableMap<Any, Triple<MutableList<Int>,String,String>> = mutableMapOf()
-    val awts  = sortedMapOf<String,Type.Data>()
 
     var datas = 1
 
@@ -263,7 +262,6 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
         check_types()
         infer_check()
         cache_tpls()
-        cache_awts()
     } catch (e: Throwable) {
         if (THROW) {
             throw e

@@ -1,5 +1,7 @@
 package mar
 
+import java.util.SortedSet
+
 fun String.clean (): String {
     return this.replace('*','_')
 }
@@ -17,6 +19,7 @@ fun Type.coder (tpls: Tpl_Map?): String {
         is Type.Nat        -> this.tk.str
         is Type.Prim       -> this.tk.str
         is Type.Data       -> this.ts.first().str + this.xtpls!!.map { (t,e) -> "_" + t.cond { it.to_str() } + e.cond { it.to_str() } }.joinToString("")
+        //is Type.Data       -> this.ts.map { it.str }.joinToString("_") + this.xtpls!!.map { (t,e) -> "_" + t.cond { it.to_str() } + e.cond { it.to_str() } }.joinToString("")
         is Type.Unit       -> "_VOID_"
         is Type.Pointer    -> this.ptr.coder(tpls) + (this.ptr !is Type.Proto).cond { "*" }
         is Type.Tuple      -> "Tuple__${this.ts.map { (id,tp) -> tp.coder(tpls)+id.cond {"_"+it.str} }.joinToString("__")}".clean()
@@ -671,10 +674,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Await -> {
-            val idx = 1+G.awts.keys.indexOf(this.tp!!.coder(null))
             """
                 mar_exe->pc = ${this.n};
-                return $idx;
+                return MAR_EVENT_${this.tp!!.path()};
             case ${this.n}:
                 // remove from list (TODO: also on task kill defer)
                 ${(this.xup is Stmt.SetS).cond {
@@ -688,10 +690,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
         is Stmt.Emit -> {
             val e = this.e.coder(tpls, pre)
-            val idx = 1+G.awts.keys.indexOf(this.e.typex().coder(null))
             """
             typeof($e) mar_$n = $e;
-            mar_awaits_emt($idx, &mar_$n);
+            mar_awaits_emt(MAR_EVENT_${(this.e.typex() as Type.Data).path()}, &mar_$n);
             // declare event
             // traverse list
             // pass pointer
@@ -1138,6 +1139,17 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
      }
 }
 
+fun coder_awts (): SortedSet<String> {
+    fun fs (me: Stmt): List<String> {
+        return when (me) {
+            is Stmt.Emit -> listOf((me.e.typex() as Type.Data).path())
+            is Stmt.Await -> if (me.tp == null) emptyList() else listOf(me.tp.path())
+            else -> emptyList()
+        }
+    }
+    return G.outer!!.dn_collect_pre(::fs, {null}, {null}).toSortedSet()
+}
+
 fun coder_main (pre: Boolean): String {
     return """
         #include <assert.h>
@@ -1263,6 +1275,13 @@ fun coder_main (pre: Boolean): String {
         }
         
         ${coder_types(null, G.outer!!, null, pre)}
+        
+        enum {
+            MAR_EVENT_NONE = 0,
+            ${coder_awts().map {
+                "MAR_EVENT_$it"
+            }.joinToString(",\n")}
+        };
         
         int main (void) {
             do {
