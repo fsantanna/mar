@@ -39,6 +39,8 @@ int mar_sup (uint32_t sup, uint32_t sub) {
     return 1;
 }
 
+// ESCAPE / EXCEPTION
+
 #define __MAR_ESCAPE_NONE__  0
 typedef struct Escape {
     int tag;
@@ -52,6 +54,8 @@ typedef struct Exception {
     char _[100];
 } Exception;
 Exception MAR_EXCEPTION = { __MAR_EXCEPTION_NONE__ };
+
+// VECTORS
 
 typedef struct Vector {
     int max, cur;
@@ -68,6 +72,8 @@ void mar_vector_cat_vector (Vector* dst, Vector* src, int size) {
     mar_vector_cat_pointer(dst, src->buf, src->cur, size);
 }
 
+// EVENTS / AWAITS
+
 typedef struct Task_Await {
     int evt;
     struct Task* prv;
@@ -79,6 +85,11 @@ typedef struct Task {
     int (*pro) (struct Task*, void*, void*);
     Task_Await awt;
 } Task;
+
+enum {
+    MAR_EVENT_NONE = 0,
+    // === MAR_EVENTS === //
+};
 
 Task* MAR_AWAITS = NULL;
 
@@ -108,12 +119,12 @@ void mar_awaits_emt (int evt_id, void* evt_pay) {
     Task* tsk = MAR_AWAITS;
     while (tsk != NULL) {
         if (tsk->awt.evt == evt_id) {
-            tsk->awt.evt = 0;
+            tsk->awt.evt = MAR_EVENT_NONE;
             int x = tsk->pro(tsk, NULL, evt_pay);
             Task* cur = tsk;
             tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
             mar_awaits_rem(cur);
-            if (x != 0) {
+            if (x != MAR_EVENT_NONE) {
                 mar_awaits_add(cur, x);
             }
         } else {
@@ -131,11 +142,6 @@ void mar_awaits_dmp () {
     }
 }
 #endif
-
-enum {
-    MAR_EVENT_NONE = 0,
-    // === MAR_EVENTS === //
-};
 
 // TYPES
 // === MAR_TYPES === //

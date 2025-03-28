@@ -367,11 +367,11 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
 
             val xtplss: List<Tpl_Map?> = this.template_map_all() ?: listOf(null)
-            xtplss.distinctBy {
+            val (sigs, cods) = xtplss.distinctBy {
                 this.proto(it)
-            }.forEach { xtpls ->
-                G.protos.first.add(this.x_sig(xtpls, pre) + ";\n")
-                G.protos.second.add("""
+            }.map { xtpls ->
+                val sig = this.x_sig(xtpls, pre) + ";\n"
+                val cod = """
                     ${this.x_sig(xtpls, pre)} {
                         ${(this !is Stmt.Proto.Func).cond {
                             val (pro,_) = this.tp.x_pro_exe(this.tp.assert_no_tpls_up())
@@ -426,9 +426,16 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         }}
                         
                     }
-                """)
+                """
+                Pair(sig, cod)
+            }.unzip()
+            if (this is Stmt.Proto.Func) {
+                cods.joinToString("")
+            } else {
+                G.protos.first.addAll(sigs)
+                G.protos.second.addAll(cods)
+                ""
             }
-            ""
         }
 
         is Stmt.Block  -> {
@@ -450,13 +457,13 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }}
                 do {
                     ${this.to_dcls().map { (s,_,tp) ->
-                        if (tp !is Type.Proto) emptyList() else {
+                        if (tp !is Type.Proto.Func) emptyList() else {
                             s as Stmt.Proto
                             val xtplss: List<Tpl_Map?> = s.template_map_all() ?: listOf(null)
                             xtplss.distinctBy {
                                 s.proto(it)
                             }.map {
-                                "" //""auto " + s.x_sig(it, pre) + ";\n"
+                                "auto " + s.x_sig(it, pre) + ";\n"
                             }
                         }
                     }.flatten().joinToString("")}
@@ -682,7 +689,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Emit   -> {
             val e = this.e.coder(tpls, pre)
             """
-            typeof($e) mar_$n = $e;
+            // EMIT | ${this.dump()}
+             typeof($e) mar_$n = $e;
             mar_awaits_emt(MAR_EVENT_${(this.e.typex() as Type.Data).path()}, &mar_$n);
             // declare event
             // traverse list
