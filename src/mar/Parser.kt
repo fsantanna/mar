@@ -629,8 +629,15 @@ fun parser_stmt (): List<Stmt> {
             val tk0 = G.tk0 as Tk.Fix
             when {
                 check_stmt_as_set_src() -> {
+                    val is_spawn = check_fix("spawn")
                     val ss = parser_stmt()
-                    ss.take(ss.size-1) + Stmt.SetS(tk0, dst, ss.last())
+                    if (is_spawn) {
+                        val x = (ss[0] as Stmt.Dcl).id
+                        ss + Stmt.SetE(tk0, dst, Expr.Acc(x))
+                    } else {
+                        assert(ss.size == 1)
+                        listOf(Stmt.SetS(tk0, dst, ss.first()))
+                    }
                 }
                 else -> {
                     val src = parser_expr()
@@ -649,8 +656,15 @@ fun parser_stmt (): List<Stmt> {
             listOf(Stmt.Dcl(tk0, id, tp)) + when {
                 !accept_fix("=") -> emptyList()
                 check_stmt_as_set_src() -> {
+                    val is_spawn = check_fix("spawn")
                     val ss = parser_stmt()
-                    ss.take(ss.size-1) + Stmt.SetS(tk1!!, Expr.Acc(id), ss.last())
+                    if (is_spawn) {
+                        val x = (ss[0] as Stmt.Dcl).id
+                        ss + Stmt.SetE(tk1!!, Expr.Acc(id), Expr.Acc(x))
+                    } else {
+                        assert(ss.size == 1)
+                        listOf(Stmt.SetS(tk1!!, Expr.Acc(id), ss.first()))
+                    }
                 }
                 else -> listOf(Stmt.SetE(tk1!!, Expr.Acc(id), parser_expr()))
             }

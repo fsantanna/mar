@@ -1777,6 +1777,7 @@ class Exec  {
                 print(f)
             }
             var e = spawn tsk()
+            ;;print(e)
             emit(X(10))
             emit(Y(10))
         """)
