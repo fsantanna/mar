@@ -550,18 +550,30 @@ fun parser_expr (): Expr {
     return parser_expr_1_bin()
 }
 
-fun check_stmt_as_set_src (): Boolean {
-    return listOf("await","catch","create","resume","spawn","start","yield").any {
-        check_fix(it)
-    }
-}
-
 fun parser_stmt_block (): List<Stmt> {
     accept_fix_err("{")
     val ss = parser_list(null, "}") {
         parser_stmt()
     }.flatten()
     return ss
+}
+
+fun check_stmt_as_set_src (): Boolean {
+    return listOf("await","catch","create","resume","spawn","start","yield").any {
+        check_fix(it)
+    }
+}
+
+fun set_stmt_as_set_src (tk0: Tk, dst: Expr): List<Stmt> {
+    val is_spawn = check_fix("spawn")
+    val ss = parser_stmt()
+    return if (is_spawn) {
+        val x = (ss[0] as Stmt.Dcl).id
+        ss + Stmt.SetE(tk0, dst, Expr.Acc(x))
+    } else {
+        assert(ss.size == 1)
+        listOf(Stmt.SetS(tk0, dst, ss.first()))
+    }
 }
 
 fun parser_stmt (): List<Stmt> {
@@ -627,22 +639,11 @@ fun parser_stmt (): List<Stmt> {
             }
             accept_fix_err("=")
             val tk0 = G.tk0 as Tk.Fix
-            when {
-                check_stmt_as_set_src() -> {
-                    val is_spawn = check_fix("spawn")
-                    val ss = parser_stmt()
-                    if (is_spawn) {
-                        val x = (ss[0] as Stmt.Dcl).id
-                        ss + Stmt.SetE(tk0, dst, Expr.Acc(x))
-                    } else {
-                        assert(ss.size == 1)
-                        listOf(Stmt.SetS(tk0, dst, ss.first()))
-                    }
-                }
-                else -> {
-                    val src = parser_expr()
-                    listOf(Stmt.SetE(tk0, dst, src))
-                }
+            if (check_stmt_as_set_src()) {
+                set_stmt_as_set_src(tk0, dst)
+            } else {
+                val src = parser_expr()
+                listOf(Stmt.SetE(tk0, dst, src))
             }
         }
         accept_fix("var") -> {
@@ -655,17 +656,7 @@ fun parser_stmt (): List<Stmt> {
             val tk1 = G.tk1
             listOf(Stmt.Dcl(tk0, id, tp)) + when {
                 !accept_fix("=") -> emptyList()
-                check_stmt_as_set_src() -> {
-                    val is_spawn = check_fix("spawn")
-                    val ss = parser_stmt()
-                    if (is_spawn) {
-                        val x = (ss[0] as Stmt.Dcl).id
-                        ss + Stmt.SetE(tk1!!, Expr.Acc(id), Expr.Acc(x))
-                    } else {
-                        assert(ss.size == 1)
-                        listOf(Stmt.SetS(tk1!!, Expr.Acc(id), ss.first()))
-                    }
-                }
+                check_stmt_as_set_src() -> set_stmt_as_set_src(tk1!!, Expr.Acc(id))
                 else -> listOf(Stmt.SetE(tk1!!, Expr.Acc(id), parser_expr()))
             }
         }
