@@ -1804,20 +1804,22 @@ class Exec  {
     fun oo_09_task_term () {
         val out = test("""
             data X: ()
+            task t2: () -> () {
+                print(">>> B")
+                await(:X)
+                print("<<< B")
+                ;;emit(Event.Task [`mar_exe`])
+            }
             spawn {
-                task t2: () -> () {
-                    await(:X)
-                    ;;emit(Event.Task [`mar_exe`])
-                }
                 var exe = create(t2)
                 start exe()
-                ;;print("start")
+                print(">>> A")
                 var e = await(:Event.Task) until (e.tsk == \exe)
-                ;;print("term")
+                print("<<< A")
             }
             emit(X())
         """)
-        assert(out == "X(10)\nY(10)\n") { out }
+        assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
     }
 
     // SPAWN

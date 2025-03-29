@@ -3,8 +3,8 @@ data Error.*: [] {
 }
 
 data Event.*: [] {
-    Task: [\()]
-    Clock: [Int]
+    Task: [tsk: \`void`]
+    Clock: [ms: Int]
 }
 
 ;;data String: #[Char]
