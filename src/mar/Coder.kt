@@ -121,14 +121,6 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 ft(itup) + ft(inps) + ft(ouni) + ft(xpro) + listOf(
                     x + ";\n",
                     "typedef void (*$pro) ($x*, $xinps*, $res*, $xouni*);\n",
-                    """
-                    typedef struct $exe {
-                        int pc;
-                        $pro pro;
-                        Task_Await awt;
-                        char mem[${me.xn()!!.static_int_eval(null)}];
-                    } $exe;
-                    """
                 )
             }
             is Type.Exec.Task -> {
@@ -141,14 +133,6 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 ft(itup) + ft(inps) + ft(out) + ft(xpro) + listOf(
                     x + ";\n",
                     "typedef int (*$pro) ($x*, $xinps*, void*);\n",
-                    """
-                    typedef struct $exe {
-                        int pc;
-                        $pro pro;
-                        Task_Await awt;
-                        char mem[${me.xn()!!.static_int_eval(null)}];
-                    } $exe;
-                    """
                 )
             }
             is Type.Tuple -> {
@@ -339,10 +323,38 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
         return if (me !is Stmt.Proto || me===x /* HACK-01 */) {
             emptyList()
         } else {
+            fun mem (): String {
+                val blks = me.dn_collect_pre({
+                    when (it) {
+                        is Stmt.Proto -> if (it == me) emptyList() else null
+                        is Stmt.Block -> listOf(it)
+                        else -> emptyList()
+                    }
+                }, {null}, {null})
+                return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n" } }.flatten().joinToString("")
+            }
+            val xx = if (me is Stmt.Proto.Func) emptyList() else {
+                val (pro,exe) = me.tp.x_pro_exe(me.tp.assert_no_tpls_up())
+                listOf("""
+                typedef struct $exe {
+                    int pc;
+                    $pro pro;
+                    ${(me is Stmt.Proto.Task).cond { """
+                        Task_Await awt;
+                    """ }}
+                    struct {
+                        ${mem()}    // TODO: unions for non-coexisting blocks
+                    } mem;
+                } $exe;
+                """)
+            }
+
             val xtplss: List<Tpl_Map> = me.template_map_all() ?: emptyList()
-            xtplss.map { xtpls ->
+            val yy = xtplss.map { xtpls ->
                 coder_types(me, me, xtpls, pre) // HACK-01: x===me above prevents stack overflow
             }
+
+            xx + yy
         }
     }
     val ts = s.dn_collect_pos(::fs, ::fe, ::ft)
@@ -355,17 +367,6 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Proto -> {
             assert((tpls == null) || this.tpls.isEmpty()) { "TODO: merge tpls" }
 
-            fun mem (): String {
-                val blks = this.dn_collect_pre({
-                    when (it) {
-                        is Stmt.Proto -> if (it == this) emptyList() else null
-                        is Stmt.Block -> listOf(it)
-                        else -> emptyList()
-                    }
-                }, {null}, {null})
-                return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n" } }.flatten().joinToString("")
-            }
-
             val xtplss: List<Tpl_Map?> = this.template_map_all() ?: listOf(null)
             val (sigs, cods) = xtplss.distinctBy {
                 this.proto(it)
@@ -373,21 +374,6 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 val sig = this.x_sig(xtpls, pre) + ";\n"
                 val cod = """
                     ${this.x_sig(xtpls, pre)} {
-                        ${(this !is Stmt.Proto.Func).cond {
-                            val (pro,_) = this.tp.x_pro_exe(this.tp.assert_no_tpls_up())
-                            """
-                            struct {
-                                int pc;
-                                $pro pro;
-                                ${(this is Stmt.Proto.Task).cond { """
-                                    Task_Await awt;
-                                """ }}
-                                struct {
-                                    ${mem()}    // TODO: unions for non-coexisting blocks
-                                } mem;
-                            }* mar_exe = (typeof(mar_exe)) _mar_exe_;
-                            """
-                        }}
                         ${this.tp.out.coder(xtpls)} mar_ret;
                         ${(this is Stmt.Proto.Func).cond {
                             this as Stmt.Proto.Func
@@ -429,6 +415,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 """
                 Pair(sig, cod)
             }.unzip()
+
             if (this is Stmt.Proto.Func) {
                 cods.joinToString("")
             } else {

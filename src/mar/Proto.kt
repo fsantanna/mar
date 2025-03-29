@@ -29,12 +29,12 @@ fun Stmt.Proto.x_sig (tpls: Tpl_Map?, pre: Boolean): String {
             val (_,exe) = this.tp.x_pro_exe(null)
             val inps = this.tp.inps.x_inp_tup(this.tp.tk,null, pre).first
             val res = this.tp.res().coder(null)
-            "void $xid ($exe* _mar_exe_, ${inps}* mar_inps, ${res}* mar_res, $xout* mar_out)"
+            "void $xid ($exe* mar_exe, ${inps}* mar_inps, ${res}* mar_res, $xout* mar_out)"
         }
         is Stmt.Proto.Task -> {
             val (_,exe) = this.tp.x_pro_exe(null)
             val inps = this.tp.inps.x_inp_tup(this.tp.tk,null, pre).first
-            "int $xid ($exe* _mar_exe_, ${inps}* mar_inps, void* mar_evt)"
+            "int $xid ($exe* mar_exe, ${inps}* mar_inps, void* mar_evt)"
       }
     }
 }

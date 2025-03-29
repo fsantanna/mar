@@ -166,12 +166,10 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
                 (tk0.str == "func") -> null
                 !accept_fix("[") -> null
                 else -> {
-                    val n = parser_expr()
-                    if (!n.static_int_is()) {
-                        err(n.tk, "type error : expected constant integer expression")
-                    }
+                    accept_enu_err("Var")
+                    val x = G.tk0 as Tk.Var
                     accept_fix_err("]")
-                    n
+                    x
                 }
             }
 
@@ -218,12 +216,10 @@ fun parser_type (pre: Tk?, fr_proto: Boolean, fr_pointer: Boolean): Type {
             val xpro = when {
                 !accept_fix("[") -> null
                 else -> {
-                    val n = parser_expr()
-                    if (!n.static_int_is()) {
-                        err(n.tk, "type error : expected constant integer expression")
-                    }
+                    accept_enu_err("Var")
+                    val x = G.tk0 as Tk.Var
                     accept_fix_err("]")
-                    n
+                    x
                 }
             }
 
