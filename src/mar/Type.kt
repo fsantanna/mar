@@ -113,7 +113,7 @@ fun Type.is_sub_of (other: Type): Boolean {
         (this is Type.Union      && other is Type.Union)      -> (this.ts.size==other.ts.size) && this.ts.zip(other.ts).all { (thi,oth) -> thi.second.is_sub_of(oth.second) }
         (this is Type.Proto.Func && other is Type.Proto.Func) -> (this.inps.size==other.inps.size) && this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sub_of(oth) } && other.out.is_sub_of(this.out)
         (this is Type.Proto.Coro && other is Type.Proto.Coro) -> when {
-                (this.xn?.static_int_eval(null) != other.xn?.static_int_eval(null)) -> false
+                (this.xpro?.str != other.xpro?.str) -> false
                 (this.inps.size != other.inps.size) -> false
                 !this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sub_of(oth) } -> false
                 !this.res.is_sub_of(other.res) -> false
@@ -122,14 +122,14 @@ fun Type.is_sub_of (other: Type): Boolean {
                 else -> true
         }
         (this is Type.Proto.Task && other is Type.Proto.Task) -> when {
-            (this.xn?.static_int_eval(null) != other.xn?.static_int_eval(null)) -> false
+            (this.xpro?.str != other.xpro?.str) -> false
             (this.inps.size != other.inps.size) -> false
             !this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sub_of(oth) } -> false
             !other.out.is_sub_of(this.out) -> false
             else -> true
         }
         (this is Type.Exec.Coro  && other is Type.Exec.Coro)  -> when {
-            (this.xn?.static_int_eval(null) != other.xn?.static_int_eval(null)) -> false
+            (this.xpro?.str != other.xpro?.str) -> false
             (this.inps.size != other.inps.size) -> false
             !this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sub_of(oth) } -> false
             !this.res.is_sub_of(other.res) -> false
@@ -138,7 +138,7 @@ fun Type.is_sub_of (other: Type): Boolean {
             else -> true
         }
         (this is Type.Exec.Task  && other is Type.Exec.Task)  -> when {
-            (this.xn?.static_int_eval(null) != other.xn?.static_int_eval(null)) -> false
+            (this.xpro?.str != other.xpro?.str) -> false
             (this.inps.size != other.inps.size) -> false
             !this.inps.zip(other.inps).all { (thi,oth) -> thi.is_sub_of(oth) } -> false
             !other.out.is_sub_of(this.out) -> false
@@ -369,14 +369,14 @@ fun Type.template_apply (map: Tpl_Map): Type? {
             val yld = this.yld.template_apply(map)
             val out = this.out.template_apply(map)
             if (inps.any { it==null } || res==null || yld==null || out==null) null else {
-                Type.Exec.Coro(this.tk, this.xn, inps as List<Type>, res, yld, out)
+                Type.Exec.Coro(this.tk, this.xpro, inps as List<Type>, res, yld, out)
             }
         }
         is Type.Exec.Task -> {
             val inps = this.inps.map { it.template_apply(map) }
             val out = this.out.template_apply(map)
             if (inps.any { it==null } || out==null) null else {
-                Type.Exec.Task(this.tk, this.xn, inps as List<Type>, out)
+                Type.Exec.Task(this.tk, this.xpro, inps as List<Type>, out)
             }
         }
     }
@@ -626,8 +626,8 @@ fun Stmt.type (): Type? {
             when (co) {
                 !is Type.Proto -> null
                 is Type.Proto.Func -> null
-                is Type.Proto.Coro -> Type.Exec.Coro(co.tk, co.xn, co.inps, co.res, co.yld, co.out)
-                is Type.Proto.Task -> Type.Exec.Task(co.tk, co.xn, co.inps, co.out)
+                is Type.Proto.Coro -> Type.Exec.Coro(co.tk, co.xpro, co.inps, co.res, co.yld, co.out)
+                is Type.Proto.Task -> Type.Exec.Task(co.tk, co.xpro, co.inps, co.out)
                 else -> error("impossible case")
             }
         }
@@ -812,21 +812,5 @@ fun Expr.type (): Type? {
             it?.xup = this
         }
         it
-    }
-}
-
-fun Type.size (): Int {
-    return when (this) {
-        is Type.Any, is Type.Bot, is Type.Top, is Type.Tpl -> error("impossible case")
-        is Type.Nat -> 8
-        is Type.Prim -> 8
-        is Type.Data -> TODO("Type.Data.size()")
-        is Type.Unit -> 8
-        is Type.Pointer -> 8
-        is Type.Tuple -> this.ts.map { it.second.size() }.sum()
-        is Type.Vector -> this.tp.size() * this.max!!.tk.str.toInt()
-        is Type.Union -> this.ts.map { it.second.size() }.max()
-        is Type.Proto -> TODO("Type.Proto.size()")
-        is Type.Exec -> TODO("Type.Exec.size()")
     }
 }

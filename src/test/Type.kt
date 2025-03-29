@@ -43,10 +43,9 @@ class XType {
     }
     @Test
     fun aa_05_task () {
-        val t1 = Type.Proto.Task(fix, Expr.Num(Tk.Num("20",pos)), null, listOf(int), int)
-        val t2 = Type.Proto.Task(fix, Expr.Num(Tk.Num("10",pos)), null, listOf(int), int)
-        assert(!t1.is_sub_of(t2))   // TODO: 20 >= 10
-        assert(!t2.is_sub_of(t1))
+        val t1 = Type.Proto.Task(fix, Tk.Var("x",pos), null, listOf(int), int)
+        val t2 = Type.Proto.Task(fix, Tk.Var("y",pos), null, listOf(int), int)
+        assert(!t1.is_sub_of(t2))
     }
 
     // SUP_VS / SUB_VS

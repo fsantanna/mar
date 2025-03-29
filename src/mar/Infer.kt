@@ -12,14 +12,14 @@ fun Stmt.infer (tpe: Type?): Type? {
         is Stmt.Create -> {
             val xtp = when (tpe) {
                 !is Type.Exec -> null
-                is Type.Exec.Coro -> Type.Proto.Coro(tpe.tk, tpe.xn, null, tpe.inps, tpe.res, tpe.yld, tpe.out)
-                is Type.Exec.Task -> Type.Proto.Task(tpe.tk, tpe.xn, null, tpe.inps, tpe.out)
+                is Type.Exec.Coro -> Type.Proto.Coro(tpe.tk, tpe.xpro, null, tpe.inps, tpe.res, tpe.yld, tpe.out)
+                is Type.Exec.Task -> Type.Proto.Task(tpe.tk, tpe.xpro, null, tpe.inps, tpe.out)
                 else -> error("impossible case")
             }
             this.pro.infer(xtp).let {
                 when (it) {
-                    is Type.Proto.Coro -> Type.Exec.Coro(pro.tk, it.xn, it.inps, it.res, it.yld, it.out)
-                    is Type.Proto.Task -> Type.Exec.Task(pro.tk, it.xn, it.inps, it.out)
+                    is Type.Proto.Coro -> Type.Exec.Coro(pro.tk, it.xpro, it.inps, it.res, it.yld, it.out)
+                    is Type.Proto.Task -> Type.Exec.Task(pro.tk, it.xpro, it.inps, it.out)
                     else -> tpe
                 }
             }
@@ -287,8 +287,8 @@ fun Type.infer (tpe: Type?): Type {
                 this.res.infer(tpe.out)
                 this.yld.infer(tpe.out)
                 this.out.infer(tpe.out)
-                if (this.xn == null) {
-                    this.xn = tpe.xn
+                if (this.xpro == null) {
+                    this.xpro = tpe.xpro
                 }
             }
         }
@@ -296,8 +296,8 @@ fun Type.infer (tpe: Type?): Type {
             if (tpe is Type.Proto.Task) {
                 this.inps.zip(tpe.inps).forEach { (a,b) -> a.infer(b) }
                 this.out.infer(tpe.out)
-                if (this.xn == null) {
-                    this.xn = tpe.xn
+                if (this.xpro == null) {
+                    this.xpro = tpe.xpro
                 }
             }
         }
@@ -307,8 +307,8 @@ fun Type.infer (tpe: Type?): Type {
                 this.res.infer(tpe.out)
                 this.yld.infer(tpe.out)
                 this.out.infer(tpe.out)
-                if (this.xn == null) {
-                    this.xn = tpe.xn
+                if (this.xpro == null) {
+                    this.xpro = tpe.xpro
                 }
             }
         }
@@ -316,8 +316,8 @@ fun Type.infer (tpe: Type?): Type {
             if (tpe is Type.Exec.Task) {
                 this.inps.zip(tpe.inps).forEach { (a,b) -> a.infer(b) }
                 this.out.infer(tpe.out)
-                if (this.xn == null) {
-                    this.xn = tpe.xn
+                if (this.xpro == null) {
+                    this.xpro = tpe.xpro
                 }
             }
         }
@@ -357,10 +357,10 @@ fun infer_apply () {
         val xxdst = when {
             (xdst == null) -> true
             (xdst is Type.Data && xdst.xtpls==null) -> true
-            (xdst is Type.Proto.Coro && xdst.xn==null) -> true
-            (xdst is Type.Proto.Task && xdst.xn==null) -> true
-            (xdst is Type.Exec.Coro && xdst.xn==null) -> true
-            (xdst is Type.Exec.Task && xdst.xn==null) -> true
+            (xdst is Type.Proto.Coro && xdst.xpro==null) -> true
+            (xdst is Type.Proto.Task && xdst.xpro==null) -> true
+            (xdst is Type.Exec.Coro && xdst.xpro==null) -> true
+            (xdst is Type.Exec.Task && xdst.xpro==null) -> true
             else -> false
         }
 
@@ -373,13 +373,13 @@ fun infer_apply () {
                         dcl.xtp!!.infer(null)
                     }
                     is Stmt.Proto.Coro -> {
-                        if (dcl.tp_.xn == null) {
-                            dcl.tp_.xn = xsrc.xn()!!
+                        if (dcl.tp_.xpro == null) {
+                            dcl.tp_.xpro = xsrc.xpro()!!
                         }
                     }
                     is Stmt.Proto.Task -> {
-                        if (dcl.tp_.xn == null) {
-                            dcl.tp_.xn = xsrc.xn()!!
+                        if (dcl.tp_.xpro == null) {
+                            dcl.tp_.xpro = xsrc.xpro()!!
                         }
                     }
                     else -> {}
@@ -396,14 +396,14 @@ fun infer_apply () {
            is Stmt.Proto.Func -> me.tp_.infer(null)
            is Stmt.Proto.Coro -> {
                me.tp_.infer(null)
-               if (me.tp_.xn == null) {
-                   me.tp_.xn = Expr.Num(Tk.Num("10", me.tk.pos))
+               if (me.tp_.xpro == null) {
+                   me.tp_.xpro = me.id
                }
            }
            is Stmt.Proto.Task -> {
                me.tp_.infer(null)
-               if (me.tp_.xn == null) {
-                   me.tp_.xn = Expr.Num(Tk.Num("10", me.tk.pos))
+               if (me.tp_.xpro == null) {
+                   me.tp_.xpro = me.id
                }
            }
 
@@ -519,7 +519,7 @@ fun infer_check () {
         }
     }, {}, {
         val ok = when (it) {
-            is Type.Proto.Coro, is Type.Proto.Task, is Type.Exec.Coro, is Type.Exec.Task -> (it.xn() != null)
+            is Type.Proto.Coro, is Type.Proto.Task, is Type.Exec.Coro, is Type.Exec.Task -> (it.xpro() != null)
             else -> true
         }
         if (!ok) {

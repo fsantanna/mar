@@ -147,9 +147,9 @@ class Infer {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "coro genFunc: () -> () -> () -> () {\n" +
+                "coro genFunc: [genFunc] () -> () -> () -> () {\n" +
                 "}\n" +
-                "var genObj: exec coro () -> () -> () -> ()\n" +
+                "var genObj: exec coro [genFunc] () -> () -> () -> ()\n" +
                 "set genObj = create(genFunc)\n" +
                 "}") { G.outer!!.to_str() }
     }
@@ -252,9 +252,9 @@ class Infer {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "coro co: (v: <(),Int>) -> () -> () -> () {\n" +
+                "coro co: [co] (v: <(),Int>) -> () -> () -> () {\n" +
                 "}\n" +
-                "var exe: exec coro (<(),Int>) -> () -> () -> ()\n" +
+                "var exe: exec coro [co] (<(),Int>) -> () -> () -> ()\n" +
                 "set exe = create(co)\n" +
                 "start exe(<.1=()>:<(),Int>)\n" +
                 "}") { G.outer!!.to_str() }
@@ -274,9 +274,9 @@ class Infer {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "coro co: () -> <(),Int> -> () -> () {\n" +
+                "coro co: [co] () -> <(),Int> -> () -> () {\n" +
                 "}\n" +
-                "var exe: exec coro () -> <(),Int> -> () -> ()\n" +
+                "var exe: exec coro [co] () -> <(),Int> -> () -> ()\n" +
                 "set exe = create(co)\n" +
                 "start exe()\n" +
                 "resume exe(<.1=()>:<(),Int>)\n" +
@@ -297,11 +297,11 @@ class Infer {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "coro co: () -> () -> <(),Int> -> () {\n" +
+                "coro co: [co] () -> () -> <(),Int> -> () {\n" +
                 "var x: ()\n" +
                 "set x = yield(<.1=()>:<(),Int>)\n" +
                 "}\n" +
-                "var exe: exec coro () -> () -> <(),Int> -> ()\n" +
+                "var exe: exec coro [co] () -> () -> <(),Int> -> ()\n" +
                 "set exe = create(co)\n" +
                 "start exe()\n" +
                 "}") { G.outer!!.to_str() }
@@ -330,11 +330,11 @@ class Infer {
                 "data B: Int\n" +
                 "data C: Int\n" +
                 "data D: Int\n" +
-                "coro co: (a: A) -> B -> C -> D {\n" +
+                "coro co: [co] (a: A) -> B -> C -> D {\n" +
                 "var x: B\n" +
                 "set x = yield((`x`: C))\n" +
                 "}\n" +
-                "var exe: exec coro (A) -> B -> C -> D\n" +
+                "var exe: exec coro [co] (A) -> B -> C -> D\n" +
                 "set exe = create(co)\n" +
                 "var y: <C,D>\n" +
                 "set y = start exe((`x`: A))\n" +
@@ -370,10 +370,10 @@ class Infer {
                 "}\n" +
                 "data Break.*: [] {\n" +
                 "}\n" +
-                "coro gen1: (v: Int) -> () -> () -> () {\n" +
+                "coro gen1: [gen1] (v: Int) -> () -> () -> () {\n" +
                 "do((`printf(\"%d\\n\", mar_exe->mem.v);`: ()))\n" +
                 "}\n" +
-                "var co1: exec coro (Int) -> () -> () -> ()\n" +
+                "var co1: exec coro [gen1] (Int) -> () -> () -> ()\n" +
                 "set co1 = create(gen1)\n" +
                 "start co1(([]:[]))\n" +
                 "}") { G.outer!!.to_str() }

@@ -39,18 +39,18 @@ fun Stmt.Proto.x_sig (tpls: Tpl_Map?, pre: Boolean): String {
     }
 }
 
-// Type.*.xn()
+// Type.*.xpro()
 // Type.*.inps()
 // Type.*.out()
 // Type.*.res()
 // Type.*.yld()
 
-fun Type.xn (): Expr? {
+fun Type.xpro (): Tk.Var? {
     return when (this) {
-        is Type.Proto.Coro -> this.xn
-        is Type.Exec.Coro -> this.xn
-        is Type.Proto.Task -> this.xn
-        is Type.Exec.Task -> this.xn
+        is Type.Proto.Coro -> this.xpro
+        is Type.Exec.Coro -> this.xpro
+        is Type.Proto.Task -> this.xpro
+        is Type.Exec.Task -> this.xpro
         else -> error("impossible case")
     }
 }
@@ -100,16 +100,16 @@ fun Type.yld (): Type {
 fun Type.x_pro_exe (tpls: Tpl_Map?): Pair<String,String> {
     val inps = this.inps()
     val out  = this.out()
-    val xn   = this.xn()!!.static_int_eval(null)
+    val xpro = this.xpro()!!.str
     return when (this) {
         is Type.Proto.Coro, is Type.Exec.Coro -> {
             val tps = (inps.to_void() + listOf(this.res(), this.yld(), out)).map { it.coder(tpls) }.joinToString("__").clean()
-            Pair("Coro_${xn}__$tps", "Exec__Coro__$tps")
+            Pair("Coro_${xpro}__$tps", "Exec__Coro__$tps")
         }
         is Type.Proto.Task, is Type.Exec.Task -> {
             Pair (
-                "Task_${xn}__${inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${out.coder(tpls)}".clean(),
-                "Exec__Task_${xn}__${inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${out.coder(tpls)}".clean(),
+                "Task_${xpro}__${inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${out.coder(tpls)}".clean(),
+                "Exec__Task_${xpro}__${inps.to_void().map { it.coder(tpls) }.joinToString("__")}__${out.coder(tpls)}".clean(),
             )
         }
         else -> error("impossible case")
