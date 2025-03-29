@@ -337,8 +337,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val (pro,exe) = me.tp.x_pro_exe(me.tp.assert_no_tpls_up())
                 listOf("""
                 typedef struct $exe {
-                    int pc;
-                    $pro pro;
+                    MAR_Exe_Fields($pro)
                     ${(me is Stmt.Proto.Task).cond { """
                         Task_Await awt;
                     """ }}
@@ -389,7 +388,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         }}
                         do {
                             ${(this !is Stmt.Proto.Func).cond {
-                                """                    
+                                """
+                                assert(mar_exe->status == MAR_EXE_STATUS_YIELDED);
                                 switch (mar_exe->pc) {
                                     case 0:
                                         ${this.tp.inps_().mapIndexed { i,vtp ->
@@ -593,7 +593,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
-            ($xtp) { 0, (${(this.pro.typex() as Type.Proto).x_sig(pre)}) ${this.pro.coder(tpls,pre)}, {} };
+            ($xtp) { 0, MAR_EXE_STATUS_YIELDED, (${(this.pro.typex() as Type.Proto).x_sig(pre)}) ${this.pro.coder(tpls,pre)}, {} };
             """
         }
         is Stmt.Start  -> {

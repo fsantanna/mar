@@ -72,7 +72,21 @@ void mar_vector_cat_vector (Vector* dst, Vector* src, int size) {
     mar_vector_cat_pointer(dst, src->buf, src->cur, size);
 }
 
-// EVENTS / AWAITS
+// EXES / COROS / TASKS
+
+typedef enum MAR_EXE_STATUS {
+    MAR_EXE_STATUS_YIELDED = 0,
+    MAR_EXE_STATUS_TOGGLED,
+    MAR_EXE_STATUS_RESUMED,
+    MAR_EXE_STATUS_TERMINATED,
+} MAR_EXE_STATUS;
+
+#define MAR_Exe_Fields(_pro_)   \
+    int pc;                     \
+    MAR_EXE_STATUS status;      \
+    _pro_ pro;
+
+// TASKS
 
 typedef struct Task_Await {
     int evt;
@@ -80,9 +94,10 @@ typedef struct Task_Await {
     struct Task* nxt;
 } Task_Await;
 
+typedef int (*Task_Pro) (struct Task*, void*, void*);
+
 typedef struct Task {
-    int pc;
-    int (*pro) (struct Task*, void*, void*);
+    MAR_Exe_Fields(Task_Pro)
     Task_Await awt;
 } Task;
 
