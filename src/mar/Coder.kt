@@ -95,7 +95,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(ouni) + ft(xexe) + listOf(
                     x + ";\n",
-                    "typedef void (*$pro) ($x*, $xinps*, $res*, $xouni*);\n",
+                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, $res*, $xouni*);\n",
                 )
             }
             is Type.Proto.Task -> {
@@ -107,7 +107,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(out) + ft(xexe) + listOf(
                     x + ";\n",
-                    "typedef int (*$pro) ($x*, $xinps*, void*);\n",
+                    "typedef int (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, void*);\n",
                 )
             }
             is Type.Exec.Coro -> {
@@ -120,7 +120,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(ouni) + ft(xpro) + listOf(
                     x + ";\n",
-                    "typedef void (*$pro) ($x*, $xinps*, $res*, $xouni*);\n",
+                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, $res*, $xouni*);\n",
                 )
             }
             is Type.Exec.Task -> {
@@ -132,7 +132,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(out) + ft(xpro) + listOf(
                     x + ";\n",
-                    "typedef int (*$pro) ($x*, $xinps*, void*);\n",
+                    "typedef int (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, void*);\n",
                 )
             }
             is Type.Tuple -> {
@@ -392,6 +392,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 assert(mar_exe->status == MAR_EXE_STATUS_YIELDED);
                                 switch (mar_exe->pc) {
                                     case 0:
+                                        if (mar_act == MAR_EXE_ACTION_ABORT) {
+                                            continue;
+                                        }
                                         ${this.tp.inps_().mapIndexed { i,vtp ->
                                             val (id,tp) = vtp
                                             assert(tp !is Type.Vector)
@@ -613,11 +616,11 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 $xinps mar_inps_$n = { ${this.args.map { it.coder(tpls,pre) }.joinToString(",")} };
                 ${(tp is Type.Exec.Coro).cond { """
                     $xouni mar_out_$n;
-                    mar_exe_$n->pro(mar_exe_$n, &mar_inps_$n, NULL, &mar_out_$n);
+                    mar_exe_$n->pro(MAR_EXE_ACTION_RESUME, mar_exe_$n, &mar_inps_$n, NULL, &mar_out_$n);
                     mar_out_$n;
                 """}}
                 ${(tp is Type.Exec.Task).cond { """
-                    int mar_evt_$n = mar_exe_$n->pro(mar_exe_$n, &mar_inps_$n, NULL);
+                    int mar_evt_$n = mar_exe_$n->pro(MAR_EXE_ACTION_RESUME, mar_exe_$n, &mar_inps_$n, NULL);
                     mar_awaits_add((Task*)mar_exe_$n, mar_evt_$n);
                 """}}
             });
@@ -637,7 +640,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             ({
                 $xouni mar_out_$n;
                 $res mar_res_$n = ${this.arg.coder(tpls,pre)};
-                $exe.pro(&$exe, NULL, &mar_res_$n, &mar_out_$n);
+                $exe.pro(MAR_EXE_ACTION_RESUME, &$exe, NULL, &mar_res_$n, &mar_out_$n);
                 mar_out_$n;
             });
             """
@@ -650,6 +653,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 *mar_out = ($xuni) { .tag=1, ._1=${this.arg.coder(tpls,pre)} };
                 return;
             case ${this.n}:
+                if (mar_act == MAR_EXE_ACTION_ABORT) {
+                    continue;
+                }
                 ${(this.xup is Stmt.SetS).cond {
                     val set = this.xup as Stmt.SetS
                     """
@@ -663,6 +669,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 mar_exe->pc = ${this.n};
                 return MAR_EVENT_${this.tp!!.path()};
             case ${this.n}:
+                if (mar_act == MAR_EXE_ACTION_ABORT) {
+                    continue;
+                }
                 // remove from list (TODO: also on task kill defer)
                 ${(this.xup is Stmt.SetS).cond {
                     val set = this.xup as Stmt.SetS

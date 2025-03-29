@@ -81,6 +81,11 @@ typedef enum MAR_EXE_STATUS {
     MAR_EXE_STATUS_TERMINATED,
 } MAR_EXE_STATUS;
 
+typedef enum MAR_EXE_ACTION {
+    MAR_EXE_ACTION_RESUME,
+    MAR_EXE_ACTION_ABORT,
+} MAR_EXE_ACTION;
+
 #define MAR_Exe_Fields(_pro_)   \
     int pc;                     \
     MAR_EXE_STATUS status;      \
@@ -94,7 +99,7 @@ typedef struct Task_Await {
     struct Task* nxt;
 } Task_Await;
 
-typedef int (*Task_Pro) (struct Task*, void*, void*);
+typedef int (*Task_Pro) (MAR_EXE_ACTION, struct Task*, void*, void*);
 
 typedef struct Task {
     MAR_Exe_Fields(Task_Pro)
@@ -135,7 +140,7 @@ void mar_awaits_emt (int evt_id, void* evt_pay) {
     while (tsk != NULL) {
         if (tsk->awt.evt == evt_id) {
             tsk->awt.evt = MAR_EVENT_NONE;
-            int x = tsk->pro(tsk, NULL, evt_pay);
+            int x = tsk->pro(MAR_EXE_ACTION_RESUME, tsk, NULL, evt_pay);
             Task* cur = tsk;
             tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
             mar_awaits_rem(cur);

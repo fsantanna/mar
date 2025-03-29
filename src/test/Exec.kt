@@ -607,6 +607,22 @@ class Exec  {
         """)
         assert(out == "anon : (lin 2, col 22) : inference error : unknown size\n") { out }
     }
+    @Test
+    fun ff_07_exec_coro_defer () {
+        val out = test("""
+            coro co: () -> () -> () -> () {
+                defer {
+                    print("ok")
+                }
+                yield()
+            }
+            do {
+                var exe = create(co)
+                start exe()
+            }
+        """)
+        assert(out == "ok\n") { out }
+    }
 
     // TUPLE
 
