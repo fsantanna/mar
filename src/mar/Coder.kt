@@ -389,6 +389,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         do {
                             ${(this !is Stmt.Proto.Func).cond {
                                 """
+                                if (mar_act==MAR_EXE_ACTION_ABORT && mar_exe->status==MAR_EXE_STATUS_TERMINATED) {
+                                    return ${(this is Stmt.Proto.Coro).cond2({""},{"0"})};
+                                }
                                 assert(mar_exe->status == MAR_EXE_STATUS_YIELDED);
                                 switch (mar_exe->pc) {
                                     case 0:
@@ -409,9 +412,17 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             is Stmt.Proto.Func -> "return mar_ret;"
                             is Stmt.Proto.Coro -> {
                                 val (xuni,_) = this.tp.x_out(null,pre)
-                                "*mar_out = ($xuni) { .tag=2, ._2=mar_ret };"
+                                """
+                                    mar_exe->status = MAR_EXE_STATUS_TERMINATED;
+                                    if (mar_act != MAR_EXE_ACTION_ABORT) {
+                                        *mar_out = ($xuni) { .tag=2, ._2=mar_ret };
+                                    }
+                                """
                             }
-                            is Stmt.Proto.Task -> "return 0;"
+                            is Stmt.Proto.Task -> """
+                                mar_exe->status = MAR_EXE_STATUS_TERMINATED;
+                                return 0;
+                            """
                         }}
                         
                     }
@@ -445,20 +456,24 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${G.defers[this.n].cond {
                     it.second
                 }}
+                ${this.to_dcls()
+                    .filter { (_,_,tp) -> tp is Type.Exec }
+                    .map { (_,id,tp) ->
+                        tp!!.coder(tpls) + " " + id.str + ";"
+                    }.joinToString("")
+                }
                 do {
-                    ${this.to_dcls().map { (s,_,tp) ->
-                        if (tp !is Type.Proto.Func) emptyList() else {
-                            s as Stmt.Proto
-                            val xtplss: List<Tpl_Map?> = s.template_map_all() ?: listOf(null)
-                            xtplss.distinctBy {
-                                s.proto(it)
-                            }.map {
-                                "auto " + s.x_sig(it, pre) + ";\n"
-                            }
-                        }
-                    }.flatten().joinToString("")}
                     $body
                 } while (0);
+                ${this.to_dcls()
+                    .filter { (_,_,tp) -> tp is Type.Exec }
+                    .map { (_,id,tp) ->
+                        val exe = id.coder(this,pre)
+                        """
+                        $exe.pro(MAR_EXE_ACTION_ABORT, &$exe, NULL, NULL ${(tp is Type.Exec.Coro).cond {", NULL"}});
+                        """
+                    }.joinToString("")
+                }
                 ${G.defers[this.n].cond {
                     it.third
                 }}
@@ -484,8 +499,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         """
         }
         is Stmt.Dcl    -> {
-            val dcl = if (this.up_first { it is Stmt.Proto }.let { it is Stmt.Proto.Coro || it is Stmt.Proto.Task }) "" else {
-                this.xtp!!.coder(tpls) + " " + this.id.str + ";"
+            val dcl = when {
+                (this.xtp is Type.Exec) -> ""
+                (this.up_first { it is Stmt.Proto }.let { it is Stmt.Proto.Coro || it is Stmt.Proto.Task }) -> ""
+                else -> this.xtp!!.coder(tpls) + " " + this.id.str + ";"
             }
             val ini = this.xtp.let {
                 if (it !is Type.Vector) "" else """
