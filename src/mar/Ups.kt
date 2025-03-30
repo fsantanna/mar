@@ -72,3 +72,7 @@ fun Any.up_data (id: String): Stmt.Data? {
         }
     } as Stmt.Data?
 }
+
+fun Any.up_exe (): Boolean {
+    return this.up_first { it is Stmt.Proto }.let { it is Stmt.Proto.Coro || it is Stmt.Proto.Task }
+}

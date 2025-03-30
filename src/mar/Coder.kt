@@ -331,7 +331,16 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                         else -> emptyList()
                     }
                 }, {null}, {null})
-                return blks.map { it.to_dcls().map { (_,id,tp) -> Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n" } }.flatten().joinToString("")
+                return blks.map { blk ->
+                    //println(listOf(blk.n,G.defers[blk.n]))
+                    val defs = G.defers[blk.n]?.first?.map {
+                        "int defer_$it;\n"
+                    } ?: emptyList()
+                    val vars = blk.to_dcls().map { (_,id,tp) ->
+                        Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n"
+                    }
+                    (defs + vars)
+                }.flatten().joinToString("")
             }
             val xx = if (me is Stmt.Proto.Func) emptyList() else {
                 val (pro,exe) = me.tp.x_pro_exe(me.tp.assert_no_tpls_up())
@@ -504,7 +513,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Dcl    -> {
             val dcl = when {
                 (this.xtp is Type.Exec) -> ""
-                (this.up_first { it is Stmt.Proto }.let { it is Stmt.Proto.Coro || it is Stmt.Proto.Task }) -> ""
+                this.up_exe() -> ""
                 else -> this.xtp!!.coder(tpls) + " " + this.id.str + ";"
             }
             val ini = this.xtp.let {
@@ -551,9 +560,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Defer  -> {
             val bup = this.up_first { it is Stmt.Block } as Stmt.Block
             val (ns,ini,end) = G.defers.getOrDefault(bup.n, Triple(mutableListOf(),"",""))
-            val id = "mar_defer_$n"
+            val id = "defer_$n".coder(bup,pre)
             val inix = """
-                int $id = 0;   // not yet reached
+                ${(!this.up_exe()).cond { "int" }} $id = 0;   // not yet reached
             """
             val endx = """
                 if ($id) {     // if true: reached, finalize
@@ -857,10 +866,18 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
 
 fun Tk.Var.coder (fr: Any, pre: Boolean): String {
     val dcl = this.to_xdcl(fr)!!.first
-    return if (dcl.xup!!.up_first { it is Stmt.Proto }.let { it is Stmt.Proto.Coro || it is Stmt.Proto.Task }) {
+    return if (dcl.xup!!.up_exe()) {
         "mar_exe->mem.${this.str}"
     } else {
         this.str
+    }
+}
+
+fun String.coder (fr: Stmt.Block, pre: Boolean): String {
+    return if (fr.xup?.up_exe() ?: false) {
+        "mar_exe->mem.$this"
+    } else {
+        this
     }
 }
 
@@ -1166,8 +1183,8 @@ fun coder_awts (): SortedSet<String> {
 }
 
 fun coder_main (pre: Boolean): String {
-    val types = coder_types(null, G.outer!!, null, pre)
     val code = G.outer!!.coder(null,pre)
+    val types = coder_types(null, G.outer!!, null, pre)
 
     val c = File("build/mar.c").readText()
         .replace("// === MAR_TYPES === //", types)
