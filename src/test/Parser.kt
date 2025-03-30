@@ -1402,6 +1402,12 @@ class Parser {
         assert(s is Stmt.Emit)
         assert(s.to_str() == "emit((X(([]))))") { s.to_str() }
     }
+    @Test
+    fun uu_07_await_call_err() {
+        G.tks = ("await x").lexer()
+        parser_lexer()
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : await error : expected task call")
+    }
 
     @Test
     fun uu_X1_spawn() {

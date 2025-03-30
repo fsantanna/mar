@@ -837,49 +837,11 @@ fun parser_stmt (): List<Stmt> {
         }
         accept_fix("await") -> {
             val tk0 = G.tk0 as Tk.Fix
-            accept_fix_err("(")
-            val (tp,cnd1) = when {
-                check_fix(")") -> Pair(null, null)
-                accept_fix(":") -> {
-                    val x = parser_type(null, false, false)
-                    if (x !is Type.Data) {
-                        err(x.tk, "exception error : expected data type")
-                    }
-                    Pair(x, null)
-                }
-                else -> {
-                    val exe = parser_expr()
-                    Pair (
-                        Type.Data(tk0, null, listOf(Tk.Type("Event",tk0.pos), Tk.Type("Task",tk0.pos))),
-                        Expr.Bin (
-                            Tk.Op("==", tk0.pos),
-                            Expr.Uno(Tk.Op("ref",tk0.pos),exe),
-                            Expr.Nat(Tk.Nat("((Event*)mar_evt)->Event_Task.tsk", tk0.pos), null)
-                        )
-                    )
-                }
-            }
-            accept_fix_err(")")
-            val cnd2 = when {
-                (cnd1 != null) -> cnd1
-                (!(accept_fix("while") || accept_fix("until"))) -> null
-                else -> {
-                    val is_until = (G.tk0!!.str == "until")
-                    accept_fix_err("(")
-                    val x = parser_expr()
-                    accept_fix_err(")")
-                    if (is_until) x else {
-                        Expr.Uno(Tk.Op("!", tk0.pos), x)
-                    }
-                }
-            }
-            if (cnd2 == null) {
-                listOf(Stmt.Await(tk0, tp))
-            } else {
-                listOf(Stmt.Loop(tk0,
+            fun loop (tp: Type.Data?, cnd: Expr): Stmt.Loop {
+                return Stmt.Loop(tk0,
                     Stmt.Block(tk0, Type.Data(tk0, null, listOf(Tk.Type("Break",tk0.pos))), listOf(
                         Stmt.Await(tk0, tp),
-                        Stmt.If(tk0, cnd2,
+                        Stmt.If(tk0, cnd,
                             Stmt.Block(tk0, null, listOf(
                                 Stmt.Escape(tk0,
                                     Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
@@ -888,7 +850,53 @@ fun parser_stmt (): List<Stmt> {
                             ),
                             Stmt.Block(tk0, null, emptyList()))
                     ))
-                ))
+                )
+            }
+            when {
+                !accept_fix("(") -> {
+                    val call = parser_expr()
+                    if (call !is Expr.Call) {
+                        err(call.tk, "await error : expected task call")
+                    }
+                    TODO()
+                }
+                (!check_fix(")") && !check_fix(":")) -> {
+                    val exe = parser_expr()
+                    accept_fix_err(")")
+                    listOf(loop (
+                        Type.Data(tk0, null, listOf(Tk.Type("Event",tk0.pos), Tk.Type("Task",tk0.pos))),
+                        Expr.Bin (
+                            Tk.Op("==", tk0.pos),
+                            Expr.Uno(Tk.Op("ref",tk0.pos),exe),
+                            Expr.Nat(Tk.Nat("((Event*)mar_evt)->Event_Task.tsk", tk0.pos), null)
+                        )
+                    ))
+                }
+                else -> {
+                    val tp = if (check_fix(")")) null else {
+                        accept_fix_err(":")
+                       val x = parser_type(null, false, false)
+                       if (x !is Type.Data) {
+                           err(x.tk, "exception error : expected data type")
+                       }
+                       x
+                    }
+                    accept_fix_err(")")
+                    val cnd = if (!(accept_fix("while") || accept_fix("until"))) null else {
+                        val is_until = (G.tk0!!.str == "until")
+                        accept_fix_err("(")
+                        val x = parser_expr()
+                        accept_fix_err(")")
+                        if (is_until) x else {
+                            Expr.Uno(Tk.Op("!", tk0.pos), x)
+                        }
+                    }
+                    if (cnd != null) {
+                        listOf(loop(tp, cnd))
+                    } else {
+                        listOf(Stmt.Await(tk0, tp))
+                    }
+                }
             }
         }
         accept_fix("emit") -> {
