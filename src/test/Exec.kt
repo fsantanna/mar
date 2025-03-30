@@ -623,6 +623,22 @@ class Exec  {
         """)
         assert(out == "ok\n") { out }
     }
+    @Test
+    fun ff_08_exec_coro_defer_no_create () {
+        val out = test("""
+            coro co: () -> () -> () -> () {
+                defer {
+                    print("ok")
+                }
+                yield()
+            }
+            do {
+                var exe: exec coro [co] () -> () -> () -> ()
+            }
+            print("ok")
+        """)
+        assert(out == "ok\n") { out }
+    }
 
     // TUPLE
 
