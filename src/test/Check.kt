@@ -443,6 +443,16 @@ class Check {
         """)
         assert(out == "anon : (lin 3, col 17) : await error : expected enclosing task") { out!! }
     }
+    @Test
+    fun bd_02_await_int_err () {
+        val out = check("""
+            do {
+                await(10)
+            }
+        """)
+        assert(out == "TODO") { out!! }
+    }
+
     // TUPLE
 
     @Test

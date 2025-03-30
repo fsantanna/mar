@@ -1853,8 +1853,55 @@ class Exec  {
         """)
         assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
     }
+    @Test
+    fun oo_10_task_term () {
+        val out = test("""
+            data X: ()
+            task t2: () -> () {
+                print(">>> B")
+                await(:X)
+                print("<<< B")
+                ;;emit(Event.Task [`mar_exe`])
+            }
+            spawn {
+                var exe = create(t2)
+                start exe()
+                print(">>> A")
+                var e = await(exe)
+                print("<<< A")
+            }
+            emit(X())
+        """)
+        assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
+    }
+    @Test
+    fun oo_11_task_term () {
+        val out = test("""
+            data X: ()
+            task t2: () -> () {
+                print(">>> B")
+                await(:X)
+                print("<<< B")
+                ;;emit(Event.Task [`mar_exe`])
+            }
+            spawn {
+                print(">>> A")
+                await t2()
+                print("<<< A")
+            }
+            emit(X())
+        """)
+        assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
+    }
+    @Test
+    fun oo_XX_task_defer () {
+        val out = test("""
+            TODO
+        """)
+        assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
+    }
 
-    // SPAWN
+    // SPAWN / PAR
 
     @Test
     fun op_01_task_spawn () {
@@ -1872,6 +1919,24 @@ class Exec  {
         """)
         assert(out == "X(10)\nY(10)\n") { out }
     }
+    @Test
+    fun op_02_par () {
+        val out = test("""
+            data X: Int
+            data Y: Int
+            par {
+                var e = await(:X)
+                print(e)
+            } with {
+                var f = await(:Y)
+                print(f)
+            }
+            emit(X(10))
+            emit(Y(10))
+        """)
+        assert(out == "X(10)\nY(10)\n") { out }
+    }
+
 
     // TEMPLATE / TYPE
 

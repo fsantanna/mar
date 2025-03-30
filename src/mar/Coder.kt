@@ -467,7 +467,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     .map { (_,id,tp) ->
                         val x = id.coder(this,pre)
                         """
-                        ${tp!!.coder(tpls)} $x;
+                        ${(!this.up_exe()).cond { " ${tp!!.coder(tpls)} $x;" }}
                         $x.pro = NULL;
                         """
                     }.joinToString("")
