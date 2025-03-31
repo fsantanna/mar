@@ -871,11 +871,7 @@ fun parser_stmt (): List<Stmt> {
                         Stmt.Dcl(tk0, id, null),
                         Stmt.SetS(tk0, Expr.Acc(id), Stmt.Create(tk0, call.f)),
                         Stmt.Start(tk0, Expr.Acc(id), call.args),
-                        Stmt.Await(
-                            tk0,
-                            Type.Data(tk0, null, listOf(Tk.Type("Event", tk0.pos), Tk.Type("Task", tk0.pos))),
-                            null
-                        )
+                        Stmt.Await(tk0, null, Expr.Acc(id))
                     )
                 }
                 // await(true), await(false)
