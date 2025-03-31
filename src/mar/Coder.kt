@@ -696,7 +696,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Await  -> {
             """
                 mar_exe->pc = ${this.n};
-                return MAR_EVENT_${this.tp!!.path()};
+                return MAR_EVENT_${this.tp?.path() ?: "ANY"};
             case ${this.n}:
                 if (mar_act == MAR_EXE_ACTION_ABORT) {
                     continue;

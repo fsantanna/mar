@@ -108,6 +108,7 @@ typedef struct Task {
 
 enum {
     MAR_EVENT_NONE = 0,
+    MAR_EVENT_ANY  = 1,
     // === MAR_EVENTS === //
 };
 
