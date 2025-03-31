@@ -91,8 +91,6 @@ typedef enum MAR_EXE_ACTION {
     MAR_EXE_STATUS status;      \
     _pro_ pro;
 
-// TASKS
-
 typedef struct Task_Await {
     int evt;
     void* pay;
@@ -106,6 +104,11 @@ typedef struct Task {
     MAR_Exe_Fields(Task_Pro)
     Task_Await awt;
 } Task;
+
+// TYPES
+// === MAR_TYPES === //
+
+// TASKS
 
 enum {
     MAR_EVENT_NONE = 0,
@@ -140,7 +143,12 @@ void mar_awaits_rem (Task* tsk) {
 void mar_awaits_emt (int evt_id, void* evt_pay) {
     Task* tsk = MAR_AWAITS;
     while (tsk != NULL) {
-        if (tsk->awt.evt==evt_id && (evt_id!=MAR_EVENT_Event_Task || tsk->awt.pay==evt_pay)) {
+        if (
+            tsk->awt.evt == evt_id
+#ifdef EVENT_TAG
+            && (evt_id!=MAR_EVENT_Event_Task || tsk->awt.pay==((Event*)evt_pay)->Event_Task.tsk)
+#endif
+        ) {
             tsk->awt.evt = MAR_EVENT_NONE;
             int x = tsk->pro(MAR_EXE_ACTION_RESUME, tsk, NULL, evt_pay);
             Task* cur = tsk;
@@ -164,9 +172,6 @@ void mar_awaits_dmp () {
     }
 }
 #endif
-
-// TYPES
-// === MAR_TYPES === //
 
 // PROTOS
 // === MAR_PROTOS === //

@@ -1846,7 +1846,7 @@ class Exec  {
                 var exe = create(t2)
                 start exe()
                 print(">>> A")
-                var e = await(:Event.Task) until (e.tsk == \exe)
+                var e = await(exe)
                 print("<<< A")
             }
             emit(X())
