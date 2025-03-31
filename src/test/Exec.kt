@@ -1854,46 +1854,6 @@ class Exec  {
         assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
     }
     @Test
-    fun oo_10_task_term () {
-        val out = test("""
-            data X: ()
-            task t2: () -> () {
-                print(">>> B")
-                await(:X)
-                print("<<< B")
-                ;;emit(Event.Task [`mar_exe`])
-            }
-            spawn {
-                var exe = create(t2)
-                start exe()
-                print(">>> A")
-                var e = await(exe)
-                print("<<< A")
-            }
-            emit(X())
-        """)
-        assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
-    }
-    @Test
-    fun oo_11_task_term () {
-        val out = test("""
-            data X: ()
-            task t2: () -> () {
-                print(">>> B")
-                await(:X)
-                print("<<< B")
-                ;;emit(Event.Task [`mar_exe`])
-            }
-            spawn {
-                print(">>> A")
-                await t2()
-                print("<<< A")
-            }
-            emit(X())
-        """)
-        assert(out == ">>> A\n>>> B\n<<< B\n<<< A\n") { out }
-    }
-    @Test
     fun oo_XX_task_defer () {
         val out = test("""
             TODO
@@ -1901,7 +1861,7 @@ class Exec  {
         assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
     }
 
-    // SPAWN / PAR
+    // SPAWN / PAR / AWAIT(exe) / AWAIT t(...)
 
     @Test
     fun op_01_task_spawn () {
@@ -1935,6 +1895,46 @@ class Exec  {
             emit(Y(10))
         """)
         assert(out == "X(10)\nY(10)\n") { out }
+    }
+    @Test
+    fun oo_03_task_term () {
+        val out = test("""
+            data X: ()
+            task t2: () -> () {
+                print(">>> B")
+                await(:X)
+                print("<<< B")
+                ;;emit(Event.Task [`mar_exe`])
+            }
+            spawn {
+                var exe = create(t2)
+                start exe()
+                print(">>> A")
+                var e = await(exe)
+                print("<<< A")
+            }
+            emit(X())
+        """)
+        assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
+    }
+    @Test
+    fun oo_04_task_term () {
+        val out = test("""
+            data X: ()
+            task t2: () -> () {
+                print(">>> B")
+                await(:X)
+                print("<<< B")
+                ;;emit(Event.Task [`mar_exe`])
+            }
+            spawn {
+                print(">>> A")
+                await t2()
+                print("<<< A")
+            }
+            emit(X())
+        """)
+        assert(out == ">>> A\n>>> B\n<<< B\n<<< A\n") { out }
     }
 
 
