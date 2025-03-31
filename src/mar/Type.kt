@@ -42,8 +42,8 @@ fun Type.is_str (): Boolean {
     }
 }
 
-fun Type.Data.path (): String {
-    return this.ts.map { it.str }.joinToString("_")
+fun Type.Data.path (str: String): String {
+    return this.ts.map { it.str }.joinToString(str)
 }
 
 fun Type.is_same_of (other: Type): Boolean {

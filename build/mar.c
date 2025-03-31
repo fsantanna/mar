@@ -95,6 +95,7 @@ typedef enum MAR_EXE_ACTION {
 
 typedef struct Task_Await {
     int evt;
+    void* pay;
     struct Task* prv;
     struct Task* nxt;
 } Task_Await;
@@ -139,7 +140,7 @@ void mar_awaits_rem (Task* tsk) {
 void mar_awaits_emt (int evt_id, void* evt_pay) {
     Task* tsk = MAR_AWAITS;
     while (tsk != NULL) {
-        if (tsk->awt.evt == evt_id) {
+        if (tsk->awt.evt==evt_id && (evt_id!=MAR_EVENT_Event_Task || tsk->awt.pay==evt_pay)) {
             tsk->awt.evt = MAR_EVENT_NONE;
             int x = tsk->pro(MAR_EXE_ACTION_RESUME, tsk, NULL, evt_pay);
             Task* cur = tsk;

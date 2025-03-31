@@ -694,9 +694,13 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Await  -> {
+            val tp = this.tp?.path("_")
             """
                 mar_exe->pc = ${this.n};
-                return MAR_EVENT_${this.tp?.path() ?: "ANY"};
+                ${(tp == "Event_Task").cond {
+                    "mar_exe->awt.pay = ${this.xpay!!.coder(null,pre)};"
+                }}
+                return MAR_EVENT_${tp ?: "ANY"};
             case ${this.n}:
                 if (mar_act == MAR_EXE_ACTION_ABORT) {
                     continue;
@@ -716,7 +720,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
             // EMIT | ${this.dump()}
              typeof($e) mar_$n = $e;
-            mar_awaits_emt(MAR_EVENT_${(this.e.typex() as Type.Data).path()}, &mar_$n);
+            mar_awaits_emt(MAR_EVENT_${(this.e.typex() as Type.Data).path("_")}, &mar_$n);
             // declare event
             // traverse list
             // pass pointer
@@ -1174,8 +1178,8 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
 fun coder_awts (): SortedSet<String> {
     fun fs (me: Stmt): List<String> {
         return when (me) {
-            is Stmt.Emit -> listOf((me.e.typex() as Type.Data).path())
-            is Stmt.Await -> if (me.tp == null) emptyList() else listOf(me.tp.path())
+            is Stmt.Emit -> listOf((me.e.typex() as Type.Data).path("_"))
+            is Stmt.Await -> if (me.tp == null) emptyList() else listOf(me.tp.path("_"))
             else -> emptyList()
         }
     }

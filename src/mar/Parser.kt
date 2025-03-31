@@ -605,6 +605,7 @@ fun gen_spawn (tk: Tk, N: Int, blk: List<Stmt>): List<Stmt> {
         Stmt.Start(tk, Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)), emptyList())
     )
 }
+
 fun parser_stmt (): List<Stmt> {
     return when {
         (accept_fix("func") || accept_fix("coro") || accept_fix("task")) -> {
@@ -855,10 +856,10 @@ fun parser_stmt (): List<Stmt> {
         }
         accept_fix("await") -> {
             val tk0 = G.tk0 as Tk.Fix
-            fun loop (tp: Type.Data?, cnd: Expr): Stmt.Loop {
+            fun loop (tp: Type.Data?, pay: Expr?, cnd: Expr): Stmt.Loop {
                 return Stmt.Loop(tk0,
                     Stmt.Block(tk0, Type.Data(tk0, null, listOf(Tk.Type("Break",tk0.pos))), listOf(
-                        Stmt.Await(tk0, tp),
+                        Stmt.Await(tk0, tp, pay),
                         Stmt.If(tk0, cnd,
                             Stmt.Block(tk0, null, listOf(
                                 Stmt.Escape(tk0,
@@ -882,36 +883,27 @@ fun parser_stmt (): List<Stmt> {
                         Stmt.Dcl(tk0, id, null),
                         Stmt.SetS(tk0, Expr.Acc(id), Stmt.Create(tk0, call.f)),
                         Stmt.Start(tk0, Expr.Acc(id), call.args),
-                        loop (
+                        Stmt.Await(tk0,
                             Type.Data(tk0, null, listOf(Tk.Type("Event",tk0.pos), Tk.Type("Task",tk0.pos))),
-                            Expr.Bin (
-                                Tk.Op("==", tk0.pos),
-                                Expr.Uno(Tk.Op("ref",tk0.pos), Expr.Acc(id)),
-                                Expr.Nat(Tk.Nat("((Event*)mar_evt)->Event_Task.tsk", tk0.pos), null)
-                            )
+                            Expr.Uno(Tk.Op("ref",tk0.pos), Expr.Acc(id))
                         )
                     )
                 }
                 (!check_fix(")") && !check_fix(":")) -> {
                     val exe = parser_expr()
                     accept_fix_err(")")
-                    listOf(loop (
-                        Type.Data(tk0, null, listOf(Tk.Type("Event",tk0.pos), Tk.Type("Task",tk0.pos))),
-                        Expr.Bin (
-                            Tk.Op("==", tk0.pos),
-                            Expr.Uno(Tk.Op("ref",tk0.pos),exe),
-                            Expr.Nat(Tk.Nat("((Event*)mar_evt)->Event_Task.tsk", tk0.pos), null)
+                    listOf (
+                        Stmt.Await(tk0,
+                            Type.Data(tk0, null, listOf(Tk.Type("Event",tk0.pos), Tk.Type("Task",tk0.pos))),
+                            Expr.Uno(Tk.Op("ref",tk0.pos),exe)
                         )
-                    ))
+                    )
                 }
                 else -> {
-                    val (tp,cnd1) = if (check_fix(")")) Pair(null,null) else {
+                    val tp = if (check_fix(")")) null else {
                         accept_fix_err(":")
                         if (check_enu("Type")) {
-                            Pair (
-                                parser_type(null, false, false) as Type.Data,
-                                null
-                            )
+                            parser_type(null, false, false) as Type.Data
                         } else {
                             val x = parser_expr()
                             //Pair (
@@ -932,9 +924,9 @@ fun parser_stmt (): List<Stmt> {
                         }
                     }
                     if (cnd != null) {
-                        listOf(loop(tp, cnd))
+                        listOf(loop(tp, null, cnd))
                     } else {
-                        listOf(Stmt.Await(tk0, tp))
+                        listOf(Stmt.Await(tk0, tp, null))
                     }
                 }
             }

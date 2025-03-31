@@ -1873,6 +1873,30 @@ class Exec  {
         """)
         assert(out == "first\nlast\n") { out }
     }
+    @Test
+    fun oo_11_task_term () {
+        val out = test("""
+            data X: ()
+            data Y: ()
+            task t2: () -> () {
+                await(:X)
+            }
+            task t3: () -> () {
+                await(:Y)
+            }
+            spawn {
+                var e2 = create(t2)
+                var e3 = create(t3)
+                start e2()
+                start e3()
+                var e = await(e2)
+                print("nok")
+            }
+            emit(Y())
+            print("ok")
+        """)
+        assert(out == "ok\n") { out }
+    }
 
     // SPAWN / PAR / AWAIT(exe) / AWAIT t(...)
 
