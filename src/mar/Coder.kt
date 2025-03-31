@@ -694,19 +694,35 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Await  -> {
-            val tp = this.evt?.path("_")
-            val pay = this.xpay?.coder(null,pre)
+            val te = this.e?.typex()
             """
                 mar_exe->pc = ${this.n};
-                ${when (tp) {
-                    "Event_Task"  -> "mar_exe->awt.pay = ${pay!!};"
-                    "Event_Clock" -> "mar_exe->awt.pay = (void*) ${pay!!};"
-                    else -> ""
+                ${when {
+                    (this.e is Expr.Bool && this.e.tk.str=="false") -> """
+                        return MAR_EVENT_NONE;
+                    """
+                    (this.e is Expr.Bool && this.e.tk.str=="true") -> """
+                        return MAR_EVENT_ANY;
+                    """
+                    (te is Type.Prim && te.tk.str=="Int") -> """
+                        mar_exe->awt.pay = (void*) ${this.e!!.coder(null,pre)};
+                        return MAR_EVENT_Event_Clock;
+                    """
+                    (te is Type.Exec.Task) -> {
+                        val exe = this.e!!.coder(null,pre)
+                        """
+                        if ($exe.status != MAR_EXE_STATUS_TERMINATED) {
+                            mar_exe->awt.pay = & $exe;
+                            return MAR_EVENT_Event_Task;
+                        }
+                        """
+                    }
+                    (this.e != null) -> error("impossible case")
+                    (this.tp == null) -> error("impossible case")
+                    else -> """
+                        return MAR_EVENT_${this.tp.path("_")};
+                    """
                 }}
-                ${(tp == "Event_Task").cond { "if (${pay!!}->status != MAR_EXE_STATUS_TERMINATED)" }}
-                {
-                    return MAR_EVENT_${tp ?: "ANY"};
-                }
             case ${this.n}:
                 if (mar_act == MAR_EXE_ACTION_ABORT) {
                     continue;
@@ -1185,7 +1201,7 @@ fun coder_awts (): SortedSet<String> {
     fun fs (me: Stmt): List<String> {
         return when (me) {
             is Stmt.Emit -> listOf((me.e.typex() as Type.Data).path("_"))
-            is Stmt.Await -> if (me.evt == null) emptyList() else listOf(me.evt.path("_"))
+            is Stmt.Await -> if (me.tp == null) emptyList() else listOf(me.tp.path("_"))
             else -> emptyList()
         }
     }

@@ -24,7 +24,7 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
         is Stmt.Start  -> this.args.map { it.dn_collect_pos(fe,ft) }.flatten() + this.exe.dn_collect_pos(fe,ft)
         is Stmt.Resume -> this.arg.dn_collect_pos(fe,ft) + this.exe.dn_collect_pos(fe,ft)
         is Stmt.Yield  -> this.arg.dn_collect_pos(fe,ft)
-        is Stmt.Await  -> (this.evt?.dn_collect_pos(fe,ft) ?: emptyList()) + (this.xpay?.dn_collect_pos(fe,ft) ?: emptyList())
+        is Stmt.Await  -> (this.tp?.dn_collect_pos(fe,ft) ?: emptyList()) + (this.e?.dn_collect_pos(fe,ft) ?: emptyList())
         is Stmt.Emit   -> this.e.dn_collect_pos(fe,ft)
 
         is Stmt.Print -> this.e.dn_collect_pos(fe,ft)
@@ -119,7 +119,7 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
         is Stmt.Start  -> this.exe.dn_collect_pre(fe,ft) + this.args.map { it.dn_collect_pre(fe,ft) }.flatten()
         is Stmt.Resume -> this.exe.dn_collect_pre(fe,ft) + this.arg.dn_collect_pre(fe,ft)
         is Stmt.Yield  -> this.arg.dn_collect_pre(fe,ft)
-        is Stmt.Await  -> (this.evt?.dn_collect_pre(fe,ft) ?: emptyList()) + (this.xpay?.dn_collect_pre(fe,ft) ?: emptyList())
+        is Stmt.Await  -> (this.tp?.dn_collect_pre(fe,ft) ?: emptyList()) + (this.e?.dn_collect_pre(fe,ft) ?: emptyList())
         is Stmt.Emit   -> this.e.dn_collect_pre(fe,ft)
 
         is Stmt.Print -> this.e.dn_collect_pre(fe,ft)

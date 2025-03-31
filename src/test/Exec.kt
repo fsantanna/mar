@@ -1861,7 +1861,7 @@ class Exec  {
                 defer {
                     print("first")
                 }
-                await()
+                await(true)
             }
             spawn {
                 defer {
@@ -2018,7 +2018,7 @@ class Exec  {
         val out = test("""
             spawn {
                 print("antes")
-                await(:10)
+                await(%10)
                 print("depois")
             }
             emit(Event.Clock [10])
@@ -2030,7 +2030,7 @@ class Exec  {
         val out = test("""
             spawn {
                 print("antes")
-                await(:10)
+                await(%10)
                 print("depois")
             }
             emit(Event.Clock [5])

@@ -858,22 +858,7 @@ fun parser_stmt (): List<Stmt> {
         }
         accept_fix("await") -> {
             val tk0 = G.tk0 as Tk.Fix
-            fun loop (tp: Type.Data?, pay: Expr?, cnd: Expr): Stmt.Loop {
-                return Stmt.Loop(tk0,
-                    Stmt.Block(tk0, Type.Data(tk0, null, listOf(Tk.Type("Break",tk0.pos))), listOf(
-                        Stmt.Await(tk0, tp, pay),
-                        Stmt.If(tk0, cnd,
-                            Stmt.Block(tk0, null, listOf(
-                                Stmt.Escape(tk0,
-                                    Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
-                                        Expr.Tuple(tk0,null, emptyList())))
-                                )
-                            ),
-                            Stmt.Block(tk0, null, emptyList()))
-                    ))
-                )
-            }
-            val ss = when {
+            val awt: Stmt.Await = when {
                 // await pro(...)
                 !accept_fix("(") -> {
                     val n = G.N
@@ -882,53 +867,65 @@ fun parser_stmt (): List<Stmt> {
                     if (call !is Expr.Call) {
                         err(call.tk, "await error : expected task call")
                     }
-                    listOf(
+                    return listOf(
                         Stmt.Dcl(tk0, id, null),
                         Stmt.SetS(tk0, Expr.Acc(id), Stmt.Create(tk0, call.f)),
                         Stmt.Start(tk0, Expr.Acc(id), call.args),
                         Stmt.Await(
                             tk0,
                             Type.Data(tk0, null, listOf(Tk.Type("Event", tk0.pos), Tk.Type("Task", tk0.pos))),
-                            Expr.Uno(Tk.Op("ref", tk0.pos), Expr.Acc(id))
+                            null
                         )
                     )
                 }
                 // await(true), await(false)
                 check_fix("true") || check_fix("false") -> {
                     val b = parser_expr()
-                    listOf(Stmt.Await(tk0, b, null))
+                    accept_fix_err(")")
+                    Stmt.Await(tk0, null, b)
                 }
-                // await(@10min)
-                accept_fix("@") -> {
+                // await(%10min)
+                accept_op("%") -> {
                     val ms = parser_expr()
-                    listOf(Stmt.Await(tk0, ms, null))
+                    accept_fix_err(")")
+                    Stmt.Await(tk0, null, ms)
                 }
                 // await(:X)
                 accept_fix(":") -> {
-                    val tp = parser_type(null, false, false) as Type.Data,
+                    val tp = parser_type(null, false, false) as Type.Data
                     accept_fix_err(")")
-                    listOf(Stmt.Await(tk0, tp, null))
+                    Stmt.Await(tk0, tp, null)
                 }
                 // await(exe)
                 else -> {
                     val exe = parser_expr()
                     accept_fix_err(")")
-                    TODO()
+                    Stmt.Await(tk0, null, exe)
                 }
             }
-            val cnd = if (!(accept_fix("while") || accept_fix("until"))) null else {
+            if (!(accept_fix("while") || accept_fix("until"))) {
+                listOf(awt)
+            } else {
                 val is_until = (G.tk0!!.str == "until")
                 accept_fix_err("(")
-                val x = parser_expr()
+                val cnd1 = parser_expr()
                 accept_fix_err(")")
-                if (is_until) x else {
-                    Expr.Uno(Tk.Op("!", tk0.pos), x)
+                val cnd2 = if (is_until) cnd1 else {
+                    Expr.Uno(Tk.Op("!", tk0.pos), cnd1)
                 }
-            }
-            if (cnd != null) {
-                listOf(loop(tp, pay, cnd))
-            } else {
-                listOf(Stmt.Await(tk0, tp, pay))
+                listOf(Stmt.Loop(tk0,
+                   Stmt.Block(tk0, Type.Data(tk0, null, listOf(Tk.Type("Break",tk0.pos))), listOf(
+                       awt,
+                       Stmt.If(tk0, cnd2,
+                           Stmt.Block(tk0, null, listOf(
+                               Stmt.Escape(tk0,
+                                   Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
+                                       Expr.Tuple(tk0,null, emptyList())))
+                               )
+                           ),
+                           Stmt.Block(tk0, null, emptyList()))
+                   ))
+               ))
             }
         }
         accept_fix("emit") -> {
