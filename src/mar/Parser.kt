@@ -905,13 +905,21 @@ fun parser_stmt (): List<Stmt> {
                     ))
                 }
                 else -> {
-                    val tp = if (check_fix(")")) null else {
+                    val (tp,cnd1) = if (check_fix(")")) Pair(null,null) else {
                         accept_fix_err(":")
-                       val x = parser_type(null, false, false)
-                       if (x !is Type.Data) {
-                           err(x.tk, "exception error : expected data type")
-                       }
-                       x
+                        if (check_enu("Type")) {
+                            Pair (
+                                parser_type(null, false, false) as Type.Data,
+                                null
+                            )
+                        } else {
+                            val x = parser_expr()
+                            //Pair (
+                            //    Type.Data(tk0, null, listOf(Tk.Type("Event",tk0.pos), Tk.Type("Clock",tk0.pos))),
+                            //    Expr.Bin(TODO())
+                            //)
+                            TODO()
+                        }
                     }
                     accept_fix_err(")")
                     val cnd = if (!(accept_fix("while") || accept_fix("until"))) null else {

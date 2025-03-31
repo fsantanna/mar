@@ -1950,6 +1950,20 @@ class Exec  {
         assert(out == ">>> A\n>>> B\n<<< B\n<<< A\n") { out }
     }
 
+    // AWAIT / TIME / CLOCK
+
+    @Test
+    fun oq_01_clock () {
+        val out = test("""
+            spawn {
+                print("antes")
+                await(:10ms)
+                print("depois")
+            }
+            emit(Event.Clock [10])
+        """)
+        assert(out == "X(10)\nY(10)\n") { out }
+    }
 
     // TEMPLATE / TYPE
 
