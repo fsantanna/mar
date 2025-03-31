@@ -1981,7 +1981,7 @@ class Exec  {
         val out = test("""
             spawn {
                 print("antes")
-                await(:10ms)
+                await(:10)
                 print("depois")
             }
             emit(Event.Clock [10])

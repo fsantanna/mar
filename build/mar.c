@@ -110,11 +110,9 @@ typedef struct Task {
 
 // TASKS
 
-enum {
-    MAR_EVENT_NONE = 0,
-    MAR_EVENT_ANY  = 1,
-    // === MAR_EVENTS === //
-};
+#define MAR_EVENT_NONE 0
+#define MAR_EVENT_ANY  1
+// === MAR_EVENTS === //
 
 Task* MAR_AWAITS = NULL;
 
@@ -145,8 +143,11 @@ void mar_awaits_emt (int evt_id, void* evt_pay) {
     while (tsk != NULL) {
         if (
             tsk->awt.evt == evt_id
-#ifdef EVENT_TAG
+#ifdef MAR_EVENT_Event_Task
             && (evt_id!=MAR_EVENT_Event_Task || tsk->awt.pay==((Event*)evt_pay)->Event_Task.tsk)
+#endif
+#ifdef MAR_EVENT_Event_Clock
+            && (evt_id!=MAR_EVENT_Event_Clock || ((intptr_t)tsk->awt.pay)==((Event*)evt_pay)->Event_Clock.ms)
 #endif
         ) {
             tsk->awt.evt = MAR_EVENT_NONE;

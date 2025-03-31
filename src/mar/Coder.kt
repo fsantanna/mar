@@ -1192,7 +1192,7 @@ fun coder_main (pre: Boolean): String {
 
     val c = File("build/mar.c").readText()
         .replace("// === MAR_TYPES === //", types)
-        .replace("// === MAR_EVENTS === //", coder_awts().map { "MAR_EVENT_$it" }.joinToString(",\n"))
+        .replace("// === MAR_EVENTS === //", coder_awts().mapIndexed { i,id -> "#define MAR_EVENT_$id (MAR_EVENT_ANY+1+$i)" }.joinToString("\n"))
         .replace("// === MAR_MAIN === //", code)
         .replace("// === MAR_PROTOS === //", (G.protos.first + G.protos.second).joinToString("\n"))
 

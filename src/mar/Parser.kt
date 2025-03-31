@@ -587,6 +587,16 @@ fun set_stmt_as_set_src (tk0: Tk, dst: Expr): List<Stmt> {
     }
 }
 
+fun gen_task_emit (tk: Tk): Stmt {
+    return Stmt.Emit(tk,
+        Expr.Cons(tk,
+            Type.Data(tk,null,listOf(Tk.Type("Event",tk.pos),(Tk.Type("Task",tk.pos)))),
+            Expr.Tuple(tk,null, listOf(
+                Pair(null, Expr.Nat(Tk.Nat("((void*) mar_exe)", tk.pos), null))))
+        )
+    )
+}
+
 fun gen_spawn (tk: Tk, N: Int, blk: List<Stmt>): List<Stmt> {
     return listOf(
         Stmt.Proto.Task(
@@ -594,7 +604,7 @@ fun gen_spawn (tk: Tk, N: Int, blk: List<Stmt>): List<Stmt> {
             Tk.Var("mar_pro_$N", tk.pos),
             emptyList(),
             Type.Proto.Task.Vars(tk, null, emptyList(), emptyList(), Type.Unit(tk)),
-            Stmt.Block(tk, null, blk)
+            Stmt.Block(tk, null, blk+ gen_task_emit(tk))
         ),
         Stmt.Dcl(tk, Tk.Var("mar_exe_$N", tk.pos), null),
         Stmt.SetS(
@@ -623,15 +633,7 @@ fun parser_stmt (): List<Stmt> {
                 is Type.Proto.Coro.Vars ->
                     Stmt.Proto.Coro(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, ss))
                 is Type.Proto.Task.Vars -> {
-                    val xss = ss + listOf(
-                        Stmt.Emit(tk0,
-                            Expr.Cons(tk0,
-                                Type.Data(tk0,null,listOf(Tk.Type("Event",tk0.pos),(Tk.Type("Task",tk0.pos)))),
-                                Expr.Tuple(tk0,null, listOf(
-                                    Pair(null, Expr.Nat(Tk.Nat("((void*) mar_exe)", tk0.pos), null))))
-                            )
-                        )
-                    )
+                    val xss = ss + listOf(gen_task_emit(tk0))
                     Stmt.Proto.Task(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, xss))
                 }
                 else -> error("impossible case")
@@ -900,17 +902,19 @@ fun parser_stmt (): List<Stmt> {
                     )
                 }
                 else -> {
-                    val tp = if (check_fix(")")) null else {
+                    val (tp,pay) = if (check_fix(")")) Pair(null,null) else {
                         accept_fix_err(":")
                         if (check_enu("Type")) {
-                            parser_type(null, false, false) as Type.Data
+                            Pair (
+                                parser_type(null, false, false) as Type.Data,
+                                null
+                            )
                         } else {
-                            val x = parser_expr()
-                            //Pair (
-                            //    Type.Data(tk0, null, listOf(Tk.Type("Event",tk0.pos), Tk.Type("Clock",tk0.pos))),
-                            //    Expr.Bin(TODO())
-                            //)
-                            TODO()
+                            val ms = parser_expr()
+                            Pair (
+                                Type.Data(tk0, null, listOf(Tk.Type("Event",tk0.pos), Tk.Type("Clock",tk0.pos))),
+                                ms
+                            )
                         }
                     }
                     accept_fix_err(")")
@@ -924,7 +928,7 @@ fun parser_stmt (): List<Stmt> {
                         }
                     }
                     if (cnd != null) {
-                        listOf(loop(tp, null, cnd))
+                        listOf(loop(tp, pay, cnd))
                     } else {
                         listOf(Stmt.Await(tk0, tp, null))
                     }
