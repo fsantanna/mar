@@ -695,15 +695,18 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
         is Stmt.Await  -> {
             val tp = this.tp?.path("_")
+            val pay = this.xpay?.coder(null,pre)
             """
                 mar_exe->pc = ${this.n};
                 ${when (tp) {
-                    "Event_Task"  -> "mar_exe->awt.pay = ${this.xpay!!.coder(null,pre)};"
-                    "Event_Clock" -> "mar_exe->awt.pay = (void*) ${this.xpay!!.coder(null,pre)};"
+                    "Event_Task"  -> "mar_exe->awt.pay = ${pay!!};"
+                    "Event_Clock" -> "mar_exe->awt.pay = (void*) ${pay!!};"
                     else -> ""
+                }}
+                ${(tp == "Event_Task").cond { "if (${pay!!}->status != MAR_EXE_STATUS_TERMINATED)" }}
+                {
+                    return MAR_EVENT_${tp ?: "ANY"};
                 }
-                }
-                return MAR_EVENT_${tp ?: "ANY"};
             case ${this.n}:
                 if (mar_act == MAR_EXE_ACTION_ABORT) {
                     continue;

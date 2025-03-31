@@ -1897,6 +1897,22 @@ class Exec  {
         """)
         assert(out == "ok\n") { out }
     }
+    @Test
+    fun oo_12_task_terminated () {
+        val out = test("""
+            data X: ()
+            task t2: () -> () {
+                print("t2")
+            }
+            spawn {
+                var exe = create(t2)
+                start exe()
+                await(exe)
+                print("main")
+            }
+        """)
+        assert(out == "t2\nmain\n") { out }
+    }
 
     // SPAWN / PAR / AWAIT(exe) / AWAIT t(...)
 
