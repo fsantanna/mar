@@ -1937,12 +1937,15 @@ class Exec  {
         val out = test("""
             data X: Int
             data Y: Int
-            par {
-                var e = await(:X)
-                print(e)
-            } with {
-                var f = await(:Y)
-                print(f)
+            spawn {
+                par {
+                    var e = await(:X)
+                    print(e)
+                } with {
+                    var f = await(:Y)
+                    print(f)
+                }
+                print("nooo")
             }
             emit(X(10))
             emit(Y(10))
@@ -1988,6 +1991,24 @@ class Exec  {
             emit(X())
         """)
         assert(out == ">>> A\n>>> B\n<<< B\n<<< A\n") { out }
+    }
+    @Test
+    fun op_05_par_and () {
+        val out = test("""
+            data X: Int
+            data Y: Int
+            spawn {
+                par_and {
+                    await(:X)
+                } with {
+                    await(:Y)
+                }
+                print("ok")
+            }
+            emit(X(10))
+            emit(Y(10))
+        """)
+        assert(out == "ok\n") { out }
     }
 
     // AWAIT / TIME / CLOCK

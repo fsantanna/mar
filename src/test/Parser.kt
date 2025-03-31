@@ -1363,7 +1363,7 @@ class Parser {
         G.tks = ("await(:X)").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Await && s.tp?.ts?.size==1)
+        assert(s is Stmt.Await && s.evt?.ts?.size==1)
         assert(s.to_str() == "await(:X)") { s.to_str() }
     }
     @Test
@@ -1371,7 +1371,7 @@ class Parser {
         G.tks = ("await()").lexer()
         parser_lexer()
         val s = parser_stmt().first()
-        assert(s is Stmt.Await && s.tp==null)
+        assert(s is Stmt.Await && s.evt==null)
         assert(s.to_str() == "await()") { s.to_str() }
     }
     @Test

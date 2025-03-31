@@ -694,7 +694,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Await  -> {
-            val tp = this.tp?.path("_")
+            val tp = this.evt?.path("_")
             val pay = this.xpay?.coder(null,pre)
             """
                 mar_exe->pc = ${this.n};
@@ -1185,7 +1185,7 @@ fun coder_awts (): SortedSet<String> {
     fun fs (me: Stmt): List<String> {
         return when (me) {
             is Stmt.Emit -> listOf((me.e.typex() as Type.Data).path("_"))
-            is Stmt.Await -> if (me.tp == null) emptyList() else listOf(me.tp.path("_"))
+            is Stmt.Await -> if (me.evt == null) emptyList() else listOf(me.evt.path("_"))
             else -> emptyList()
         }
     }

@@ -83,7 +83,7 @@ fun cache_ups () {
                 me.arg.xup = me
             }
             is Stmt.Await -> {
-                me.tp?.xup = me
+                me.evt?.xup = me
                 me.xpay?.xup = me
             }
             is Stmt.Emit -> me.e.xup = me
