@@ -1986,7 +1986,20 @@ class Exec  {
             }
             emit(Event.Clock [10])
         """)
-        assert(out == "X(10)\nY(10)\n") { out }
+        assert(out == "antes\ndepois\n") { out }
+    }
+    @Test
+    fun oq_02_clock () {
+        val out = test("""
+            spawn {
+                print("antes")
+                await(:10)
+                print("depois")
+            }
+            emit(Event.Clock [5])
+            emit(Event.Clock [5])
+        """)
+        assert(out == "antes\ndepois\n") { out }
     }
 
     // TEMPLATE / TYPE

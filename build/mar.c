@@ -141,15 +141,25 @@ void mar_awaits_rem (Task* tsk) {
 void mar_awaits_emt (int evt_id, void* evt_pay) {
     Task* tsk = MAR_AWAITS;
     while (tsk != NULL) {
-        if (
-            tsk->awt.evt == evt_id
+        int ok = (tsk->awt.evt == evt_id);
+        if (ok) {
+            switch (evt_id) {
 #ifdef MAR_EVENT_Event_Task
-            && (evt_id!=MAR_EVENT_Event_Task || tsk->awt.pay==((Event*)evt_pay)->Event_Task.tsk)
+                case MAR_EVENT_Event_Task:
+                    ok = (tsk->awt.pay == ((Event*)evt_pay)->Event_Task.tsk);
+                    break;
 #endif
 #ifdef MAR_EVENT_Event_Clock
-            && (evt_id!=MAR_EVENT_Event_Clock || ((intptr_t)tsk->awt.pay)==((Event*)evt_pay)->Event_Clock.ms)
+                case MAR_EVENT_Event_Clock: {
+                    intptr_t* ms = (intptr_t*) &tsk->awt.pay;
+                    *ms -= ((Event*)evt_pay)->Event_Clock.ms;
+                    ok = (*ms <= 0);
+                    break;
+                }
 #endif
-        ) {
+            }
+        }
+        if (ok) {
             tsk->awt.evt = MAR_EVENT_NONE;
             int x = tsk->pro(MAR_EXE_ACTION_RESUME, tsk, NULL, evt_pay);
             Task* cur = tsk;

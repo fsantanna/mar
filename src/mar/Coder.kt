@@ -697,9 +697,12 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             val tp = this.tp?.path("_")
             """
                 mar_exe->pc = ${this.n};
-                ${(tp == "Event_Task").cond {
-                    "mar_exe->awt.pay = ${this.xpay!!.coder(null,pre)};"
-                }}
+                ${when (tp) {
+                    "Event_Task"  -> "mar_exe->awt.pay = ${this.xpay!!.coder(null,pre)};"
+                    "Event_Clock" -> "mar_exe->awt.pay = (void*) ${this.xpay!!.coder(null,pre)};"
+                    else -> ""
+                }
+                }
                 return MAR_EVENT_${tp ?: "ANY"};
             case ${this.n}:
                 if (mar_act == MAR_EXE_ACTION_ABORT) {

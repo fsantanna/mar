@@ -930,7 +930,7 @@ fun parser_stmt (): List<Stmt> {
                     if (cnd != null) {
                         listOf(loop(tp, pay, cnd))
                     } else {
-                        listOf(Stmt.Await(tk0, tp, null))
+                        listOf(Stmt.Await(tk0, tp, pay))
                     }
                 }
             }
