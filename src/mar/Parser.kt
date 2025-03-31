@@ -854,11 +854,25 @@ fun parser_stmt (): List<Stmt> {
             }
             when {
                 !accept_fix("(") -> {
+                    val n = G.N
+                    val id = Tk.Var("mar_$n", tk0.pos)
                     val call = parser_expr()
                     if (call !is Expr.Call) {
                         err(call.tk, "await error : expected task call")
                     }
-                    TODO()
+                    listOf (
+                        Stmt.Dcl(tk0, id, null),
+                        Stmt.SetS(tk0, Expr.Acc(id), Stmt.Create(tk0, call.f)),
+                        Stmt.Start(tk0, Expr.Acc(id), call.args),
+                        loop (
+                            Type.Data(tk0, null, listOf(Tk.Type("Event",tk0.pos), Tk.Type("Task",tk0.pos))),
+                            Expr.Bin (
+                                Tk.Op("==", tk0.pos),
+                                Expr.Uno(Tk.Op("ref",tk0.pos), Expr.Acc(id)),
+                                Expr.Nat(Tk.Nat("((Event*)mar_evt)->Event_Task.tsk", tk0.pos), null)
+                            )
+                        )
+                    )
                 }
                 (!check_fix(")") && !check_fix(":")) -> {
                     val exe = parser_expr()

@@ -1891,7 +1891,7 @@ class Exec  {
             }
             emit(X())
         """)
-        assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
+        assert(out == ">>> A\n>>> B\n<<< B\n<<< A\n") { out }
     }
     @Test
     fun oo_XX_task_defer () {
