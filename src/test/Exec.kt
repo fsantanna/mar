@@ -1854,11 +1854,24 @@ class Exec  {
         assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
     }
     @Test
-    fun oo_XX_task_defer () {
+    fun oo_10_task_defer () {
         val out = test("""
-            TODO
+            data X: ()
+            task t2: () -> () {
+                defer {
+                    print("first")
+                }
+                await()
+            }
+            spawn {
+                defer {
+                    print("last")
+                }
+                var exe = create(t2)
+                start exe()
+            }
         """)
-        assert(out == ">>> B\n>>> A\n<<< B\n<<< A\n") { out }
+        assert(out == "first\nlast\n") { out }
     }
 
     // SPAWN / PAR / AWAIT(exe) / AWAIT t(...)

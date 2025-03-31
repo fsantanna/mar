@@ -587,6 +587,24 @@ fun set_stmt_as_set_src (tk0: Tk, dst: Expr): List<Stmt> {
     }
 }
 
+fun gen_spawn (tk: Tk, N: Int, blk: List<Stmt>): List<Stmt> {
+    return listOf(
+        Stmt.Proto.Task(
+            Tk.Fix("task", tk.pos),
+            Tk.Var("mar_pro_$N", tk.pos),
+            emptyList(),
+            Type.Proto.Task.Vars(tk, null, emptyList(), emptyList(), Type.Unit(tk)),
+            Stmt.Block(tk, null, blk)
+        ),
+        Stmt.Dcl(tk, Tk.Var("mar_exe_$N", tk.pos), null),
+        Stmt.SetS(
+            tk,
+            Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)),
+            Stmt.Create(tk, Expr.Acc(Tk.Var("mar_pro_$N", tk.pos))),
+        ),
+        Stmt.Start(tk, Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)), emptyList())
+    )
+}
 fun parser_stmt (): List<Stmt> {
     return when {
         (accept_fix("func") || accept_fix("coro") || accept_fix("task")) -> {
@@ -926,25 +944,7 @@ fun parser_stmt (): List<Stmt> {
         }
         accept_fix("spawn") -> {
             if (check_fix("{")) {
-                val tk = G.tk1!!
-                val blk = parser_stmt_block()
-                val N = G.N
-                listOf(
-                    Stmt.Proto.Task(
-                        Tk.Fix("task", tk.pos),
-                        Tk.Var("mar_pro_$N", tk.pos),
-                        emptyList(),
-                        Type.Proto.Task.Vars(tk, null, emptyList(), emptyList(), Type.Unit(tk)),
-                        Stmt.Block(tk, null, blk)
-                    ),
-                    Stmt.Dcl(tk, Tk.Var("mar_exe_$N", tk.pos), null),
-                    Stmt.SetS(
-                        tk,
-                        Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)),
-                        Stmt.Create(tk, Expr.Acc(Tk.Var("mar_pro_$N", tk.pos))),
-                    ),
-                    Stmt.Start(tk, Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)), emptyList())
-                )
+                gen_spawn(G.tk1!!, G.N, parser_stmt_block())
             } else {
                 val tk = G.tk1!!
                 val N = G.N
@@ -961,6 +961,17 @@ fun parser_stmt (): List<Stmt> {
                     Stmt.Start(tk, Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)), args)
                 )
             }
+        }
+        accept_fix("par") -> {
+            val tk0 = G.tk0!!
+            val l = mutableListOf(parser_stmt_block())
+            check_fix_err("with")
+            while (accept_fix("with")) {
+                l.add(parser_stmt_block())
+            }
+            l.mapIndexed { i, ss ->
+                gen_spawn(tk0, G.N+i, ss)
+            }.flatten()
         }
 
         (accept_fix("match")) -> {
