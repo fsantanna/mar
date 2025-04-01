@@ -964,7 +964,9 @@ fun parser_stmt (): List<Stmt> {
             }
             l.mapIndexed { i, ss ->
                 gen_spawn(tk0, G.N+i, ss)
-            }.flatten()
+            }.flatten() + listOf(
+                Stmt.Await(tk0, null, Expr.Bool(Tk.Fix("true", tk0.pos))),
+            )
         }
 
         (accept_fix("match")) -> {
