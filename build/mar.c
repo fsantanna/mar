@@ -77,8 +77,8 @@ void mar_vector_cat_vector (Vector* dst, Vector* src, int size) {
 typedef enum MAR_EXE_STATUS {
     MAR_EXE_STATUS_YIELDED = 0,
     MAR_EXE_STATUS_TOGGLED,
-    MAR_EXE_STATUS_RESUMED,
-    MAR_EXE_STATUS_TERMINATED,
+    MAR_EXE_STATUS_RUNNING,
+    MAR_EXE_STATUS_COMPLETE,
 } MAR_EXE_STATUS;
 
 typedef enum MAR_EXE_ACTION {
@@ -141,7 +141,7 @@ void mar_awaits_rem (Task* tsk) {
 void mar_awaits_emt (int evt_id, void* evt_pay) {
     Task* tsk = MAR_AWAITS;
     while (tsk != NULL) {
-        int ok = (tsk->awt.evt == evt_id);
+        int ok = (tsk->status == MAR_EXE_STATUS_YIELDED) && (tsk->awt.evt == evt_id);
         if (ok) {
             switch (evt_id) {
 #ifdef MAR_EVENT_Event_Task

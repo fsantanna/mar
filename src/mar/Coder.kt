@@ -398,10 +398,11 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         do {
                             ${(this !is Stmt.Proto.Func).cond {
                                 """
-                                if (mar_act==MAR_EXE_ACTION_ABORT && (mar_exe->status==MAR_EXE_STATUS_TERMINATED || mar_exe->pc==0)) {
+                                if (mar_act==MAR_EXE_ACTION_ABORT && (mar_exe->status==MAR_EXE_STATUS_COMPLETE || mar_exe->pc==0)) {
                                     return ${(this is Stmt.Proto.Coro).cond2({""},{"0"})};
                                 }
                                 assert(mar_exe->status == MAR_EXE_STATUS_YIELDED);
+                                mar_exe->status = MAR_EXE_STATUS_RUNNING;
                                 switch (mar_exe->pc) {
                                     case 0:
                                         ${this.tp.inps_().mapIndexed { i,vtp ->
@@ -419,14 +420,14 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             is Stmt.Proto.Coro -> {
                                 val (xuni,_) = this.tp.x_out(null,pre)
                                 """
-                                    mar_exe->status = MAR_EXE_STATUS_TERMINATED;
+                                    mar_exe->status = MAR_EXE_STATUS_COMPLETE;
                                     if (mar_act != MAR_EXE_ACTION_ABORT) {
                                         *mar_out = ($xuni) { .tag=2, ._2=mar_ret };
                                     }
                                 """
                             }
                             is Stmt.Proto.Task -> """
-                                mar_exe->status = MAR_EXE_STATUS_TERMINATED;
+                                mar_exe->status = MAR_EXE_STATUS_COMPLETE;
                                 return 0;
                             """
                         }}
@@ -679,6 +680,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
             val (xuni,_) = tp.x_out(null,pre)
             """
+                mar_exe->status = MAR_EXE_STATUS_YIELDED;
                 mar_exe->pc = ${this.n};
                 *mar_out = ($xuni) { .tag=1, ._1=${this.arg.coder(tpls,pre)} };
                 return;
@@ -697,6 +699,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Await  -> {
             val te = this.e?.typex()
             """
+                mar_exe->status = MAR_EXE_STATUS_YIELDED;
                 mar_exe->pc = ${this.n};
                 ${when {
                     (this.e is Expr.Bool && this.e.tk.str=="false") -> """
@@ -712,22 +715,24 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     (te is Type.Exec.Task) -> {
                         val exe = this.e!!.coder(null,pre)
                         """
-                        if ($exe.status != MAR_EXE_STATUS_TERMINATED) {
+                        if ($exe.status != MAR_EXE_STATUS_COMPLETE) {
                             mar_exe->awt.pay = & $exe;
                             return MAR_EVENT_Event_Task;
                         }
+                        mar_exe->status = MAR_EXE_STATUS_RUNNING;
                         """
                     }
                     (this.e != null) -> error("impossible case")
                     (this.es != null) -> {
                         val ok = this.es.map {
-                            "(${it.coder(tpls,pre)}.status == MAR_EXE_STATUS_TERMINATED)"
+                            "(${it.coder(tpls,pre)}.status == MAR_EXE_STATUS_COMPLETE)"
                         }.joinToString(" || ")
                         """
                         if (!$ok) {
                             mar_exe->awt.pay = NULL;        // any task
                             return MAR_EVENT_Event_Task;
                         }
+                        mar_exe->status = MAR_EXE_STATUS_RUNNING;
                         """
                     }
                     (this.tp == null) -> error("impossible case")
