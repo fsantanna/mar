@@ -983,6 +983,22 @@ fun parser_stmt (): List<Stmt> {
                 listOf(Stmt.Await(tk0, null, Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos))))
             }).flatten()
         }
+        accept_fix("par_or") -> {
+            val tk0 = G.tk0!!
+            val l = mutableListOf(parser_stmt_block())
+            check_fix_err("with")
+            val N = G.N
+            while (accept_fix("with")) {
+                l.add(parser_stmt_block())
+            }
+            listOf(Stmt.Block(tk0, null,
+                (l.mapIndexed { i, ss ->
+                    gen_spawn(tk0, N+i, ss)
+                }).flatten() + listOf(
+                    Stmt.Await(tk0, null, Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos)))
+                )
+            ))
+        }
 
         (accept_fix("match")) -> {
             val tk0 = G.tk0!!
