@@ -616,6 +616,35 @@ fun gen_spawn (tk: Tk, N: Int, blk: List<Stmt>): List<Stmt> {
     )
 }
 
+fun parser_await_until (awt: Stmt.Await): Stmt {
+    return if (!(accept_fix("while") || accept_fix("until"))) {
+        awt
+    } else {
+        val tk0 = G.tk0!!
+        val is_until = (G.tk0!!.str == "until")
+        accept_fix_err("(")
+        val cnd1 = parser_expr()
+        accept_fix_err(")")
+        val cnd2 = if (is_until) cnd1 else {
+            Expr.Uno(Tk.Op("!", tk0.pos), cnd1)
+        }
+        Stmt.Loop(tk0,
+            Stmt.Block(tk0,
+                Type.Data(tk0, null, listOf(Tk.Type("Break",tk0.pos))),
+                listOf(awt,
+                    Stmt.If(tk0, cnd2,
+                       Stmt.Block(tk0, null, listOf(
+                           Stmt.Escape(tk0,
+                               Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
+                                   Expr.Tuple(tk0,null, emptyList())))
+                           )
+                       ),
+                       Stmt.Block(tk0, null, emptyList()))))
+        )
+    }
+
+}
+
 fun parser_stmt (): List<Stmt> {
     return when {
         (accept_fix("func") || accept_fix("coro") || accept_fix("task")) -> {
@@ -899,30 +928,7 @@ fun parser_stmt (): List<Stmt> {
                     Stmt.Await(tk0, null, exe, null)
                 }
             }
-            if (!(accept_fix("while") || accept_fix("until"))) {
-                listOf(awt)
-            } else {
-                val is_until = (G.tk0!!.str == "until")
-                accept_fix_err("(")
-                val cnd1 = parser_expr()
-                accept_fix_err(")")
-                val cnd2 = if (is_until) cnd1 else {
-                    Expr.Uno(Tk.Op("!", tk0.pos), cnd1)
-                }
-                listOf(Stmt.Loop(tk0,
-                   Stmt.Block(tk0, Type.Data(tk0, null, listOf(Tk.Type("Break",tk0.pos))), listOf(
-                       awt,
-                       Stmt.If(tk0, cnd2,
-                           Stmt.Block(tk0, null, listOf(
-                               Stmt.Escape(tk0,
-                                   Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
-                                       Expr.Tuple(tk0,null, emptyList())))
-                               )
-                           ),
-                           Stmt.Block(tk0, null, emptyList()))
-                   ))
-               ))
-            }
+            listOf(parser_await_until(awt))
         }
         accept_fix("emit") -> {
             val tk0 = G.tk0!!
@@ -999,6 +1005,32 @@ fun parser_stmt (): List<Stmt> {
                         Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos))
                     })
                 )
+            ))
+        }
+        accept_fix("every") -> {
+            val tk0 = G.tk0!!
+            val par = accept_fix("(")
+            val awt = when {
+                // await(%10min)
+                accept_op("%") -> {
+                    val ms = parser_expr()
+                    Stmt.Await(tk0, null, ms, null)
+                }
+                // await(:X)
+                accept_fix_err(":") -> {
+                    val tp = parser_type(null, false, false) as Type.Data
+                    Stmt.Await(tk0, tp, null, null)
+                }
+                else -> error("impossible case")
+            }
+            val lop = parser_await_until(awt)
+            if (par) {
+                accept_fix_err(")")
+            }
+            val ss = parser_stmt_block()
+            listOf(Stmt.Loop(tk0,
+                Stmt.Block(tk0, null,
+                    listOf(lop) + ss)
             ))
         }
 

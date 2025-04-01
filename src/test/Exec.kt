@@ -1914,7 +1914,7 @@ class Exec  {
         assert(out == "t2\nmain\n") { out }
     }
 
-    // SPAWN / PAR / AWAIT(exe) / AWAIT t(...)
+    // SPAWN / PAR / AWAIT(exe) / AWAIT t(...) / EVERY
 
     @Test
     fun op_01_task_spawn () {
@@ -2081,6 +2081,57 @@ class Exec  {
             }
         """)
         assert(out == "y\nok\n") { out }
+    }
+    @Test
+    fun op_10_every () {
+        val out = test("""
+            data X: ()
+            spawn {
+                every :X {
+                    print("x")
+                }
+            }
+            emit(X())
+            emit(X())
+        """)
+        assert(out == "x\nx\n") { out }
+    }
+    @Test
+    fun op_11_every () {
+        val out = test("""
+            spawn {
+                every %10 {
+                    print("ms")
+                }
+            }
+            emit(Event.Clock [10])
+            emit(Event.Clock [5])
+            emit(Event.Clock [5])
+        """)
+        assert(out == "ms\nms\n") { out }
+    }
+    @Test
+    fun op_12_every () {
+        val out = test("""
+            data X: ()
+            spawn {
+                par {
+                    every :X {
+                        print("x")
+                    }
+                } with {
+                    every %10 {
+                        print("ms")
+                    }
+                }
+            }
+            emit(Event.Clock [10])
+            emit(X())
+            emit(Event.Clock [5])
+            emit(X())
+            emit(Event.Clock [5])
+        """)
+        assert(out == "ms\nx\nx\nms\n") { out }
     }
 
     // AWAIT / TIME / CLOCK
