@@ -398,8 +398,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         do {
                             ${(this !is Stmt.Proto.Func).cond {
                                 """
-                                if (mar_act==MAR_EXE_ACTION_ABORT && (mar_exe->status==MAR_EXE_STATUS_COMPLETE || mar_exe->pc==0)) {
-                                    return ${(this is Stmt.Proto.Coro).cond2({""},{"0"})};
+                                if (mar_act == MAR_EXE_ACTION_ABORT) {
+                                    if (mar_exe->status!=MAR_EXE_STATUS_YIELDED || mar_exe->pc==0) {
+                                        return ${(this is Stmt.Proto.Coro).cond2({""},{"0"})};
+                                    }
                                 }
                                 assert(mar_exe->status == MAR_EXE_STATUS_YIELDED);
                                 mar_exe->status = MAR_EXE_STATUS_RUNNING;
