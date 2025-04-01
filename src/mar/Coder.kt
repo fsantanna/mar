@@ -468,7 +468,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         val x = id.coder(this,pre)
                         """
                         ${(!this.up_exe()).cond { " ${tp!!.coder(tpls)} $x;" }}
-                        $x.pro = NULL;
+                        $x.pro = NULL;  // uninitialized Exec
                         """
                     }.joinToString("")
                 }
@@ -625,6 +625,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${set.dst.coder(tpls,pre)} =
                 """
             } + """
+            // CREATE | ${this.dump()}
             ($xtp) { 0, MAR_EXE_STATUS_YIELDED, (${(this.pro.typex() as Type.Proto).x_sig(pre)}) ${this.pro.coder(tpls,pre)}, {} };
             """
         }
