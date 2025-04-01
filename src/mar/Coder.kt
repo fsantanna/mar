@@ -893,10 +893,11 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
 
 fun Tk.Var.coder (fr: Any, pre: Boolean): String {
     val dcl = this.to_xdcl(fr)!!.first
-    return if (dcl.xup!!.up_exe()) {
-        "mar_exe->mem.${this.str}"
-    } else {
-        this.str
+    //println(listOf(this.str, dcl.to_str()))
+    return when {
+        (dcl is Stmt.Proto) -> this.str
+        dcl.xup!!.up_exe() -> "mar_exe->mem.${this.str}"
+        else -> this.str
     }
 }
 
