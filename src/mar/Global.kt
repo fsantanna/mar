@@ -42,7 +42,7 @@ val KEYWORDS: SortedSet<String> = (
     setOf (
         "await", "break", "do", "catch", "coro", "compile", "create", "defer",
         "data", "else", "emit", "escape", "exec", "false", "func", "if", "in",
-        "include", "loop", "match", "null", "par", "print", "resume",
+        "include", "loop", "match", "null", "par", "par_and", "print", "resume",
         "return", "set", "spawn", "start", "task", "test", "throw", "true",
         "until", "var", "yield", "with", "where", "while"
     ).toSortedSet()
