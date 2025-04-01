@@ -42,7 +42,7 @@ val KEYWORDS: SortedSet<String> = (
     setOf (
         "await", "break", "do", "catch", "coro", "compile", "create", "defer",
         "data", "else", "emit", "escape", "exec", "false", "func", "if", "in",
-        "include", "loop", "match", "null", "par", "par_and", "print", "resume",
+        "include", "loop", "match", "null", "par", "par_and", "par_or", "print", "resume",
         "return", "set", "spawn", "start", "task", "test", "throw", "true",
         "until", "var", "yield", "with", "where", "while"
     ).toSortedSet()
@@ -163,7 +163,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Stmt(G.N++, null, tk)
     class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Stmt(G.N++, null, tk)
     class Yield   (tk: Tk, val arg: Expr): Stmt(G.N++, null, tk)
-    class Await   (tk: Tk, val tp: Type.Data?, val e: Expr?): Stmt(G.N++, null, tk)
+    class Await   (tk: Tk, val tp: Type.Data?, val e: Expr?, val es: List<Expr>?): Stmt(G.N++, null, tk)
     class Emit    (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
 
     class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)

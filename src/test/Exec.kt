@@ -2010,6 +2010,78 @@ class Exec  {
         """)
         assert(out == "ok\n") { out }
     }
+    @Test
+    fun op_06_par_or () {
+        val out = test("""
+            data X: Int
+            data Y: Int
+            spawn {
+                par_or {
+                    await(:X)
+                    print("x")
+                } with {
+                    await(:Y)
+                    print("y")
+                }
+                print("ok")
+            }
+            emit(X(10))
+        """)
+        assert(out == "x\nok\n") { out }
+    }
+    @Test
+    fun op_07_par_or () {
+        val out = test("""
+            data X: Int
+            data Y: Int
+            spawn {
+                par_or {
+                    await(:X)
+                    print("x")
+                } with {
+                    await(:Y)
+                    print("y")
+                }
+                print("ok")
+            }
+            emit(Y(10))
+        """)
+        assert(out == "y\nok\n") { out }
+    }
+    @Test
+    fun op_08_par_or () {
+        val out = test("""
+            data X: Int
+            data Y: Int
+            spawn {
+                par_or {
+                    print("x")
+                } with {
+                    await(:Y)
+                    print("y")
+                }
+                print("ok")
+            }
+        """)
+        assert(out == "x\nok\n") { out }
+    }
+    @Test
+    fun op_09_par_or () {
+        val out = test("""
+            data X: Int
+            data Y: Int
+            spawn {
+                par_or {
+                    await(:X)
+                    print("x")
+                } with {
+                    print("y")
+                }
+                print("ok")
+            }
+        """)
+        assert(out == "y\nok\n") { out }
+    }
 
     // AWAIT / TIME / CLOCK
 

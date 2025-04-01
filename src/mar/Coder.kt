@@ -719,6 +719,17 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         """
                     }
                     (this.e != null) -> error("impossible case")
+                    (this.es != null) -> {
+                        val ok = this.es.map {
+                            "(${it.coder(tpls,pre)}.status == MAR_EXE_STATUS_TERMINATED)"
+                        }.joinToString(" || ")
+                        """
+                        if (!$ok) {
+                            mar_exe->awt.pay = NULL;        // any task
+                            return MAR_EVENT_Event_Task;
+                        }
+                        """
+                    }
                     (this.tp == null) -> error("impossible case")
                     else -> """
                         return MAR_EVENT_${this.tp.path("_")};
@@ -1146,8 +1157,8 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.Unit -> "_void_"
-        is Expr.Bool, is Expr.Chr, is Expr.Str,
-        is Expr.Null -> this.to_str(pre)
+        is Expr.Null -> "null"
+        is Expr.Bool, is Expr.Chr, is Expr.Str -> this.tk.str
         is Expr.Num -> this.to_str(pre).let {
             if (this.xnum == null) it else {
                 val tp = this.typex()

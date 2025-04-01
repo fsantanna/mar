@@ -114,7 +114,7 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Str    -> this.tk.str
         is Expr.Chr    -> this.tk.str
         is Expr.Num    -> this.tk.str
-        is Expr.Null   -> this.tk.str
+        is Expr.Null   -> "null"
         is Expr.Unit   -> "()"
 
         is Expr.Tuple  -> {

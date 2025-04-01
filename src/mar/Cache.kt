@@ -85,6 +85,9 @@ fun cache_ups () {
             is Stmt.Await -> {
                 me.tp?.xup = me
                 me.e?.xup = me
+                me.es?.forEach {
+                    it.xup = me
+                }
             }
             is Stmt.Emit -> me.e.xup = me
 

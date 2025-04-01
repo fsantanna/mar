@@ -342,7 +342,7 @@ fun parser_expr_4_prim (): Expr {
         accept_enu("Str")  -> Expr.Str(G.tk0 as Tk.Str)
         accept_enu("Chr")  -> Expr.Chr(G.tk0 as Tk.Chr)
         accept_enu("Num")  -> Expr.Num(G.tk0 as Tk.Num)
-        accept_fix("null")  -> Expr.Null(G.tk0 as Tk.Fix)
+        accept_fix("null")  -> Expr.Null(G.tk0!!)
         accept_fix("(")     -> {
             val tk0 = G.tk0 as Tk.Fix
             if (accept_fix(")")) {
@@ -871,32 +871,32 @@ fun parser_stmt (): List<Stmt> {
                         Stmt.Dcl(tk0, id, null),
                         Stmt.SetS(tk0, Expr.Acc(id), Stmt.Create(tk0, call.f)),
                         Stmt.Start(tk0, Expr.Acc(id), call.args),
-                        Stmt.Await(tk0, null, Expr.Acc(id))
+                        Stmt.Await(tk0, null, Expr.Acc(id), null)
                     )
                 }
                 // await(true), await(false)
                 check_fix("true") || check_fix("false") -> {
                     val b = parser_expr()
                     accept_fix_err(")")
-                    Stmt.Await(tk0, null, b)
+                    Stmt.Await(tk0, null, b, null)
                 }
                 // await(%10min)
                 accept_op("%") -> {
                     val ms = parser_expr()
                     accept_fix_err(")")
-                    Stmt.Await(tk0, null, ms)
+                    Stmt.Await(tk0, null, ms, null)
                 }
                 // await(:X)
                 accept_fix(":") -> {
                     val tp = parser_type(null, false, false) as Type.Data
                     accept_fix_err(")")
-                    Stmt.Await(tk0, tp, null)
+                    Stmt.Await(tk0, tp, null, null)
                 }
                 // await(exe)
                 else -> {
                     val exe = parser_expr()
                     accept_fix_err(")")
-                    Stmt.Await(tk0, null, exe)
+                    Stmt.Await(tk0, null, exe, null)
                 }
             }
             if (!(accept_fix("while") || accept_fix("until"))) {
@@ -965,7 +965,7 @@ fun parser_stmt (): List<Stmt> {
             l.mapIndexed { i, ss ->
                 gen_spawn(tk0, G.N+i, ss)
             }.flatten() + listOf(
-                Stmt.Await(tk0, null, Expr.Bool(Tk.Fix("true", tk0.pos))),
+                Stmt.Await(tk0, null, Expr.Bool(Tk.Fix("true", tk0.pos)), null),
             )
         }
         accept_fix("par_and") -> {
@@ -980,7 +980,7 @@ fun parser_stmt (): List<Stmt> {
                 gen_spawn(tk0, N+i, ss)
             } +
             l.mapIndexed { i, ss ->
-                listOf(Stmt.Await(tk0, null, Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos))))
+                listOf(Stmt.Await(tk0, null, Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos)), null))
             }).flatten()
         }
         accept_fix("par_or") -> {
@@ -995,7 +995,9 @@ fun parser_stmt (): List<Stmt> {
                 (l.mapIndexed { i, ss ->
                     gen_spawn(tk0, N+i, ss)
                 }).flatten() + listOf(
-                    Stmt.Await(tk0, null, Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos)))
+                    Stmt.Await(tk0, null, null, l.mapIndexed { i,ss ->
+                        Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos))
+                    })
                 )
             ))
         }

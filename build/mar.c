@@ -146,7 +146,7 @@ void mar_awaits_emt (int evt_id, void* evt_pay) {
             switch (evt_id) {
 #ifdef MAR_EVENT_Event_Task
                 case MAR_EVENT_Event_Task:
-                    ok = (tsk->awt.pay == ((Event*)evt_pay)->Event_Task.tsk);
+                    ok = (tsk->awt.pay == NULL) || (tsk->awt.pay == ((Event*)evt_pay)->Event_Task.tsk);
                     break;
 #endif
 #ifdef MAR_EVENT_Event_Clock
