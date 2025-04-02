@@ -639,6 +639,18 @@ class Exec  {
         """)
         assert(out == "ok\n") { out }
     }
+    @Test
+    fun ff_09_coro_func_gcc_bug () {
+        val out = test("""
+            func f: () -> () {
+            }
+            coro co: () -> () -> () -> () {
+                f()
+            }
+            print("ok")
+        """)
+        assert(out == "ok\n") { out }
+    }
 
     // TUPLE
 

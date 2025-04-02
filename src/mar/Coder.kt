@@ -444,13 +444,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 Pair(sig, cod)
             }.unzip()
 
-            if (this is Stmt.Proto.Func) {
-                cods.joinToString("")
-            } else {
-                G.protos.first.addAll(sigs)
-                G.protos.second.addAll(cods)
-                ""
-            }
+            G.protos.first.addAll(sigs)
+            G.protos.second.addAll(cods)
+            ""
         }
 
         is Stmt.Block  -> {
