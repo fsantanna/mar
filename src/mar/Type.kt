@@ -29,7 +29,7 @@ fun List<Type>.to_void (): List<Type> {
     }
 }
 
-val nums = setOf("Float", "Int", "U8")
+val nums = setOf("Float", "Int", "U8", "U16", "U32", "U64", "S8", "S16", "S32", "S64")
 fun Type.is_num (): Boolean {
     return (this is Type.Nat || this is Type.Any || (this is Type.Prim && nums.contains(this.tk.str)))
 }

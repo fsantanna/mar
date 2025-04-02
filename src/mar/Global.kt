@@ -50,7 +50,9 @@ val KEYWORDS: SortedSet<String> = (
 
 val PRIMS = setOf(
     "Bool", "Char", "Float",
-    "Int", "U8"
+    "Int",
+    "U8", "U16", "U32", "U64",
+    "S8", "S16", "S32", "S64",
 )
 
 typealias XDcl = Triple<Stmt,Tk.Var,Type?>
