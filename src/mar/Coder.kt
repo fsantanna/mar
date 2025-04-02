@@ -348,7 +348,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 typedef struct $exe {
                     MAR_Exe_Fields($pro)
                     ${(me is Stmt.Proto.Task).cond { """
-                        Task_Await awt;
+                        MAR_Task_Await awt;
                     """ }}
                     struct {
                         ${mem()}    // TODO: unions for non-coexisting blocks

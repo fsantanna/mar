@@ -91,19 +91,19 @@ typedef enum MAR_EXE_ACTION {
     MAR_EXE_STATUS status;      \
     _pro_ pro;
 
-typedef struct Task_Await {
+typedef struct MAR_Task_Await {
     int evt;
     void* pay;
-    struct Task* prv;
-    struct Task* nxt;
-} Task_Await;
+    struct MAR_Task* prv;
+    struct MAR_Task* nxt;
+} MAR_Task_Await;
 
 typedef int (*Task_Pro) (MAR_EXE_ACTION, struct Task*, void*, void*);
 
-typedef struct Task {
+typedef struct MAR_Task {
     MAR_Exe_Fields(Task_Pro)
-    Task_Await awt;
-} Task;
+    MAR_Task_Await awt;
+} MAR_Task;
 
 // TYPES
 // === MAR_TYPES === //
@@ -114,7 +114,7 @@ typedef struct Task {
 #define MAR_EVENT_ANY  1
 // === MAR_EVENTS === //
 
-Task* MAR_AWAITS = NULL;
+MAR_Task* MAR_AWAITS = NULL;
 
 void mar_awaits_add (Task* tsk, int evt_id) {
     tsk->awt.evt = evt_id;
@@ -130,7 +130,7 @@ void mar_awaits_add (Task* tsk, int evt_id) {
     }
 }
 
-void mar_awaits_rem (Task* tsk) {
+void mar_awaits_rem (MAR_Task* tsk) {
     if (MAR_AWAITS == tsk) {
         MAR_AWAITS = (tsk->awt.nxt == tsk) ? NULL : tsk->awt.nxt;
     }
@@ -139,7 +139,7 @@ void mar_awaits_rem (Task* tsk) {
 }
 
 void mar_awaits_emt (int evt_id, void* evt_pay) {
-    Task* tsk = MAR_AWAITS;
+    MAR_Task* tsk = MAR_AWAITS;
     while (tsk != NULL) {
         int ok = (tsk->status == MAR_EXE_STATUS_YIELDED) && (tsk->awt.evt == evt_id);
         if (ok) {
@@ -176,7 +176,7 @@ void mar_awaits_emt (int evt_id, void* evt_pay) {
 
 #if 0
 void mar_awaits_dmp () {
-    Task* tsk = MAR_AWAITS;
+    MAR_Task* tsk = MAR_AWAITS;
     while (tsk != NULL) {
         printf("%p <= %p => %p\n", tsk->awt.prv, tsk, tsk->awt.nxt);
         tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
