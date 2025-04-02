@@ -10,19 +10,8 @@ fun Stmt.infer (tpe: Type?): Type? {
         }
 
         is Stmt.Create -> {
-            val xtp = when (tpe) {
-                !is Type.Exec -> null
-                is Type.Exec.Coro -> Type.Proto.Coro(tpe.tk, tpe.xpro, null, tpe.inps, tpe.res, tpe.yld, tpe.out)
-                is Type.Exec.Task -> Type.Proto.Task(tpe.tk, tpe.xpro, null, tpe.inps, tpe.out)
-                else -> error("impossible case")
-            }
-            this.pro.infer(xtp).let {
-                when (it) {
-                    is Type.Proto.Coro -> Type.Exec.Coro(pro.tk, it.xpro, it.inps, it.res, it.yld, it.out)
-                    is Type.Proto.Task -> Type.Exec.Task(pro.tk, it.xpro, it.inps, it.out)
-                    else -> tpe
-                }
-            }
+            val xtp = tpe?.to_exe()
+            this.pro.infer(xtp)?.to_exe() ?: tpe
         }
         is Stmt.Start -> {
             val exe = this.exe.infer(null)

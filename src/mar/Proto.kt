@@ -6,6 +6,21 @@ fun List<Type>.x_inp_tup (tk: Tk, tpls: Tpl_Map?, pre: Boolean): Pair<String, Ty
     return Pair(id, tp)
 }
 
+fun Type.to_exe (): Type.Exec? {
+    return when (this) {
+        is Type.Proto.Coro -> Type.Exec.Coro(this.tk, this.xpro, this.inps, this.out, this.res, this.yld)
+        is Type.Proto.Task -> Type.Exec.Task(this.tk, this.xpro, this.inps, this.out)
+        else -> null
+    }
+}
+
+fun Type.Exec.to_pro (): Type.Proto {
+    return when (this) {
+        is Type.Exec.Coro -> Type.Proto.Coro(this.tk, this.xpro, null, this.inps, this.out, this.res, this.yld)
+        is Type.Exec.Task -> Type.Proto.Task(this.tk, this.xpro, null, this.inps, this.out)
+    }
+}
+
 fun Type.Proto.x_sig (pre: Boolean): String {
     val (_,exe) = this.x_pro_exe(null)
     val inps = this.inps.x_inp_tup(this.tk,null, pre).first

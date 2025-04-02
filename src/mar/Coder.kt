@@ -87,7 +87,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             }
             is Type.Proto.Coro -> {
                 val (pro, exe) = me.x_pro_exe(null)
-                val xexe = Type.Exec.Coro(me.tk, me.xpro, me.inps, me.res, me.yld, me.out)
+                val xexe = me.to_exe()!!
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
                 val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
                 val res = me.res().coder(null)
@@ -112,7 +112,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             }
             is Type.Exec.Coro -> {
                 val (pro, exe) = me.x_pro_exe(null)
-                val xpro = Type.Proto.Coro(me.tk, me.xpro, null, me.inps, me.res, me.yld, me.out)
+                val xpro = me.to_pro()
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
                 val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
                 val res = me.res().coder(null)
@@ -125,7 +125,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             }
             is Type.Exec.Task -> {
                 val (pro, exe) = me.x_pro_exe(null)
-                val xpro = Type.Proto.Task(me.tk, me.xpro, null, me.inps, me.out)
+                val xpro = me.to_pro()
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
                 val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
                 val (_, out) = me.x_out(null, pre)
