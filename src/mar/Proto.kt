@@ -8,7 +8,7 @@ fun List<Type>.x_inp_tup (tk: Tk, tpls: Tpl_Map?, pre: Boolean): Pair<String, Ty
 
 fun Type.to_exe (): Type.Exec? {
     return when (this) {
-        is Type.Proto.Coro -> Type.Exec.Coro(this.tk, this.xpro, this.inps, this.out, this.res, this.yld)
+        is Type.Proto.Coro -> Type.Exec.Coro(this.tk, this.xpro, this.inps, this.res, this.yld, this.out)
         is Type.Proto.Task -> Type.Exec.Task(this.tk, this.xpro, this.inps, this.out)
         else -> null
     }
