@@ -107,7 +107,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(out) + ft(xexe) + listOf(
                     x + ";\n",
-                    "typedef int (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, void*);\n",
+                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, void*);\n",
                 )
             }
             is Type.Exec.Coro -> {
@@ -132,7 +132,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(out) + ft(xpro) + listOf(
                     x + ";\n",
-                    "typedef int (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, void*);\n",
+                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, void*);\n",
                 )
             }
             is Type.Tuple -> {
@@ -400,13 +400,16 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 """
                                 if (mar_act == MAR_EXE_ACTION_ABORT) {
                                     if (mar_exe->status!=MAR_EXE_STATUS_YIELDED || mar_exe->pc==0) {
-                                        return ${(this is Stmt.Proto.Coro).cond2({""},{"0"})};
+                                        return;
                                     }
                                 }
                                 assert(mar_exe->status == MAR_EXE_STATUS_YIELDED);
                                 mar_exe->status = MAR_EXE_STATUS_RUNNING;
                                 switch (mar_exe->pc) {
                                     case 0:
+                                        ${(this is Stmt.Proto.Task).cond {
+                                            "mar_awaits_add((MAR_Task*)mar_exe)"
+                                        }};
                                         ${this.tp.inps_().mapIndexed { i,vtp ->
                                             val (id,tp) = vtp
                                             assert(tp !is Type.Vector)
@@ -430,7 +433,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             }
                             is Stmt.Proto.Task -> """
                                 mar_exe->status = MAR_EXE_STATUS_COMPLETE;
-                                return 0;
+                                mar_awaits_rem((MAR_Task*)mar_exe);
+                                return;
                             """
                         }}
                         
@@ -621,7 +625,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         """
 
         is Stmt.Create -> {
-            val xtp = (this.xup as Stmt.SetS).dst.typex().coder(tpls)
+            val exe = this.pro.typex().to_exe()!!.coder(null)
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
                 """
@@ -629,7 +633,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 """
             } + """
             // CREATE | ${this.dump()}
-            ($xtp) { 0, MAR_EXE_STATUS_YIELDED, (${(this.pro.typex() as Type.Proto).x_sig(pre)}) ${this.pro.coder(tpls,pre)}, {} };
+            ($exe) { 0, MAR_EXE_STATUS_YIELDED, (${(this.pro.typex() as Type.Proto).x_sig(pre)}) ${this.pro.coder(tpls,pre)}, {} };
             """
         }
         is Stmt.Start  -> {
@@ -653,8 +657,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     mar_out_$n;
                 """}}
                 ${(tp is Type.Exec.Task).cond { """
-                    int mar_evt_$n = mar_exe_$n->pro(MAR_EXE_ACTION_RESUME, mar_exe_$n, &mar_inps_$n, NULL);
-                    mar_awaits_add((Task*)mar_exe_$n, mar_evt_$n);
+                    mar_exe_$n->pro(MAR_EXE_ACTION_RESUME, mar_exe_$n, &mar_inps_$n, NULL);
                 """}}
             });
             """
@@ -705,21 +708,25 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 mar_exe->pc = ${this.n};
                 ${when {
                     (this.e is Expr.Bool && this.e.tk.str=="false") -> """
-                        return MAR_EVENT_NONE;
+                        mar_exe->awt.evt = MAR_EVENT_NONE;
+                        return;
                     """
                     (this.e is Expr.Bool && this.e.tk.str=="true") -> """
-                        return MAR_EVENT_ANY;
+                        mar_exe->awt.evt = MAR_EVENT_ANY;
+                        return;
                     """
                     (te is Type.Prim && te.tk.str=="Int") -> """
                         mar_exe->awt.pay = (void*) ${this.e!!.coder(null,pre)};
-                        return MAR_EVENT_Event_Clock;
+                        mar_exe->awt.evt = MAR_EVENT_Event_Clock;
+                        return;
                     """
                     (te is Type.Exec.Task) -> {
                         val exe = this.e!!.coder(null,pre)
                         """
                         if ($exe.status != MAR_EXE_STATUS_COMPLETE) {
                             mar_exe->awt.pay = & $exe;
-                            return MAR_EVENT_Event_Task;
+                            mar_exe->awt.evt = MAR_EVENT_Event_Task;
+                            return;
                         }
                         mar_exe->status = MAR_EXE_STATUS_RUNNING;
                         """
@@ -732,14 +739,16 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         """
                         if (!$ok) {
                             mar_exe->awt.pay = NULL;        // any task
-                            return MAR_EVENT_Event_Task;
+                            mar_exe->awt.evt = MAR_EVENT_Event_Task;
+                            return;
                         }
                         mar_exe->status = MAR_EXE_STATUS_RUNNING;
                         """
                     }
                     (this.tp == null) -> error("impossible case")
                     else -> """
-                        return MAR_EVENT_${this.tp.path("_")};
+                        mar_exe->awt.evt = MAR_EVENT_${this.tp.path("_")};
+                        return;
                     """
                 }}
             case ${this.n}:

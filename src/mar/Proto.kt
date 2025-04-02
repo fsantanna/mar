@@ -31,7 +31,7 @@ fun Type.Proto.x_sig (pre: Boolean): String {
             val res = this.res().coder(null)
             "void (*) (MAR_EXE_ACTION, $exe*, ${inps}*, ${res}*, $xout*)"
         }
-        is Type.Proto.Task -> "int (*) (MAR_EXE_ACTION, $exe*, ${inps}*, void*)"
+        is Type.Proto.Task -> "void (*) (MAR_EXE_ACTION, $exe*, ${inps}*, void*)"
     }
 }
 
@@ -49,7 +49,7 @@ fun Stmt.Proto.x_sig (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Proto.Task -> {
             val (_,exe) = this.tp.x_pro_exe(null)
             val inps = this.tp.inps.x_inp_tup(this.tp.tk,null, pre).first
-            "int $xid (MAR_EXE_ACTION mar_act, $exe* mar_exe, ${inps}* mar_inps, void* mar_evt)"
+            "void $xid (MAR_EXE_ACTION mar_act, $exe* mar_exe, ${inps}* mar_inps, void* mar_evt)"
       }
     }
 }

@@ -98,7 +98,7 @@ typedef struct MAR_Task_Await {
     struct MAR_Task* nxt;
 } MAR_Task_Await;
 
-typedef int (*Task_Pro) (MAR_EXE_ACTION, struct Task*, void*, void*);
+typedef void (*Task_Pro) (MAR_EXE_ACTION, struct MAR_Task*, void*, void*);
 
 typedef struct MAR_Task {
     MAR_Exe_Fields(Task_Pro)
@@ -161,8 +161,8 @@ void mar_awaits_emt (int evt_id, void* evt_pay) {
         }
         if (ok) {
             tsk->awt.evt = MAR_EVENT_NONE;
-            int x = tsk->pro(MAR_EXE_ACTION_RESUME, tsk, NULL, evt_pay);
-            Task* cur = tsk;
+            tsk->pro(MAR_EXE_ACTION_RESUME, tsk, NULL, evt_pay);
+            MAR_Task* cur = tsk;
             tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
             mar_awaits_rem(cur);
             if (x != MAR_EVENT_NONE) {
