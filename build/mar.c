@@ -116,8 +116,8 @@ typedef struct MAR_Task {
 
 MAR_Task* MAR_AWAITS = NULL;
 
-void mar_awaits_add (Task* tsk, int evt_id) {
-    tsk->awt.evt = evt_id;
+void mar_awaits_add (MAR_Task* tsk /*, int evt_id*/) {
+    //tsk->awt.evt = evt_id;
     if (MAR_AWAITS == NULL) {
         tsk->awt.prv = tsk;
         tsk->awt.nxt = tsk;
@@ -162,15 +162,9 @@ void mar_awaits_emt (int evt_id, void* evt_pay) {
         if (ok) {
             tsk->awt.evt = MAR_EVENT_NONE;
             tsk->pro(MAR_EXE_ACTION_RESUME, tsk, NULL, evt_pay);
-            MAR_Task* cur = tsk;
-            tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
-            mar_awaits_rem(cur);
-            if (x != MAR_EVENT_NONE) {
-                mar_awaits_add(cur, x);
-            }
         } else {
-            tsk = (tsk->awt.nxt == MAR_AWAITS) ? NULL : tsk->awt.nxt;
         }
+        tsk = (tsk->awt.nxt==MAR_AWAITS || MAR_AWAITS==NULL) ? NULL : tsk->awt.nxt;
     }
 }
 
