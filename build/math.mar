@@ -1,0 +1,3 @@
+func math_max: (v1:Int, v2:Int) -> Int {
+    return(if v1 > v2 => v1 => v2)
+}
