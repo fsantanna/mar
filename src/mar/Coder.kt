@@ -1,7 +1,8 @@
 package mar
 
-import java.io.File
-import java.util.SortedSet
+import java.util.*
+
+
 
 fun String.clean (): String {
     return this.replace('*','_')
@@ -1240,8 +1241,7 @@ fun coder_awts (): SortedSet<String> {
 fun coder_main (pre: Boolean): String {
     val code = G.outer!!.coder(null,pre)
     val types = coder_types(null, G.outer!!, null, pre)
-
-    val c = File("build/mar.c").readText()
+    val c = object{}::class.java.getResourceAsStream("/mar.c")!!.bufferedReader().readText()
         .replace("// === MAR_TYPES === //", types)
         .replace("// === MAR_EVENTS === //", coder_awts().mapIndexed { i,id -> "#define MAR_EVENT_$id (MAR_EVENT_ANY+1+$i)" }.joinToString("\n"))
         .replace("// === MAR_MAIN === //", code)
