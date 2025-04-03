@@ -1925,6 +1925,27 @@ class Exec  {
         """)
         assert(out == "t2\nmain\n") { out }
     }
+    @Test
+    fun oo_13_task_undead_bug () {
+        val out = test("""
+            data X: ()
+            spawn {
+                par_or {
+                    await(:X)
+                } with {
+                    every :X {
+                        print("x")
+                    }
+                }
+            }
+            emit(X())
+            emit(X())
+            emit(X())
+            emit(X())
+            print("ok")
+        """)
+        assert(out == "ok\n") { out }
+    }
 
     // SPAWN / PAR / AWAIT(exe) / AWAIT t(...) / EVERY
 
