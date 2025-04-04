@@ -245,3 +245,40 @@ fun cache_tpls () {
     }
     G.outer!!.dn_visit_pre({}, ::fe, {})
 }
+
+fun cache_blks () {
+    fun Stmt.f (up: Int, sd: Int): Int {
+        return when (this) {
+            is Stmt.Block -> {
+                G.blks[this] = Pair(up, sd)
+                this.ss.fold(sd) { i,s ->
+                    s.f(up+1, i)
+                }
+                1
+            }
+            //is Stmt.Proto -> this.blk.f(0, 0)
+            is Stmt.SetS -> this.src.f(up, sd)
+            is Stmt.Catch -> this.blk.f(up, sd)
+            //is Stmt.Defer -> TODO()
+            is Stmt.Loop -> this.blk.f(up, sd)
+            is Stmt.If -> this.t.f(up, sd) + this.f.f(up, sd+1)
+            is Stmt.MatchE -> this.cases.map { it.second }.fold(sd) { i,s ->
+                s.f(up, i)
+            }
+            is Stmt.MatchT -> this.cases.map { it.second }.fold(sd) { i,s ->
+                s.f(up, i)
+            }
+            is Stmt.Await -> {
+                G.blks[this] = Pair(up, sd)
+                sd+1
+            }
+            else -> sd
+        }
+    }
+    G.outer!!.dn_visit_pre({
+        if (it is Stmt.Proto.Task) {
+            it.blk.f(0, 0)
+            Unit
+        }
+    }, {}, {})
+}
