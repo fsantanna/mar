@@ -450,6 +450,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
 
         is Stmt.Block  -> {
+            val ups = this.ups_until { it is Stmt.Proto }.filter { it is Stmt.Block }.mapNotNull { G.blks[it] }
             val body = this.ss.map {
                 it.coder(tpls,pre) + "\n"
             }.joinToString("")
@@ -462,7 +463,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }
             }, {null}, {null}).let { !it.isEmpty() }
             """
-            { // BLOCK [${G.blks[this]}] | ${this.dump()}
+            { // BLOCK [${ups.joinToString(",")}] | ${this.dump()}
                 ${G.defers[this.n].cond {
                     it.second
                 }}
@@ -699,9 +700,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Await  -> {
+            val ups = this.ups_until { it is Stmt.Proto }.filter { it is Stmt.Block }.map { G.blks[it] }
             val te = this.e?.typex()
             """
-            // AWAIT [${G.blks[this]}] | ${this.dump()}
+            // AWAIT [${(ups+G.blks[this]).joinToString(",")}] | ${this.dump()}
                 mar_exe->status = MAR_EXE_STATUS_YIELDED;
                 mar_exe->pc = ${this.n};
                 ${when {

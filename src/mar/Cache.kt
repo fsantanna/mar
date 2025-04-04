@@ -247,29 +247,29 @@ fun cache_tpls () {
 }
 
 fun cache_blks () {
-    fun Stmt.f (up: Int, sd: Int): Int {
+    fun Stmt.f (sd: Int): Int {
         return when (this) {
             is Stmt.Block -> {
-                G.blks[this] = Pair(up, sd)
+                G.blks[this] = sd
                 this.ss.fold(sd) { i,s ->
-                    s.f(up+1, i)
+                    s.f(i)
                 }
                 1
             }
             //is Stmt.Proto -> this.blk.f(0, 0)
-            is Stmt.SetS -> this.src.f(up, sd)
-            is Stmt.Catch -> this.blk.f(up, sd)
+            is Stmt.SetS -> this.src.f(sd)
+            is Stmt.Catch -> this.blk.f(sd)
             //is Stmt.Defer -> TODO()
-            is Stmt.Loop -> this.blk.f(up, sd)
-            is Stmt.If -> this.t.f(up, sd) + this.f.f(up, sd+1)
+            is Stmt.Loop -> this.blk.f(sd)
+            is Stmt.If -> this.t.f(sd) + this.f.f(sd+1)
             is Stmt.MatchE -> this.cases.map { it.second }.fold(sd) { i,s ->
-                s.f(up, i)
+                s.f(i)
             }
             is Stmt.MatchT -> this.cases.map { it.second }.fold(sd) { i,s ->
-                s.f(up, i)
+                s.f(i)
             }
             is Stmt.Await -> {
-                G.blks[this] = Pair(up, sd)
+                G.blks[this] = sd
                 sd+1
             }
             else -> sd
@@ -277,7 +277,7 @@ fun cache_blks () {
     }
     G.outer!!.dn_visit_pre({
         if (it is Stmt.Proto.Task) {
-            it.blk.f(0, 0)
+            it.blk.f( 0)
             Unit
         }
     }, {}, {})
