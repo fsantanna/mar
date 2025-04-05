@@ -461,7 +461,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
 
         is Stmt.Block  -> {
-            val ups = this.ups_until { it is Stmt.Proto }.filter { it is Stmt.Block }.mapNotNull { G.tsks_ids[it] }
+            val ups = this.ups_until { it is Stmt.Proto }.filter { it is Stmt.Block }.mapNotNull { G.tsks_enums[it] }
             val body = this.ss.map {
                 it.coder(tpls,pre) + "\n"
             }.joinToString("")
@@ -477,7 +477,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
 
             if (this.up_exe()) {
                 G.tsks_blks.add("""
-                    if ((mar_exe->pc & ${G.tsks_ids[this]!!.let { "$it) == $it" }}) {
+                    if ((mar_exe->pc & ${G.tsks_enums[this]!!.let { "$it) == $it" }}) {
                         ${tsks.map { (_,id,_) -> {
                             val exe = id.coder(this,pre)
                             """
@@ -725,8 +725,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Await  -> {
             val ups = this.ups_until { it is Stmt.Proto }
                 .filter { it is Stmt.Block }
-                .map { G.tsks_ids[it]!! } +
-                G.tsks_ids[this]!!
+                .map { G.tsks_enums[it]!! } +
+                G.tsks_enums[this]!!
             //println(ups.bin_to_num())
             val te = this.e?.typex()
             """

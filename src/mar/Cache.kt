@@ -250,7 +250,7 @@ fun cache_blks () {
     fun Stmt.f (sd: Int): Int {
         return when (this) {
             is Stmt.Block -> {
-                G.tsks_ids[this] = sd
+                G.tsks_enums[this] = sd
                 this.ss.fold(sd) { i,s ->
                     s.f(i)
                 }
@@ -269,7 +269,7 @@ fun cache_blks () {
                 s.f(i)
             }
             is Stmt.Await -> {
-                G.tsks_ids[this] = sd
+                G.tsks_enums[this] = sd
                 sd+1
             }
             else -> sd
