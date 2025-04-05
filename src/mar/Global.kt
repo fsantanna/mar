@@ -189,7 +189,9 @@ object G {
     val tpls  = mutableMapOf<Stmt.Proto, MutableMap<String,List<Tpl_Con>>>()
     val defers: MutableMap<Int, Triple<MutableList<Int>,String,String>> = mutableMapOf()
     val protos = Pair(mutableListOf<String>(), mutableListOf<String>())
-    val blks  = mutableMapOf<Stmt,Int>()
+
+    val tsks_ids  = mutableMapOf<Stmt,Int>()
+    val tsks_blks = mutableListOf<String>()
 
     var datas = 1
 
@@ -211,7 +213,9 @@ object G {
         defers.clear()
         protos.first.clear()
         protos.second.clear()
-        blks.clear()
+
+        tsks_ids.clear()
+        tsks_blks.clear()
 
         datas = 1
 

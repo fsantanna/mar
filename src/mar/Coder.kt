@@ -370,6 +370,16 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
     return ts.joinToString("")
 }
 
+// [1,3] -> [1,3,0,0,0,0,0,0] -> numero
+fun List<Int>.bin_to_num (): Int {
+    assert(this.size <= 8)
+    val l = this + List(8-this.size) {0}
+    return l.mapIndexed { i,v ->
+        assert(v < 16)
+        v shl ((7-i)*4)
+    }.sum()
+}
+
 fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
     return when (this) {
         is Stmt.Data  -> ""
@@ -406,6 +416,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 }
                                 assert(mar_exe->status == MAR_EXE_STATUS_YIELDED);
                                 mar_exe->status = MAR_EXE_STATUS_RUNNING;
+                                
                                 switch (mar_exe->pc) {
                                     case 0:
                                         ${(this is Stmt.Proto.Task).cond {
@@ -450,7 +461,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
 
         is Stmt.Block  -> {
-            val ups = this.ups_until { it is Stmt.Proto }.filter { it is Stmt.Block }.mapNotNull { G.blks[it] }
+            val ups = this.ups_until { it is Stmt.Proto }.filter { it is Stmt.Block }.mapNotNull { G.tsks_ids[it] }
             val body = this.ss.map {
                 it.coder(tpls,pre) + "\n"
             }.joinToString("")
@@ -462,6 +473,21 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     else -> emptyList()
                 }
             }, {null}, {null}).let { !it.isEmpty() }
+            val tsks = this.to_dcls().filter { (_,_,tp) -> tp is Type.Exec }
+
+            if (this.up_exe()) {
+                G.tsks_blks.add("""
+                    if ((mar_exe->pc & ${G.tsks_ids[this]!!.let { "$it) == $it" }}) {
+                        ${tsks.map { (_,id,_) -> {
+                            val exe = id.coder(this,pre)
+                            """
+                            $exe.pro(MAR_EXE_ACTION_RESUME, &$exe, NULL, mar_evt);
+                            """
+                        }}.joinToString("")
+                    }
+                """)
+            }
+
             """
             { // BLOCK [${ups.joinToString(",")}] | ${this.dump()}
                 ${G.defers[this.n].cond {
@@ -480,17 +506,14 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 do {
                     $body
                 } while (0);
-                ${this.to_dcls()
-                    .filter { (_,_,tp) -> tp is Type.Exec }
-                    .map { (_,id,tp) ->
-                        val exe = id.coder(this,pre)
-                        """
-                        if ($exe.pro != NULL) {
-                            $exe.pro(MAR_EXE_ACTION_ABORT, &$exe, NULL, NULL ${(tp is Type.Exec.Coro).cond {", NULL"}});
-                        }
-                        """
-                    }.joinToString("")
-                }
+                ${tsks.map { (_,id,tp) ->
+                    val exe = id.coder(this,pre)
+                    """
+                    if ($exe.pro != NULL) {
+                        $exe.pro(MAR_EXE_ACTION_ABORT, &$exe, NULL, NULL ${(tp is Type.Exec.Coro).cond {", NULL"}});
+                    }
+                    """
+                }.joinToString("")}
                 ${G.defers[this.n].cond {
                     it.third
                 }}
@@ -700,10 +723,14 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Await  -> {
-            val ups = this.ups_until { it is Stmt.Proto }.filter { it is Stmt.Block }.map { G.blks[it] }
+            val ups = this.ups_until { it is Stmt.Proto }
+                .filter { it is Stmt.Block }
+                .map { G.tsks_ids[it]!! } +
+                G.tsks_ids[this]!!
+            //println(ups.bin_to_num())
             val te = this.e?.typex()
             """
-            // AWAIT [${(ups+G.blks[this]).joinToString(",")}] | ${this.dump()}
+            // AWAIT [${(ups).joinToString(",")}] | ${this.dump()}
                 mar_exe->status = MAR_EXE_STATUS_YIELDED;
                 mar_exe->pc = ${this.n};
                 ${when {
