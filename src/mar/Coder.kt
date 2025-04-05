@@ -1,7 +1,5 @@
 package mar
 
-import java.util.*
-
 
 
 fun String.clean (): String {
@@ -419,9 +417,6 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 
                                 switch (mar_exe->pc) {
                                     case 0:
-                                        ${(this is Stmt.Proto.Task).cond {
-                                            "mar_awaits_add((MAR_Task*)mar_exe)"
-                                        }};
                                         ${this.tp.inps_().mapIndexed { i,vtp ->
                                             val (id,tp) = vtp
                                             assert(tp !is Type.Vector)
@@ -445,7 +440,6 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             }
                             is Stmt.Proto.Task -> """
                                 mar_exe->status = MAR_EXE_STATUS_COMPLETE;
-                                mar_awaits_rem((MAR_Task*)mar_exe);
                                 return;
                             """
                         }}
@@ -797,10 +791,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
             // EMIT | ${this.dump()}
              typeof($e) mar_$n = $e;
-            mar_awaits_emt(MAR_EVENT_${(this.e.typex() as Type.Data).path("_")}, &mar_$n);
-            // declare event
-            // traverse list
-            // pass pointer
+            mar_broadcast(MAR_EVENT_${(this.e.typex() as Type.Data).path("_")}, &mar_$n);
             """
         }
 
@@ -1253,23 +1244,11 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
      }
 }
 
-fun coder_awts (): SortedSet<String> {
-    fun fs (me: Stmt): List<String> {
-        return when (me) {
-            is Stmt.Emit -> listOf((me.e.typex() as Type.Data).path("_"))
-            is Stmt.Await -> if (me.tp == null) emptyList() else listOf(me.tp.path("_"))
-            else -> emptyList()
-        }
-    }
-    return G.outer!!.dn_collect_pre(::fs, {null}, {null}).toSortedSet()
-}
-
 fun coder_main (pre: Boolean): String {
     val code = G.outer!!.coder(null,pre)
     val types = coder_types(null, G.outer!!, null, pre)
     val c = object{}::class.java.getResourceAsStream("/mar.c")!!.bufferedReader().readText()
         .replace("// === MAR_TYPES === //", types)
-        .replace("// === MAR_EVENTS === //", coder_awts().mapIndexed { i,id -> "#define MAR_EVENT_$id (MAR_EVENT_ANY+1+$i)" }.joinToString("\n"))
         .replace("// === MAR_MAIN === //", code)
         .replace("// === MAR_PROTOS === //", (G.protos.first + G.protos.second).joinToString("\n"))
 
