@@ -169,19 +169,18 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             }
             is Type.Union -> {
                 val x = me.coder(tpls)
-                val xx = x.uppercase()
                 listOf(
                     """
-                        typedef enum MAR_TAGS_${xx} {
-                            __MAR_TAG_${xx}__,
+                        typedef enum MAR_TAGS_${x} {
+                            __MAR_TAG_${x}__,
                             ${
                         me.ts.mapIndexed { i, (id, _) ->
                             """
-                                MAR_TAG_${xx}_${if (id == null) i else id.str.uppercase()},
+                                MAR_TAG_${x}_${if (id == null) i else id.str},
                                 """
                         }.joinToString("")
                     }
-                        } MAR_TAGS_${xx};
+                        } MAR_TAGS_${x};
                         typedef struct $x {
                             ${me.tagged.cond { "int tag;" }}
                             union {
@@ -208,20 +207,22 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                         fun f(tp: Type, s: List<String>): List<String> {
                             //println(listOf(s, tp.to_str()))
                             val ss = ID+s.drop(1).map { "_"+it }.joinToString("")
-                            val SS = ss.uppercase()
-                            val x1 = "typedef ${tp.coder(tpls)} $ss;\n"
+                            val x1 = """
+                                #define MAR_TAG_${me.ts.first().str} $N
+                                typedef ${tp.coder(tpls)} $ss;
+                            """
                             val x2 = if (tp !is Type.Union) {
                                 emptyList()
                             } else {
                                 listOf("""
-                                    typedef enum MAR_TAGS_${SS} {
-                                        __MAR_TAG_${SS}__,
+                                    typedef enum MAR_TAGS_${ss} {
+                                        __MAR_TAG_${ss}__,
                                         ${tp.ts.mapIndexed { i, (id, _) ->
                                             """
-                                            MAR_TAG_${SS}_${if (id == null) i else id.str.uppercase()},
+                                            MAR_TAG_${ss}_${if (id == null) i else id.str.uppercase()},
                                             """
                                         }.joinToString("")}
-                                    } MAR_TAGS_${SS};
+                                    } MAR_TAGS_${ss};
                                 """) + tp.ts.map { (id, t) ->
                                     if (id == null) emptyList() else f(t, s + listOf(id.str))
                                 }.flatten()
@@ -233,7 +234,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     else -> {
                         val sup = S.t.str
                         fun f(s: Stmt.Data, sup: String, l: List<Int>): String {
-                            val id = (if (sup == "") "" else sup + "_") + s.t.str.uppercase()
+                            val id = (if (sup == "") "" else sup + "_") + s.t.str
                             //println(listOf(S.tk.pos, S.to_str()))
                             assert(l.size <= 6)
                             var n = 0
@@ -519,7 +520,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     if (MAR_ESCAPE.tag == __MAR_ESCAPE_NONE__) {
                         // no escape
                     ${this.esc.cond { """
-                        } else if (mar_sup(MAR_TAG_${it.ts.coder(null,pre).uppercase()}, MAR_ESCAPE.tag)) {
+                        } else if (mar_sup(MAR_TAG_${it.ts.coder(null,pre)}, MAR_ESCAPE.tag)) {
                             MAR_ESCAPE.tag = __MAR_ESCAPE_NONE__;   // caught escape: go ahead
                             ${(it.ts.first().str == "Break").cond { """
                                 goto MAR_LOOP_STOP_${this.xup!!.n};
@@ -598,8 +599,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Catch  -> {
-            val uni  = this.type()?.coder(tpls)
-            val xuni = uni?.uppercase()
+            val uni = this.type()?.coder(tpls)
             """
             { // CATCH | ${this.dump()}
                 do {
@@ -610,7 +610,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     ${(this.xup is Stmt.SetS).cond {
                         val set = this.xup as Stmt.SetS
                         """
-                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=MAR_TAG_${xuni}_OK };
+                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=MAR_TAG_${uni}_OK };
                         """
                      }}
                 } else if (
@@ -623,7 +623,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     ${(this.xup is Stmt.SetS && this.tp!=null).cond {
                         val set = this.xup as Stmt.SetS
                         """
-                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=MAR_TAG_${xuni}_ERR, .Err=CAST(${this.tp!!.coder(tpls)}, MAR_EXCEPTION) };
+                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=MAR_TAG_${uni}_ERR, .Err=CAST(${this.tp!!.coder(tpls)}, MAR_EXCEPTION) };
                         """
                      }}
                     MAR_EXCEPTION.tag = __MAR_EXCEPTION_NONE__;
@@ -729,7 +729,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 mar_exe->pc = ${this.n};
                 ${when {
                     (this.e is Expr.Bool && this.e.tk.str=="false") -> """
-                        mar_exe->awt.evt = MAR_EVENT_NONE;
+                        mar_exe->awt.evt = MAR_TAG_none;
                         return;
                     """
                     (this.e is Expr.Bool && this.e.tk.str=="true") -> """
@@ -768,7 +768,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     }
                     (this.tp == null) -> error("impossible case")
                     else -> """
-                        mar_exe->awt.evt = MAR_EVENT_${this.tp.path("_")};
+                        mar_exe->awt.evt = MAR_TAG_${this.tp.path("_")};
                         return;
                     """
                 }}
@@ -791,7 +791,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
             // EMIT | ${this.dump()}
              typeof($e) mar_$n = $e;
-            mar_broadcast(MAR_EVENT_${(this.e.typex() as Type.Data).path("_")}, &mar_$n);
+            mar_broadcast(MAR_TAG_${(this.e.typex() as Type.Data).path("_")}, &mar_$n);
             """
         }
 
@@ -1175,7 +1175,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     "."+(id?.str ?: ("_"+(i+1))) + " = " + v.coder(tpls,pre)
                 }.joinToString(",")
                 val ts = this.tp.ts.coder(null,pre)
-                "((${this.tp.ts.first().str}) { .tag=MAR_TAG_${ts.uppercase()}, .$ts={$vs} })"
+                "((${this.tp.ts.first().str}) { .tag=MAR_TAG_$ts, .$ts={$vs} })"
             }
         }
 
@@ -1208,7 +1208,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             ${this.typex().coder(TODO())} mar_$n;
             switch (${this.tst.coder(tpls,pre)}.tag) {
                 ${this.cases.map { (tst,e) -> """
-                    ${tst.cond2({"case MAR_TAG_${it.ts.coder(TODO(),pre).uppercase()}"},{"default"})}:
+                    ${tst.cond2({"case MAR_TAG_${it.ts.coder(TODO(),pre)}"},{"default"})}:
                         mar_$n = ${e.coder(tpls,pre)};
                     break;
                 """ }.joinToString("")}
