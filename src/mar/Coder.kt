@@ -470,7 +470,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }, {null}, {null}).let { !it.isEmpty() }
             val tsks = this.to_dcls().filter { (_,_,tp) -> tp is Type.Exec }
 
-            if (this.up_exe()) {
+            if (this.up_exe() is Stmt.Proto.Task) {
                 G.tsks_blks.add("""
                     if ((mar_exe->pc & ${G.tsks_enums[this]!!.let { "$it) == $it" }}) {
                         ${tsks.map { (_,id,_) -> {
@@ -493,7 +493,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     .map { (_,id,tp) ->
                         val x = id.coder(this,pre)
                         """
-                        ${(!this.up_exe()).cond { " ${tp!!.coder(tpls)} $x;" }}
+                        ${(this.up_exe() == null).cond { " ${tp!!.coder(tpls)} $x;" }}
                         $x.pro = NULL;  // uninitialized Exec
                         """
                     }.joinToString("")
@@ -536,7 +536,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Dcl    -> {
             val dcl = when {
                 (this.xtp is Type.Exec) -> ""
-                this.up_exe() -> ""
+                (this.up_exe() != null) -> ""
                 else -> this.xtp!!.coder(tpls) + " " + this.id.str + ";"
             }
             val ini = this.xtp.let {
@@ -585,7 +585,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             val (ns,ini,end) = G.defers.getOrDefault(bup.n, Triple(mutableListOf(),"",""))
             val id = "defer_$n".coder(bup,pre)
             val inix = """
-                ${(!this.up_exe()).cond { "int" }} $id = 0;   // not yet reached
+                ${(this.up_exe() == null).cond { "int" }} $id = 0;   // not yet reached
             """
             val endx = """
                 if ($id) {     // if true: reached, finalize
@@ -941,13 +941,13 @@ fun Tk.Var.coder (fr: Any, pre: Boolean): String {
     //println(listOf(this.str, dcl.to_str()))
     return when {
         (dcl is Stmt.Proto) -> this.str
-        dcl.xup!!.up_exe() -> "mar_exe->mem.${this.str}"
+        (dcl.xup!!.up_exe() != null) -> "mar_exe->mem.${this.str}"
         else -> this.str
     }
 }
 
 fun String.coder (fr: Stmt.Block, pre: Boolean): String {
-    return if (fr.xup?.up_exe() ?: false) {
+    return if (fr.xup?.up_exe() != null) {
         "mar_exe->mem.$this"
     } else {
         this
