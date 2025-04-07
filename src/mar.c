@@ -103,6 +103,7 @@ typedef struct MAR_Task_Await {
     void* pay;
 } MAR_Task_Await;
 
+struct MAR_Task;
 typedef void (*Task_Pro) (MAR_EXE_ACTION, struct MAR_Task*, void*, void*);
 
 typedef struct MAR_Task {
@@ -111,6 +112,7 @@ typedef struct MAR_Task {
 } MAR_Task;
 
 // TYPES
+#define MAR_TAG_none 0
 // === MAR_TYPES === //
 
 // PROTOS

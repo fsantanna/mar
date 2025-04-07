@@ -198,6 +198,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             }
             is Type.Data -> {
                 val ID = me.coder(tpls)
+                val N = G.datas++
                 val (S, _, tpc) = me.walk_tpl()
                 //println(me.to_str())
                 //println(tpc.to_str())
@@ -275,7 +276,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
 
                         val tpl = S.tpls.map { (id, _) -> id.str }.zip(me.xtpls!!).toMap()
                         listOf(
-                            f(S, "", listOf(G.datas++)) + """
+                            f(S, "", listOf(N)) + """
                                 typedef struct ${sup} {
                                     union {
                                         struct {
