@@ -469,12 +469,12 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     else -> emptyList()
                 }
             }, {null}, {null}).let { !it.isEmpty() }
-            val tsks = this.to_dcls().filter { (_,_,tp) -> tp is Type.Exec }
+            val exes = this.to_dcls().filter { (_,_,tp) -> tp is Type.Exec }
 
             if (this.up_exe() is Stmt.Proto.Task) {
                 G.tsks_blks.add("""
                     if ((mar_exe->pc & ${G.tsks_enums[this]!!.let { "$it) == $it" }}) {
-                        ${tsks.map { (_,id,_) -> {
+                        ${exes.map { (_,id,_) -> {
                             val exe = id.coder(this,pre)
                             """
                             $exe.pro(MAR_EXE_ACTION_RESUME, &$exe, NULL, mar_evt);
@@ -489,20 +489,29 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 ${G.defers[this.n].cond {
                     it.second
                 }}
-                ${this.to_dcls()
-                    .filter { (_,_,tp) -> tp is Type.Exec }
-                    .map { (_,id,tp) ->
-                        val x = id.coder(this,pre)
-                        """
-                        ${(this.up_exe() == null).cond { " ${tp!!.coder(tpls)} $x;" }}
-                        $x.pro = NULL;  // uninitialized Exec
-                        """
-                    }.joinToString("")
-                }
+                ${exes.map { (_,id,tp) ->
+                    val x = id.coder(this,pre)
+                    """
+                    ${(this.up_exe() == null).cond { " ${tp!!.coder(tpls)} $x;" }}
+                    $x.pro = NULL;  // uninitialized Exec
+                    """
+                }.joinToString("")}
+                ${(this == G.outer).cond { """
+                    void _mar_broadcast_ (int tag, void* pay) {
+                        ${exes.filter { (_,_,tp) -> tp is Type.Exec.Task }.map { (_,id,_) ->
+                            val x = id.coder(this,pre)
+                            """
+                            $x.pro(MAR_EXE_ACTION_RESUME, &$x, NULL, tag, pay);
+                            """
+                        }.joinToString("")}
+                    }
+                    mar_broadcast = &_mar_broadcast_;
+                    
+                """ }}
                 do {
                     $body
                 } while (0);
-                ${tsks.map { (_,id,tp) ->
+                ${exes.map { (_,id,tp) ->
                     val exe = id.coder(this,pre)
                     """
                     if ($exe.pro != NULL) {

@@ -49,7 +49,7 @@ fun Stmt.Proto.x_sig (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Proto.Task -> {
             val (_,exe) = this.tp.x_pro_exe(null)
             val inps = this.tp.inps.x_inp_tup(this.tp.tk,null, pre).first
-            "void $xid (MAR_EXE_ACTION mar_act, $exe* mar_exe, ${inps}* mar_inps, void* mar_evt)"
+            "void $xid (MAR_EXE_ACTION mar_act, $exe* mar_exe, ${inps}* mar_inps, int mar_evt_tag, void* mar_evt_pay)"
       }
     }
 }

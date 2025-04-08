@@ -98,18 +98,22 @@ typedef enum MAR_EXE_ACTION {
     MAR_EXE_STATUS status;      \
     _pro_ pro;
 
+// TASKS
+
 typedef struct MAR_Task_Await {
     int evt;
     void* pay;
 } MAR_Task_Await;
 
 struct MAR_Task;
-typedef void (*Task_Pro) (MAR_EXE_ACTION, struct MAR_Task*, void*, void*);
+typedef void (*Task_Pro) (MAR_EXE_ACTION, struct MAR_Task*, void*, int, void*);
 
 typedef struct MAR_Task {
     MAR_Exe_Fields(Task_Pro)
     MAR_Task_Await awt;
 } MAR_Task;
+
+void (*mar_broadcast) (int tag, void* pay);
 
 // TYPES
 #define MAR_TAG_none 0
