@@ -220,7 +220,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                                         __MAR_TAG_${ss}__,
                                         ${tp.ts.mapIndexed { i, (id, _) ->
                                             """
-                                            MAR_TAG_${ss}_${if (id == null) i else id.str.uppercase()},
+                                            MAR_TAG_${ss}_${if (id == null) i else id.str},
                                             """
                                         }.joinToString("")}
                                     } MAR_TAGS_${ss};
@@ -611,7 +611,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     ${(this.xup is Stmt.SetS).cond {
                         val set = this.xup as Stmt.SetS
                         """
-                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=MAR_TAG_${uni}_OK };
+                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=MAR_TAG_${uni}_Ok };
                         """
                      }}
                 } else if (
@@ -624,7 +624,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     ${(this.xup is Stmt.SetS && this.tp!=null).cond {
                         val set = this.xup as Stmt.SetS
                         """
-                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=MAR_TAG_${uni}_ERR, .Err=CAST(${this.tp!!.coder(tpls)}, MAR_EXCEPTION) };
+                        ${set.dst.coder(tpls,pre)} = ($uni) { .tag=MAR_TAG_${uni}_Err, .Err=CAST(${this.tp!!.coder(tpls)}, MAR_EXCEPTION) };
                         """
                      }}
                     MAR_EXCEPTION.tag = __MAR_EXCEPTION_NONE__;
@@ -1163,7 +1163,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 val nxt = this.tp.ts[i + 1].str
                                 """
                                 {
-                                    .tag = MAR_TAG_${tp.uppercase()}_${nxt.uppercase()},
+                                    .tag = MAR_TAG_${tp}_${nxt},
                                     { .$nxt = ceu_${i + 1} }
                                 };
                                 """
