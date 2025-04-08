@@ -391,6 +391,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 this.proto(it)
             }.map { xtpls ->
                 val sig = this.x_sig(xtpls, pre) + ";\n"
+                val blk = this.blk.coder(xtpls,pre)
+                //println(listOf("read", this, G.tsks_blks[this]))
                 val cod = """
                     ${this.x_sig(xtpls, pre)} {
                         ${this.tp.out.coder(xtpls)} mar_ret;
@@ -414,6 +416,13 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 }
                                 mar_exe->status = MAR_EXE_STATUS_RUNNING;
                                 
+                                ${(G.tsks_blks[this] != null).cond { """
+                                    // broadcast
+                                    {
+                                        ${G.tsks_blks[this]!!.joinToString("")}
+                                    }
+                                """ }}
+                                
                                 switch (mar_exe->pc) {
                                     case 0:
                                         if (mar_act == MAR_EXE_ACTION_ABORT) {
@@ -424,7 +433,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                             assert(tp !is Type.Vector)
                                             id.coder(this.blk,pre) + " = mar_inps->_${i+1};\n"                                }.joinToString("")}
                             """ }}
-                            ${this.blk.coder(xtpls,pre)}
+                            $blk
                             ${(this !is Stmt.Proto.Func).cond { """
                                 }
                             """ }}
@@ -470,16 +479,22 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }
             }, {null}, {null}).let { !it.isEmpty() }
             val exes = this.to_dcls().filter { (_,_,tp) -> tp is Type.Exec }
+            val tsks = exes.filter { (_,_,tp) -> tp is Type.Exec.Task }
 
-            if (this.up_exe() is Stmt.Proto.Task) {
-                G.tsks_blks.add("""
-                    if ((mar_exe->pc & ${G.tsks_enums[this]!!.let { "$it) == $it" }}) {
-                        ${exes.map { (_,id,_) -> {
+            val up_tsk = this.up_exe()
+            if (up_tsk is Stmt.Proto.Task) {
+                if (G.tsks_blks[up_tsk] == null) {
+                    G.tsks_blks[up_tsk] = mutableListOf()
+                }
+                //println(listOf("write", up_tsk, G.tsks_blks[up_tsk]))
+                G.tsks_blks[up_tsk]!!.add("""
+                    if (mar_exe->pc!=0 && (mar_exe->pc & ${G.tsks_enums[this]!!.let { "$it) == $it" }}) {
+                        ${exes.map { (_,id,_) ->
                             val exe = id.coder(this,pre)
                             """
                             $exe.pro(MAR_EXE_ACTION_RESUME, &$exe, NULL, mar_evt_tag, mar_evt_pay);
                             """
-                        }}.joinToString("")
+                        }.joinToString("")}
                     }
                 """)
             }
@@ -498,7 +513,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }.joinToString("")}
                 ${(this == G.outer).cond { """
                     void _mar_broadcast_ (int tag, void* pay) {
-                        ${exes.filter { (_,_,tp) -> tp is Type.Exec.Task }.map { (_,id,_) ->
+                        ${tsks.map { (_,id,_) ->
                             val x = id.coder(this,pre)
                             """
                             $x.pro(MAR_EXE_ACTION_RESUME, &$x, NULL, tag, pay);

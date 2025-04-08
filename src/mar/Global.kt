@@ -191,7 +191,7 @@ object G {
     val protos = Pair(mutableListOf<String>(), mutableListOf<String>())
 
     val tsks_enums = mutableMapOf<Stmt,Int>()
-    val tsks_blks = mutableListOf<String>()
+    val tsks_blks = mutableMapOf<Stmt.Proto.Task, MutableList<String>>()
 
     var datas = 1
 
