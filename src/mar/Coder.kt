@@ -409,16 +409,16 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         do {
                             ${(this !is Stmt.Proto.Func).cond {
                                 """
-                                if (mar_act == MAR_EXE_ACTION_ABORT) {
-                                    if (mar_exe->status!=MAR_EXE_STATUS_YIELDED || mar_exe->pc==0) {
-                                        return;
-                                    }
+                                if (mar_exe->status != MAR_EXE_STATUS_YIELDED) {
+                                    return;
                                 }
-                                assert(mar_exe->status == MAR_EXE_STATUS_YIELDED);
                                 mar_exe->status = MAR_EXE_STATUS_RUNNING;
                                 
                                 switch (mar_exe->pc) {
                                     case 0:
+                                        if (mar_act == MAR_EXE_ACTION_ABORT) {
+                                            continue;
+                                        }
                                         ${this.tp.inps_().mapIndexed { i,vtp ->
                                             val (id,tp) = vtp
                                             assert(tp !is Type.Vector)
@@ -792,7 +792,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     val set = this.xup as Stmt.SetS
                     val dst = set.dst.coder(tpls,pre)
                     """
-                    $dst = * (typeof($dst)*) mar_evt;
+                    $dst = * (typeof($dst)*) mar_evt_pay;
                     """
                 }}
             """
