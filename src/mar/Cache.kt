@@ -83,10 +83,12 @@ fun cache_ups () {
                 me.arg.xup = me
             }
             is Stmt.Await -> {
-                me.tp?.xup = me
-                me.e?.xup = me
-                me.es?.forEach {
-                    it.xup = me
+                when (me) {
+                    is Stmt.Await.Data -> me.tp.xup = me
+                    is Stmt.Await.Task -> me.exe.xup = me
+                    is Stmt.Await.Clock -> me.ms.xup = me
+                    is Stmt.Await.Bool -> {}
+                    is Stmt.Await.Any -> me.exes.forEach { it.xup = me }
                 }
             }
             is Stmt.Emit -> me.e.xup = me

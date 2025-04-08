@@ -645,7 +645,15 @@ fun Stmt.type (): Type? {
             }
         }
         is Stmt.Yield -> (this.up_first { it is Stmt.Proto } as Stmt.Proto.Coro).tp_.res
-        is Stmt.Await -> this.tp ?: Type.Unit(this.tk)
+        is Stmt.Await -> {
+            when (this) {
+                is Stmt.Await.Data -> this.tp
+                is Stmt.Await.Task -> (this.exe.typex() as Type.Exec.Task).out
+                is Stmt.Await.Clock -> Type.Unit(this.tk)   // TODO: Int ms overflow
+                is Stmt.Await.Bool -> Type.Unit(this.tk)
+                is Stmt.Await.Any -> Type.Unit(this.tk)
+            }
+        }
         else -> error("impossible case")
     }
 }

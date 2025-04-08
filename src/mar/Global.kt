@@ -165,7 +165,13 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Start   (tk: Tk, val exe: Expr, val args: List<Expr>): Stmt(G.N++, null, tk)
     class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Stmt(G.N++, null, tk)
     class Yield   (tk: Tk, val arg: Expr): Stmt(G.N++, null, tk)
-    class Await   (tk: Tk, val tp: Type.Data?, val e: Expr?, val es: List<Expr>?): Stmt(G.N++, null, tk)
+    sealed class Await (tk: Tk): Stmt(G.N++, null, tk) {
+        class Data  (tk: Tk, val tp: Type.Data): Stmt.Await(tk)
+        class Task  (tk: Tk, val exe: Expr): Stmt.Await(tk)
+        class Clock (tk: Tk, val ms: Expr): Stmt.Await(tk)
+        class Bool  (tk: Tk): Stmt.Await(tk)
+        class Any   (tk: Tk, val exes: List<Expr>): Stmt.Await(tk)
+    }
     class Emit    (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
 
     class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)

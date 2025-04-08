@@ -54,7 +54,7 @@ fun Stmt.infer (tpe: Type?): Type? {
             this.arg.infer(coro.yld)
             coro.res
         }
-        is Stmt.Await -> this.tp ?: Type.Unit(this.tk)
+        is Stmt.Await -> this.typex()
 
        else -> error("impossible case")
    }

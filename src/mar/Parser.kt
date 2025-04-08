@@ -900,32 +900,32 @@ fun parser_stmt (): List<Stmt> {
                         Stmt.Dcl(tk0, id, null),
                         Stmt.SetS(tk0, Expr.Acc(id), Stmt.Create(tk0, call.f)),
                         Stmt.Start(tk0, Expr.Acc(id), call.args),
-                        Stmt.Await(tk0, null, Expr.Acc(id), null)
+                        Stmt.Await.Task(tk0, Expr.Acc(id))
                     )
                 }
                 // await(true), await(false)
-                check_fix("true") || check_fix("false") -> {
-                    val b = parser_expr()
+                accept_fix("true") || accept_fix("false") -> {
+                    val tk = G.tk0!!
                     accept_fix_err(")")
-                    Stmt.Await(tk0, null, b, null)
+                    Stmt.Await.Bool(tk0)
                 }
                 // await(%10min)
                 accept_op("%") -> {
                     val ms = parser_expr()
                     accept_fix_err(")")
-                    Stmt.Await(tk0, null, ms, null)
+                    Stmt.Await.Clock(tk0, ms)
                 }
                 // await(:X)
                 accept_fix(":") -> {
                     val tp = parser_type(null, false, false) as Type.Data
                     accept_fix_err(")")
-                    Stmt.Await(tk0, tp, null, null)
+                    Stmt.Await.Data(tk0, tp)
                 }
                 // await(exe)
                 else -> {
                     val exe = parser_expr()
                     accept_fix_err(")")
-                    Stmt.Await(tk0, null, exe, null)
+                    Stmt.Await.Task(tk0, exe)
                 }
             }
             listOf(parser_await_until(awt))
@@ -971,7 +971,7 @@ fun parser_stmt (): List<Stmt> {
             l.mapIndexed { i, ss ->
                 gen_spawn(tk0, G.N+i, ss)
             }.flatten() + listOf(
-                Stmt.Await(tk0, null, Expr.Bool(Tk.Fix("true", tk0.pos)), null),
+                Stmt.Await.Bool(Tk.Fix("false", tk0.pos)),
             )
         }
         accept_fix("par_and") -> {
@@ -986,7 +986,7 @@ fun parser_stmt (): List<Stmt> {
                 gen_spawn(tk0, N+i, ss)
             } +
             l.mapIndexed { i, ss ->
-                listOf(Stmt.Await(tk0, null, Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos)), null))
+                listOf(Stmt.Await.Task(tk0, Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos))))
             }).flatten()
         }
         accept_fix("par_or") -> {
@@ -1001,7 +1001,7 @@ fun parser_stmt (): List<Stmt> {
                 (l.mapIndexed { i, ss ->
                     gen_spawn(tk0, N+i, ss)
                 }).flatten() + listOf(
-                    Stmt.Await(tk0, null, null, l.mapIndexed { i,ss ->
+                    Stmt.Await.Any(tk0, l.mapIndexed { i, ss ->
                         Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos))
                     })
                 )
@@ -1014,12 +1014,12 @@ fun parser_stmt (): List<Stmt> {
                 // await(%10min)
                 accept_op("%") -> {
                     val ms = parser_expr()
-                    Stmt.Await(tk0, null, ms, null)
+                    Stmt.Await.Clock(tk0, ms)
                 }
                 // await(:X)
                 accept_fix_err(":") -> {
                     val tp = parser_type(null, false, false) as Type.Data
-                    Stmt.Await(tk0, tp, null, null)
+                    Stmt.Await.Data(tk0, tp)
                 }
                 else -> error("impossible case")
             }
