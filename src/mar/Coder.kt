@@ -106,7 +106,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(out) + ft(xexe) + listOf(
                     x + ";\n",
-                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, void*);\n",
+                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, int, void*);\n",
                 )
             }
             is Type.Exec.Coro -> {
@@ -131,7 +131,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val x = "struct " + exe
                 ft(itup) + ft(inps) + ft(out) + ft(xpro) + listOf(
                     x + ";\n",
-                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, void*);\n",
+                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, int, void*);\n",
                 )
             }
             is Type.Tuple -> {
@@ -477,7 +477,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         ${exes.map { (_,id,_) -> {
                             val exe = id.coder(this,pre)
                             """
-                            $exe.pro(MAR_EXE_ACTION_RESUME, &$exe, NULL, mar_evt);
+                            $exe.pro(MAR_EXE_ACTION_RESUME, &$exe, NULL, mar_evt_tag, mar_evt_pay);
                             """
                         }}.joinToString("")
                     }
@@ -513,9 +513,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 } while (0);
                 ${exes.map { (_,id,tp) ->
                     val exe = id.coder(this,pre)
+                    val args = if (tp is Type.Exec.Coro) "NULL, NULL" else "0, NULL"
                     """
                     if ($exe.pro != NULL) {
-                        $exe.pro(MAR_EXE_ACTION_ABORT, &$exe, NULL, NULL ${(tp is Type.Exec.Coro).cond {", NULL"}});
+                        $exe.pro(MAR_EXE_ACTION_ABORT, &$exe, NULL, $args);
                     }
                     """
                 }.joinToString("")}
@@ -682,7 +683,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     mar_out_$n;
                 """}}
                 ${(tp is Type.Exec.Task).cond { """
-                    mar_exe_$n->pro(MAR_EXE_ACTION_RESUME, mar_exe_$n, &mar_inps_$n, NULL);
+                    mar_exe_$n->pro(MAR_EXE_ACTION_RESUME, mar_exe_$n, &mar_inps_$n, 0, NULL);
                 """}}
             });
             """

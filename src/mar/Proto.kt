@@ -31,7 +31,7 @@ fun Type.Proto.x_sig (pre: Boolean): String {
             val res = this.res().coder(null)
             "void (*) (MAR_EXE_ACTION, $exe*, ${inps}*, ${res}*, $xout*)"
         }
-        is Type.Proto.Task -> "void (*) (MAR_EXE_ACTION, $exe*, ${inps}*, void*)"
+        is Type.Proto.Task -> "void (*) (MAR_EXE_ACTION, $exe*, ${inps}*, int, void*)"
     }
 }
 
