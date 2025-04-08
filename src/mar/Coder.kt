@@ -349,7 +349,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 typedef struct $exe {
                     MAR_Exe_Fields($pro)
                     ${(me is Stmt.Proto.Task).cond { """
-                        MAR_Task_Await awt;
+                        uintptr_t evt;
                     """ }}
                     struct {
                         ${mem()}    // TODO: unions for non-coexisting blocks
@@ -666,7 +666,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         """
 
         is Stmt.Create -> {
-            val exe = this.pro.typex().to_exe()!!.coder(null)
+            val tp = this.pro.typex() as Type.Proto
+            val exe = tp.to_exe()!!.coder(null)
             (this.xup is Stmt.SetS).cond {
                 val set = this.xup as Stmt.SetS
                 """
@@ -674,7 +675,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 """
             } + """
             // CREATE | ${this.dump()}
-            ($exe) { 0, MAR_EXE_STATUS_YIELDED, (${(this.pro.typex() as Type.Proto).x_sig(pre)}) ${this.pro.coder(tpls,pre)}, {} };
+            ($exe) { 0, MAR_EXE_STATUS_YIELDED, (${tp.x_sig(pre)}) ${this.pro.coder(tpls,pre)} ${(tp is Type.Proto.Task).cond {", 0"}}, {} };
             """
         }
         is Stmt.Start  -> {
@@ -755,32 +756,30 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 mar_exe->pc = ${this.n};
                 ${when (this) {
                     is Stmt.Await.Data -> """
-                        mar_exe->awt.evt = MAR_TAG_${this.tp.path("_")};
+                        mar_exe->evt = MAR_TAG_${this.tp.path("_")};
                         return;
                     """
                     is Stmt.Await.Task -> {
                         val exe = this.exe.coder(null,pre)
                         """
                             if ($exe.status != MAR_EXE_STATUS_COMPLETE) {
-                                mar_exe->awt.pay = & $exe;
-                                mar_exe->awt.evt = MAR_TAG_Event_Task;
+                                mar_exe->evt = (uintptr_t) & $exe;
                                 return;
                             }
                             mar_exe->status = MAR_EXE_STATUS_RUNNING;
                         """
                     }
                     is Stmt.Await.Clock -> """
-                        mar_exe->awt.pay = (void*) ${this.ms.coder(null,pre)};
-                        mar_exe->awt.evt = MAR_TAG_Event_Clock;
+                        mar_exe->evt = ${this.ms.coder(null,pre)};
                         return;
                     """
                     is Stmt.Await.Bool -> when (this.tk.str) {
                         "false" -> """
-                            mar_exe->awt.evt = MAR_TAG_none;
+                            mar_exe->evt = MAR_TAG_none;
                             return;
                         """
                         "true" -> """
-                            mar_exe->awt.evt = MAR_TAG_ANY;
+                            mar_exe->evt = MAR_TAG_ANY;
                             return;
                         """
                         else -> error("impossible case")
@@ -791,8 +790,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         }.joinToString(" || ")
                         """
                         if (!$ok) {
-                            mar_exe->awt.pay = NULL;        // any task
-                            mar_exe->awt.evt = MAR_TAG_Event_Task;
+                            //mar_exe->evy = NULL;        // any task
                             return;
                         }
                         mar_exe->status = MAR_EXE_STATUS_RUNNING;

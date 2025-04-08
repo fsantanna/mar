@@ -100,17 +100,12 @@ typedef enum MAR_EXE_ACTION {
 
 // TASKS
 
-typedef struct MAR_Task_Await {
-    int evt;
-    void* pay;
-} MAR_Task_Await;
-
 struct MAR_Task;
 typedef void (*Task_Pro) (MAR_EXE_ACTION, struct MAR_Task*, void*, int, void*);
 
 typedef struct MAR_Task {
     MAR_Exe_Fields(Task_Pro)
-    MAR_Task_Await awt;
+    uintptr_t evt;
 } MAR_Task;
 
 void (*mar_broadcast) (int tag, void* pay);
