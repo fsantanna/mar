@@ -744,12 +744,12 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         return;
                     """
                     (this.e is Expr.Bool && this.e.tk.str=="true") -> """
-                        mar_exe->awt.evt = MAR_EVENT_ANY;
+                        mar_exe->awt.evt = MAR_TAG_ANY;
                         return;
                     """
                     (te is Type.Prim && te.tk.str=="Int") -> """
                         mar_exe->awt.pay = (void*) ${this.e!!.coder(null,pre)};
-                        mar_exe->awt.evt = MAR_EVENT_Event_Clock;
+                        mar_exe->awt.evt = MAR_TAG_Event_Clock;
                         return;
                     """
                     (te is Type.Exec.Task) -> {
@@ -757,7 +757,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         """
                         if ($exe.status != MAR_EXE_STATUS_COMPLETE) {
                             mar_exe->awt.pay = & $exe;
-                            mar_exe->awt.evt = MAR_EVENT_Event_Task;
+                            mar_exe->awt.evt = MAR_TAG_Event_Task;
                             return;
                         }
                         mar_exe->status = MAR_EXE_STATUS_RUNNING;
@@ -771,7 +771,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         """
                         if (!$ok) {
                             mar_exe->awt.pay = NULL;        // any task
-                            mar_exe->awt.evt = MAR_EVENT_Event_Task;
+                            mar_exe->awt.evt = MAR_TAG_Event_Task;
                             return;
                         }
                         mar_exe->status = MAR_EXE_STATUS_RUNNING;
