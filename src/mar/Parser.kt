@@ -560,33 +560,6 @@ fun check_stmt_as_set_src (): Boolean {
     }
 }
 
-fun set_stmt_as_set_src (tk0: Tk, dst: Expr): List<Stmt> {
-    val cmd = G.tk1!!.str
-    val ss = parser_stmt()
-    return when {
-        (cmd == "spawn") -> {
-            val x = (ss[0] as Stmt.Dcl).id
-            ss + Stmt.SetE(tk0, dst, Expr.Acc(x))
-        }
-        (cmd=="await" && ss[0] is Stmt.Loop) -> {
-            assert(ss.size == 1)
-            val lop = ss[0] as Stmt.Loop
-            val blk = lop.blk
-            val awt = blk.ss[0] as Stmt.Await
-            listOf (
-                Stmt.Loop (
-                    lop.tk,
-                    Stmt.Block(blk.tk, blk.esc,
-                        listOf(Stmt.SetS(tk0, dst, awt)) + blk.ss.drop(1)))
-            )
-        }
-        else -> {
-            assert(ss.size == 1)
-            listOf(Stmt.SetS(tk0, dst, ss.first()))
-        }
-    }
-}
-
 fun gen_task_emit (tk: Tk): Stmt {
     return Stmt.Emit(tk,
         Expr.Cons(tk,
@@ -622,7 +595,7 @@ fun gen_proto_spawn (tk: Tk, N: Int, blk: List<Stmt>): List<Stmt> {
     ) + gen_spawn(tk, N, Expr.Acc(Tk.Var("mar_pro_$N", tk.pos)), emptyList())
 }
 
-fun parser_await_until (awt: Stmt.Await): Stmt {
+fun parser_await_until (awt: Stmt): Stmt {
     return if (!(accept_fix("while") || accept_fix("until"))) {
         awt
     } else {
@@ -651,7 +624,7 @@ fun parser_await_until (awt: Stmt.Await): Stmt {
 
 }
 
-fun parser_stmt (): List<Stmt> {
+fun parser_stmt (set: Expr?=null): List<Stmt> {
     return when {
         (accept_fix("func") || accept_fix("coro") || accept_fix("task")) -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -717,7 +690,7 @@ fun parser_stmt (): List<Stmt> {
             accept_op_err("=")
             val tk0 = G.tk0 as Tk.Op
             if (check_stmt_as_set_src()) {
-                set_stmt_as_set_src(tk0, dst)
+                parser_stmt(dst)
             } else {
                 val src = parser_expr()
                 listOf(Stmt.SetE(tk0, dst, src))
@@ -733,7 +706,7 @@ fun parser_stmt (): List<Stmt> {
             val tk1 = G.tk1
             listOf(Stmt.Dcl(tk0, id, tp)) + when {
                 !accept_op("=") -> emptyList()
-                check_stmt_as_set_src() -> set_stmt_as_set_src(tk1!!, Expr.Acc(id))
+                check_stmt_as_set_src() -> parser_stmt(Expr.Acc(id))
                 else -> listOf(Stmt.SetE(tk1!!, Expr.Acc(id), parser_expr()))
             }
         }
@@ -764,7 +737,13 @@ fun parser_stmt (): List<Stmt> {
                 tp
             }
             val blk = parser_stmt_block()
-            listOf(Stmt.Catch(tk0, tp, Stmt.Block(tk0, null, blk)))
+            Stmt.Catch(tk0, tp, Stmt.Block(tk0, null, blk)).let {
+                if (set == null) {
+                    listOf(it)
+                } else {
+                    listOf(Stmt.SetS(set.tk, set, it))
+                }
+            }
         }
         accept_fix("throw") -> {
             val tk0 = G.tk0!!
@@ -855,18 +834,26 @@ fun parser_stmt (): List<Stmt> {
         }
 
         accept_fix("create") -> {
+            assert(set != null) { "TODO: error message"}
+            set as Expr
             val tk0 = G.tk0 as Tk.Fix
             accept_fix_err("(")
             val co = parser_expr()
             accept_fix_err(")")
-            listOf(Stmt.Create(tk0, co))
+            listOf(Stmt.SetS(set.tk, set, Stmt.Create(tk0, co)))
         }
         accept_fix("start") -> {
             val tk0 = G.tk0 as Tk.Fix
             val exe = parser_expr_4_prim()
             accept_fix_err("(")
             val args = parser_list(",",")") { parser_expr() }
-            listOf(Stmt.Start(tk0, exe, args))
+            Stmt.Start(tk0, exe, args).let {
+                if (set == null) {
+                    listOf(it)
+                } else {
+                    listOf(Stmt.SetS(set.tk, set, it))
+                }
+            }
         }
         accept_fix("resume") -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -878,7 +865,13 @@ fun parser_stmt (): List<Stmt> {
                 parser_expr()
             }
             accept_fix_err(")")
-            listOf(Stmt.Resume(tk0, exe, arg))
+            Stmt.Resume(tk0, exe, arg).let {
+                if (set == null) {
+                    listOf(it)
+                } else {
+                    listOf(Stmt.SetS(set.tk, set, it))
+                }
+            }
         }
         accept_fix("yield") -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -889,7 +882,13 @@ fun parser_stmt (): List<Stmt> {
                 parser_expr()
             }
             accept_fix_err(")")
-            listOf(Stmt.Yield(tk0, arg))
+            Stmt.Yield(tk0, arg).let {
+                if (set == null) {
+                    listOf(it)
+                } else {
+                    listOf(Stmt.SetS(set.tk, set, it))
+                }
+            }
         }
         accept_fix("await") -> {
             val tk0 = G.tk0 as Tk.Fix
@@ -934,7 +933,10 @@ fun parser_stmt (): List<Stmt> {
                     Stmt.Await.Task(tk0, exe)
                 }
             }
-            listOf(parser_await_until(awt))
+            val xawt = if (set == null) awt else {
+                Stmt.SetS(set.tk, set, awt)
+            }
+            listOf(parser_await_until(xawt))
         }
         accept_fix("emit") -> {
             val tk0 = G.tk0!!
@@ -955,7 +957,14 @@ fun parser_stmt (): List<Stmt> {
                 val pro = parser_expr_4_prim()
                 accept_fix_err("(")
                 val args = parser_list(",",")") { parser_expr() }
-                gen_spawn(tk, G.N, pro, args)
+                if (set == null) {
+                    gen_spawn(tk, G.N, pro, args)
+                } else {
+                    listOf(
+                        Stmt.SetS(set.tk, set, Stmt.Create(tk, pro)),
+                        Stmt.Start(tk, set, args)
+                    )
+                }
             }
         }
         accept_fix("par") -> {
