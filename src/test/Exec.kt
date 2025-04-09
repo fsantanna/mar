@@ -1829,6 +1829,20 @@ class Exec  {
         assert(out == "X(10)\nY(20)\n") { out }
     }
     @Test
+    fun oo_07x_task_spawn () {
+        val out = test("""
+            data X: Int
+            task tsk: () -> () {
+                var e = await(:X)
+                print(e)
+            }
+            var e = spawn tsk()
+            ;;print(e)
+            emit(X(10))
+        """)
+        assert(out == "X(10)\n") { out }
+    }
+    @Test
     fun oo_08_task_await_until () {
         val out = test("""
             data X: Int

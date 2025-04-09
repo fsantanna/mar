@@ -416,6 +416,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                     // broadcast
                                     {
                                         ${G.tsks_blks[this]!!.joinToString("")}
+                                        // TODO: abort
                                     }
                                 """ }}
                                 
