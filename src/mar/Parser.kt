@@ -912,7 +912,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
                 accept_fix("true") || accept_fix("false") -> {
                     val tk = G.tk0!!
                     accept_fix_err(")")
-                    Stmt.Await.Bool(tk0)
+                    Stmt.Await.Bool(tk)
                 }
                 // await(%10min)
                 accept_op("%") -> {

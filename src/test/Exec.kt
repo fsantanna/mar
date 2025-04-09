@@ -1900,6 +1900,17 @@ class Exec  {
         assert(out == "first\nlast\n") { out }
     }
     @Test
+    fun oo_10x_task_defer () {
+        val out = test("""
+            task t: () -> () {
+                defer {
+                }
+            }
+            print(1)
+        """)
+        assert(out == "1\n") { out }
+    }
+    @Test
     fun oo_11_task_term () {
         val out = test("""
             data X: ()

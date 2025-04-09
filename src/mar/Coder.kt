@@ -485,20 +485,23 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
 
             val up_tsk = this.up_exe()
             if (up_tsk is Stmt.Proto.Task) {
-                if (G.tsks_blks[up_tsk] == null) {
-                    G.tsks_blks[up_tsk] = mutableListOf()
-                }
-                //println(listOf("write", up_tsk, G.tsks_blks[up_tsk]))
-                G.tsks_blks[up_tsk]!!.add("""
-                    if (mar_exe->pc!=0 && (mar_exe->pc & ${G.tsks_enums[this]!!.let { "$it) == $it" }}) {
-                        ${exes.map { (_,id,_) ->
-                            val exe = id.coder(this,pre)
-                            """
-                            $exe.pro(MAR_EXE_ACTION_RESUME, &$exe, NULL, mar_evt_tag, mar_evt_pay);
-                            """
-                        }.joinToString("")}
+                val has_await = this.dn_collect_pre({if (it is Stmt.Await) listOf(it) else emptyList()}, {null}, {null}).isNotEmpty()
+                if (has_await) {
+                    if (G.tsks_blks[up_tsk] == null) {
+                        G.tsks_blks[up_tsk] = mutableListOf()
                     }
-                """)
+                    //println(listOf("write", up_tsk, G.tsks_blks[up_tsk]))
+                    G.tsks_blks[up_tsk]!!.add("""
+                        if (mar_exe->pc!=0 && (mar_exe->pc & ${G.tsks_enums[this]!!.let { "$it) == $it" }}) {
+                            ${exes.map { (_,id,_) ->
+                                val exe = id.coder(this,pre)
+                                """
+                                $exe.pro(MAR_EXE_ACTION_RESUME, &$exe, NULL, mar_evt_tag, mar_evt_pay);
+                                """
+                            }.joinToString("")}
+                        }
+                    """)
+                }
             }
 
             """
@@ -772,15 +775,15 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 mar_exe->evt = (uintptr_t) & $exe;
                                 mar_exe->status = MAR_EXE_STATUS_YIELDED;
                                 return;
-                            }
             case ${this.n}:
-                        if (
-                            (mar_evt_tag != MAR_TAG_Event_Task) ||
-                            (mar_exe->evt != (uintptr_t)((Event*)mar_evt_pay)->Event_Task.tsk)
-                        ) {
-                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
-                            return;
-                        }
+                                if (
+                                    (mar_evt_tag != MAR_TAG_Event_Task) ||
+                                    (mar_exe->evt != (uintptr_t)((Event*)mar_evt_pay)->Event_Task.tsk)
+                                ) {
+                                    mar_exe->status = MAR_EXE_STATUS_YIELDED;
+                                    return;
+                                }
+                            }
                         """
                     }
                     is Stmt.Await.Clock -> """
