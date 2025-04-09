@@ -597,23 +597,29 @@ fun gen_task_emit (tk: Tk): Stmt {
     )
 }
 
-fun gen_spawn (tk: Tk, N: Int, blk: List<Stmt>): List<Stmt> {
+fun gen_spawn (tk: Tk, N: Int, pro: Expr, args: List<Expr>): List<Stmt> {
+    return listOf(
+        //Stmt.Dcl(tk, Tk.Var("mar_exe_$N", tk.pos), Type.Nat(Tk.Nat("TODO", tk.pos))),
+        Stmt.Dcl(tk, Tk.Var("mar_exe_$N", tk.pos), null),
+        Stmt.SetS(
+            tk,
+            Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)),
+            Stmt.Create(tk, pro),
+        ),
+        Stmt.Start(tk, Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)), args)
+    )
+}
+
+fun gen_proto_spawn (tk: Tk, N: Int, blk: List<Stmt>): List<Stmt> {
     return listOf(
         Stmt.Proto.Task(
             Tk.Fix("task", tk.pos),
             Tk.Var("mar_pro_$N", tk.pos),
             emptyList(),
             Type.Proto.Task.Vars(tk, null, emptyList(), emptyList(), Type.Unit(tk)),
-            Stmt.Block(tk, null, blk+ gen_task_emit(tk))
-        ),
-        Stmt.Dcl(tk, Tk.Var("mar_exe_$N", tk.pos), null),
-        Stmt.SetS(
-            tk,
-            Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)),
-            Stmt.Create(tk, Expr.Acc(Tk.Var("mar_pro_$N", tk.pos))),
-        ),
-        Stmt.Start(tk, Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)), emptyList())
-    )
+            Stmt.Block(tk, null, blk + gen_task_emit(tk))
+        )
+    ) + gen_spawn(tk, N, Expr.Acc(Tk.Var("mar_pro_$N", tk.pos)), emptyList())
 }
 
 fun parser_await_until (awt: Stmt.Await): Stmt {
@@ -943,22 +949,13 @@ fun parser_stmt (): List<Stmt> {
         }
         accept_fix("spawn") -> {
             if (check_fix("{")) {
-                gen_spawn(G.tk1!!, G.N, parser_stmt_block())
+                gen_proto_spawn(G.tk1!!, G.N, parser_stmt_block())
             } else {
                 val tk = G.tk1!!
-                val N = G.N
                 val pro = parser_expr_4_prim()
                 accept_fix_err("(")
                 val args = parser_list(",",")") { parser_expr() }
-                listOf(
-                    Stmt.Dcl(tk, Tk.Var("mar_exe_$N", tk.pos), null),
-                    Stmt.SetS(
-                        tk,
-                        Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)),
-                        Stmt.Create(tk, pro),
-                    ),
-                    Stmt.Start(tk, Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)), args)
-                )
+                gen_spawn(tk, G.N, pro, args)
             }
         }
         accept_fix("par") -> {
@@ -969,7 +966,7 @@ fun parser_stmt (): List<Stmt> {
                 l.add(parser_stmt_block())
             }
             l.mapIndexed { i, ss ->
-                gen_spawn(tk0, G.N+i, ss)
+                gen_proto_spawn(tk0, G.N+i, ss)
             }.flatten() + listOf(
                 Stmt.Await.Bool(Tk.Fix("false", tk0.pos)),
             )
@@ -983,7 +980,7 @@ fun parser_stmt (): List<Stmt> {
                 l.add(parser_stmt_block())
             }
             (l.mapIndexed { i, ss ->
-                gen_spawn(tk0, N+i, ss)
+                gen_proto_spawn(tk0, N+i, ss)
             } +
             l.mapIndexed { i, ss ->
                 listOf(Stmt.Await.Task(tk0, Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos))))
@@ -999,7 +996,7 @@ fun parser_stmt (): List<Stmt> {
             }
             listOf(Stmt.Block(tk0, null,
                 (l.mapIndexed { i, ss ->
-                    gen_spawn(tk0, N+i, ss)
+                    gen_proto_spawn(tk0, N+i, ss)
                 }).flatten() + listOf(
                     Stmt.Await.Any(tk0, l.mapIndexed { i, ss ->
                         Expr.Acc(Tk.Var("mar_exe_${N+i}", tk0.pos))

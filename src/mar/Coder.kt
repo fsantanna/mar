@@ -394,6 +394,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 val blk = this.blk.coder(xtpls,pre)
                 //println(listOf("read", this, G.tsks_blks[this]))
                 val cod = """
+                    // PROTO | ${this.dump()}
                     ${this.x_sig(xtpls, pre)} {
                         ${this.tp.out.coder(xtpls)} mar_ret;
                         ${(this is Stmt.Proto.Func).cond {
@@ -411,17 +412,17 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         do {
                             ${(this !is Stmt.Proto.Func).cond {
                                 """
-                                if (mar_exe->status != MAR_EXE_STATUS_YIELDED) {
-                                    return;
-                                }
-                                mar_exe->status = MAR_EXE_STATUS_RUNNING;
-                                
                                 ${(G.tsks_blks[this] != null).cond { """
                                     // broadcast
                                     {
                                         ${G.tsks_blks[this]!!.joinToString("")}
                                     }
                                 """ }}
+                                
+                                if (mar_exe->status != MAR_EXE_STATUS_YIELDED) {
+                                    return;
+                                }
+                                mar_exe->status = MAR_EXE_STATUS_RUNNING;
                                 
                                 switch (mar_exe->pc) {
                                     case 0:
@@ -752,35 +753,58 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             //val te = this.e?.typex()
             """
             // AWAIT [${(ups).joinToString(",")}] | ${this.dump()}
-                mar_exe->status = MAR_EXE_STATUS_YIELDED;
                 mar_exe->pc = ${this.n};
                 ${when (this) {
                     is Stmt.Await.Data -> """
-                        mar_exe->evt = MAR_TAG_${this.tp.path("_")};
+                        mar_exe->status = MAR_EXE_STATUS_YIELDED;
                         return;
+            case ${this.n}:
+                        if (mar_evt_tag != MAR_TAG_${this.tp.path("_")}) {
+                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
+                            return;
+                        }
                     """
                     is Stmt.Await.Task -> {
                         val exe = this.exe.coder(null,pre)
                         """
                             if ($exe.status != MAR_EXE_STATUS_COMPLETE) {
                                 mar_exe->evt = (uintptr_t) & $exe;
+                                mar_exe->status = MAR_EXE_STATUS_YIELDED;
                                 return;
                             }
-                            mar_exe->status = MAR_EXE_STATUS_RUNNING;
+            case ${this.n}:
+                        if (
+                            (mar_evt_tag != MAR_TAG_Event_Task) ||
+                            (mar_exe->evt != (uintptr_t)((Event*)mar_evt_pay)->Event_Task.tsk)
+                        ) {
+                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
+                            return;
+                        }
                         """
                     }
                     is Stmt.Await.Clock -> """
+                        mar_exe->status = MAR_EXE_STATUS_YIELDED;
                         mar_exe->evt = ${this.ms.coder(null,pre)};
                         return;
+            case ${this.n}:
+                        mar_exe->evt -= ((Event*)mar_evt_pay)->Event_Clock.ms;
+                        if (mar_exe->evt > 0) {
+                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
+                            return;
+                        }
                     """
                     is Stmt.Await.Bool -> when (this.tk.str) {
                         "false" -> """
-                            mar_exe->evt = MAR_TAG_none;
+                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
+                            return;
+            case ${this.n}:
+                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
                         """
                         "true" -> """
-                            mar_exe->evt = MAR_TAG_ANY;
+                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
+            case ${this.n}:
                         """
                         else -> error("impossible case")
                     }
@@ -789,19 +813,18 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             "(${it.coder(tpls,pre)}.status == MAR_EXE_STATUS_COMPLETE)"
                         }.joinToString(" || ")
                         """
+            case ${this.n}:
                         if (!$ok) {
-                            //mar_exe->evy = NULL;        // any task
+                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
                         }
-                        mar_exe->status = MAR_EXE_STATUS_RUNNING;
                         """
                     }
                 }}
-            case ${this.n}:
+            //case ${this.n}:
                 if (mar_act == MAR_EXE_ACTION_ABORT) {
                     continue;
                 }
-                // remove from list (TODO: also on task kill defer)
                 ${(this.xup is Stmt.SetS).cond {
                     val set = this.xup as Stmt.SetS
                     val dst = set.dst.coder(tpls,pre)

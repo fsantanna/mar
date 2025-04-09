@@ -259,12 +259,15 @@ fun check_types () {
             }
             is Stmt.Start -> {
                 val exe = me.exe.type()
-                if (exe !is Type.Exec) {
-                    err(me.tk, "start error : expected active coroutine")
-                }
-                val ok = (exe.inps.size == me.args.size) && exe.inps.zip(me.args).all { (thi,oth) -> thi.is_sup_of(oth.typex()) }
-                if (!ok) {
-                    err(me.tk, "start error : types mismatch")
+                when (exe) {
+                    //is Type.Nat -> {}
+                    !is Type.Exec -> err(me.tk, "start error : expected active coroutine")
+                    else -> {
+                        val ok = (exe.inps.size == me.args.size) && exe.inps.zip(me.args).all { (thi,oth) -> thi.is_sup_of(oth.typex()) }
+                        if (!ok) {
+                            err(me.tk, "start error : types mismatch")
+                        }
+                    }
                 }
             }
             is Stmt.Resume -> {

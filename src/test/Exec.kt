@@ -1824,9 +1824,9 @@ class Exec  {
             var e = spawn tsk()
             ;;print(e)
             emit(X(10))
-            emit(Y(10))
+            emit(Y(20))
         """)
-        assert(out == "X(10)\nY(10)\n") { out }
+        assert(out == "X(10)\nY(20)\n") { out }
     }
     @Test
     fun oo_08_task_await_until () {
