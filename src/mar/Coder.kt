@@ -414,13 +414,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 """
                                 ${(G.tsks_blks[this] != null).cond { """
                                     // broadcast
-                                    if (mar_exe->status != MAR_EXE_STATUS_COMPLETE) {
-                                        ${G.tsks_blks[this]!!.joinToString("""
-                                        if (mar_exe->status == MAR_EXE_STATUS_COMPLETE) {
-                                            return;
-                                        }
-                                        """)}
-                                    }
+                                    ${G.tsks_blks[this]!!.joinToString("")}
                                 """ }}
                                 
                                 if (mar_exe->status != MAR_EXE_STATUS_YIELDED) {
@@ -503,6 +497,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             ${exes.map { (_,id,_) ->
                                 val exe = id.coder(this,pre)
                                 """
+                                if (mar_exe->status == MAR_EXE_STATUS_COMPLETE) {
+                                    return;
+                                }
                                 $exe.pro(MAR_EXE_ACTION_RESUME, &$exe, NULL, mar_evt_tag, mar_evt_pay);
                                 """
                             }.joinToString("")}

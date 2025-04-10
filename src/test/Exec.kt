@@ -1957,11 +1957,13 @@ class Exec  {
             spawn {
                 par_or {
                     await(:X)
+                    print("x")
                 } with {
                     every :X {
-                        print("x")
+                        print("no")
                     }
                 }
+                print("or")
             }
             emit(X())
             emit(X())
@@ -1969,7 +1971,7 @@ class Exec  {
             emit(X())
             print("ok")
         """)
-        assert(out == "ok\n") { out }
+        assert(out == "x\nor\nok\n") { out }
     }
 
     // SPAWN / PAR / AWAIT(exe) / AWAIT t(...) / EVERY
