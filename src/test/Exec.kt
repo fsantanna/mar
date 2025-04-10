@@ -1445,11 +1445,11 @@ class Exec  {
             `printf("%X\n", xza.tag)`
             `printf("%X\n", j.tag)`
         """)
-        assert(out == "6000000\n" +
-                "6100000\n" +
-                "6200000\n" +
-                "6208000\n" +
-                "8000000\n") { out }
+        assert(out == "8000000\n" +
+                "8100000\n" +
+                "8200000\n" +
+                "8208000\n" +
+                "A000000\n") { out }
     }
     @Test
     fun jk_02_data_hier_enum () {

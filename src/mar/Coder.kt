@@ -414,9 +414,12 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 """
                                 ${(G.tsks_blks[this] != null).cond { """
                                     // broadcast
-                                    {
-                                        ${G.tsks_blks[this]!!.joinToString("")}
-                                        // TODO: abort
+                                    if (mar_exe->status != MAR_EXE_STATUS_COMPLETE) {
+                                        ${G.tsks_blks[this]!!.joinToString("""
+                                        if (mar_exe->status == MAR_EXE_STATUS_COMPLETE) {
+                                            return;
+                                        }
+                                        """)}
                                     }
                                 """ }}
                                 
@@ -650,7 +653,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                      }}
                 } else if (
                     ${this.tp.cond2({
-                        "mar_sup(MAR_TAG_${it.ts.coder(null,pre).uppercase()}, MAR_EXCEPTION.tag)"
+                        "mar_sup(MAR_TAG_${it.ts.coder(null,pre)}, MAR_EXCEPTION.tag)"
                     },{
                         "true"
                     })}
@@ -795,6 +798,11 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         mar_exe->evt = ${this.ms.coder(null,pre)};
                         return;
             case ${this.n}:
+                        // Stmt.Await.Clock
+                        if (mar_evt_tag != MAR_TAG_Event_Clock) {
+                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
+                            return;
+                        }
                         mar_exe->evt -= ((Event*)mar_evt_pay)->Event_Clock.ms;
                         if (mar_exe->evt > 0) {
                             mar_exe->status = MAR_EXE_STATUS_YIELDED;
