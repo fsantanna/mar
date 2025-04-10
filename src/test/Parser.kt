@@ -548,9 +548,10 @@ class Parser {
     fun hh_01_create() {
         G.tks = ("create(f)").lexer()
         parser_lexer()
-        val s = parser_stmt().first()
-        assert(s is Stmt.Create && s.pro is Expr.Acc)
+        //val s = parser_stmt().first()
+        //assert(s is Stmt.Create && s.pro is Expr.Acc)
         //assert(trap { parser_stmt() } == "anon : (lin 1, col 1) : expected expression : have \"create\"")
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 1) : create error : expected assignment")
     }
     @Test
     fun hh_02_resume() {
@@ -1348,7 +1349,8 @@ class Parser {
         parser_lexer()
         val s = parser_stmt().first()
         assert(s is Stmt.Proto.Task && s.tp.inps.size==0)
-        assert(s.to_str() == "task co: () -> () {\nemit((Event.Task(([`((void*) mar_exe)`]))))\n}") { s.to_str() }
+        //assert(s.to_str() == "task co: () -> () {\nemit((Event.Task(([`((void*) mar_exe)`]))))\n}") { s.to_str() }
+        assert(s.to_str() == "task co: () -> () {\n}") { s.to_str() }
     }
     @Test
     fun uu_03_task() {
@@ -1356,7 +1358,7 @@ class Parser {
         parser_lexer()
         val s = parser_stmt().first()
         assert(s is Stmt.Proto.Task && s.tp.out is Type.Unit)
-        assert(s.to_str() == "task co: (x: ()) -> () {\nemit((Event.Task(([`((void*) mar_exe)`]))))\n}") { s.to_str() }
+        assert(s.to_str() == "task co: (x: ()) -> () {\n}") { s.to_str() }
     }
     @Test
     fun uu_03_await() {
@@ -1370,13 +1372,14 @@ class Parser {
     fun uu_04_await_err() {
         G.tks = ("await()").lexer()
         parser_lexer()
-        assert(trap { parser_stmt() } == "TODO")
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : expected expression : have \")\"")
     }
     @Test
     fun uu_05_await_err() {
         G.tks = ("await :X").lexer()
         parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : expected \"(\" : have \":\"")
+        assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : expected expression : have \":\"")
+        //assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : expected \"(\" : have \":\"")
     }
     @Test
     fun uu_06_await_err() {
@@ -1411,9 +1414,12 @@ class Parser {
     fun uu_X1_spawn() {
         G.tks = ("spawn xf()").lexer()
         parser_lexer()
-        val s = parser_stmt().first()
-        assert(s is Stmt.Resume && s.exe is Expr.Acc && s.arg is Expr.Unit)
-        assert(s.to_str() == "spawn xf()") { s.to_str() }
+        val s = parser_stmt() //.first()
+        //assert(s is Stmt.Resume && s.exe is Expr.Acc && s.arg is Expr.Unit)
+        assert(s.to_str() ==
+            "var mar_exe_2\n"+
+            "set mar_exe_2 = create(xf)\n"+
+            "start mar_exe_2()\n") { s.to_str() }
     }
     @Test
     fun uu_X2_spawn() {

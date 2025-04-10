@@ -823,9 +823,11 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
         }
 
         accept_fix("create") -> {
-            assert(set != null) { "TODO: error message"}
-            set as Expr
             val tk0 = G.tk0 as Tk.Fix
+            if (set == null) {
+                err(tk0, "create error : expected assignment")
+            }
+            set as Expr
             accept_fix_err("(")
             val co = parser_expr()
             accept_fix_err(")")

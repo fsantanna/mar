@@ -396,9 +396,9 @@ class Infer {
                "data Break.*: [] {\n"+
                "}\n"+
                "data X: Int\n"+
-               "task tsk: [10] () -> () {\n"+
+               "task tsk: [tsk] () -> () {\n"+
                "var x: X\n"+
-               "set x = await(:X)\n"+
+               "set x = await(TODO)\n"+
                "}\n"+
                "}") { G.outer!!.to_str() }
     }
@@ -407,7 +407,7 @@ class Infer {
         val out = infer("""
                 data X: Int
                 task tsk: () -> () {
-                    var x = await()
+                    var x = await(true)
                 }
             """)
         assert(out == null) { out!! }
@@ -417,9 +417,9 @@ class Infer {
                "data Break.*: [] {\n"+
                "}\n"+
                "data X: Int\n"+
-               "task tsk: [10] () -> () {\n"+
+               "task tsk: [tsk] () -> () {\n"+
                "var x: ()\n"+
-               "set x = await()\n"+
+               "set x = await(TODO)\n"+
                "}\n"+
                "}") { G.outer!!.to_str() }
     }
