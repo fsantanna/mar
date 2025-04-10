@@ -245,7 +245,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                                 k -= 5
                             }
                             return """
-                            #define MAR_TAG_${id} $n
+                            #define MAR_TAG_${id} 0b${n.toString(2)}
                         """ + s.subs!!.mapIndexed { i, ss ->
                                 f(ss, id, l + listOf(i + 1))
                             }.joinToString("")
@@ -990,7 +990,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     else -> TODO("3")
                 }
             }
-            aux(this.e.typex(), this.e.coder(tpls,pre)) + """
+            """
+            // PRINT | ${this.dump()}
+            """ + aux(this.e.typex(), this.e.coder(tpls,pre)) + """
                 puts("");
             """
         }
@@ -1206,8 +1208,14 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Expr.Pred   -> {
-            val (i,_) = this.col.typex().discx(this.idx)!!
-            "(${this.col.coder(tpls,pre)}.tag==${i+1})"
+            val tp = this.col.typex()
+            val (i,_) = tp.discx(this.idx)!!
+            val tag = when (tp) {
+                is Type.Union -> i + 1
+                is Type.Data -> "MAR_TAG_${tp.ts.first().str}_${this.idx}"
+                else -> error("impossible case")
+            }
+            return "(${this.col.coder(tpls,pre)}.tag==$tag)"
         }
         is Expr.Cons   -> {
             val s = this.walk(this.tp.ts)!!.first

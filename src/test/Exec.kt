@@ -1333,6 +1333,18 @@ class Exec  {
         """)
         assert(out == "X [10]\n20\n") { out }
     }
+    @Test
+    fun hj_02_hier_extd () {
+        val out = test("""
+            data X.*: [Int] {
+                Y: []
+                Z: [Int]
+            }
+            var xz: X = X.Z [10,20]
+            print([xz?Y, xz?Z])
+        """)
+        assert(out == "[false,true]\n") { out }
+    }
 
     // INFER
 
