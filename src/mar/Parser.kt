@@ -560,16 +560,6 @@ fun check_stmt_as_set_src (): Boolean {
     }
 }
 
-fun gen_task_emit (tk: Tk): Stmt {
-    return Stmt.Emit(tk,
-        Expr.Cons(tk,
-            Type.Data(tk,null,listOf(Tk.Type("Event",tk.pos),(Tk.Type("Task",tk.pos)))),
-            Expr.Tuple(tk,null, listOf(
-                Pair(null, Expr.Nat(Tk.Nat("((void*) mar_exe)", tk.pos), null))))
-        )
-    )
-}
-
 fun gen_spawn (tk: Tk, N: Int, pro: Expr, args: List<Expr>): List<Stmt> {
     return listOf(
         //Stmt.Dcl(tk, Tk.Var("mar_exe_$N", tk.pos), Type.Nat(Tk.Nat("TODO", tk.pos))),
@@ -590,7 +580,7 @@ fun gen_proto_spawn (tk: Tk, N: Int, blk: List<Stmt>): List<Stmt> {
             Tk.Var("mar_pro_$N", tk.pos),
             emptyList(),
             Type.Proto.Task.Vars(tk, null, emptyList(), emptyList(), Type.Unit(tk)),
-            Stmt.Block(tk, null, blk + gen_task_emit(tk))
+            Stmt.Block(tk, null, blk)
         )
     ) + gen_spawn(tk, N, Expr.Acc(Tk.Var("mar_pro_$N", tk.pos)), emptyList())
 }
@@ -641,8 +631,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
                 is Type.Proto.Coro.Vars ->
                     Stmt.Proto.Coro(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, ss))
                 is Type.Proto.Task.Vars -> {
-                    val xss = ss + listOf(gen_task_emit(tk0))
-                    Stmt.Proto.Task(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, xss))
+                    Stmt.Proto.Task(tk0, id, tpls, tp, Stmt.Block(tp.tk, esc, ss))
                 }
                 else -> error("impossible case")
             }.let { listOf(it) }

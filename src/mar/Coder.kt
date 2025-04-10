@@ -453,6 +453,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             }
                             is Stmt.Proto.Task -> """
                                 mar_exe->status = MAR_EXE_STATUS_COMPLETE;
+                                {
+                                    Event mar_$n = { .Event_Task={mar_exe} };
+                                    mar_broadcast(MAR_TAG_Event_Task, &mar_$n);
+                                }
                                 return;
                             """
                         }}
@@ -818,7 +822,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         }.joinToString(" || ")
                         """
             case ${this.n}:
-                        if (!$ok) {
+                        // Stmt.Await.Any
+                        if (!($ok)) {
                             mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
                         }

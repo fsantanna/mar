@@ -268,10 +268,15 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
         val ss = parser_list(null, { accept_enu("Eof") }, {
             parser_stmt()
         }).flatten()
-        G.outer = Stmt.Block(tk0, null, listOf(
-            Stmt.Data(tk0, Tk.Type("Return", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
-            Stmt.Data(tk0, Tk.Type("Break", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
-        ) + ss)
+        G.outer = Stmt.Block(tk0, null,
+         listOf(
+                Stmt.Data(tk0, Tk.Type("Return", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
+                Stmt.Data(tk0, Tk.Type("Break", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
+                Stmt.Dcl(tk0, Tk.Var("_",tk0.pos), Type.Data(tk0, emptyList(), listOf(
+                    Tk.Type("Event",tk0.pos),Tk.Type("Task",tk0.pos)
+                )))
+            ) + ss
+        )
         //println(G.outer!!.to_str())
         cache_ups()
         check_vars()
