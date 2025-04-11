@@ -530,7 +530,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 val blks = this.ups_until { it is Stmt.Proto }
                     .filter { it is Stmt.Block }
                     .drop(1)  // skip outermost block
-                val depth = blks.size - 1
+                val depth = blks.size
                 val enus = blks.map { G.tsks_blks_awts[it]!! }
                 val enu = G.tsks_blks_awts[this]!!.toString(16)
                 """
