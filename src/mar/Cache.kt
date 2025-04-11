@@ -249,9 +249,13 @@ fun cache_tpls () {
 }
 
 fun cache_tsks_blks_awts () {
+    // 0xABCDEFGH
+    //  - eight nesting levels
+    //  - with 16 myself/blocks/awaits each
     fun Stmt.f (sd: Int): Int {
         return when (this) {
             is Stmt.Block -> {
+                assert(sd < 16)
                 G.tsks_blks_awts[this] = sd
                 this.ss.fold(sd) { i,s ->
                     s.f(i)
@@ -271,6 +275,7 @@ fun cache_tsks_blks_awts () {
                 s.f(i)
             }
             is Stmt.Await -> {
+                assert(sd < 16)
                 G.tsks_blks_awts[this] = sd
                 sd+1
             }
@@ -278,9 +283,11 @@ fun cache_tsks_blks_awts () {
         }
     }
     G.outer!!.dn_visit_pre({
-        if (it is Stmt.Proto.Task) {
-            it.blk.f( 1)
-            Unit
+        when (it) {
+            is Stmt.Proto.Coro -> it.blk.f(1)
+            is Stmt.Proto.Task -> it.blk.f(1)
+            else -> {}
         }
+        Unit
     }, {}, {})
 }

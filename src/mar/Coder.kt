@@ -455,7 +455,6 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
 
         is Stmt.Block  -> {
-            val ups = this.ups_until { it is Stmt.Proto }.filter { it is Stmt.Block }.mapNotNull { G.tsks_blks_awts[it] }
             val escs = this.dn_collect_pre({
                 // TODO: should consider nested matching do/escape
                 when (it) {
@@ -528,12 +527,21 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }
                 """
             } else {
-                val enu = G.tsks_blks_awts[this]
+                val blks = this.ups_until { it is Stmt.Proto }
+                    .filter { it is Stmt.Block }
+                    .drop(1)  // skip outermost block
+                val depth = blks.size - 1
+                val enus = blks.map { G.tsks_blks_awts[it]!! }
+                val enu = G.tsks_blks_awts[this]!!.toString(16)
                 """
-                { // BLOCK [${ups.joinToString(",")}] | ${this.dump()}
-                    case $enu:
-                        if (mar_exe->pc & $enu != 0) {
+                { // BLOCK [${enus.joinToString(",")}] | ${this.dump()}
+                    ${(this.xup !is Stmt.Proto).cond {
+                        // skip outermost block
+                        "case $enu:"
+                    }}
+                        if ((mar_exe->pc >> (4*$depth)) != 0) {
                             // only if initialized
+                            // 0 initializes all tasks regardless of scope
                             ${exes.map { (_, id, _) ->
                                 val exe = id.coder(this, pre)
                                 """
@@ -547,9 +555,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 """
                             }.joinToString("")}
                         }
-                        mar_exe->status = MAR_EXE_STATUS_RUNNING;
-                        switch (mar_exe->pc & $enu) {
+                        switch (mar_exe->pc >> (4*$depth)) {
                             case 0:
+                                mar_exe->status = MAR_EXE_STATUS_RUNNING;
                                 $body
                                 break;
                         }
@@ -734,6 +742,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 if (mar_act == MAR_EXE_ACTION_ABORT) {
                     continue;
                 }
+                mar_exe->status = MAR_EXE_STATUS_RUNNING;
                 ${(this.xup is Stmt.SetS).cond {
                     val set = this.xup as Stmt.SetS
                     """
@@ -758,9 +767,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         return;
             case ${this.n}:
                         if (mar_evt_tag != MAR_TAG_${this.tp.path("_")}) {
-                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
                         }
+                        mar_exe->status = MAR_EXE_STATUS_RUNNING;
                     """
                     is Stmt.Await.Task -> {
                         val exe = this.exe.coder(null,pre)
@@ -774,10 +783,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                     (mar_evt_tag != MAR_TAG_Event_Task) ||
                                     (mar_exe->evt != (uintptr_t)((Event*)mar_evt_pay)->Event_Task.tsk)
                                 ) {
-                                    mar_exe->status = MAR_EXE_STATUS_YIELDED;
                                     return;
                                 }
                             }
+                            mar_exe->status = MAR_EXE_STATUS_RUNNING;
                         """
                     }
                     is Stmt.Await.Clock -> """
@@ -787,27 +796,26 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             case ${this.n}:
                         // Stmt.Await.Clock
                         if (mar_evt_tag != MAR_TAG_Event_Clock) {
-                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
                         }
                         mar_exe->evt -= ((Event*)mar_evt_pay)->Event_Clock.ms;
                         if (mar_exe->evt > 0) {
-                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
                         }
+                        mar_exe->status = MAR_EXE_STATUS_RUNNING;
                     """
                     is Stmt.Await.Bool -> when (this.tk.str) {
                         "false" -> """
                             mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
             case ${this.n}:
-                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
                         """
                         "true" -> """
                             mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
             case ${this.n}:
+                        mar_exe->status = MAR_EXE_STATUS_RUNNING;
                         """
                         else -> error("impossible case")
                     }
@@ -819,9 +827,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             case ${this.n}:
                         // Stmt.Await.Any
                         if (!($ok)) {
-                            mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
                         }
+                        mar_exe->status = MAR_EXE_STATUS_RUNNING;
                         """
                     }
                 }}
