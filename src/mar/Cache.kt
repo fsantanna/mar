@@ -248,11 +248,11 @@ fun cache_tpls () {
     G.outer!!.dn_visit_pre({}, ::fe, {})
 }
 
-fun cache_blks () {
+fun cache_tsks_blks_awts () {
     fun Stmt.f (sd: Int): Int {
         return when (this) {
             is Stmt.Block -> {
-                G.tsks_enums[this] = sd
+                G.tsks_blks_awts[this] = sd
                 this.ss.fold(sd) { i,s ->
                     s.f(i)
                 }
@@ -271,7 +271,7 @@ fun cache_blks () {
                 s.f(i)
             }
             is Stmt.Await -> {
-                G.tsks_enums[this] = sd
+                G.tsks_blks_awts[this] = sd
                 sd+1
             }
             else -> sd
@@ -279,7 +279,7 @@ fun cache_blks () {
     }
     G.outer!!.dn_visit_pre({
         if (it is Stmt.Proto.Task) {
-            it.blk.f( 0)
+            it.blk.f( 1)
             Unit
         }
     }, {}, {})

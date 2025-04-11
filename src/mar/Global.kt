@@ -196,8 +196,7 @@ object G {
     val defers: MutableMap<Int, Triple<MutableList<Int>,String,String>> = mutableMapOf()
     val protos = Pair(mutableListOf<String>(), mutableListOf<String>())
 
-    val tsks_enums = mutableMapOf<Stmt,Int>()
-    val tsks_blks = mutableMapOf<Stmt.Proto.Task, MutableList<String>>()
+    val tsks_blks_awts = mutableMapOf<Stmt,Int>()
 
     var datas = 1
 
@@ -220,8 +219,7 @@ object G {
         protos.first.clear()
         protos.second.clear()
 
-        tsks_enums.clear()
-        tsks_blks.clear()
+        tsks_blks_awts.clear()
 
         datas = 1
 
@@ -284,7 +282,7 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
         check_types()
         infer_check()
         cache_tpls()
-        cache_blks()
+        cache_tsks_blks_awts()
     } catch (e: Throwable) {
         if (THROW) {
             throw e
