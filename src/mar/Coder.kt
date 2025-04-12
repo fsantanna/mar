@@ -370,16 +370,6 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
     return ts.joinToString("")
 }
 
-// [1,3] -> [1,3,0,0,0,0,0,0] -> numero
-fun List<Int>.bin_to_num (): Int {
-    assert(this.size <= 8)
-    val l = this + List(8-this.size) {0}
-    return l.mapIndexed { i,v ->
-        assert(v < 16)
-        v shl ((7-i)*4)
-    }.sum()
-}
-
 fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
     return when (this) {
         is Stmt.Data  -> ""
@@ -536,11 +526,14 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }
                 """
             } else {
-                val blks = this.ups_until { it is Stmt.Proto }
+                val enus = this.ups_until { it is Stmt.Proto }
                     .filter { it is Stmt.Block }
                     .drop(1)  // skip outermost block
-                val depth = blks.size
-                val enus = blks.map { G.tsks_blks_awts[it]!! }
+                    .map { G.tsks_blks_awts[it]!! }
+                val hex = enus
+                    .map { it.toString(16) }
+                    .joinToString("")
+                val depth = (7 - enus.size)
                 val enu = G.tsks_blks_awts[this]!!.toString(16)
                 """
                 { // BLOCK [${enus.joinToString(",")}] | ${this.dump()}
@@ -761,16 +754,16 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             """
         }
         is Stmt.Await  -> {
-            val ups = this.ups_until { it is Stmt.Proto }
+            val enus = this.ups_until { it is Stmt.Proto }
                 .filter { it is Stmt.Block }
+                .drop(1)  // skip outermost block
                 .map { G.tsks_blks_awts[it]!! } +
                 G.tsks_blks_awts[this]!!
-            //println(ups.bin_to_num())
-            //val te = this.e?.typex()
-            val enu = G.tsks_blks_awts[this]!!.toString(16)
+            val hex = "0x" + enus.map { it.toString(16) }.joinToString("") + "0".repeat(8-enus.size);
+            //val enu = G.tsks_blks_awts[this]!!.toString(16)
             """
-            // AWAIT [${(ups).joinToString(",")}] | ${this.dump()}
-                mar_exe->pc = 0x$enu;
+            // AWAIT [${enus.joinToString(",")}] | ${this.dump()}
+                mar_exe->pc = 0x$hex
                 ${when (this) {
                     is Stmt.Await.Data -> """
                         mar_exe->status = MAR_EXE_STATUS_YIELDED;
@@ -843,7 +836,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         """
                     }
                 }}
-            //case 0x$enu:
+            //case 0x$hex:
                 if (mar_act == MAR_EXE_ACTION_ABORT) {
                     continue;
                 }
