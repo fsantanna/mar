@@ -426,7 +426,14 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 }
                                 """
                             }}
+                            ${(this is Stmt.Proto.Coro).cond { """
+                                switch (mar_exe->pc) {
+                                    case 0:
+                            """ }}
                             ${this.blk.coder(xtpls,pre)}
+                            ${(this is Stmt.Proto.Coro).cond { """
+                                }
+                            """ }}
                         } while (0);
                         ${when (this) {
                             is Stmt.Proto.Func -> "return mar_ret;"
@@ -735,13 +742,12 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.Yield  -> {
             val tp = (this.up_first { it is Stmt.Proto.Coro } as Stmt.Proto.Coro).tp_
             val (xuni,_) = tp.x_out(null,pre)
-            val enu = G.tsks_blks_awts[this]!!.toString(16)
             """
                 mar_exe->status = MAR_EXE_STATUS_YIELDED;
-                mar_exe->pc = 0x$enu;
+                mar_exe->pc = ${this.n};
                 *mar_out = ($xuni) { .tag=1, ._1=${this.arg.coder(tpls,pre)} };
                 return;
-            case 0x$enu:
+            case ${this.n}:
                 if (mar_act == MAR_EXE_ACTION_ABORT) {
                     continue;
                 }
