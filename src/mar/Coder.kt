@@ -738,7 +738,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             val enu = G.tsks_blks_awts[this]!!.toString(16)
             """
                 mar_exe->status = MAR_EXE_STATUS_YIELDED;
-                mar_exe->pc = ${this.n};
+                mar_exe->pc = 0x$enu;
                 *mar_out = ($xuni) { .tag=1, ._1=${this.arg.coder(tpls,pre)} };
                 return;
             case 0x$enu:
