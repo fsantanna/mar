@@ -274,6 +274,11 @@ fun cache_tsks_blks_awts () {
             is Stmt.MatchT -> this.cases.map { it.second }.fold(sd) { i,s ->
                 s.f(i)
             }
+            is Stmt.Yield -> {
+                assert(sd < 16)
+                G.tsks_blks_awts[this] = sd
+                sd+1
+            }
             is Stmt.Await -> {
                 assert(sd < 16)
                 G.tsks_blks_awts[this] = sd
