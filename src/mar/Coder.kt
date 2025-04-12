@@ -415,6 +415,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                     return;
                                 }
                                 if (mar_exe->pc == 0) {
+                                    if (mar_act == MAR_EXE_ACTION_ABORT) {
+                                        return;
+                                    }
                                     ${this.tp.inps_().mapIndexed { i,vtp ->
                                         val (id,tp) = vtp
                                         assert(tp !is Type.Vector)
@@ -465,7 +468,6 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }, {null}, {null}).let { !it.isEmpty() }
             val exes = this.to_dcls().filter { (_,_,tp) -> tp is Type.Exec }
             val tsks = exes.filter { (_,_,tp) -> tp is Type.Exec.Task }
-            val up_tsk = this.up_exe()
 
             val ss = this.ss.map { it.coder(tpls,pre) }.joinToString("\n")
             val body = """
@@ -477,6 +479,17 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         $x.pro = NULL;  // uninitialized Exec
                         """
                 }.joinToString("")}
+                ${(this == G.outer).cond { """
+                    void _mar_broadcast_ (int tag, void* pay) {
+                        ${tsks.map { (_,id,_) ->
+                            val x = id.coder(this,pre)
+                            """
+                            $x.pro(MAR_EXE_ACTION_RESUME, &$x, NULL, tag, pay);
+                            """
+                        }.joinToString("")}
+                    }
+                    mar_broadcast = &_mar_broadcast_;
+                """ }}
                 do {
                     $ss
                 } while (0);
@@ -509,20 +522,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 """ }}
             """
 
-            if (up_tsk == null) {
+            if (G.tsks_blks_awts[this] == null) {
                 """
                 { // BLOCK | ${this.dump()}
-                    ${(this == G.outer).cond { """
-                        void _mar_broadcast_ (int tag, void* pay) {
-                            ${tsks.map { (_,id,_) ->
-                                val x = id.coder(this,pre)
-                                """
-                                $x.pro(MAR_EXE_ACTION_RESUME, &$x, NULL, tag, pay);
-                                """
-                            }.joinToString("")}
-                        }
-                        mar_broadcast = &_mar_broadcast_;
-                    """ }}
                     $body
                 }
                 """
