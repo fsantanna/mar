@@ -417,7 +417,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 """
                             }}
                             ${(this is Stmt.Proto.Coro).cond { """
-                                switch (mar_exe->pc) {
+                                switch (mar_exe->pc >> (4*6)) {
                                     case 0:
                             """ }}
                             ${this.blk.coder(xtpls,pre)}
@@ -530,10 +530,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     .filter { it is Stmt.Block }
                     .drop(1)  // skip outermost block
                     .map { G.tsks_blks_awts[it]!! }
-                val hex = enus
-                    .map { it.toString(16) }
-                    .joinToString("")
-                val depth = (7 - enus.size)
+                //val hex = enus
+                //    .map { it.toString(16) }
+                //    .joinToString("")
+                //val depth = (7 - enus.size)
                 val enu = G.tsks_blks_awts[this]!!.toString(16)
                 """
                 { // BLOCK [${enus.joinToString(",")}] | ${this.dump()}
@@ -541,7 +541,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         // skip outermost block
                         "case 0x$enu:"
                     }}
-                        if ((mar_exe->pc >> (4*$depth)) != 0) {
+                        if ((mar_exe->pc >> (4*${(7 - enus.size)})) != 0) {
                             // only if initialized
                             // 0 initializes all tasks regardless of scope
                             ${exes.map { (_, id, _) ->
@@ -557,7 +557,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 """
                             }.joinToString("")}
                         }
-                        switch (mar_exe->pc >> (4*$depth)) {
+                        switch (mar_exe->pc >> (4*${7 - enus.size})) {
                             case 0:
                                 mar_exe->status = MAR_EXE_STATUS_RUNNING;
                                 $body
@@ -757,9 +757,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             val enus = this.ups_until { it is Stmt.Proto }
                 .filter { it is Stmt.Block }
                 .drop(1)  // skip outermost block
-                .map { G.tsks_blks_awts[it]!! } +
-                G.tsks_blks_awts[this]!!
-            val hex = "0x" + enus.map { it.toString(16) }.joinToString("") + "0".repeat(8-enus.size);
+                .map { G.tsks_blks_awts[it]!! }
+            val hex = "0x" + (enus + G.tsks_blks_awts[this]!!).map {
+                it.toString(16)
+            }.joinToString("") //+ "0".repeat(8-enus.size);
             //val enu = G.tsks_blks_awts[this]!!.toString(16)
             """
             // AWAIT [${enus.joinToString(",")}] | ${this.dump()}
@@ -768,7 +769,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     is Stmt.Await.Data -> """
                         mar_exe->status = MAR_EXE_STATUS_YIELDED;
                         return;
-            case 0x$enu:
+            case 0x$hex:
                         if (mar_evt_tag != MAR_TAG_${this.tp.path("_")}) {
                             return;
                         }
@@ -781,7 +782,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 mar_exe->evt = (uintptr_t) & $exe;
                                 mar_exe->status = MAR_EXE_STATUS_YIELDED;
                                 return;
-            case 0x$enu:
+            case 0x$hex:
                                 if (
                                     (mar_evt_tag != MAR_TAG_Event_Task) ||
                                     (mar_exe->evt != (uintptr_t)((Event*)mar_evt_pay)->Event_Task.tsk)
@@ -796,7 +797,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         mar_exe->status = MAR_EXE_STATUS_YIELDED;
                         mar_exe->evt = ${this.ms.coder(null,pre)};
                         return;
-            case 0x$enu:
+            case 0x$hex:
                         // Stmt.Await.Clock
                         if (mar_evt_tag != MAR_TAG_Event_Clock) {
                             return;
@@ -811,13 +812,13 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         "false" -> """
                             mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
-            case 0x$enu:
+            case 0x$hex:
                             return;
                         """
                         "true" -> """
                             mar_exe->status = MAR_EXE_STATUS_YIELDED;
                             return;
-            case 0x$enu:
+            case 0x$hex:
                         mar_exe->status = MAR_EXE_STATUS_RUNNING;
                         """
                         else -> error("impossible case")
@@ -827,7 +828,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             "(${it.coder(tpls,pre)}.status == MAR_EXE_STATUS_COMPLETE)"
                         }.joinToString(" || ")
                         """
-            case 0x$enu:
+            case 0x$hex:
                         // Stmt.Await.Any
                         if (!($ok)) {
                             return;
