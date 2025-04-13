@@ -417,7 +417,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 """
                             }}
                             ${(this is Stmt.Proto.Coro).cond { """
-                                switch (mar_exe->pc >> (4*6)) {
+                                switch (mar_exe->pc) {
                                     case 0:
                             """ }}
                             ${this.blk.coder(xtpls,pre)}
@@ -725,6 +725,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 """
             } + """
             ({
+                // RESUME | ${this.dump()}
                 $xouni mar_out_$n;
                 $res mar_res_$n = ${this.arg.coder(tpls,pre)};
                 $exe.pro(MAR_EXE_ACTION_RESUME, &$exe, NULL, &mar_res_$n, &mar_out_$n);
@@ -758,13 +759,13 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 .filter { it is Stmt.Block }
                 .drop(1)  // skip outermost block
                 .map { G.tsks_blks_awts[it]!! }
-            val hex = "0x" + (enus + G.tsks_blks_awts[this]!!).map {
+            val hex = (enus + G.tsks_blks_awts[this]!!).map {
                 it.toString(16)
             }.joinToString("") //+ "0".repeat(8-enus.size);
             //val enu = G.tsks_blks_awts[this]!!.toString(16)
             """
             // AWAIT [${enus.joinToString(",")}] | ${this.dump()}
-                mar_exe->pc = 0x$hex
+                mar_exe->pc = 0x$hex;
                 ${when (this) {
                     is Stmt.Await.Data -> """
                         mar_exe->status = MAR_EXE_STATUS_YIELDED;
