@@ -941,15 +941,16 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
             listOf(Stmt.Emit(tk0, e))
         }
         accept_fix("spawn") -> {
+            val n = G.N++
             if (check_fix("{")) {
-                gen_proto_spawn(G.tk1!!, G.N, parser_stmt_block())
+                gen_proto_spawn(G.tk1!!, n, parser_stmt_block())
             } else {
                 val tk = G.tk1!!
                 val pro = parser_expr_4_prim()
                 accept_fix_err("(")
                 val args = parser_list(",",")") { parser_expr() }
                 if (set == null) {
-                    gen_spawn(tk, G.N, pro, args)
+                    gen_spawn(tk, n, pro, args)
                 } else {
                     listOf(
                         Stmt.SetS(set.tk, set, Stmt.Create(tk, pro)),

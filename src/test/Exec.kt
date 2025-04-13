@@ -2205,6 +2205,35 @@ class Exec  {
         """)
         assert(out == "ms\nx\nx\nms\n") { out }
     }
+    @Test
+    fun op_13a_spawn_defer () {
+        val out = test("""
+            spawn {
+                spawn {
+                }
+            }
+            print("ok")
+        """)
+        assert(out == "ok\n") { out }
+    }
+    @Test
+    fun op_13b_spawn_defer () {
+        val out = test("""
+            data X: []
+            spawn {
+                spawn {
+                    defer {
+                        print("2")
+                    }
+                    await(false)
+                }
+                await(true)
+                print("1")
+            }
+            emit(X [])
+        """)
+        assert(out == "1\n2\n") { out }
+    }
 
     // AWAIT / TIME / CLOCK
 

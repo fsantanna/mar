@@ -497,10 +497,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             ${exes.map { (_,id,_) ->
                                 val exe = id.coder(this,pre)
                                 """
-                                if (mar_exe->status == MAR_EXE_STATUS_COMPLETE) {
+                                if (mar_act!=MAR_EXE_ACTION_ABORT && mar_exe->status==MAR_EXE_STATUS_COMPLETE) {
                                     return;
                                 }
-                                $exe.pro(MAR_EXE_ACTION_RESUME, &$exe, NULL, mar_evt_tag, mar_evt_pay);
+                                $exe.pro(mar_act, &$exe, NULL, mar_evt_tag, mar_evt_pay);
                                 """
                             }.joinToString("")}
                         }
