@@ -41,10 +41,10 @@ val BINS = listOf (
 val KEYWORDS: SortedSet<String> = (
     setOf (
         "await", "break", "do", "catch", "coro", "compile", "create", "defer",
-        "data", "else", "emit", "escape", "every", "exec", "false", "func", "if", "in",
-        "include", "loop", "match", "null", "par", "par_and", "par_or", "print", "resume",
-        "return", "set", "spawn", "start", "task", "test", "throw", "true",
-        "until", "var", "yield", "with", "where", "while"
+        "data", "else", "emit", "escape", "every", "exec", "false", "func", "if",
+        "in", "it", "include", "loop", "match", "null", "par", "par_and", "par_or",
+        "print", "resume", "return", "set", "spawn", "start", "task", "test",
+        "throw", "true", "until", "var", "yield", "with", "where", "while"
     ).toSortedSet()
 )
 
@@ -113,6 +113,8 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
     class Tpl    (val tk_: Tk.Var): Expr(G.N++, null, tk_, null)
     class Nat    (val tk_: Tk.Nat, var xtp: Type?): Expr(G.N++, null, tk_, null)
     class Acc    (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, null, tk_, null)
+    class It     (val tk_: Tk.Fix, var xtp: Type?): Expr(G.N++, null, tk_, null)
+
     class Bool   (val tk_: Tk.Fix): Expr(G.N++, null, tk_, null)
     class Str    (val tk_: Tk.Str): Expr(G.N++, null, tk_, null)
     class Chr    (val tk_: Tk.Chr): Expr(G.N++, null, tk_, null)
@@ -166,7 +168,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     class Resume  (tk: Tk, val exe: Expr, val arg: Expr): Stmt(G.N++, null, tk)
     class Yield   (tk: Tk, val arg: Expr): Stmt(G.N++, null, tk)
     sealed class Await (tk: Tk): Stmt(G.N++, null, tk) {
-        class Data  (tk: Tk, val tp: Type.Data): Stmt.Await(tk)
+        class Data  (tk: Tk, val tp: Type.Data, val cnd: Expr): Stmt.Await(tk)
         class Task  (tk: Tk, val exe: Expr): Stmt.Await(tk)
         class Clock (tk: Tk, val ms: Expr): Stmt.Await(tk)
         class Bool  (tk: Tk): Stmt.Await(tk)

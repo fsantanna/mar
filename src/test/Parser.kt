@@ -1214,7 +1214,7 @@ class Parser {
                 "}\n") { ss.to_str() }
     }
 
-    // WHERE
+    // WHERE / IT
 
     @Test
     fun qq_01_where () {
@@ -1226,6 +1226,15 @@ class Parser {
             "var y\n"+
             "set y = 10\n"+
             "set x = y\n"+
+            "}\n") { ss.to_str() }
+    }
+    @Test
+    fun qq_02_it () {
+        G.tks = ("var x = it").lexer()
+        parser_lexer()
+        val ss = parser_stmt()
+        assert(ss.to_str() == "var x\n"+
+            "set x = it\n"+
             "}\n") { ss.to_str() }
     }
 

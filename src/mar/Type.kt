@@ -790,6 +790,7 @@ fun Expr.type (): Type? {
             }
         }
         is Expr.Acc -> this.tk_.type(this)
+        is Expr.It -> this.xtp
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos))
         is Expr.Str -> Type.Pointer(this.tk, Type.Prim(Tk.Type( "Char", this.tk.pos)))
         is Expr.Chr -> Type.Prim(Tk.Type( "Char", this.tk.pos))

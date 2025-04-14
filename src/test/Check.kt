@@ -432,7 +432,7 @@ class Check {
         assert(out == "anon : (lin 4, col 21) : yield error : types mismatch") { out!! }
     }
 
-    // TASK / AWAIT
+    // TASK / AWAIT / IT
 
     @Test
     fun bd_01_await_no_task_ee () {
@@ -451,6 +451,33 @@ class Check {
             }
         """)
         assert(out == "TODO") { out!! }
+    }
+    @Test
+    fun bd_03_it_err () {
+        val out = check("""
+            print(it)
+        """)
+        assert(out == "ERR") { out!! }
+    }
+    @Test
+    fun bd_04_await_it () {
+        val out = check("""
+            data X: Int
+            task x: () -> () {
+                await(:X, it==10) 
+            }
+        """)
+        assert(out == "OK") { out!! }
+    }
+    @Test
+    fun bd_05_await_it_err () {
+        val out = check("""
+            data X: [x:Int]
+            task x: () -> () {
+                await(:X, it.y==10) 
+            }
+        """)
+        assert(out == "ERR") { out!! }
     }
 
     // TUPLE

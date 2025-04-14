@@ -66,6 +66,12 @@ fun Expr.infer (tpe: Type?): Type? {
         is Expr.Acc, is Expr.Bool, is Expr.Str, is Expr.Chr,
         is Expr.Null, is Expr.Unit, is Expr.Num -> {}
 
+        is Expr.It -> {
+            val dat = this.up_first { it is Stmt.Await.Data } as Stmt.Await.Data
+            this.xtp = dat.tp
+            this.xtp
+        }
+
         is Expr.Tpl -> this.typex()
         is Expr.Nat -> {
             if (this.xtp == null) {
@@ -451,6 +457,9 @@ fun infer_apply () {
            is Stmt.Await -> {
                if (me.xup !is Stmt.SetS) {
                    me.infer(null)
+               }
+               if (me is Stmt.Await.Data) {
+                    me.cnd.infer(Type.Prim(Tk.Type("Bool",me.tk.pos)))
                }
            }
            is Stmt.Emit -> me.e.infer(null)

@@ -26,7 +26,10 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
         is Stmt.Yield  -> this.arg.dn_collect_pos(fe,ft)
         is Stmt.Await  -> {
             when (this) {
-                is Stmt.Await.Data -> this.tp.dn_collect_pos(fe,ft)
+                is Stmt.Await.Data -> {
+                    this.tp.dn_collect_pos(fe,ft)
+                    this.cnd.dn_collect_pos(fe,ft)
+                }
                 is Stmt.Await.Task -> this.exe.dn_collect_pos(fe,ft)
                 is Stmt.Await.Clock -> this.ms.dn_collect_pos(fe,ft)
                 is Stmt.Await.Bool -> emptyList()
@@ -56,7 +59,7 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
         is Expr.MatchT -> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(fe,ft) ?: emptyList()) + it.second.dn_collect_pos(fe,ft) }.flatten()
         is Expr.MatchE -> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(fe,ft) ?: emptyList()) + it.second.dn_collect_pos(fe,ft) }.flatten()
         is Expr.Nat    -> (this.xtp?.dn_collect_pos(fe,ft) ?: emptyList())
-        is Expr.Acc, is Expr.Null, is Expr.Unit, is Expr.Str,
+        is Expr.Acc, is Expr.It, is Expr.Null, is Expr.Unit, is Expr.Str,
         is Expr.Bool, is Expr.Chr, is Expr.Num, is Expr.Tpl -> emptyList()
     } + fe(this)
 }
@@ -129,7 +132,10 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
         is Stmt.Yield  -> this.arg.dn_collect_pre(fe,ft)
         is Stmt.Await  -> {
             when (this) {
-                is Stmt.Await.Data -> this.tp.dn_collect_pre(fe,ft)
+                is Stmt.Await.Data -> {
+                    this.tp.dn_collect_pre(fe,ft)
+                    this.cnd.dn_collect_pre(fe,ft)
+                }
                 is Stmt.Await.Task -> this.exe.dn_collect_pre(fe,ft)
                 is Stmt.Await.Clock -> this.ms.dn_collect_pre(fe,ft)
                 is Stmt.Await.Bool -> emptyList()
@@ -163,7 +169,7 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
         is Expr.MatchT -> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(fe,ft) ?: emptyList()) + it.second.dn_collect_pre(fe,ft) }.flatten()
         is Expr.MatchE -> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(fe,ft) ?: emptyList()) + it.second.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Nat    -> (this.xtp?.dn_collect_pre(fe,ft) ?: emptyList())
-        is Expr.Acc, is Expr.Null, is Expr.Unit, is Expr.Str,
+        is Expr.Acc, is Expr.It, is Expr.Null, is Expr.Unit, is Expr.Str,
         is Expr.Bool, is Expr.Chr, is Expr.Num, is Expr.Tpl -> emptyList()
     }
 }

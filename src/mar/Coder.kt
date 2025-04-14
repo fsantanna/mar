@@ -774,6 +774,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         if (mar_evt_tag != MAR_TAG_${this.tp.path("_")}) {
                             return;
                         }
+                        if (!(${this.cnd.coder(null,pre)})) {
+                            return;
+                        }
                         mar_exe->status = MAR_EXE_STATUS_RUNNING;
                     """
                     is Stmt.Await.Task -> {
@@ -1263,6 +1266,10 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             else -> "((${this.xtp!!.coder(tpls)}) ${this.tk.str})"
         }
         is Expr.Acc -> this.tk_.coder(this, pre)
+        is Expr.It -> {
+            val tp = this.typex()
+            "(*(${tp.coder(null)}*)mar_evt_pay)"
+        }
         is Expr.Unit -> "_void_"
         is Expr.Null -> "null"
         is Expr.Bool, is Expr.Chr, is Expr.Str -> this.tk.str

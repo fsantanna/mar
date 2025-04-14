@@ -24,7 +24,7 @@ syn match   Type      '[A-Z][a-zA-Z0-9]\+'
 syn match   Statement '[\+\-\*\/\%\>\<\=\|\&\~]'
 
 syn keyword Statement await break do catch compile coro create data defer else
-syn keyword Statement emit exec escape every false func if in include loop match
+syn keyword Statement emit exec escape every false func if in it include loop match
 syn keyword Statement null par par_and par_or print resume return set spawn start
 syn keyword Statement task test throw true until var yield with where while
 

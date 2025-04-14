@@ -84,7 +84,10 @@ fun cache_ups () {
             }
             is Stmt.Await -> {
                 when (me) {
-                    is Stmt.Await.Data -> me.tp.xup = me
+                    is Stmt.Await.Data -> {
+                        me.tp.xup = me
+                        me.cnd.xup = me
+                    }
                     is Stmt.Await.Task -> me.exe.xup = me
                     is Stmt.Await.Clock -> me.ms.xup = me
                     is Stmt.Await.Bool -> {}
@@ -136,7 +139,7 @@ fun cache_ups () {
                 me.xtp?.xup = me
             }
 
-            is Expr.Acc, is Expr.Bool, is Expr.Chr, is Expr.Str,
+            is Expr.Acc, is Expr.It, is Expr.Bool, is Expr.Chr, is Expr.Str,
             is Expr.Null, is Expr.Num, is Expr.Unit, is Expr.Tpl -> {}
 
             is Expr.If -> {

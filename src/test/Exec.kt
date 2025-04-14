@@ -1860,7 +1860,7 @@ class Exec  {
             data X: Int
             data Y: Int
             task tsk: () -> () {
-                var e = await(:X) until (e==X(10))
+                var e = await(:X, it==X(10))
                 print(e)
             }
             spawn tsk()
