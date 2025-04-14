@@ -61,6 +61,8 @@ fun <T> T?.cond (f: (v:T)->String): String {
 }
 fun String.quote (n: Int): String {
     return this
+        .replace('{','.')
+        .replace('}','.')
         .replace('\n',' ')
         .replace('"','.')
         .replace('\\','.')

@@ -559,7 +559,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 $body
                                 break;
                         }
-                    break;
+                    /*break;*/
                 }
                 """
             }
@@ -890,6 +890,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             // LOOP | ${this.dump()}
             MAR_LOOP_START_${this.n}:
                 ${this.blk.coder(tpls,pre)}
+                ${(this.up_exe() is Stmt.Proto.Task).cond { """
+                    mar_exe->pc = 0;
+                """ }}
                 goto MAR_LOOP_START_${this.n};
                 MAR_LOOP_STOP_${this.n}:
         """

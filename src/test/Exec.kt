@@ -2203,6 +2203,21 @@ class Exec  {
         assert(out == "ms\nms\n") { out }
     }
     @Test
+    fun op_11x_await_loop () {
+        val out = test("""
+            data X: ()
+            spawn {
+                loop {
+                    await(:X)
+                    print("x")
+                }
+            }
+            emit(X())
+            emit(X())
+        """)
+        assert(out == "x\nx\n") { out }
+    }
+    @Test
     fun op_12_every () {
         val out = test("""
             data X: ()
