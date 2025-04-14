@@ -761,11 +761,11 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 .map { G.tsks_blks_awts[it]!! }
             val hex = (enus + G.tsks_blks_awts[this]!!).map {
                 it.toString(16)
-            }.joinToString("") //+ "0".repeat(8-enus.size);
-            //val enu = G.tsks_blks_awts[this]!!.toString(16)
+            }.joinToString("")
+            val hexs = hex + "0".repeat(7-enus.size);
             """
             // AWAIT [${enus.joinToString(",")}] | ${this.dump()}
-                mar_exe->pc = 0x$hex;
+                mar_exe->pc = 0x$hexs;
                 ${when (this) {
                     is Stmt.Await.Data -> """
                         mar_exe->status = MAR_EXE_STATUS_YIELDED;
