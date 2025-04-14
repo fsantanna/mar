@@ -1985,6 +1985,26 @@ class Exec  {
         """)
         assert(out == "x\nor\nok\n") { out }
     }
+    @Test
+    fun oo_13x_task_undead_bug () {
+        val out = test("""
+            data X: ()
+            spawn {
+                par_or {
+                    await(:X)
+                    print("x")
+                } with {
+                    every :X {
+                        print("no")
+                    }
+                }
+                print("or")
+            }
+            emit(X())
+            print("ok")
+        """)
+        assert(out == "x\nor\nok\n") { out }
+    }
 
     // SPAWN / PAR / AWAIT(exe) / AWAIT t(...) / EVERY
 
@@ -2233,6 +2253,21 @@ class Exec  {
             emit(X [])
         """)
         assert(out == "1\n2\n") { out }
+    }
+    @Test
+    fun op_14_spawn_spawn () {
+        val out = test("""
+            data X: Int
+            spawn {
+                spawn {
+                    var e = await(:X, it==X(10))
+                    print(e)
+                }
+                await(false)
+            }
+            emit(X(10))
+        """)
+        assert(out == "X(10)\n") { out }
     }
 
     // AWAIT / TIME / CLOCK
