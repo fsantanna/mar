@@ -108,7 +108,13 @@ typedef struct MAR_Task {
     uintptr_t evt;
 } MAR_Task;
 
-void (*mar_broadcast) (int tag, void* pay);
+int MAR_BROADCAST_N = 0; //// === MAR_BROADCAST_N === //;
+MAR_Task* MAR_BROADCAST_TS[100];
+void mar_broadcast (int tag, void* pay) {
+    for (int i=0; i<MAR_BROADCAST_N; i++) {
+        MAR_BROADCAST_TS[i]->pro(MAR_EXE_ACTION_RESUME, MAR_BROADCAST_TS[i], null, tag, pay);
+    }
+}
 
 // TYPES
 #define MAR_TAG_none 0

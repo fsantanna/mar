@@ -446,9 +446,10 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     }
                 """)
             }.unzip()
+            cods.joinToString("") + "\n" +
 
-            G.protos.first.addAll(sigs)
-            G.protos.second.addAll(cods)
+            //G.protos.first.addAll(sigs)
+            //G.protos.second.addAll(cods)
             ""
         }
 
@@ -475,17 +476,28 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         """
                 }.joinToString("")}
                 ${(this == G.outer).cond { """
-                    void _mar_broadcast_ (int tag, void* pay) {
-                        ${tsks.map { (_,id,_) ->
-                            val x = id.coder(this,pre)
-                            """
-                            $x.pro(MAR_EXE_ACTION_RESUME, &$x, NULL, tag, pay);
-                            """
-                        }.joinToString("")}
+                    {
+                    ${tsks.map { (_,id,_) ->
+                        val x = id.coder(this,pre)
+                        """
+                        MAR_BROADCAST_TS[MAR_BROADCAST_N++] = (MAR_Task*) &$x;
+                        """
+                    }.joinToString("")}
                     }
-                    mar_broadcast = &_mar_broadcast_;
                 """ }}
                 do {
+                    ${this.to_dcls().map { (s,_,tp) ->
+                        if (tp !is Type.Proto.Func) emptyList() else {
+                            s as Stmt.Proto
+                            val xtplss: List<Tpl_Map?> = s.template_map_all() 
+?: listOf(null)
+                            xtplss.distinctBy {
+                                s.proto(it)
+                            }.map {
+                                "auto " + s.x_sig(it, pre) + ";\n"
+                            }
+                        }
+                    }.flatten().joinToString("")}
                     $ss
                 } while (0);
                 ${exes.map { (_,id,tp) ->
@@ -1349,7 +1361,8 @@ fun coder_main (pre: Boolean): String {
     val c = object{}::class.java.getResourceAsStream("/mar.c")!!.bufferedReader().readText()
         .replace("// === MAR_TYPES === //", types)
         .replace("// === MAR_MAIN === //", code)
-        .replace("// === MAR_PROTOS === //", (G.protos.first + G.protos.second).joinToString(";\n"))
+        //.replace("// === MAR_BROADCAST_N === //", "TODO")
+        //.replace("// === MAR_PROTOS === //", (G.protos.first + G.protos.second).joinToString(";\n"))
 
     return c
 }
