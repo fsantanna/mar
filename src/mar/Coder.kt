@@ -200,13 +200,11 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val ID = me.coder(tpls)
                 val N = G.datas++
                 val (S, _, tpc) = me.walk_tpl()
-                //println(me.to_str())
                 //println(tpc.to_str())
                 val ts = tpc.dn_collect_pos({ emptyList() }, ::ft)
                 ts + when {
                     (S.subs == null) -> {
                         fun f(tp: Type, s: List<String>): List<String> {
-                            //println(listOf(s, tp.to_str()))
                             val ss = ID+s.drop(1).map { "_"+it }.joinToString("")
                             val x1 = """
                                 #define MAR_TAG_${me.ts.first().str} $N
@@ -290,7 +288,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                             """
                         )
                     }
-                }
+                } //.let { println(it);it }
             }
             else -> emptyList()
         }
@@ -367,7 +365,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
         }
     }
     val ts = s.dn_collect_pos(::fs, ::fe, ::ft)
-    return ts.joinToString("")
+    return ts.joinToString("") //.let { println(it);it }
 }
 
 fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {

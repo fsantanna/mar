@@ -26,10 +26,7 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
         is Stmt.Yield  -> this.arg.dn_collect_pos(fe,ft)
         is Stmt.Await  -> {
             when (this) {
-                is Stmt.Await.Data -> {
-                    this.tp.dn_collect_pos(fe,ft)
-                    this.cnd.dn_collect_pos(fe,ft)
-                }
+                is Stmt.Await.Data -> this.tp.dn_collect_pos(fe,ft) + this.cnd.dn_collect_pos(fe,ft)
                 is Stmt.Await.Task -> this.exe.dn_collect_pos(fe,ft)
                 is Stmt.Await.Clock -> this.ms.dn_collect_pos(fe,ft)
                 is Stmt.Await.Bool -> emptyList()
@@ -132,10 +129,7 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
         is Stmt.Yield  -> this.arg.dn_collect_pre(fe,ft)
         is Stmt.Await  -> {
             when (this) {
-                is Stmt.Await.Data -> {
-                    this.tp.dn_collect_pre(fe,ft)
-                    this.cnd.dn_collect_pre(fe,ft)
-                }
+                is Stmt.Await.Data -> this.tp.dn_collect_pre(fe,ft) + this.cnd.dn_collect_pre(fe,ft)
                 is Stmt.Await.Task -> this.exe.dn_collect_pre(fe,ft)
                 is Stmt.Await.Clock -> this.ms.dn_collect_pre(fe,ft)
                 is Stmt.Await.Bool -> emptyList()
