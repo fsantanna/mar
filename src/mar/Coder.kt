@@ -520,7 +520,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         }
                         """
                 }.joinToString("")}
-                ${defers.map {
+                ${defers.reversed().map {
                     val id = "defer_${it.n}".coder(this,pre)
                     """
                     if ($id) {     // defer if true: reached, finalize
