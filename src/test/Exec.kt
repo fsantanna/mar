@@ -2045,6 +2045,20 @@ class Exec  {
         assert(out == "X(10)\nY(10)\n") { out }
     }
     @Test
+    fun op_02x_par () {
+        val out = test("""
+            data X: Int
+            spawn {
+                spawn {
+                    await(:X)
+                }
+                await(false)
+            }
+            emit(X(10))
+        """)
+        assert(out == "X(10)\nY(10)\n") { out }
+    }
+    @Test
     fun oo_03_task_term () {
         val out = test("""
             data X: ()
