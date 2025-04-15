@@ -356,9 +356,10 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 """)
             }
 
-            val xtplss: List<Tpl_Map> = me.template_map_all() ?: emptyList()
+            val xtplss: List<Tpl_Map?> = me.template_map_all() ?: listOf(null)
             val yy = xtplss.map { xtpls ->
-                coder_types(me, me, xtpls, pre) // HACK-01: x===me above prevents stack overflow
+                coder_types(me, me, xtpls, pre) + // HACK-01: x===me above prevents stack overflow
+                "\n" + me.x_sig(xtpls, pre) + ";\n"
             }
 
             xx + yy
@@ -368,25 +369,24 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
     return ts.joinToString("") //.let { println(it);it }
 }
 
-fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
-    return when (this) {
-        is Stmt.Data  -> ""
-        is Stmt.Proto -> {
-            assert((tpls == null) || this.tpls.isEmpty()) { "TODO: merge tpls" }
-
-            val xtplss: List<Tpl_Map?> = this.template_map_all() ?: listOf(null)
-            val (sigs, cods) = xtplss.distinctBy {
-                this.proto(it)
-            }.map { xtpls ->
-                val sig = this.x_sig(xtpls, pre)
-                //println(listOf("read", this, G.tsks_blks[this]))
-                Pair(sig, """
-                    // PROTO | ${this.dump()}
+fun coder_protos (pre: Boolean): String {
+    fun fs (me: Stmt): List<String> {
+        return when (me) {
+            !is Stmt.Proto -> emptyList()
+            else -> {
+                val xtplss: List<Tpl_Map?> = me.template_map_all() ?: listOf(null)
+                val cods = xtplss.distinctBy {
+                    me.proto(it)
+                }.map { xtpls ->
+                    val sig = me.x_sig(xtpls, pre)
+                    //println(listOf("read", me, G.tsks_blks[me]))
+                    """
+                    // PROTO | ${me.dump()}
                     $sig {
-                        ${this.tp.out.coder(xtpls)} mar_ret;
-                        ${(this is Stmt.Proto.Func).cond {
-                            this as Stmt.Proto.Func
-                            this.tp_.inps_.map { (id,tp) ->
+                        ${me.tp.out.coder(xtpls)} mar_ret;
+                        ${(me is Stmt.Proto.Func).cond {
+                            me as Stmt.Proto.Func
+                            me.tp_.inps_.map { (id,tp) ->
                                 if (tp !is Type.Vector) "" else {
                                     val xxid = id.str
                                     """
@@ -397,7 +397,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             }.joinToString("")
                         }}
                         do {
-                            ${(this !is Stmt.Proto.Func).cond {
+                            ${(me !is Stmt.Proto.Func).cond {
                                 """
                                 if (mar_exe->status != MAR_EXE_STATUS_YIELDED) {
                                     return;
@@ -406,27 +406,27 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                     if (mar_act == MAR_EXE_ACTION_ABORT) {
                                         return;
                                     }
-                                    ${this.tp.inps_().mapIndexed { i,vtp ->
+                                    ${me.tp.inps_().mapIndexed { i,vtp ->
                                         val (id,tp) = vtp
                                         assert(tp !is Type.Vector)
-                                        id.coder(this.blk,pre) + " = mar_inps->_${i+1};\n"
+                                        id.coder(me.blk,pre) + " = mar_inps->_${i+1};\n"
                                     }.joinToString("")}
                                 }
                                 """
                             }}
-                            ${(this is Stmt.Proto.Coro).cond { """
+                            ${(me is Stmt.Proto.Coro).cond { """
                                 switch (mar_exe->pc) {
                                     case 0:
                             """ }}
-                            ${this.blk.coder(xtpls,pre)}
-                            ${(this is Stmt.Proto.Coro).cond { """
+                            ${me.blk.coder(xtpls,pre)}
+                            ${(me is Stmt.Proto.Coro).cond { """
                                 }
                             """ }}
                         } while (0);
-                        ${when (this) {
+                        ${when (me) {
                             is Stmt.Proto.Func -> "return mar_ret;"
                             is Stmt.Proto.Coro -> {
-                                val (xuni,_) = this.tp.x_out(null,pre)
+                                val (xuni,_) = me.tp.x_out(null,pre)
                                 """
                                     mar_exe->status = MAR_EXE_STATUS_COMPLETE;
                                     if (mar_act != MAR_EXE_ACTION_ABORT) {
@@ -437,21 +437,27 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             is Stmt.Proto.Task -> """
                                 mar_exe->status = MAR_EXE_STATUS_COMPLETE;
                                 if (mar_act != MAR_EXE_ACTION_ABORT) {
-                                    Event mar_$n = { .Event_Task={mar_exe} };
-                                    mar_broadcast(MAR_TAG_Event_Task, &mar_$n);
+                                    Event mar_${me.n} = { .Event_Task={mar_exe} };
+                                    mar_broadcast(MAR_TAG_Event_Task, &mar_${me.n});
                                 }
                                 return;
                             """
                         }}
                     }
-                """)
-            }.unzip()
-            cods.joinToString("") + "\n" +
-
-            //G.protos.first.addAll(sigs)
-            //G.protos.second.addAll(cods)
-            ""
+                    """
+                }
+                listOf(cods.joinToString("") + "\n")
+            }
         }
+    }
+    val ts = G.outer!!.dn_collect_pre(::fs, {null}, {null})
+    return ts.joinToString("")
+}
+
+fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
+    return when (this) {
+        is Stmt.Data  -> ""
+        is Stmt.Proto -> ""
 
         is Stmt.Block  -> {
             val escs = this.dn_collect_pre({
@@ -493,7 +499,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             xtplss.distinctBy {
                                 s.proto(it)
                             }.map {
-                                "auto " + s.x_sig(it, pre) + ";\n"
+                                "//auto " + s.x_sig(it, pre) + ";\n"
                             }
                         }
                     }.flatten().joinToString("")}
@@ -1358,11 +1364,12 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
 fun coder_main (pre: Boolean): String {
     val code = G.outer!!.coder(null,pre)
     val types = coder_types(null, G.outer!!, null, pre)
+    val protos = coder_protos(pre)
     val c = object{}::class.java.getResourceAsStream("/mar.c")!!.bufferedReader().readText()
         .replace("// === MAR_TYPES === //", types)
+        .replace("// === MAR_PROTOS === //", protos)
         .replace("// === MAR_MAIN === //", code)
         //.replace("// === MAR_BROADCAST_N === //", "TODO")
-        //.replace("// === MAR_PROTOS === //", (G.protos.first + G.protos.second).joinToString(";\n"))
 
     return c
 }
