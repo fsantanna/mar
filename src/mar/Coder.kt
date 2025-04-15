@@ -489,8 +489,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     ${this.to_dcls().map { (s,_,tp) ->
                         if (tp !is Type.Proto.Func) emptyList() else {
                             s as Stmt.Proto
-                            val xtplss: List<Tpl_Map?> = s.template_map_all() 
-?: listOf(null)
+                            val xtplss: List<Tpl_Map?> = s.template_map_all() ?: listOf(null)
                             xtplss.distinctBy {
                                 s.proto(it)
                             }.map {
@@ -551,6 +550,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         // skip outermost block
                         "case 0x$enu:"
                     }}
+                        // BROADCAST
                         if ((mar_exe->pc >> (4*${(7 - enus.size)})) != 0) {
                             ${exes.map { (_, id, _) ->
                                 val exe = id.coder(this, pre)
