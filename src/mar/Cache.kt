@@ -251,6 +251,21 @@ fun cache_tpls () {
     G.outer!!.dn_visit_pre({}, ::fe, {})
 }
 
+fun cache_defers () {
+    fun fs (me: Stmt) {
+        when (me) {
+            is Stmt.Defer -> {
+                val bup = me.up_first { it is Stmt.Block } as Stmt.Block
+                val ns = G.defers.getOrDefault(bup, mutableListOf())
+                ns.add(me)
+                G.defers[bup] = ns
+            }
+            else -> {}
+        }
+    }
+    G.outer!!.dn_visit_pre(::fs, {}, {})
+}
+
 fun cache_tsks_blks_awts () {
     // 0xABCDEFGH
     //  - eight nesting levels

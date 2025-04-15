@@ -332,9 +332,9 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 }, {null}, {null})
                 return blks.map { blk ->
                     //println(listOf(blk.n,G.defers[blk.n]))
-                    val defs = G.defers[blk.n]?.first?.map {
-                        "int defer_$it;\n"
-                    } ?: emptyList()
+                    val defs = G.defers.getOrDefault(blk, emptyList()).map {
+                        "int defer_${it.n};\n"
+                    }
                     val vars = blk.to_dcls().map { (_,id,tp) ->
                         Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n"
                     }
@@ -470,10 +470,16 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }, {null}, {null}).let { !it.isEmpty() }
             val exes = this.to_dcls().filter { (_,_,tp) -> tp is Type.Exec }
             val tsks = exes.filter { (_,_,tp) -> tp is Type.Exec.Task }
+            val defers = G.defers.getOrDefault(this, emptyList())
 
             val ss = this.ss.map { it.coder(tpls,pre) }.joinToString("\n")
             val body = """
-                ${G.defers[this.n]?.second ?: ""}
+                ${defers.map {
+                    val id = "defer_${it.n}".coder(this,pre)
+                    """
+                    ${(this.up_exe() == null).cond { "int" }} $id = 0;   // defer not yet reached
+                    """
+                }.joinToString("")}
                 ${exes.map { (_,id,tp) ->
                     val x = id.coder(this,pre)
                     """
@@ -514,7 +520,14 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         }
                         """
                 }.joinToString("")}
-                ${G.defers[this.n]?.third ?: ""}
+                ${defers.map {
+                    val id = "defer_${it.n}".coder(this,pre)
+                    """
+                    if ($id) {     // defer if true: reached, finalize
+                        ${it.blk.coder(tpls,pre)}
+                    }
+                    """
+                }.joinToString("")}
                 if (MAR_EXCEPTION.tag != __MAR_EXCEPTION_NONE__) {
                     continue;
                 }
@@ -631,20 +644,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         """
         is Stmt.Defer  -> {
             val bup = this.up_first { it is Stmt.Block } as Stmt.Block
-            val (ns,ini,end) = G.defers.getOrDefault(bup.n, Triple(mutableListOf(),"",""))
             val id = "defer_$n".coder(bup,pre)
-            val inix = """
-                ${(this.up_exe() == null).cond { "int" }} $id = 0;   // not yet reached
             """
-            val endx = """
-                if ($id) {     // if true: reached, finalize
-                    ${this.blk.coder(tpls,pre)}
-                }
-            """
-            ns.add(n)
-            G.defers[bup.n] = Triple(ns, ini+inix, endx+end)
-            """
-            $id = 1;   // now reached
+            $id = 1;   // defer reached
             """
         }
         is Stmt.Catch  -> {
@@ -1362,9 +1364,9 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
 }
 
 fun coder_main (pre: Boolean): String {
-    val code = G.outer!!.coder(null,pre)
     val types = coder_types(null, G.outer!!, null, pre)
     val protos = coder_protos(pre)
+    val code = G.outer!!.coder(null,pre)
     val c = object{}::class.java.getResourceAsStream("/mar.c")!!.bufferedReader().readText()
         .replace("// === MAR_TYPES === //", types)
         .replace("// === MAR_PROTOS === //", protos)

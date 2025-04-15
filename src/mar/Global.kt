@@ -195,7 +195,7 @@ object G {
 
     val types = mutableSetOf<String>()
     val tpls  = mutableMapOf<Stmt.Proto, MutableMap<String,List<Tpl_Con>>>()
-    val defers: MutableMap<Int, Triple<MutableList<Int>,String,String>> = mutableMapOf()
+    val defers = mutableMapOf<Stmt.Block, MutableList<Stmt.Defer>>()
     //val protos = Pair(mutableListOf<String>(), mutableListOf<String>())
 
     val tsks_blks_awts = mutableMapOf<Stmt,Int>()
@@ -284,6 +284,7 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
         check_types()
         infer_check()
         cache_tpls()
+        cache_defers()
         cache_tsks_blks_awts()
     } catch (e: Throwable) {
         if (THROW) {
