@@ -56,33 +56,22 @@ fun List<Tk.Type>.coder (tpls: List<Tpl_Con>?, pre: Boolean): String {
     }.joinToString("_")
 }
 
-fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): String {
-    fun ft (me: Type): List<String> {
+fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Boolean): List<Pair<String,String>> {
+    fun ft (me: Type): List<Pair<String,String>> {
         when {
             (me is Type.Any) -> return emptyList()
             (tpls==null && me.has_tpls_dn()) -> return emptyList()
             (tpls!=null && !me.has_tpls_dn()) -> return emptyList()
         }
-        when (me) {
-            is Type.Proto, is Type.Exec, is Type.Data, is Type.Tuple,
-            is Type.Vector, is Type.Union -> me.coder(tpls).let {
-                if (G.types.contains(it)) {
-                    return emptyList()
-                } else {
-                    G.types.add(it)
-                }
-            }
-            else -> {}
-        }
-        //println(listOf("AAA", me.coder(null,pre)))
-
+        val id = me.coder(tpls)
         return when (me) {
             is Type.Proto.Func -> {
-                listOf(
-                    "typedef ${me.out.coder(tpls)} (*${me.coder(tpls)}) (${
+                val v = """
+                    typedef ${me.out.coder(tpls)} (*$id) (${
                         me.inps.map { it.coder(tpls) }.joinToString(",")
-                    });\n"
-                )
+                    });
+                """
+                listOf(id to v)
             }
             is Type.Proto.Coro -> {
                 val (pro, exe) = me.x_pro_exe(null)
@@ -91,11 +80,11 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
                 val res = me.res().coder(null)
                 val (xouni, ouni) = me.x_out(null, pre)
-                val x = "struct " + exe
-                ft(itup) + ft(inps) + ft(ouni) + ft(xexe) + listOf(
-                    x + ";\n",
-                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, $res*, $xouni*);\n",
-                )
+                val v = """
+                    struct $exe;
+                    typedef void (*$pro) (MAR_EXE_ACTION, struct $exe*, $xinps*, $res*, $xouni*);
+                """
+                ft(itup) + ft(inps) + ft(ouni) + /*ft(xexe) +*/ listOf(id to v)
             }
             is Type.Proto.Task -> {
                 val (pro, exe) = me.x_pro_exe(null)
@@ -103,11 +92,11 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
                 val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
                 val (_,out) = me.x_out(null, pre)
-                val x = "struct " + exe
-                ft(itup) + ft(inps) + ft(out) + ft(xexe) + listOf(
-                    x + ";\n",
-                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, int, void*);\n",
-                )
+                val v = """
+                    struct $exe;
+                    typedef void (*$pro) (MAR_EXE_ACTION, struct $exe*, $xinps*, int, void*);
+                """
+                ft(itup) + ft(inps) + ft(out) + /*ft(xexe) +*/ listOf(id to v)
             }
             is Type.Exec.Coro -> {
                 val (pro, exe) = me.x_pro_exe(null)
@@ -116,11 +105,11 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
                 val res = me.res().coder(null)
                 val (xouni, ouni) = me.x_out(null, pre)
-                val x = "struct " + exe
-                ft(itup) + ft(inps) + ft(ouni) + ft(xpro) + listOf(
-                    x + ";\n",
-                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, $res*, $xouni*);\n",
-                )
+                val v = """
+                    struct $exe;
+                    typedef void (*$pro) (MAR_EXE_ACTION, struct $exe*, $xinps*, $res*, $xouni*);
+                """
+                ft(itup) + ft(inps) + ft(ouni) + /*ft(xpro) +*/ listOf(id to v)
             }
             is Type.Exec.Task -> {
                 val (pro, exe) = me.x_pro_exe(null)
@@ -128,84 +117,66 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val (_, itup) = me.inps().x_inp_tup(me.tk, null, pre)
                 val (xinps,inps) = me.inps().x_inp_tup(me.tk,null, pre)
                 val (_, out) = me.x_out(null, pre)
-                val x = "struct " + exe
-                ft(itup) + ft(inps) + ft(out) + ft(xpro) + listOf(
-                    x + ";\n",
-                    "typedef void (*$pro) (MAR_EXE_ACTION, $x*, $xinps*, int, void*);\n",
-                )
+                val v = """
+                    struct $exe;
+                    typedef void (*$pro) (MAR_EXE_ACTION, struct $exe*, $xinps*, int, void*);
+                """
+                ft(itup) + ft(inps) + ft(out) + /*ft(xpro) +*/ listOf(id to v)
             }
             is Type.Tuple -> {
-                val x = me.coder(tpls)
-                /*val ids = if (me.ids == null) emptyList() else {
-                        ft(Type.Tuple(me.tk, me.ts, null))
-                    }
-                    ids +*/ listOf(
-                    """
-                        typedef struct $x {
-                            ${
-                        me.ts.mapIndexed { i, id_tp ->
-                            val (id, tp) = id_tp
+                listOf(id to """
+                    typedef struct $id {
+                        ${me.ts.mapIndexed { i, id_tp ->
+                        val (id, tp) = id_tp
+                        """
+                            union {
+                                ${tp.coder(tpls)} _${i + 1};
+                                ${id.cond { "${tp.coder(tpls)} ${it.str};" }}
+                            };                                    
                             """
-                                union {
-                                    ${tp.coder(tpls)} _${i + 1};
-                                    ${id.cond { "${tp.coder(tpls)} ${it.str};" }}
-                                };                                    
-                                """
-                        }.joinToString("")
-                    }
-                        } $x;
-                    """
-                )
+                    }.joinToString("")}
+                    } $id;
+                """)
             }
             is Type.Vector -> {
                 //println(me.xup!!.to_str())
-                val x = me.coder(tpls)
-                listOf("""
-                    typedef struct $x {
+                listOf(id to """
+                    typedef struct $id {
                         int max, cur;
                         ${me.tp.coder(tpls)} buf[${me.max.cond2({ it.coder(tpls,pre) }, { "" })}];
-                    } $x;
+                    } $id;
                 """)
             }
             is Type.Union -> {
-                val x = me.coder(tpls)
-                listOf(
-                    """
-                        typedef enum MAR_TAGS_${x} {
-                            __MAR_TAG_${x}__,
-                            ${
-                        me.ts.mapIndexed { i, (id, _) ->
+                listOf(id to """
+                    typedef enum MAR_TAGS_${id} {
+                        __MAR_TAG_${id}__,
+                        ${me.ts.mapIndexed { i, (xid, _) ->
+                        """
+                            MAR_TAG_${id}_${if (xid == null) i else xid.str},
                             """
-                                MAR_TAG_${x}_${if (id == null) i else id.str},
-                                """
-                        }.joinToString("")
-                    }
-                        } MAR_TAGS_${x};
-                        typedef struct $x {
-                            ${me.tagged.cond { "int tag;" }}
-                            union {
-                                ${
-                        me.ts.mapIndexed { i, id_tp ->
-                            val (id, tp) = id_tp
-                            id.cond { tp.coder(tpls) + " " + it.str + ";\n" } +
-                                    tp.coder(tpls) + " _" + (i + 1) + ";\n"
-                        }.joinToString("")
-                    }
-                            };
-                        } $x;
-                    """
-                )
+                    }.joinToString("")}
+                    } MAR_TAGS_${id};
+                    typedef struct $id {
+                        ${me.tagged.cond { "int tag;" }}
+                        union {
+                            ${me.ts.mapIndexed { i, id_tp ->
+                        val (id, tp) = id_tp
+                        id.cond { tp.coder(tpls) + " " + it.str + ";\n" } +
+                                tp.coder(tpls) + " _" + (i + 1) + ";\n"
+                    }.joinToString("")}
+                        };
+                    } $id;
+                """)
             }
             is Type.Data -> {
-                val ID = me.coder(tpls)
                 val N = G.datas++
                 val (S, _, tpc) = me.walk_tpl()
-                //println(tpc.to_str())
                 val ts = tpc.dn_collect_pos({ emptyList() }, ::ft)
-                ts + when {
+                (ts + listOf(id to when {
                     (S.subs == null) -> {
                         fun f(tp: Type, s: List<String>): List<String> {
-                            val ss = ID+s.drop(1).map { "_"+it }.joinToString("")
+                            val ss = id+s.drop(1).map { "_"+it }.joinToString("")
                             val x1 = """
                                 #define MAR_TAG_${me.ts.first().str} $N
                                 typedef ${tp.coder(tpls)} $ss;
@@ -228,12 +199,11 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                             }
                             return listOf(x1) + x2
                         }
-                        f(tpc, listOf(S.t.str))
-                    }
+                        f(tpc, listOf(S.t.str)).joinToString("")                    }
                     else -> {
                         val sup = S.t.str
                         fun f(s: Stmt.Data, sup: String, l: List<Int>): String {
-                            val id = (if (sup == "") "" else sup + "_") + s.t.str
+                            val xid = (if (sup == "") "" else sup + "_") + s.t.str
                             //println(listOf(S.tk.pos, S.to_str()))
                             assert(l.size <= 6)
                             var n = 0
@@ -243,9 +213,9 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                                 k -= 5
                             }
                             return """
-                            #define MAR_TAG_${id} 0b${n.toString(2)}
-                        """ + s.subs!!.mapIndexed { i, ss ->
-                                f(ss, id, l + listOf(i + 1))
+                                #define MAR_TAG_${xid} 0b${n.toString(2)}
+                            """ + s.subs!!.mapIndexed { i, ss ->
+                                f(ss, xid, l + listOf(i + 1))
                             }.joinToString("")
                         }
 
@@ -253,11 +223,11 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                             val cur = sup.cond { it.first + "_" } + s.t.str
                             val tup = s.tp as Type.Tuple
                             val flds = sup.cond { it.second } + tup.ts.mapIndexed { i, id_tp ->
-                                val (id, tp) = id_tp
+                                val (xid, tp) = id_tp
                                 """
                                 union {
                                     ${tp.coder(tpls)} _${I + i};
-                                    ${id.cond { "${tp.coder(tpls)} ${it.str};" }}
+                                    ${xid.cond { "${tp.coder(tpls)} ${it.str};" }}
                                 };
                                 """
                             }.joinToString("")
@@ -273,43 +243,36 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                         }
 
                         val tpl = S.tpls.map { (id, _) -> id.str }.zip(me.xtpls!!).toMap()
-                        listOf(
-                            f(S, "", listOf(N)) + """
-                                typedef struct ${sup} {
-                                    union {
-                                        struct {
-                                            int tag;
-                                            union {
-                                                ${g(tpl, null, S, 1)}
-                                            };
+                        f(S, "", listOf(N)) + """
+                            typedef struct ${sup} {
+                                union {
+                                    struct {
+                                        int tag;
+                                        union {
+                                            ${g(tpl, null, S, 1)}
                                         };
                                     };
-                                } $sup;
-                            """
-                        )
+                                };
+                            } $sup;
+                        """
                     }
-                } //.let { println(it);it }
+                }))
             }
             else -> emptyList()
         }
     }
-    fun fe (me: Expr): List<String> {
+    fun fe (me: Expr): List<Pair<String,String>> {
         return when (me) {
             is Expr.Bin -> {
                 if (me.tk.str == "++") {
                     val tp = me.typex() as Type.Vector
-                    val x = tp.coder(tp.assert_no_tpls_up())
-                    if (G.types.contains(x)) {
-                        return emptyList()
-                    } else {
-                        G.types.add(x)
-                    }
-                    val y = tp.tp.coder(tp.tp.assert_no_tpls_up())
-                    return listOf("""
-                        typedef struct $x {
+                    val a = tp.coder(tp.assert_no_tpls_up())
+                    val b = tp.tp.coder(tp.tp.assert_no_tpls_up())
+                    listOf(a to """
+                        typedef struct $a {
                             int max, cur;
-                            $y buf[${tp.max!!.coder(tpls,pre)}];
-                        } $x;
+                            $b buf[${tp.max!!.coder(tpls,pre)}];
+                        } $a;
                     """)
                 } else {
                     emptyList()
@@ -318,7 +281,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             else -> emptyList()
         }
     }
-    fun fs (me: Stmt): List<String> {
+    fun fs (me: Stmt): List<Pair<String,String>> {
         return if (me !is Stmt.Proto || me===x /* HACK-01 */) {
             emptyList()
         } else {
@@ -341,32 +304,33 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     (defs + vars)
                 }.flatten().joinToString("")
             }
-            val xx = if (me is Stmt.Proto.Func) emptyList() else {
+            val xx: List<Pair<String,String>> = if (me is Stmt.Proto.Func) emptyList() else {
                 val (pro,exe) = me.tp.x_pro_exe(me.tp.assert_no_tpls_up())
-                listOf("""
-                typedef struct $exe {
-                    MAR_Exe_Fields($pro)
-                    ${(me is Stmt.Proto.Task).cond { """
-                        uintptr_t evt;
-                    """ }}
-                    struct {
-                        ${mem()}    // TODO: unions for non-coexisting blocks
-                    } mem;
-                } $exe;
+                //println(listOf(me.n, me.tp.n, exe))
+                listOf(exe to """
+                    typedef struct $exe {
+                        MAR_Exe_Fields($pro)
+                        ${(me is Stmt.Proto.Task).cond { """
+                            uintptr_t evt;
+                        """ }}
+                        struct {
+                            ${mem()}    // TODO: unions for non-coexisting blocks
+                        } mem;
+                    } $exe;
                 """)
             }
 
             val xtplss: List<Tpl_Map?> = me.template_map_all() ?: listOf(null)
-            val yy = xtplss.map { xtpls ->
-                coder_types(me, me, xtpls, pre) + // HACK-01: x===me above prevents stack overflow
-                "\n" + me.x_sig(xtpls, pre) + ";\n"
-            }
+            val yy: List<Pair<String,String>> = xtplss.map { xtpls ->
+                coder_types(me, me, xtpls, pre) //+ // HACK-01: x===me above prevents stack overflow
+                //"\n" + me.x_sig(xtpls, pre) + ";\n"
+            }.flatten()
 
             xx + yy
         }
     }
     val ts = s.dn_collect_pos(::fs, ::fe, ::ft)
-    return ts.joinToString("") //.let { println(it);it }
+    return ts //.unionAll() //.values.joinToString("") //.let { println(it);it }
 }
 
 fun coder_protos (pre: Boolean): String {
@@ -1368,7 +1332,10 @@ fun coder_main (pre: Boolean): String {
     val protos = coder_protos(pre)
     val code = G.outer!!.coder(null,pre)
     val c = object{}::class.java.getResourceAsStream("/mar.c")!!.bufferedReader().readText()
-        .replace("// === MAR_TYPES === //", types)
+        //.replace("// === MAR_TYPES === //", types.toMap().values.joinToString(""))
+        .replace("// === MAR_TYPES === //",
+            // first reverse to keep first map entry, second reverse to keep original order
+            types.distinctBy { it.first }.map { it.second }.joinToString(""))
         .replace("// === MAR_PROTOS === //", protos)
         .replace("// === MAR_MAIN === //", code)
         //.replace("// === MAR_BROADCAST_N === //", "TODO")

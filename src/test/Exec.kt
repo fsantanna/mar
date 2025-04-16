@@ -921,6 +921,15 @@ class Exec  {
     // DATA
 
     @Test
+    fun hh_00_data () {
+        val out = test("""
+            data Pos: [Bool]
+            var p = Pos [true]
+            print(p)
+        """)
+        assert(out == "Pos [true]\n") { out }
+    }
+    @Test
     fun hh_01_data () {
         val out = test("""
             data Pos: [Int, Int]

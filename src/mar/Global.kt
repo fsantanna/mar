@@ -193,7 +193,6 @@ object G {
 
     var outer: Stmt.Block? = null
 
-    val types = mutableSetOf<String>()
     val tpls  = mutableMapOf<Stmt.Proto, MutableMap<String,List<Tpl_Con>>>()
     val defers = mutableMapOf<Stmt.Block, MutableList<Stmt.Defer>>()
     //val protos = Pair(mutableListOf<String>(), mutableListOf<String>())
@@ -215,7 +214,6 @@ object G {
 
         outer = null
 
-        types.clear()
         tpls.clear()
         defers.clear()
         //protos.first.clear()
