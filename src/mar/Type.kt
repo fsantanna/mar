@@ -483,7 +483,7 @@ fun template_map (abss: List<Tpl_Abs>, cons: List<Tpl_Con>): Tpl_Map {
 fun Stmt.template_map_all (): List<Tpl_Map>? {
     val abss = this.to_tpl_abss()
     return if (abss.isEmpty()) null else {
-        G.tpls[this]?.values?.map { template_map(abss,it) }
+        G.tpls[this]?.map { template_map(abss,it) }
             ?: emptyList()
     }
 }

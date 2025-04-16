@@ -232,23 +232,36 @@ fun cache_ups () {
 }
 
 fun cache_tpls () {
-    fun fe (me: Expr) {
+    fun Stmt.add (tpls: List<Tpl_Con>) {
+        assert(tpls.isNotEmpty())
+        if (G.tpls[this] == null) {
+            G.tpls[this] = mutableListOf()
+        }
+        G.tpls[this]!!.add(tpls)
+    }
+    fun ft (me: Type) {
         when (me) {
-            is Expr.Call -> {
-                if (!me.xtpls!!.isEmpty()) {
-                    val f = me.f as Expr.Acc
-                    val dcl = f.to_xdcl()!!.first as Stmt.Proto
-                    if (G.tpls[dcl] == null) {
-                        G.tpls[dcl] = mutableMapOf()
-                    }
-                    val id = me.coder(null,false)
-                    G.tpls[dcl]!![id] = me.xtpls!!
+            is Type.Data -> me.xtpls!!.let {
+                if (it.isNotEmpty()) {
+                    me.walk()!!.first.add(it)
                 }
             }
             else -> {}
         }
     }
-    G.outer!!.dn_visit_pre({}, ::fe, {})
+    fun fe (me: Expr) {
+        when (me) {
+            is Expr.Call -> me.xtpls!!.let {
+                if (it.isNotEmpty()) {
+                    val f = me.f as Expr.Acc
+                    val dcl = f.to_xdcl()!!.first as Stmt.Proto
+                    dcl.add(it)
+                }
+            }
+            else -> {}
+        }
+    }
+    G.outer!!.dn_visit_pre({}, ::fe, ::ft)
 }
 
 fun cache_defers () {

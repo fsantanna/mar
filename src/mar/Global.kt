@@ -193,9 +193,8 @@ object G {
 
     var outer: Stmt.Block? = null
 
-    val tpls = mutableMapOf<Stmt.Proto, MutableMap<String,List<Tpl_Con>>>()
+    val tpls = mutableMapOf<Stmt, MutableList<List<Tpl_Con>>>()
     val defers = mutableMapOf<Stmt.Block, MutableList<Stmt.Defer>>()
-    //val protos = Pair(mutableListOf<String>(), mutableListOf<String>())
 
     val tsks_blks_awts = mutableMapOf<Stmt,Int>()
 
