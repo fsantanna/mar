@@ -282,58 +282,61 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
         }
     }
     fun fs (me: Stmt): List<Pair<String,String>> {
-        return if (me !is Stmt.Proto || me===x /* HACK-01 */) {
-            emptyList()
-        } else {
-            fun mem (): String {
-                val blks = me.dn_collect_pre({
-                    when (it) {
-                        is Stmt.Proto -> if (it == me) emptyList() else null
-                        is Stmt.Block -> listOf(it)
-                        else -> emptyList()
-                    }
-                }, {null}, {null})
-                return blks.map { blk ->
-                    //println(listOf(blk.n,G.defers[blk.n]))
-                    val defs = G.defers.getOrDefault(blk, emptyList()).map {
-                        "int defer_${it.n};\n"
-                    }
-                    val vars = blk.to_dcls().filter { (_,_,tp) -> tp !is Type.Proto }.map { (_,id,tp) ->
-                        Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n"
-                    }
-                    (defs + vars)
-                }.flatten().joinToString("")
+        return when {
+            (me is Stmt.Data) -> emptyList()
+            (me !is Stmt.Proto) -> emptyList()
+            (me == x) -> emptyList() // HACK-01
+            else -> {
+                fun mem (): String {
+                    val blks = me.dn_collect_pre({
+                        when (it) {
+                            is Stmt.Proto -> if (it == me) emptyList() else null
+                            is Stmt.Block -> listOf(it)
+                            else -> emptyList()
+                        }
+                    }, {null}, {null})
+                    return blks.map { blk ->
+                        //println(listOf(blk.n,G.defers[blk.n]))
+                        val defs = G.defers.getOrDefault(blk, emptyList()).map {
+                            "int defer_${it.n};\n"
+                        }
+                        val vars = blk.to_dcls().filter { (_,_,tp) -> tp !is Type.Proto }.map { (_,id,tp) ->
+                            Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n"
+                        }
+                        (defs + vars)
+                    }.flatten().joinToString("")
+                }
+
+                val xx: List<Pair<String,String>> = if (me is Stmt.Proto.Func) emptyList() else {
+                    val (pro,exe) = me.tp.x_pro_exe(me.tp.assert_no_tpls_up())
+                    //println(listOf(me.n, me.tp.n, exe))
+                    listOf(exe to """
+                        typedef struct $exe {
+                            MAR_Exe_Fields($pro)
+                            ${(me is Stmt.Proto.Task).cond { """
+                                uintptr_t evt;
+                            """ }}
+                            struct {
+                                ${mem()}    // TODO: unions for non-coexisting blocks
+                            } mem;
+                        } $exe;
+                    """)
+                }
+
+                val xtplss: List<Tpl_Map?> = me.template_map_all() ?: listOf(null)
+
+                val yy: List<Pair<String,String>> = xtplss.map { xtpls ->
+                    coder_types(me, me, xtpls, pre) //+ // HACK-01: x===me above prevents stack overflow
+                }.flatten()
+
+                val zz = xtplss.map {
+                    listOf(me.n.toString() to me.x_sig(it, pre) + ";\n")
+                }.flatten()
+
+                //println(listOf(me.tp.coder(null), xx))
+
+                xx + yy + zz
             }
-
-            val xx: List<Pair<String,String>> = if (me is Stmt.Proto.Func) emptyList() else {
-                val (pro,exe) = me.tp.x_pro_exe(me.tp.assert_no_tpls_up())
-                //println(listOf(me.n, me.tp.n, exe))
-                listOf(exe to """
-                    typedef struct $exe {
-                        MAR_Exe_Fields($pro)
-                        ${(me is Stmt.Proto.Task).cond { """
-                            uintptr_t evt;
-                        """ }}
-                        struct {
-                            ${mem()}    // TODO: unions for non-coexisting blocks
-                        } mem;
-                    } $exe;
-                """)
-            }
-
-            val xtplss: List<Tpl_Map?> = me.template_map_all() ?: listOf(null)
-
-            val yy: List<Pair<String,String>> = xtplss.map { xtpls ->
-                coder_types(me, me, xtpls, pre) //+ // HACK-01: x===me above prevents stack overflow
-            }.flatten()
-
-            val zz = xtplss.map {
-                listOf(me.n.toString() to me.x_sig(it, pre) + ";\n")
-            }.flatten()
-
-            //println(listOf(me.tp.coder(null), xx))
-
-            xx + yy + zz
         }
     }
     val ts = s.dn_collect_pos(::fs, ::fe, ::ft)
