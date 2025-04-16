@@ -169,16 +169,44 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     } $id;
                 """)
             }
-            is Type.Data -> {
+            else -> emptyList()
+        }
+    }
+    fun fe (me: Expr): List<Pair<String,String>> {
+        return when (me) {
+            is Expr.Bin -> {
+                if (me.tk.str == "++") {
+                    val tp = me.typex() as Type.Vector
+                    val a = tp.coder(tp.assert_no_tpls_up())
+                    val b = tp.tp.coder(tp.tp.assert_no_tpls_up())
+                    listOf(a to """
+                        typedef struct $a {
+                            int max, cur;
+                            $b buf[${tp.max!!.coder(tpls,pre)}];
+                        } $a;
+                    """)
+                } else {
+                    emptyList()
+                }
+            }
+            else -> emptyList()
+        }
+    }
+    fun fs (me: Stmt): List<Pair<String,String>> {
+        return when {
+            (me.xup is Stmt.Data) -> emptyList()
+            (me is Stmt.Data) -> {
+                val id = me.t.str
                 val N = G.datas++
-                val (S, _, tpc) = me.walk_tpl()
+                //val (S, _, tpc) = XX.walk_tpl()
+                val tpc = me.tp
                 val ts = tpc.dn_collect_pos({ emptyList() }, ::ft)
                 (ts + listOf(id to when {
-                    (S.subs == null) -> {
+                    (me.subs == null) -> {
                         fun f(tp: Type, s: List<String>): List<String> {
                             val ss = id+s.drop(1).map { "_"+it }.joinToString("")
                             val x1 = """
-                                #define MAR_TAG_${me.ts.first().str} $N
+                                #define MAR_TAG_${me.t.str} $N
                                 typedef ${tp.coder(tpls)} $ss;
                             """
                             val x2 = if (tp !is Type.Union) {
@@ -199,12 +227,12 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                             }
                             return listOf(x1) + x2
                         }
-                        f(tpc, listOf(S.t.str)).joinToString("")                    }
+                        f(tpc, listOf(me.t.str)).joinToString("")                    }
                     else -> {
-                        val sup = S.t.str
+                        val sup = me.t.str
                         fun f(s: Stmt.Data, sup: String, l: List<Int>): String {
                             val xid = (if (sup == "") "" else sup + "_") + s.t.str
-                            //println(listOf(S.tk.pos, S.to_str()))
+                            //println(listOf(me.tk.pos, me.to_str()))
                             assert(l.size <= 6)
                             var n = 0
                             var k = 25
@@ -212,6 +240,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                                 n += l[i] shl k
                                 k -= 5
                             }
+                            //println(listOf(xid, n, n.toString(2)))
                             return """
                                 #define MAR_TAG_${xid} 0b${n.toString(2)}
                             """ + s.subs!!.mapIndexed { i, ss ->
@@ -242,14 +271,14 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                             """
                         }
 
-                        val tpl = S.tpls.map { (id, _) -> id.str }.zip(me.xtpls!!).toMap()
-                        f(S, "", listOf(N)) + """
+                        val tpl = me.tpls.map { (id, _) -> id.str }.zip(emptyList<Tpl_Con>()).toMap()
+                        f(me, "", listOf(N)) + """
                             typedef struct ${sup} {
                                 union {
                                     struct {
                                         int tag;
                                         union {
-                                            ${g(tpl, null, S, 1)}
+                                            ${g(tpl, null, me, 1)}
                                         };
                                     };
                                 };
@@ -258,32 +287,6 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     }
                 }))
             }
-            else -> emptyList()
-        }
-    }
-    fun fe (me: Expr): List<Pair<String,String>> {
-        return when (me) {
-            is Expr.Bin -> {
-                if (me.tk.str == "++") {
-                    val tp = me.typex() as Type.Vector
-                    val a = tp.coder(tp.assert_no_tpls_up())
-                    val b = tp.tp.coder(tp.tp.assert_no_tpls_up())
-                    listOf(a to """
-                        typedef struct $a {
-                            int max, cur;
-                            $b buf[${tp.max!!.coder(tpls,pre)}];
-                        } $a;
-                    """)
-                } else {
-                    emptyList()
-                }
-            }
-            else -> emptyList()
-        }
-    }
-    fun fs (me: Stmt): List<Pair<String,String>> {
-        return when {
-            (me is Stmt.Data) -> emptyList()
             (me !is Stmt.Proto) -> emptyList()
             (me == x) -> emptyList() // HACK-01
             else -> {
