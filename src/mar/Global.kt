@@ -193,7 +193,7 @@ object G {
 
     var outer: Stmt.Block? = null
 
-    val tpls  = mutableMapOf<Stmt.Proto, MutableMap<String,List<Tpl_Con>>>()
+    val tpls = mutableMapOf<Stmt.Proto, MutableMap<String,List<Tpl_Con>>>()
     val defers = mutableMapOf<Stmt.Block, MutableList<Stmt.Defer>>()
     //val protos = Pair(mutableListOf<String>(), mutableListOf<String>())
 
@@ -253,6 +253,22 @@ fun exec (hold: Boolean, cmd: String): Pair<Boolean,String> {
     return exec(hold, cmd.split(' '))
 }
 
+fun coder (pre: Boolean): String {
+    val types = coder_types(null, G.outer!!, null, pre)
+    val protos = coder_protos(pre)
+    val main = G.outer!!.coder(null,pre)
+    val c = object{}::class.java.getResourceAsStream("/mar.c")!!.bufferedReader().readText()
+        //.replace("// === MAR_TYPES === //", types.toMap().values.joinToString(""))
+        .replace("// === MAR_TYPES === //",
+            // first reverse to keep first map entry, second reverse to keep original order
+            types.distinctBy { it.first }.map { it.second }.joinToString(""))
+        .replace("// === MAR_PROTOS === //", protos)
+        .replace("// === MAR_MAIN === //", main)
+        //.replace("// === MAR_BROADCAST_N === //", "TODO")
+
+    return c
+}
+
 fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, Int>, Reader>>, out: String, args: List<String>): String {
     G.reset()
     G.tks = inps.lexer()
@@ -294,7 +310,7 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
     if (verbose) {
         System.err.println("... mar -> c ...")
     }
-    val c = coder_main(false)
+    val c = coder(false)
 
     if (verbose) {
         System.err.println("... c -> exe ...")
