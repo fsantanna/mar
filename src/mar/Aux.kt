@@ -2,9 +2,27 @@ package mar
 
 import kotlin.math.min
 
-fun <K,V> List<Map<K,V>>.union (): Map<K,V> {
+fun <K,V> List<Map<K,V>>.unionAll (): Map<K,V> {
     return this.fold(emptyMap()) { acc, value -> acc + value }
 }
+
+/*
+fun <T> Collection<T>?.union (other: Collection<T>?): Collection<T>? {
+    return when {
+        (this == null) -> other
+        (other == null) -> this
+        else -> this + other
+    }
+}
+
+fun <T> Collection<Collection<T>?>.unionAll (): Collection<T>? {
+    return if (this.isEmpty()) {
+        null
+    } else {
+        this.drop(1).fold(this.first()) { a,b->a.union(b) }
+    }
+}
+ */
 
 fun <T> List<T>.commonPrefix (other: List<T>, fcmp: (T,T)->Boolean): List<T> {
     val l = mutableListOf<T>()

@@ -415,25 +415,25 @@ fun Type.template_con_abs (tp: Type): Tpl_Map {
         (this is Type.Tuple   && tp is Type.Tuple)   -> {
             this.ts.zip(tp.ts).map { (t1,t2) ->
                 t1.second.template_con_abs(t2.second)
-            }.union()
+            }.unionAll()
         }
         (this is Type.Vector  && tp is Type.Vector)  -> this.tp.template_con_abs(tp.tp)
         (this is Type.Union   && tp is Type.Union)   -> {
             this.ts.zip(tp.ts).map { (t1,t2) ->
                 t1.second.template_con_abs(t2.second)
-            }.union()
+            }.unionAll()
         }
         (this is Type.Proto.Func && tp is Type.Proto.Func) -> {
             this.out.template_con_abs(tp.out) +
                     this.inps.zip(tp.inps).map { (t1,t2) ->
                         t1.template_con_abs(t2)
-                    }.union()
+                    }.unionAll()
         }
         (this is Type.Proto.Coro && tp is Type.Proto.Coro) -> {
             this.out.template_con_abs(tp.out) +
                     this.inps.zip(tp.inps).map { (t1,t2) ->
                         t1.template_con_abs(t2)
-                    }.union() +
+                    }.unionAll() +
                     this.yld.template_con_abs(tp.yld) +
                     this.res.template_con_abs(tp.res)
         }
@@ -441,13 +441,13 @@ fun Type.template_con_abs (tp: Type): Tpl_Map {
             this.out.template_con_abs(tp.out) +
                     this.inps.zip(tp.inps).map { (t1,t2) ->
                         t1.template_con_abs(t2)
-                    }.union()
+                    }.unionAll()
         }
         (this is Type.Exec.Coro && tp is Type.Exec.Coro)    -> {
             this.out.template_con_abs(tp.out) +
                     this.inps.zip(tp.inps).map { (t1,t2) ->
                         t1.template_con_abs(t2)
-                    }.union() +
+                    }.unionAll() +
                     this.yld.template_con_abs(tp.yld) +
                     this.res.template_con_abs(tp.res)
         }
@@ -455,7 +455,7 @@ fun Type.template_con_abs (tp: Type): Tpl_Map {
             this.out.template_con_abs(tp.out) +
                     this.inps.zip(tp.inps).map { (t1,t2) ->
                         t1.template_con_abs(t2)
-                    }.union()
+                    }.unionAll()
         }
         else -> error("impossible case")
     }
