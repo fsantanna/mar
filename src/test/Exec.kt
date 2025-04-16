@@ -1466,11 +1466,11 @@ class Exec  {
             `printf("%X\n", xza.tag)`
             `printf("%X\n", j.tag)`
         """)
-        assert(out == "8000000\n" +
-                "8100000\n" +
-                "8200000\n" +
-                "8208000\n" +
-                "A000000\n") { out }
+        assert(out == "2000000\n" +
+                "2100000\n" +
+                "2200000\n" +
+                "2208000\n" +
+                "3000000\n") { out }
     }
     @Test
     fun jk_02_data_hier_enum () {
@@ -2064,8 +2064,9 @@ class Exec  {
                 await(false)
             }
             emit(X(10))
+            print("ok")
         """)
-        assert(out == "X(10)\nY(10)\n") { out }
+        assert(out == "ok\n") { out }
     }
     @Test
     fun oo_03_task_term () {

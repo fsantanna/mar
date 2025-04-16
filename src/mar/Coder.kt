@@ -298,12 +298,13 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                     val defs = G.defers.getOrDefault(blk, emptyList()).map {
                         "int defer_${it.n};\n"
                     }
-                    val vars = blk.to_dcls().map { (_,id,tp) ->
+                    val vars = blk.to_dcls().filter { (_,_,tp) -> tp !is Type.Proto }.map { (_,id,tp) ->
                         Pair(id,tp!!).coder(tp.assert_no_tpls_up(),pre) + ";\n"
                     }
                     (defs + vars)
                 }.flatten().joinToString("")
             }
+
             val xx: List<Pair<String,String>> = if (me is Stmt.Proto.Func) emptyList() else {
                 val (pro,exe) = me.tp.x_pro_exe(me.tp.assert_no_tpls_up())
                 //println(listOf(me.n, me.tp.n, exe))
@@ -321,12 +322,18 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
             }
 
             val xtplss: List<Tpl_Map?> = me.template_map_all() ?: listOf(null)
+
             val yy: List<Pair<String,String>> = xtplss.map { xtpls ->
                 coder_types(me, me, xtpls, pre) //+ // HACK-01: x===me above prevents stack overflow
-                //"\n" + me.x_sig(xtpls, pre) + ";\n"
             }.flatten()
 
-            xx + yy
+            val zz = xtplss.map {
+                listOf(me.n.toString() to me.x_sig(it, pre) + ";\n")
+            }.flatten()
+
+            //println(listOf(me.tp.coder(null), xx))
+
+            xx + yy + zz
         }
     }
     val ts = s.dn_collect_pos(::fs, ::fe, ::ft)
