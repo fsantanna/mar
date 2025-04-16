@@ -42,6 +42,14 @@ class Parser {
         val e = parser_expr_4_prim()
         assert(e is Expr.Acc && e.tk.str == "err")
     }
+    @Test
+    fun aa_06_err() {
+        G.tks = ("""
+        var e
+        """).lexer()
+        parser_lexer()
+        assert(trap { parser_stmt(null) } == "anon : (lin 2, col 9) : declaration error : expected type")
+    }
 
     // TYPE
 
