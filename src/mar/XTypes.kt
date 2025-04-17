@@ -200,7 +200,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                                     if (id == null) emptyList() else f(t, s + listOf(id.str))
                                 }.flatten()
                             }
-                            return listOf(x1) + x2
+                            return listOf(x1) //+ x2
                         }
                         f(tpc, listOf(me.t.str)).joinToString("")                    }
                     else -> {
@@ -246,6 +246,9 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                             """
                         }
 
+                        val xtplss: List<Tpl_Map?> = me.template_map_all() ?: listOf(null)
+                        //println(xtplss)
+                        println(listOf(me.t.str, G.tpls[me]))
                         val tpl = me.tpls.map { (id, _) -> id.str }.zip(emptyList<Tpl_Con>()).toMap()
                         f(me, "", listOf(N)) + """
                             typedef struct ${sup} {

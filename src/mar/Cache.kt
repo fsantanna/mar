@@ -243,6 +243,7 @@ fun cache_tpls () {
         when (me) {
             is Type.Data -> me.xtpls!!.let {
                 if (it.isNotEmpty()) {
+                    //println(me.to_str())
                     me.walk()!!.first.add(it)
                 }
             }

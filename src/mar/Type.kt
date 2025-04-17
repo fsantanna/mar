@@ -469,6 +469,7 @@ fun Type.Data.abs_con (s: Stmt.Data, map: Tpl_Map): Type.Data {
 }
 
 fun Stmt.to_tpl_abss (): List<Tpl_Abs> {
+    //println(listOf(this.javaClass.name, this.to_str()))
     return when (this) {
         is Stmt.Data -> this.tpls
         is Stmt.Proto -> this.tpls
