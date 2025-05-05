@@ -178,6 +178,8 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val ts = tpc.dn_collect_pos({ emptyList() }, ::ft)
                 (ts + listOf(id to when {
                     (me.subs == null) -> {
+                        println(id)
+                        println(listOf(me.t.str, G.tpls[me]))
                         fun f(tp: Type, s: List<String>): List<String> {
                             val ss = id+s.drop(1).map { "_"+it }.joinToString("")
                             val x1 = """
@@ -200,7 +202,7 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                                     if (id == null) emptyList() else f(t, s + listOf(id.str))
                                 }.flatten()
                             }
-                            return listOf(x1) //+ x2
+                            return listOf(x1) + x2
                         }
                         f(tpc, listOf(me.t.str)).joinToString("")                    }
                     else -> {
