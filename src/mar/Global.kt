@@ -256,7 +256,7 @@ fun coder (pre: Boolean): String {
     val types = coder_types(null, G.outer!!, null, pre)
     val protos = coder_protos(pre)
     val main = G.outer!!.coder(null,pre)
-    val c = object{}::class.java.getResourceAsStream("/mar.c")!!.bufferedReader().readText()
+    val c = object{}::class.java.getResourceAsStream("/mar.lua")!!.bufferedReader().readText()
         //.replace("// === MAR_TYPES === //", types.toMap().values.joinToString(""))
         .replace("// === MAR_TYPES === //",
             // first reverse to keep first map entry, second reverse to keep original order
@@ -307,31 +307,17 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
     }
 
     if (verbose) {
-        System.err.println("... mar -> c ...")
+        System.err.println("... mar -> lua ...")
     }
-    val c = coder(false)
+    val lua = coder(false)
+    File("$out.lua").writeText(lua)
 
-    if (verbose) {
-        System.err.println("... c -> exe ...")
-    }
-    File("$out.c").writeText(c)
-    val xargs = (args + G.ccs).map {
-        it.replace("@/",PATH+"/")
-    }
-    val cmd = listOf("gcc", "-Werror", "$out.c", "-l", "m", "-o", "$out.exe") + xargs
-    if (verbose) {
-        System.err.println("\t" + cmd.joinToString(" "))
-    }
-    val (ok2, out2) = exec(true, cmd)
-    if (!ok2) {
-        return out2
-    }
     if (verbose) {
         System.err.println("... executing ...")
     }
-    val (_, out3) = exec(tst, "$VALGRIND./$out.exe")
-    //println(out3)
-    return out3
+    val (_, out) = exec(tst, "lua5.4 $out.lua")
+    //println(out)
+    return out
 }
 
 fun test (inp: String): String {
