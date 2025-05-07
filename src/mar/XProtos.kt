@@ -138,19 +138,8 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 """
             }
         }
-        is Stmt.Dcl    -> {
-            val dcl = when {
-                (this.xtp is Type.Exec) -> ""
-                (this.up_exe() != null) -> ""
-                else -> this.xtp!!.coder(tpls) + " " + this.id.str + ";"
-            }
-            val ini = this.xtp.let {
-                if (it !is Type.Vector) "" else """
-                    ${this.id.str}.max = ${it.max!!.coder(tpls,pre)};
-                    ${this.id.str}.cur = 0;
-                """
-            }
-            dcl + ini
+        is Stmt.Dcl    -> this.id.str.let {
+            "local $it = %it"
         }
         is Stmt.SetE   -> {
             val dst = this.dst.coder(tpls,pre)
