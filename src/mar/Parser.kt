@@ -666,12 +666,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
             }
             val tk1 = G.tk1
             listOf(Stmt.Dcl(tk0, id, tp)) + when {
-                !accept_op("=") -> {
-                    if (tp == null) {
-                        err(tk0, "declaration error : expected type")
-                    }
-                    emptyList()
-                }
+                !accept_op("=") -> emptyList()
                 check_stmt_as_set_src() -> parser_stmt(Expr.Acc(id))
                 else -> listOf(Stmt.SetE(tk1!!, Expr.Acc(id), parser_expr()))
             }

@@ -524,18 +524,19 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
     }
     return when (this) {
         is Expr.Uno -> {
+            val e = this.e.coder(tpls,pre)
             return when (this.tk.str) {
-                "#"  -> "(" + this.e.coder(tpls,pre) + ".cur)"
-                "##" -> "(" + this.e.coder(tpls,pre) + ".max)"
+                "!"  -> "(not $e)"
+                "#"  -> "(" + e + ".cur)"
+                "##" -> "(" + e + ".max)"
                 "ref" -> {
-                    val x = this.e.coder(tpls,pre)
                     if (this.e.is_lval()) {
-                        "(&$x)"
+                        "(&$e)"
                     } else {
-                        "({ typeof($x) mar_$n=$x; &mar_$n; })"
+                        "({ typeof($e) mar_$n=$e; &mar_$n; })"
                     }
                 }
-                else -> "(" + this.tk.str.op_mar_to_c() + this.e.coder(tpls,pre) + ")"
+                else -> "(" + this.tk.str.op_mar_to_c() + e + ")"
             }
         }
         is Expr.Bin -> {
@@ -565,44 +566,8 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         mar_$n;
                     })
                     """                }
-                "==", "!=" -> {
-                    fun f (xx: Int, xtp: Type, xe1: String, xe2: String): String {
-                        //println(xtp.to_str())
-                        return when {
-                            (xtp is Type.Data) -> f(xx, xtp.walk()!!.third, xe1, xe2)
-                            (xtp is Type.Tuple) -> {
-                                val (uno,op) = if (this.tk.str == "==") Pair(1,"&&") else Pair(0,"||")
-                                val vs = xtp.ts.mapIndexed { i,(_,xxtp) ->
-                                    //println(xxtp.to_str())
-                                    op + " " + f(xx+1, xxtp, "mar_1_${n}_$xx._"+(i+1), "mar_2_${n}_$xx._"+(i+1))
-                                }.joinToString("")
-                                """({
-                                    typeof($xe1) mar_1_${n}_$xx = $xe1;
-                                    typeof($xe2) mar_2_${n}_$xx = $xe2;
-                                    $uno $vs;
-                                })"""
-                            }
-                            (xtp is Type.Vector) -> {
-                                """({
-                                    typeof($xe1) mar_1_${n}_$xx = $xe1;
-                                    typeof($xe2) mar_2_${n}_$xx = $xe2;
-                                    (mar_1_${n}_$xx.cur == mar_2_${n}_$xx.cur) && ({
-                                        int mar_ok_${n}_$xx = 1;
-                                        for (int i=0; i<mar_1_${n}_$xx.cur; i++) {
-                                            if (!${f(xx+1, xtp.tp, "mar_1_${n}_$xx.buf[i]", "mar_2_${n}_$xx.buf[i]")}) {
-                                                mar_ok_${n}_$xx = 0;
-                                                break;
-                                            }
-                                        };
-                                        mar_ok_${n}_$xx;
-                                    });
-                                })"""
-                            }
-                            else -> "($xe1 ${this.tk.str} $xe2)"
-                        }
-                    }
-                    f(11, this.e1.typex(), e1, e2)
-                }
+                "==" -> "mar_equal($e1, $e2)"
+                "!=" -> "(not mar_equal($e1, $e2))"
                 else -> "(" + e1 + " " + this.tk.str.op_mar_to_c() + " " + e2 + ")"
             }
         }
@@ -648,7 +613,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             call
         }
 
-        is Expr.Tuple  -> "((${this.typex().coder(tpls)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(tpls,pre)+"}" }.joinToString(",") } })"
+        is Expr.Tuple  -> "{ ${this.vs.map { (_,tp) -> "{"+tp.coder(tpls,pre)+"}" }.joinToString(",") } }"
         is Expr.Vector -> (this.typex() as Type.Vector).let {
             val max = it.max!!.coder(tpls,pre)
             "((${it.coder(tpls)}) { .max=$max, .cur=$max, .buf={${this.vs.map { it.coder(tpls,pre) }.joinToString(",") }} })"
