@@ -1092,13 +1092,6 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
                 listOf(Stmt.Data(tk0, t, xs, tp, f()))
             }
         }
-        accept_fix("print") -> {
-            val tk0 = G.tk0 as Tk.Fix
-            accept_fix_err("(")
-            val e = parser_expr()
-            accept_fix_err(")")
-            listOf(Stmt.Print(tk0, e))
-        }
         accept_fix("test") -> {
             val tk0 = G.tk0!!
             val blk = parser_stmt_block()

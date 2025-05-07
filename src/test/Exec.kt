@@ -8,7 +8,7 @@ import org.junit.runners.MethodSorters
 fun test_int (src: String): String {
     return test("""
         var v: Int = $src
-        `printf("%d\n", v);`
+        dump(v)
     """)
 }
 

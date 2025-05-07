@@ -243,8 +243,6 @@ fun Stmt.to_str (pre: Boolean = false): String {
             else -> "await(TODO)"
         }
         is Stmt.Emit   -> "emit(" + this.e.to_str(pre) + ")"
-
-        is Stmt.Print  -> "print(" + this.e.to_str(pre) + ")"
         is Stmt.Pass   -> "do(" + this.e.to_str(pre) + ")"
     }.let {
         when {

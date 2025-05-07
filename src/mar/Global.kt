@@ -4,7 +4,6 @@ import java.io.File
 import java.io.Reader
 import java.util.*
 
-val VALGRIND = ""
 val THROW = false
 var DUMP = true
 var PATH = File(File(System.getProperty("java.class.path")).absolutePath).parent    // var b/c of test/Main/aa_04_main
@@ -43,7 +42,7 @@ val KEYWORDS: SortedSet<String> = (
         "await", "break", "do", "catch", "coro", "compile", "create", "defer",
         "data", "else", "emit", "escape", "every", "exec", "false", "func", "if",
         "in", "it", "include", "loop", "match", "null", "par", "par_and", "par_or",
-        "print", "resume", "return", "set", "spawn", "start", "task", "test",
+        "resume", "return", "set", "spawn", "start", "task", "test",
         "throw", "true", "until", "var", "yield", "with", "where", "while"
     ).toSortedSet()
 )
@@ -175,8 +174,6 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
         class Any   (tk: Tk, val exes: List<Expr>): Stmt.Await(tk)
     }
     class Emit    (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
-
-    class Print  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
     class Pass  (tk: Tk, val e: Expr): Stmt(G.N++, null, tk)
 }
 
@@ -285,9 +282,7 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
          listOf(
                 Stmt.Data(tk0, Tk.Type("Return", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
                 Stmt.Data(tk0, Tk.Type("Break", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
-                Stmt.Dcl(tk0, Tk.Var("_",tk0.pos), Type.Data(tk0, emptyList(), listOf(
-                    Tk.Type("Event",tk0.pos),Tk.Type("Task",tk0.pos)
-                )))
+                Stmt.Dcl(tk0, Tk.Var("dump",tk0.pos), Type.Unit(tk0))
             ) + ss
         )
         //println(G.outer!!.to_str())

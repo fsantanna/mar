@@ -95,8 +95,6 @@ fun cache_ups () {
                 }
             }
             is Stmt.Emit -> me.e.xup = me
-
-            is Stmt.Print -> me.e.xup = me
             is Stmt.Pass -> me.e.xup = me
         }
     }

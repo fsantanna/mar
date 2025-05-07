@@ -74,9 +74,6 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     }
                     """
                 }.joinToString("")}
-                if (MAR_EXCEPTION.tag != __MAR_EXCEPTION_NONE__) {
-                    continue;
-                }
                 ${escs.cond { """
                     if (MAR_ESCAPE.tag == __MAR_ESCAPE_NONE__) {
                         // no escape
@@ -483,110 +480,6 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
         """
 
-        is Stmt.Print -> {
-            fun aux (tp: Type, v: String): String {
-                return when (tp) {
-                    is Type.Unit -> "printf(\"()\");"
-                    is Type.Tpl  -> TODO("8") //aux(tpl, TODO(), v)
-                    is Type.Prim -> when (tp.tk_.str) {
-                        "Bool" -> """
-                            if ($v) {
-                                printf("true");
-                            } else {
-                                printf("false");
-                            }
-                        """
-                        "Char"  -> "printf(\"%c\", $v);"
-                        "Int"   -> "printf(\"%d\", $v);"
-                        "Float" -> "printf(\"%f\", $v);"
-                        else -> TODO("2")
-                    }
-                    is Type.Pointer -> {
-                        if (tp.ptr is Type.Prim && tp.ptr.tk.str=="Char") {
-                            "printf(\"%s\", $v);"
-                        } else {
-                            TODO("1")
-                        }
-                    }
-                    is Type.Tuple -> {
-                        """
-                        {
-                            printf("[");
-                            ${tp.coder(tpls)} mar_${tp.n} = $v;
-                            ${tp.ts.mapIndexed { i,(_,t) ->
-                                aux(t, "mar_${tp.n}._${i+1}")
-                            }.joinToString("printf(\",\");")}
-                            printf("]");
-                        }
-                        """
-                    }
-                    is Type.Vector -> {
-                        """
-                        {
-                            printf("#[");
-                            ${tp.coder(tpls)} mar_${tp.n} = $v;
-                            for (int i=0; i<mar_${tp.n}.cur; i++) {
-                                if (i > 0) {
-                                    printf(",");
-                                }
-                                ${aux(tp.tp, "mar_${tp.n}.buf[i]")};
-                            }
-                            printf("]");
-                        }
-                        """
-                    }
-                    is Type.Union -> {
-                        """
-                        {
-                            ${tp.coder(tpls)} mar_${tp.n} = $v;
-                            printf("<.%d=", mar_${tp.n}.tag);
-                            switch (mar_${tp.n}.tag) {
-                                ${tp.ts.mapIndexed { i,(_,t) ->
-                                    """
-                                    case ${i+1}:
-                                        ${aux(t, "mar_${tp.n}._${i+1}")}
-                                        break;
-                                    """
-                                }.joinToString("printf(\",\");")}
-                            }
-                            printf(">");
-                        }
-                        """
-                    }
-                    is Type.Data -> {
-                        val (s,_,tpx) = tp.walk_tpl()
-                        val par = (tpx !is Type.Tuple) && (tpx !is Type.Union) && (tpx !is Type.Unit)
-                        //println(listOf("XXX", tp2.to_str(), tp.to_str()))
-                        val x = if (s.subs == null) aux(tpx, v) else {
-                            val tup = tpx as Type.Tuple
-                            val ts = tp.ts.coder(null,pre)
-                            """
-                            {
-                                printf("[");
-                                ${tp.ts.first().str} mar_${tp.n} = $v;
-                                ${tup.ts.mapIndexed { i,(_,t) ->
-                                    aux(t, "mar_${tp.n}.$ts._${i+1}")
-                                }.joinToString("printf(\",\");")}
-                                printf("]");
-                            }                                
-                            """
-                        }
-                        """
-                        printf("${tp.ts.to_str(pre)}");
-                        ${par.cond2({ "printf(\"(\");" }, { "printf(\" \");" })}
-                        $x
-                        ${par.cond { "printf(\")\");" }}
-                    """
-                    }
-                    else -> TODO("3")
-                }
-            }
-            """
-            // PRINT | ${this.dump()}
-            """ + aux(this.e.typex(), this.e.coder(tpls,pre)) + """
-                puts("");
-            """
-        }
         is Stmt.Pass  -> this.e.coder(tpls,pre) + ";"
     }
 }
