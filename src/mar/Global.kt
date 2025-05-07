@@ -287,7 +287,6 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
         check_vars()
         infer_apply()
         check_types()
-        infer_check()
         cache_tpls()
         cache_defers()
         cache_tsks_blks_awts()
