@@ -34,16 +34,16 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         """
                 }.joinToString("")}
                 ${(this == G.outer).cond { """
-                    {
+                    do
                     ${tsks.map { (_,id,_) ->
                         val x = id.coder(this,pre)
                         """
                         MAR_BROADCAST_TS[MAR_BROADCAST_N++] = (MAR_Task*) &$x;
                         """
                     }.joinToString("")}
-                    }
+                    end
                 """ }}
-                do {
+                do
                     ${this.to_dcls().map { (s,_,tp) ->
                         if (tp !is Type.Proto.Func) emptyList() else {
                             s as Stmt.Proto
@@ -51,12 +51,12 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                             xtplss.distinctBy {
                                 s.proto(it)
                             }.map {
-                                "//auto " + s.x_sig(it, pre) + ";\n"
+                                "" //""//auto " + s.x_sig(it, pre) + ";\n"
                             }
                         }
                     }.flatten().joinToString("")}
                     $ss
-                } while (0);
+                end
                 ${exes.map { (_,id,tp) ->
                     val exe = id.coder(this,pre)
                     val args = if (tp is Type.Exec.Coro) "NULL, NULL" else "0, NULL"
@@ -95,9 +95,9 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
 
             if (G.tsks_blks_awts[this] == null) {
                 """
-                { // BLOCK | ${this.dump()}
+                do -- BLOCK | ${this.dump()}
                     $body
-                }
+                end
                 """
             } else {
                 val enus = this.ups_until { it is Stmt.Proto }
@@ -110,7 +110,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 //val depth = (7 - enus.size)
                 val enu = G.tsks_blks_awts[this]!!.toString(16)
                 """
-                { // BLOCK [${enus.joinToString(",")}] | ${this.dump()}
+                do -- BLOCK [${enus.joinToString(",")}] | ${this.dump()}
                     ${(this.xup !is Stmt.Proto).cond {
                         // skip outermost block
                         "case 0x$enu:"
@@ -137,7 +137,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                                 break;
                         }
                     /*break;*/
-                }
+                end
                 """
             }
         }

@@ -258,10 +258,10 @@ fun coder (pre: Boolean): String {
     val main = G.outer!!.coder(null,pre)
     val c = object{}::class.java.getResourceAsStream("/mar.lua")!!.bufferedReader().readText()
         //.replace("// === MAR_TYPES === //", types.toMap().values.joinToString(""))
-        .replace("// === MAR_TYPES === //",
+        //.replace("// === MAR_TYPES === //",
             // first reverse to keep first map entry, second reverse to keep original order
-            types.distinctBy { it.first }.map { it.second }.joinToString(""))
-        .replace("// === MAR_PROTOS === //", protos)
+        //    types.distinctBy { it.first }.map { it.second }.joinToString(""))
+        //.replace("// === MAR_PROTOS === //", protos)
         .replace("// === MAR_MAIN === //", main)
         //.replace("// === MAR_BROADCAST_N === //", "TODO")
 

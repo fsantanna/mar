@@ -178,8 +178,6 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
                 val ts = tpc.dn_collect_pos({ emptyList() }, ::ft)
                 (ts + listOf(id to when {
                     (me.subs == null) -> {
-                        println(id)
-                        println(listOf(me.t.str, G.tpls[me]))
                         fun f(tp: Type, s: List<String>): List<String> {
                             val ss = id+s.drop(1).map { "_"+it }.joinToString("")
                             val x1 = """
@@ -250,7 +248,6 @@ fun coder_types (x: Stmt.Proto?, s: Stmt, tpls: Map<String, Tpl_Con>?, pre: Bool
 
                         val xtplss: List<Tpl_Map?> = me.template_map_all() ?: listOf(null)
                         //println(xtplss)
-                        println(listOf(me.t.str, G.tpls[me]))
                         val tpl = me.tpls.map { (id, _) -> id.str }.zip(emptyList<Tpl_Con>()).toMap()
                         f(me, "", listOf(N)) + """
                             typedef struct ${sup} {

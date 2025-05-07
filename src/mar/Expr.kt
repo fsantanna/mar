@@ -25,8 +25,6 @@ fun Expr.static_int_eval (tpls: Tpl_Map?): Int {
     assert(this.static_int_is())
     return when (this) {
         is Expr.Tpl -> {
-            println("static_int_eval: ${this.tk.str}")
-            println(listOf(tpls))
             tpls!![this.tk.str]!!.second!!.static_int_eval(tpls)
         }
         is Expr.Num -> this.tk.str.toInt()
