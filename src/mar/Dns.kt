@@ -41,7 +41,7 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
     return when (this) {
         is Expr.Uno    -> this.e.dn_collect_pos(fe,ft)
         is Expr.Bin    -> this.e1.dn_collect_pos(fe,ft) + this.e2.dn_collect_pos(fe,ft)
-        is Expr.Tuple  -> (this.xtp?.dn_collect_pos(fe,ft) ?: emptyList()) + this.vs.map { (_,tp) -> tp.dn_collect_pos(fe,ft) }.flatten()
+        is Expr.Table  -> (this.xtp?.dn_collect_pos(fe,ft) ?: emptyList()) + this.vs.map { (_,tp) -> tp.dn_collect_pos(fe,ft) }.flatten()
         is Expr.Field  -> this.col.dn_collect_pos(fe,ft)
         is Expr.Index  -> this.col.dn_collect_pos(fe,ft) + this.idx.dn_collect_pos(fe,ft)
         is Expr.Disc   -> this.col.dn_collect_pos(fe,ft)
@@ -144,7 +144,7 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
     return v + when (this) {
         is Expr.Uno   -> this.e.dn_collect_pre(fe,ft)
         is Expr.Bin   -> this.e1.dn_collect_pre(fe,ft) + this.e2.dn_collect_pre(fe,ft)
-        is Expr.Tuple -> (this.xtp?.dn_collect_pre(fe,ft) ?: emptyList()) + this.vs.map { (_,tp) -> tp.dn_collect_pre(fe,ft) }.flatten()
+        is Expr.Table -> (this.xtp?.dn_collect_pre(fe,ft) ?: emptyList()) + this.vs.map { (_,tp) -> tp.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Field -> this.col.dn_collect_pre(fe,ft)
         is Expr.Index  -> this.col.dn_collect_pre(fe,ft) + this.idx.dn_collect_pre(fe,ft)
         is Expr.Disc  -> this.col.dn_collect_pre(fe,ft)

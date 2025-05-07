@@ -110,7 +110,7 @@ fun cache_ups () {
                 me.args.forEach { it.xup = me }
             }
 
-            is Expr.Tuple -> {
+            is Expr.Table -> {
                 me.xtp?.xup = me
                 me.vs.forEach { (_,e) -> e.xup = me }
             }

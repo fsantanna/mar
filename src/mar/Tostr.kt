@@ -118,7 +118,7 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Null   -> "null"
         is Expr.Unit   -> "()"
 
-        is Expr.Tuple  -> {
+        is Expr.Table  -> {
             "([" + this.vs.map { (id,v) -> id.cond { "."+it.str+"=" } + v.to_str(pre) }.joinToString(",") + "]" + this.xtp.cond { ":${it.to_str()}" } + ")"
         }
         is Expr.Field  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"

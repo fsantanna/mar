@@ -613,7 +613,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             call
         }
 
-        is Expr.Tuple  -> "{ ${this.vs.map { (_,tp) -> "{"+tp.coder(tpls,pre)+"}" }.joinToString(",") } }"
+        is Expr.Table  -> "{ ${this.vs.map { (_,tp) -> "{"+tp.coder(tpls,pre)+"}" }.joinToString(",") } }"
         is Expr.Field  -> {
             val idx = this.idx.toIntOrNull().let {
                 if (it == null) this.idx else "_"+it
@@ -685,7 +685,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 }
                 ret + " ceu_0; })"
             } else {
-                val tup = this.e as Expr.Tuple
+                val tup = this.e as Expr.Table
                 val vs = tup.vs.mapIndexed { i,(id,v) ->
                     "."+(id?.str ?: ("_"+(i+1))) + " = " + v.coder(tpls,pre)
                 }.joinToString(",")

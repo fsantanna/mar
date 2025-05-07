@@ -121,7 +121,7 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
     class Null   (tk_: Tk): Expr(G.N++, null, tk_, null)
     class Unit   (tk_: Tk): Expr(G.N++, null, tk_, null)
 
-    class Tuple  (tk: Tk, var xtp: Type.Tuple?, val vs: List<Pair<Tk.Var?,Expr>>): Expr(G.N++, null, tk, null)
+    class Table  (tk: Tk, var xtp: Type.Tuple?, val vs: List<Pair<Tk.Var?,Expr>>): Expr(G.N++, null, tk, null)
     class Field  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)
     class Index  (tk: Tk, val col: Expr, val idx: Expr): Expr(G.N++, null, tk, null)
     class Pred   (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)

@@ -80,7 +80,7 @@ fun Expr.infer (tpe: Type?): Type? {
             this.xtp?.infer(null)
         }
 
-        is Expr.Tuple -> {
+        is Expr.Table -> {
             val up = this.xtp.sub_vs_null(tpe)
             //val up = this.xtp ?: tpx
             //println(listOf("infer-tuple", this.to_str(), this.xtp?.to_str(), xtp?.to_str()))
@@ -442,7 +442,7 @@ fun infer_check () {
     G.outer!!.dn_visit_pos({ me ->
         me.dn_collect_pre({if (me==it) emptyList<Unit>() else null}, {
             val xtp = when (it) {
-                is Expr.Tuple  -> it.xtp
+                is Expr.Table  -> it.xtp
                 is Expr.If     -> it.xtp
                 is Expr.MatchT -> it.xtp
                 is Expr.MatchE -> it.xtp

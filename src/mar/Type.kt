@@ -763,7 +763,7 @@ fun Expr.type (): Type? {
             }
         }
 
-        is Expr.Tuple -> this.xtp ?: Type.Any(this.tk)
+        is Expr.Table -> this.xtp ?: Type.Any(this.tk)
         is Expr.Field -> {
             val tup = this.col.type().let { tp ->
                 when (tp) {

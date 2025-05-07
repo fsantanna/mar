@@ -369,7 +369,7 @@ fun parser_expr_4_prim (): Expr {
                 check_fix_err("[")
                 parser_type(null, false, false) as Type.Tuple
             }
-            Expr.Tuple(tk0, tp, l)
+            Expr.Table(tk0, tp, l)
         }
 
         check_enu("Type") -> {
@@ -593,7 +593,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
                     e),
                 Stmt.Escape(tk0,
                     Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Return", tk0.pos))),
-                        Expr.Tuple(tk0,null, emptyList())))
+                        Expr.Table(tk0,null, emptyList())))
             )
         }
 
@@ -685,7 +685,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
             val tk0 = G.tk0!!
             accept_fix_err("(")
             val e = if (check_fix(")")) {
-                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Tuple(tk0, null, emptyList()))
+                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Table(tk0, null, emptyList()))
             } else {
                 parser_expr()
             }
@@ -732,7 +732,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
                                 Stmt.Block(tk0, null, listOf(
                                     Stmt.Escape(tk0,
                                         Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
-                                        Expr.Tuple(tk0,null, emptyList())))
+                                        Expr.Table(tk0,null, emptyList())))
                                     )
                                 ),
                                 Stmt.Block(tk0, null, emptyList()))
@@ -746,7 +746,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
             listOf (
                 Stmt.Escape(tk0,
                     Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
-                        Expr.Tuple(tk0,null, emptyList())))
+                        Expr.Table(tk0,null, emptyList())))
             )
         }
         (accept_fix("while") || accept_fix("until")) -> {
@@ -763,7 +763,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
                     Stmt.Block(tk0, null, listOf(
                         Stmt.Escape(tk0,
                             Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
-                                Expr.Tuple(tk0,null, emptyList()))))
+                                Expr.Table(tk0,null, emptyList()))))
                     ),
                     Stmt.Block(tk0, null, emptyList()))
             )
@@ -885,7 +885,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
             val tk0 = G.tk0!!
             accept_fix_err("(")
             val e = if (check_fix(")")) {
-                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Tuple(tk0, null, emptyList()))
+                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Table(tk0, null, emptyList()))
             } else {
                 parser_expr()
             }
