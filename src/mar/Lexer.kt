@@ -175,51 +175,7 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                     break
                 }
             }
-            (x in listOf('}','(',')','[',']',',','\$','.',':')) -> yield(Tk.Fix(x.toString(), pos))
-            (x in listOf('{')) -> {
-                val (n1, x1) = read2()
-                if (x1 == '{') {
-                    yield(Tk.Fix("{{", pos))
-                } else {
-                    unread2(n1)
-                    yield(Tk.Fix(x.toString(), pos))
-                }
-            }
-            (x == '^') -> {
-                val id = read2While { a -> a.isLetter() }
-                when (id) {
-                     "include" -> {
-                         val (_, x2) = read2()
-                         if (x2 != '(') {
-                             err(pos, "include error : expected \"(\"")
-                         }
-                         val f = read2Until(')')
-                         if (f == null) {
-                             err(pos, "include error : exoected \")\"")
-                         }
-                         val h = FileX(f, stack.first().file.let { if (it==null) null else File(it).parentFile?.toString() })
-                         if (h == null) {
-                             err(pos, "include error : file not found : $f")
-                         }
-                         if (!G.incs.contains(h.path)) {
-                             G.incs.add(h.path)
-                             stack.addFirst(Lex(f, 1, 1, 0, 0, PushbackReader(StringReader(h.readText()), 2)))
-                         }
-                    }
-                    "compile" -> {
-                        val (_, x2) = read2()
-                        if (x2 != '(') {
-                            err(pos, "compile error : expected \"(\"")
-                        }
-                        val f = read2Until(')')
-                        if (f == null) {
-                            err(pos, "compile error : exoected \")\"")
-                        }
-                        G.ccs.addAll(f.split(" "))
-                    }
-                    else -> err(pos, "preprocessor error : unexpected \"$id\"")
-                }
-            }
+            (x in listOf('{','}','(',')','[',']',',','.',':')) -> yield(Tk.Fix(x.toString(), pos))
             (x in OPERATORS.first) -> {
                 var op = x.toString()
                 while (true) {
@@ -255,11 +211,7 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                 }
             }
             x.isDigit() -> {
-                val num = x + (if (prv in listOf('.','!','?')) {
-                    read2While { it.isDigit() }
-                } else {
-                    read2While { it == '.' || it.isLetterOrDigit() }
-                })
+                val num = x + read2While { it == '.' || it.isLetterOrDigit() }
                 yield(Tk.Num(num, pos))
             }
             (x == '`') -> {
