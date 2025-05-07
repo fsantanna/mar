@@ -614,14 +614,6 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
 
         is Expr.Tuple  -> "{ ${this.vs.map { (_,tp) -> "{"+tp.coder(tpls,pre)+"}" }.joinToString(",") } }"
-        is Expr.Vector -> (this.typex() as Type.Vector).let {
-            val max = it.max!!.coder(tpls,pre)
-            "((${it.coder(tpls)}) { .max=$max, .cur=$max, .buf={${this.vs.map { it.coder(tpls,pre) }.joinToString(",") }} })"
-        }
-        is Expr.Union  -> {
-            val (i,_) = this.xtp!!.disc(this.idx)!!
-            "((${this.typex().coder(tpls)}) { .tag=${i+1}, ._${i+1}=${this.v.coder(tpls,pre) } })"
-        }
         is Expr.Field  -> {
             val idx = this.idx.toIntOrNull().let {
                 if (it == null) this.idx else "_"+it

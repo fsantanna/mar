@@ -114,14 +114,6 @@ fun cache_ups () {
                 me.xtp?.xup = me
                 me.vs.forEach { (_,e) -> e.xup = me }
             }
-            is Expr.Vector -> {
-                me.xtp?.xup = me
-                me.vs.forEach { it.xup = me }
-            }
-            is Expr.Union -> {
-                me.xtp?.xup = me
-                me.v.xup = me
-            }
             is Expr.Field -> me.col.xup = me
             is Expr.Index -> {
                 me.col.xup = me

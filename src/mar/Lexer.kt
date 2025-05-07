@@ -220,17 +220,6 @@ fun Lexer.lexer (): Iterator<Tk> = sequence {
                     else -> err(pos, "preprocessor error : unexpected \"$id\"")
                 }
             }
-            (x == '#') -> {
-                val (n1,x1) = read2()
-                when {
-                    (x1 == '[') -> yield(Tk.Fix("$x[", pos))
-                    (x1 == '#') -> yield(Tk.Op("##", pos))
-                    else -> {
-                        unread2(n1)
-                        yield(Tk.Op(x.toString(), pos))
-                    }
-                }
-            }
             (x in OPERATORS.first) -> {
                 var op = x.toString()
                 while (true) {

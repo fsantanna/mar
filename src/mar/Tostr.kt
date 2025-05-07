@@ -121,12 +121,8 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Tuple  -> {
             "([" + this.vs.map { (id,v) -> id.cond { "."+it.str+"=" } + v.to_str(pre) }.joinToString(",") + "]" + this.xtp.cond { ":${it.to_str()}" } + ")"
         }
-        is Expr.Vector -> {
-            "(#[" + this.vs.map { it.to_str(pre) }.joinToString(",") + "]" + this.xtp.cond { ":${it.to_str()}" } + ")"
-        }
         is Expr.Field  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"
         is Expr.Index  -> "(" + this.col.to_str(pre) + "[" + this.idx.to_str(pre) + "])"
-        is Expr.Union  -> "<." + this.idx + "=" + this.v.to_str(pre) + ">" + this.xtp.cond { ":${it.to_str()}" }
         is Expr.Disc   -> "(${this.col.to_str(pre)}!${this.idx})"
         is Expr.Pred   -> "(${this.col.to_str(pre)}?${this.idx})"
         is Expr.Cons   -> "(${this.tp.to_str(pre)}(${this.e.to_str(pre)}))"

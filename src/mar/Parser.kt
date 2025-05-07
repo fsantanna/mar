@@ -371,31 +371,6 @@ fun parser_expr_4_prim (): Expr {
             }
             Expr.Tuple(tk0, tp, l)
         }
-        accept_fix("#[")    -> {
-            val tk0 = G.tk0 as Tk.Fix
-            val l = parser_list(",", "]") {
-                parser_expr()
-            }
-            val tp = if (!accept_fix(":")) null else {
-                check_fix_err("#[")
-                parser_type(null, false, false) as Type.Vector
-            }
-            Expr.Vector(tk0, tp, l)
-        }
-        accept_op("<")      -> {
-            val tk0 = G.tk0 as Tk.Op
-            accept_fix_err(".")
-            (accept_enu("Type") || accept_enu_err("Num"))
-            val idx = G.tk0!!.str
-            accept_op_err("=")
-            val v = parser_expr_2_pre() // avoid bin `>` (x>10)
-            accept_op_err(">")
-            val tp = if (!accept_fix(":")) null else {
-                check_op_err("<")
-                parser_type(null, false, false) as Type.Union
-            }
-            Expr.Union(tk0, tp, idx, v)
-        }
 
         check_enu("Type") -> {
             val tp = parser_type(null, false, false)

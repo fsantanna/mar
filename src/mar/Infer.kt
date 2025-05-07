@@ -113,50 +113,10 @@ fun Expr.infer (tpe: Type?): Type? {
             }
             this.xtp?.infer(null)
         }
-        is Expr.Vector -> {
-            val up = this.xtp.sub_vs_null(tpe)
-            val xup = if (up !is Type.Vector) null else up.tp
-            //println(listOf("infer-vector",this.to_str(),this.xtp?.to_str(), tpx?.to_str()))
-            //println(listOf(xup?.to_str()))
-            val dn = if (this.vs.size == 0) null else {
-                val vs = this.vs.map { it.infer(xup) }
-                val v = vs.fold(vs.first()) { a,b ->
-                    if (a==null||b==null) null else a.sup_vs(b)
-                }
-                //println(v?.to_str())
-                if (v == null) null else {
-                    Type.Vector(this.tk, Expr.Num(Tk.Num(vs.size.toString(),this.tk.pos)), v)
-                }
-            }
-            if (this.xtp == null) {
-                //println(listOf("infer-vector", this.to_str(), up?.to_str(), dn?.to_str()))
-                this.xtp.sub_vs_null(dn).sub_vs_null(up).let {
-                    //println(listOf(it, dn, up))
-                    when {
-                        //(dn==null && up==null) -> this.xtp = Type.Vector(this.tk, null, Type.Top(this.tk))
-                        (it == null) -> {}
-                        (it is Type.Vector) -> this.xtp = it
-                        else -> err(this.tk, "inference error : expected vector type")
-                    }
-                }
-            }
-            this.xtp?.infer(null)
-        }
         is Expr.Field -> this.col.infer(null)
         is Expr.Index -> {
             this.col.infer(Type.Prim(Tk.Type("Int",this.tk.pos)))
             this.col.infer(null)
-        }
-        is Expr.Union -> {
-            val up = this.xtp ?: tpe
-            val sub = if (up !is Type.Union) null else {
-                up.disc(this.idx).nulls().second
-            }
-            val dn = this.v.infer(sub)
-            if (dn!=null && this.xtp==null) {
-                this.xtp = (if (up is Type.Union) up else null)
-            }
-            this.xtp?.infer(null)
         }
         is Expr.Pred -> this.col.infer(null)
         is Expr.Disc -> this.col.infer(null)
@@ -483,8 +443,6 @@ fun infer_check () {
         me.dn_collect_pre({if (me==it) emptyList<Unit>() else null}, {
             val xtp = when (it) {
                 is Expr.Tuple  -> it.xtp
-                is Expr.Vector -> it.xtp
-                is Expr.Union  -> it.xtp
                 is Expr.If     -> it.xtp
                 is Expr.MatchT -> it.xtp
                 is Expr.MatchE -> it.xtp

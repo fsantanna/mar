@@ -331,12 +331,6 @@ fun check_types () {
                     (!me.idx.typex().is_num()) -> err(me.idx.tk, "index error : expected number")
                 }
             }
-            is Expr.Union -> {
-                val (_,sub) = me.xtp!!.disc(me.idx).nulls()
-                if (sub==null || !sub.is_sup_of(me.v.typex())) {
-                    err(me.tk, "union error : types mismatch")
-                }
-            }
             is Expr.Disc -> {
                 if (me.col.typex().discx(me.idx) == null) {
                     err(me.tk, "discriminator error : types mismatch")
