@@ -109,7 +109,6 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
 }
 
 sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
-    class Tpl    (val tk_: Tk.Var): Expr(G.N++, null, tk_, null)
     class Nat    (val tk_: Tk.Nat, var xtp: Type?): Expr(G.N++, null, tk_, null)
     class Acc    (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, null, tk_, null)
     class It     (val tk_: Tk.Fix, var xtp: Type?): Expr(G.N++, null, tk_, null)

@@ -1,10 +1,7 @@
 package mar
 
 fun Type.has_tpls_dn (): Boolean {
-    return this.dn_collect_pos(
-        { if (it is Expr.Tpl) listOf(Unit) else  emptyList() },
-        { if (it is Type.Tpl) listOf(Unit) else  emptyList() }
-    ).isNotEmpty()
+    return false
 }
 
 fun Type.assert_no_tpls_up (): Tpl_Map? {
@@ -384,7 +381,6 @@ fun Type.template_apply (map: Tpl_Map): Type? {
 
 fun Expr.template_apply (map: Tpl_Map): Expr? {
     return when (this) {
-        is Expr.Tpl -> map[this.tk.str]?.second?.template_apply(map)
         is Expr.Num -> this
         is Expr.Uno -> this.e.template_apply(map).let {
             if (it == null) null else {
@@ -800,11 +796,6 @@ fun Expr.type (): Type? {
             Type.Prim(Tk.Type(x, this.tk.pos))
         }
         is Expr.Nat -> this.xtp ?: Type.Any(this.tk)
-        is Expr.Tpl -> {
-            val proto = this.up_first { it is Stmt.Proto } as Stmt.Proto
-            val tpl = proto.tpls.find { it.first.str == this.tk.str }!!
-            tpl.second
-        }
 
         is Expr.If -> {
             val tt = this.t.type()

@@ -72,7 +72,6 @@ fun Expr.infer (tpe: Type?): Type? {
             this.xtp
         }
 
-        is Expr.Tpl -> this.typex()
         is Expr.Nat -> {
             if (this.xtp == null) {
                 this.xtp = tpe ?: Type.Any(this.tk)

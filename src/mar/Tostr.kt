@@ -100,7 +100,6 @@ fun Tk.Op.to_str (pre: Boolean): String {
 
 fun Expr.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Expr.Tpl    -> "{{${this.tk.str}}}"
         is Expr.Nat    -> {
             val nat = this.tk.str.let { if (it.contains("\n")) "```"+it+"```" else "`"+it+"`" }
             if (this.xtp==null || this.xtp is Type.Any) {

@@ -693,7 +693,6 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
         }
 
-        is Expr.Tpl -> tpls!![this.tk.str]!!.second!!.coder(tpls,pre)
         is Expr.Nat -> when {
             (this.tk.str == "mar_ret") -> this.tk.str
             (this.xup is Stmt.Pass)    -> this.tk.str

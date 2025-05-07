@@ -13,7 +13,6 @@ fun Expr.is_lval (): Boolean {
 
 fun Expr.static_int_is (): Boolean {
     return when (this) {
-        is Expr.Tpl -> true
         is Expr.Num -> (this.tk.str.toIntOrNull() != null)
         is Expr.Uno -> this.e.static_int_is()
         is Expr.Bin -> this.e1.static_int_is() && this.e2.static_int_is()
@@ -24,9 +23,6 @@ fun Expr.static_int_is (): Boolean {
 fun Expr.static_int_eval (tpls: Tpl_Map?): Int {
     assert(this.static_int_is())
     return when (this) {
-        is Expr.Tpl -> {
-            tpls!![this.tk.str]!!.second!!.static_int_eval(tpls)
-        }
         is Expr.Num -> this.tk.str.toInt()
         is Expr.Uno -> when (this.tk.str) {
             "-"  -> - this.e.static_int_eval(tpls)
