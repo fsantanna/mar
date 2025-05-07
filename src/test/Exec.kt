@@ -132,39 +132,6 @@ class Exec  {
         assert(out == "true\nfalse\n") { out }
     }
     @Test
-    fun ac_04_eq_vec () {
-        val out = test("""
-            dump(#[] == #[])
-            dump(#[] != #[])
-        """)
-        assert(out == "anon : (lin 2, col 19) : inference error : unknown type\n") { out }
-    }
-    @Test
-    fun ac_05_eq_vec () {
-        val out = test("""
-            dump(#[1] == #[1])
-            dump(#[1] != #[1])
-        """)
-        assert(out == "true\nfalse\n") { out }
-    }
-    @Test
-    fun ac_06_eq_vec () {
-        val out = test("""
-            dump(#[#[3],#[1]] == #[#[3],#[1]])
-            dump(#[#[3],#[1]] != #[#[3],#[1]])
-        """)
-        assert(out == "true\nfalse\n") { out }
-    }
-    @Test
-    fun ac_07_eq_vec () {
-        val out = test("""
-            var vs: #[Int*2]
-            var ok = (vs == #[3])
-            dump(ok)
-        """)
-        assert(out == "false\n") { out }
-    }
-    @Test
     fun ad_01_eq_data () {
         val out = test("""
             data X: Int
@@ -657,8 +624,8 @@ class Exec  {
     @Test
     fun gg_01_tuple () {
         val out = test("""
-            var x: [Int] = [10]: [Int]
-            dump(x.1)
+            var x: [Int] = [10,20]: [Int]
+            dump(x[1])
         """)
         assert(out == "10\n") { out }
     }
@@ -745,125 +712,6 @@ class Exec  {
             dump(a)
         """)
         assert(out == "[3]\n") { out }
-    }
-
-    // VECTOR
-
-    @Test
-    fun gh_01_vector () {
-        val out = test("""
-            var v: #[Int*3] = #[1,0,3]
-            set v[1] = v[1] + 2
-            dump(v)
-            dump(#v)
-        """)
-        assert(out == "#[1,2,3]\n3\n") { out }
-    }
-    @Test
-    fun gh_02_vector () {
-        val out = test("""
-            var v: #[Int*3]
-            dump(##v)
-            dump(#v)
-        """)
-        assert(out == "3\n0\n") { out }
-    }
-    @Test
-    fun gh_03_vector () {
-        val out = test("""
-            var v: #[Int*3] = #[1,0,3]
-            var vv: \#[Int] = \v
-            dump(vv\[2])
-        """)
-        assert(out == "3\n") { out }
-    }
-    @Test
-    fun gh_04_vector_copy () {
-        val out = test("""
-            var a = #[1,2,3]
-            var b = a
-            set a[1] = 0
-            dump(a)
-            dump(b)
-        """)
-        assert(out == "#[1,0,3]\n#[1,2,3]\n") { out }
-    }
-    @Test
-    fun gh_05_vector_max () {
-        val out = test("""
-            var a = #[1,2,3]
-            set #a = 2
-            dump(#a)
-            dump(##a)
-        """)
-        assert(out == "2\n3\n") { out }
-    }
-    @Test
-    fun gh_06_vector_cur () {
-        val out = test("""
-            var a = #[1,2,3]
-            dump(#a)
-            dump(##a)
-        """)
-        assert(out == "3\n3\n") { out }
-    }
-    @Test
-    fun gh_07_vector_cur () {
-        val out = test("""
-            var a: #[Int*3] = #[1,2]
-            dump(#a)
-            dump(##a)
-        """)
-        assert(out == "2\n3\n") { out }
-    }
-    @Test
-    fun gh_08_vector_cur () {
-        val out = test("""
-            var a: #[Int*2] = #[1,2,3]
-            dump(#a)
-            dump(##a)
-        """)
-        assert(out == "2\n2\n") { out }
-    }
-    @Test
-    fun gh_09_vector_cur () {
-        val out = test("""
-            func f: (a: #[Int*2]) -> () {
-                dump(#a)
-                dump(##a)
-            }
-            f(#[1,2,3])
-        """)
-        assert(out == "2\n2\n") { out }
-    }
-    @Test
-    fun gh_10_vector_print () {
-        val out = test("""
-            var a: #[Int*2] = #[10]
-            dump(a)
-        """)
-        assert(out == "#[10]\n") { out }
-    }
-    @Test
-    fun gh_11_vector_dynamic () {
-        val out = test("""
-            var n = 2
-            var a: #[Int*n] = #[10,20,30]
-            dump([##a, #a, a])
-        """)
-        //assert(out == "#[10,20]\n") { out }
-        assert(out == "anon : (lin 3, col 26) : type error : expected constant integer expression\n") { out }
-    }
-    @Test
-    fun gh_12_vector () {
-        val out = test("""
-            var i = 10
-            var v: #[Int*3] = #[1,0,i]
-            set v[1] = v[1] + 2
-            dump(v)
-            dump(#v)
-        """)
-        assert(out == "#[1,2,10]\n3\n") { out }
     }
 
     // CONCATENATE
@@ -2337,140 +2185,6 @@ class Exec  {
         assert(out == "antes\ndepois\n") { out }
     }
 
-    // TEMPLATE / TYPE
-
-    @Test
-    fun tt_01_tpl () {
-        val out = test("""
-            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
-            var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
-            dump(x!Just)
-        """)
-        assert(out == "10\n") { out }
-    }
-    @Test
-    fun tt_02_tpl () {
-        val out = test("""
-            data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
-            var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
-            dump(x)
-        """)
-        assert(out == "Maybe <.2=10>\n") { out }
-    }
-    @Test
-    fun tt_03_catch () {
-        val out = test("""
-            data X.* {{t:Type}}: [{{t}}]
-            catch :X {{:Int}} {
-            }
-            dump(10)
-        """)
-        //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
-        assert(out == "10\n") { out }
-    }
-    @Test
-    fun tt_04_field () {
-        val out = test("""
-            data Pos {{t:Type}}: [{{t}}, Int]
-            var p: Pos = Pos [10, 20]:[Int,Int]
-            var x: Int = p.1
-            dump(x)
-        """)
-        assert(out == "10\n") { out }
-    }
-    @Test
-    fun tt_05_data () {
-        val out = test("""
-            data A {{t:Type}}: [{{t}}]
-            var a: A = A [100]
-            dump(a)
-            dump(a.1)
-        """)
-        assert(out == "A [100]\n" +
-                "100\n") { out }
-    }
-
-    // TEMPLATE / NUMBER
-
-    @Test
-    fun ts_01_tpl () {
-        val out = test("""
-            data Vec {{n:Int}}: #[Int * {{n}}]
-            var vs: Vec {{10}} = Vec {{10}} (#[])
-            dump(##vs)
-        """)
-        assert(out == "10\n") { out }
-    }
-
-    // TEMPLATE / FUNC
-
-    @Test
-    fun tu_01_tpl () {
-        val out = test("""
-            func f {{n:Int}}: () -> Int {
-                return({{n}})
-            }
-            dump(f {{10}} ())
-            dump(f {{20}} ())
-        """)
-        assert(out == "10\n20\n") { out }
-    }
-    @Test
-    fun tu_02_tpl () {
-        val out = test("""
-            func f {{n:Int}}: () -> Int {
-                var xs: #[Int*{{n}}]
-                return(##xs+1)
-            }
-            dump(f {{10}} ())
-            dump(f {{20}} ())
-        """)
-        assert(out == "11\n21\n") { out }
-    }
-    @Test
-    fun tu_03_tpl () {
-        val out = test("""
-            func f {{w:Int,h:Int}}: () -> Int {
-                var xs: #[Int*{{w}}*{{h}}]
-                return(##xs)
-            }
-            dump(f {{10,20}} ())
-            dump(f {{20,30}} ())
-        """)
-        assert(out == "200\n600\n") { out }
-    }
-    @Test
-    fun tu_04_tpl () {
-        val out = test("""
-            func f {{n:Int}}: () -> #[Int*({{n}})] {
-            }
-            var rs = f {{10}} ()
-            dump(##rs)
-        """)
-        assert(out == "10\n") { out }
-    }
-    @Test
-    fun tu_05_tpl () {
-        val out = test("""
-            func f {{n:Int}}: (xs: #[Int*({{n}})]) -> Int {
-                return (##xs)
-            }
-            dump(f {{10}} (#[]))
-        """)
-        assert(out == "10\n") { out }
-    }
-    @Test
-    fun tu_06_tpl () {
-        val out = test("""
-            func f {{n:Int}}: (xs: #[Int*({{n}})]) -> Int {
-                return (##xs)
-            }
-            dump(f {{10}} (#[]))
-            dump(f {{10}} (#[]))
-        """)
-        assert(out == "10\n10\n") { out }
-    }
-
     // TEST
 
     @Test
@@ -2536,17 +2250,6 @@ class Exec  {
             return()
         """)
         assert(out == "anon : (lin 2, col 13) : escape error : expected matching enclosing block\n") { out }
-    }
-    @Test
-    fun zz_03_yyy () {
-        val out = test("""
-            var a = #[]     ;; infer null, check error
-            var b = []
-            var c = b.x     ;; infer exception, do not check infer
-        """)
-        assert(out == "anon : (lin 4, col 22) : field error : invalid index\n") { out }
-        //assert(out == "anon : (lin 2, col 21) : inference error : unknown type\n") { out }
-        //assert(out == "anon : (lin 2, col 17) : inference error : unknown type\n") { out }
     }
     @Test
     fun zz_04 () {

@@ -591,7 +591,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     it.inps
                 }
             }
-            val call = "$f ( ${this.args.mapIndexed { i,arg ->
+            "$f ( ${this.args.mapIndexed { i,arg ->
                 val src = arg.coder(xxx,pre)
                 val tdst = when {
                     (inps == null) -> null
@@ -610,7 +610,6 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     else -> "CAST(${tdst.coder(xxx)}, $src)"
                 }
             }.joinToString(",")} )"
-            call
         }
 
         is Expr.Table  -> "{ ${this.vs.map { (_,tp) -> "{"+tp.coder(tpls,pre)+"}" }.joinToString(",") } }"

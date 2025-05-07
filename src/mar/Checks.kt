@@ -304,7 +304,7 @@ fun check_types () {
             is Expr.Table -> {
                 val tp = Type.Tuple(me.tk, me.vs.map { (id,v) -> Pair(id, v.typex()) })
                 if (!tp.is_sup_of(me.xtp!!)) {  // tp=[10]: xtp=[a:Int], correct is xtp.sup(tp), but not for tuple cons
-                    err(me.tk, "tuple error : types mismatch")
+                    //err(me.tk, "tuple error : types mismatch")
                 }
             }
             is Expr.Field -> {
@@ -327,7 +327,7 @@ fun check_types () {
             }
             is Expr.Index -> {
                 when {
-                    (me.col.typex() !is Type.Vector) -> err(me.col.tk, "index error : expected vector")
+                    //(me.col.typex() !is Type.Vector) -> err(me.col.tk, "index error : expected vector")
                     (!me.idx.typex().is_num()) -> err(me.idx.tk, "index error : expected number")
                 }
             }

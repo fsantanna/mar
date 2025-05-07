@@ -468,9 +468,9 @@ fun parser_expr_3_suf (xe: Expr? = null): Expr {
             }
             accept_op("\\") -> Expr.Uno(Tk.Op("deref", G.tk0!!.pos), e)
             accept_fix(".") -> {
-                val dot = G.tk0 as Tk.Fix
-                (accept_enu("Var") || accept_enu_err("Num"))
-                Expr.Field(dot, e, G.tk0!!.str)
+                val tk0 = G.tk0 as Tk.Fix
+                accept_enu_err("Var")
+                Expr.Field(tk0, e, G.tk0!!.str)
             }
             accept_op("!") -> {
                 val dot = G.tk0 as Tk.Op
