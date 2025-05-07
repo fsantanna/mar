@@ -42,20 +42,20 @@ class Exec  {
         val out = test_int("""
             10 + 1.1
         """)
-        assert(out == "11\n") { out }
+        assert(out == "11.1\n") { out }
     }
     @Test
     fun aa_05_float() {
         val out = test("""
-            print(10 + 1.1)
+            dump(10 + 1.1)
         """)
-        assert(out == "11.100000\n") { out }
+        assert(out == "11.1\n") { out }
     }
     @Test
     fun aa_06_string() {
         val out = test("""
             var s = "10 + 1.1"
-            print(s)
+            dump(s)
         """)
         assert(out == "10 + 1.1\n") { out }
     }
@@ -66,25 +66,25 @@ class Exec  {
     fun ab_01_float() {
         val out = test("""
             var x: Float = 1/2
-            print(x)
+            dump(x)
         """)
-        assert(out == "0.500000\n") { out }
+        assert(out == "0.5\n") { out }
     }
     @Test
     fun ab_02_float() {
         val out = test("""
             var x: Float = -1
-            print(x)
+            dump(x)
         """)
-        assert(out == "-1.000000\n") { out }
+        assert(out == "-1\n") { out }
     }
     @Test
     fun ab_03_float() {
         val out = test("""
             var dy: Float = (10 - 9) / (3 - 1)
-            print(dy)
+            dump(dy)
         """)
-        assert(out == "0.500000\n") { out }
+        assert(out == "0.5\n") { out }
     }
     @Test
     fun ab_04_field_float() {
@@ -93,14 +93,14 @@ class Exec  {
             var x1: X = X [1]
             var x2: X = X [2]
             var dy: Float = x1.x / x2.x
-            print(dy)
+            dump(dy)
         """)
-        assert(out == "0.500000\n") { out }
+        assert(out == "0.5\n") { out }
     }
     @Test
     fun ab_05_uno_not() {
         val out = test("""
-            print(!false)
+            dump(!false)
         """)
         assert(out == "true\n") { out }
     }
@@ -110,48 +110,48 @@ class Exec  {
     @Test
     fun ac_01_eq_tup () {
         val out = test("""
-            print([] == [])
-            print([] != [])
+            dump([] == [])
+            dump([] != [])
         """)
         assert(out == "true\nfalse\n") { out }
     }
     @Test
     fun ac_02_eq_tup () {
         val out = test("""
-            print([1] == [1])
-            print([1] != [1])
+            dump([1] == [1])
+            dump([1] != [1])
         """)
         assert(out == "true\nfalse\n") { out }
     }
     @Test
     fun ac_03_eq_tup () {
         val out = test("""
-            print([1,[2],3] == [1,[2],3])
-            print([1,[2],3] != [1,[2],3])
+            dump([1,[2],3] == [1,[2],3])
+            dump([1,[2],3] != [1,[2],3])
         """)
         assert(out == "true\nfalse\n") { out }
     }
     @Test
     fun ac_04_eq_vec () {
         val out = test("""
-            print(#[] == #[])
-            print(#[] != #[])
+            dump(#[] == #[])
+            dump(#[] != #[])
         """)
         assert(out == "anon : (lin 2, col 19) : inference error : unknown type\n") { out }
     }
     @Test
     fun ac_05_eq_vec () {
         val out = test("""
-            print(#[1] == #[1])
-            print(#[1] != #[1])
+            dump(#[1] == #[1])
+            dump(#[1] != #[1])
         """)
         assert(out == "true\nfalse\n") { out }
     }
     @Test
     fun ac_06_eq_vec () {
         val out = test("""
-            print(#[#[3],#[1]] == #[#[3],#[1]])
-            print(#[#[3],#[1]] != #[#[3],#[1]])
+            dump(#[#[3],#[1]] == #[#[3],#[1]])
+            dump(#[#[3],#[1]] != #[#[3],#[1]])
         """)
         assert(out == "true\nfalse\n") { out }
     }
@@ -160,7 +160,7 @@ class Exec  {
         val out = test("""
             var vs: #[Int*2]
             var ok = (vs == #[3])
-            print(ok)
+            dump(ok)
         """)
         assert(out == "false\n") { out }
     }
@@ -168,8 +168,8 @@ class Exec  {
     fun ad_01_eq_data () {
         val out = test("""
             data X: Int
-            print(X(10) == X(10))
-            print(X(10) != X(10))
+            dump(X(10) == X(10))
+            dump(X(10) != X(10))
         """)
         assert(out == "true\nfalse\n") { out }
     }
@@ -177,8 +177,8 @@ class Exec  {
     fun ad_02_eq_data () {
         val out = test("""
             data X: [Int]
-            print(X[10] == X[10])
-            print(X[10] != X[10])
+            dump(X[10] == X[10])
+            dump(X[10] != X[10])
         """)
         assert(out == "true\nfalse\n") { out }
     }
@@ -204,7 +204,7 @@ class Exec  {
             _XY _xy = { 10,20 };
             ```
             var xy: XY = `_xy`
-            print(xy)
+            dump(xy)
         """)
         assert(out == "XY [10,20]\n") { out }
     }
@@ -212,7 +212,7 @@ class Exec  {
     fun bb_03_nat_infer() {
         val out = test("""
             var x = `10`:Int
-            print(x)
+            dump(x)
         """)
         assert(out == "10\n") { out }
     }
@@ -229,7 +229,7 @@ class Exec  {
             ```
             data X: [Int]
             var v: Int = `f`(X[10])
-            print(v)
+            dump(v)
         """)
         assert(out.contains("error: incompatible type for argument 1 of ‘f’")) { out }
         //assert(out == "10\n") { out }
@@ -260,7 +260,7 @@ class Exec  {
         val out = test("""
             var x: `int` = 10
             var y: Int = x
-            print(y)
+            dump(y)
         """)
         assert(out == "10\n") { out }
     }
@@ -268,7 +268,7 @@ class Exec  {
     fun bb_09_nat_equal() {
         val out = test("""
             expect(`1` == 1)
-            print(10)
+            dump(10)
         """)
         assert(out == "10\n") { out }
     }
@@ -322,21 +322,21 @@ class Exec  {
     @Test
     fun cc_04_match () {
         val out = test("""
-            match 10 { 10 {print(20)} ; else {print(99)} }
+            match 10 { 10 {dump(20)} ; else {dump(99)} }
         """)
         assert(out == "20\n") { out }
     }
     @Test
     fun cc_05_match () {
         val out = test("""
-            match 10 { 20 {print(99)} ; else {print(10)} }
+            match 10 { 20 {dump(99)} ; else {dump(10)} }
         """)
         assert(out == "10\n") { out }
     }
     @Test
     fun cc_06_match () {
         val out = test("""
-            match 10 { 10 {print(10)} ; else {throw()} }
+            match 10 { 10 {dump(10)} ; else {throw()} }
         """)
         assert(out == "10\n") { out }
     }
@@ -349,7 +349,7 @@ class Exec  {
             }
             var x = X.A [10]
             match x {
-                :X.A  { print(x) }
+                :X.A  { dump(x) }
                 else { throw()  }
             }
         """)
@@ -359,7 +359,7 @@ class Exec  {
     fun cc_08_loop_num () {
         val out = test("""
             loop n in 2 {
-                print(n)
+                dump(n)
             }
         """)
         assert(out == "0\n1\n") { out }
@@ -379,41 +379,41 @@ class Exec  {
     @Test
     fun cd_01_loop_break () {
         val out = test("""
-            print(1)
+            dump(1)
             loop {
-                print(2)
+                dump(2)
                 if true {
                     break
                 }
-                print(99)
+                dump(99)
             }
-            print(3)
+            dump(3)
         """)
         assert(out == "1\n2\n3\n") { out }
     }
     @Test
     fun cd_02_loop_until () {
         val out = test("""
-            print(1)
+            dump(1)
             loop {
-                print(2)
+                dump(2)
                 until(true)
-                print(99)
+                dump(99)
             }
-            print(3)
+            dump(3)
         """)
         assert(out == "1\n2\n3\n") { out }
     }
     @Test
     fun cd_03_loop_until () {
         val out = test("""
-            print(1)
+            dump(1)
             loop {
-                print(2)
+                dump(2)
                 while(false)
-                print(99)
+                dump(99)
             }
-            print(3)
+            dump(3)
         """)
         assert(out == "1\n2\n3\n") { out }
     }
@@ -442,7 +442,7 @@ class Exec  {
                     return(v + f(v-1))
                 }
             }
-            print(f(5))
+            dump(f(5))
         """)
         assert(out == "15\n") { out }
     }
@@ -460,7 +460,7 @@ class Exec  {
                 func g: (v: Int) -> Int {
                     return(f(v))
                 }
-                print(g(5))
+                dump(g(5))
             }
         """)
         assert(out == "15\n") { out }
@@ -477,7 +477,7 @@ class Exec  {
                 func g: () -> Int {
                     return(i + j)
                 }
-                print(g())
+                dump(g())
             }
             f()
         """)
@@ -498,7 +498,7 @@ class Exec  {
                     }
                 }
                 var gg: (\func () -> Int) = f()
-                print(gg\())
+                dump(gg\())
             }
         """)
         assert(out == "30\n") { out }
@@ -577,7 +577,7 @@ class Exec  {
                 var exe: exec coro (Int) -> Int -> Int -> Int = create(co)
                 var x1: <Int,Int> = start exe(5)
                 var y1: <Int,Int> = resume exe(x1!1 + 10)
-                print(y1!2)
+                dump(y1!2)
             }
         """)
         assert(out == "40\n") { out }
@@ -594,7 +594,7 @@ class Exec  {
                 var exe: exec coro (Int) -> Int -> Int -> Int = create(co)
                 var x1: <Int,Int> = start exe(5)
                 var y1: <Int,Int> = resume exe(x1!1 + 10)
-                print(y1!2)
+                dump(y1!2)
             }
         """)
         assert(out == "50\n") { out }
@@ -603,7 +603,7 @@ class Exec  {
     fun ff_06_exec_no_coro () {
         val out = test("""
             var exe: exec coro (Int) -> Int -> Int -> Int
-            print(10)
+            dump(10)
         """)
         assert(out == "anon : (lin 2, col 22) : inference error : unknown size\n") { out }
     }
@@ -612,7 +612,7 @@ class Exec  {
         val out = test("""
             coro co: () -> () -> () -> () {
                 defer {
-                    print("ok")
+                    dump("ok")
                 }
                 yield()
             }
@@ -628,14 +628,14 @@ class Exec  {
         val out = test("""
             coro co: () -> () -> () -> () {
                 defer {
-                    print("ok")
+                    dump("ok")
                 }
                 yield()
             }
             do {
                 var exe: exec coro [co] () -> () -> () -> ()
             }
-            print("ok")
+            dump("ok")
         """)
         assert(out == "ok\n") { out }
     }
@@ -647,7 +647,7 @@ class Exec  {
             coro co: () -> () -> () -> () {
                 f()
             }
-            print("ok")
+            dump("ok")
         """)
         assert(out == "ok\n") { out }
     }
@@ -658,7 +658,7 @@ class Exec  {
     fun gg_01_tuple () {
         val out = test("""
             var x: [Int] = [10]: [Int]
-            print(x.1)
+            dump(x.1)
         """)
         assert(out == "10\n") { out }
     }
@@ -667,7 +667,7 @@ class Exec  {
         val out = test("""
             var x: [Int] = [10]: [Int]
             var y: [Int] = [20]: [Int]
-            print([x,y])
+            dump([x,y])
         """)
         assert(out == "[[10],[20]]\n") { out }
     }
@@ -676,7 +676,7 @@ class Exec  {
         val out = test("""
             var x: [Int] = [10]: [Int]
             var y: Int = x.1
-            print(y)
+            dump(y)
         """)
         assert(out == "10\n") { out }
     }
@@ -684,7 +684,7 @@ class Exec  {
     fun gg_04_tuple () {
         val out = test("""
             var pos: [x:Int,y:Int] = [10,20]: [x:Int,y:Int]
-            print(pos.y)
+            dump(pos.y)
         """)
         assert(out == "20\n") { out }
     }
@@ -695,7 +695,7 @@ class Exec  {
             var pos: [x:Int,y:Int] = [10,20]: [x:Int,y:Int]
             var y: Int = pos.y
             var w: Int = dim.w
-            print([y, w])
+            dump([y, w])
         """)
         assert(out == "[20,10]\n") { out }
     }
@@ -703,7 +703,7 @@ class Exec  {
     fun gg_06_tuple () {
         val out = test("""
             var v: [x:Int] = [10*0.3]
-            print(v)
+            dump(v)
         """)
         assert(out == "[3]\n") { out }
     }
@@ -712,7 +712,7 @@ class Exec  {
         val out = test("""
             var v: [x:Int] = [10*0.3]
             set v.x = v.x + 1
-            print(v)
+            dump(v)
         """)
         assert(out == "[4]\n") { out }
     }
@@ -723,7 +723,7 @@ class Exec  {
             var v: [Int]
             set v = a
             ;;set a = v
-            print(v)
+            dump(v)
         """)
         assert(out == "[3]\n") { out }
     }
@@ -731,7 +731,7 @@ class Exec  {
     fun gg_09_tuple () {
         val out = test("""
             func f: (v: [Int]) -> () {
-                print(v)
+                dump(v)
             }
             var a: [x:Int] = [10*0.3]
             f(a)
@@ -742,7 +742,7 @@ class Exec  {
     fun TODO_gg_10_tuple_field () {
         val out = test("""
             var a: [x:Int] = [x=10]
-            print(a)
+            dump(a)
         """)
         assert(out == "[3]\n") { out }
     }
@@ -754,8 +754,8 @@ class Exec  {
         val out = test("""
             var v: #[Int*3] = #[1,0,3]
             set v[1] = v[1] + 2
-            print(v)
-            print(#v)
+            dump(v)
+            dump(#v)
         """)
         assert(out == "#[1,2,3]\n3\n") { out }
     }
@@ -763,8 +763,8 @@ class Exec  {
     fun gh_02_vector () {
         val out = test("""
             var v: #[Int*3]
-            print(##v)
-            print(#v)
+            dump(##v)
+            dump(#v)
         """)
         assert(out == "3\n0\n") { out }
     }
@@ -773,7 +773,7 @@ class Exec  {
         val out = test("""
             var v: #[Int*3] = #[1,0,3]
             var vv: \#[Int] = \v
-            print(vv\[2])
+            dump(vv\[2])
         """)
         assert(out == "3\n") { out }
     }
@@ -783,8 +783,8 @@ class Exec  {
             var a = #[1,2,3]
             var b = a
             set a[1] = 0
-            print(a)
-            print(b)
+            dump(a)
+            dump(b)
         """)
         assert(out == "#[1,0,3]\n#[1,2,3]\n") { out }
     }
@@ -793,8 +793,8 @@ class Exec  {
         val out = test("""
             var a = #[1,2,3]
             set #a = 2
-            print(#a)
-            print(##a)
+            dump(#a)
+            dump(##a)
         """)
         assert(out == "2\n3\n") { out }
     }
@@ -802,8 +802,8 @@ class Exec  {
     fun gh_06_vector_cur () {
         val out = test("""
             var a = #[1,2,3]
-            print(#a)
-            print(##a)
+            dump(#a)
+            dump(##a)
         """)
         assert(out == "3\n3\n") { out }
     }
@@ -811,8 +811,8 @@ class Exec  {
     fun gh_07_vector_cur () {
         val out = test("""
             var a: #[Int*3] = #[1,2]
-            print(#a)
-            print(##a)
+            dump(#a)
+            dump(##a)
         """)
         assert(out == "2\n3\n") { out }
     }
@@ -820,8 +820,8 @@ class Exec  {
     fun gh_08_vector_cur () {
         val out = test("""
             var a: #[Int*2] = #[1,2,3]
-            print(#a)
-            print(##a)
+            dump(#a)
+            dump(##a)
         """)
         assert(out == "2\n2\n") { out }
     }
@@ -829,8 +829,8 @@ class Exec  {
     fun gh_09_vector_cur () {
         val out = test("""
             func f: (a: #[Int*2]) -> () {
-                print(#a)
-                print(##a)
+                dump(#a)
+                dump(##a)
             }
             f(#[1,2,3])
         """)
@@ -840,7 +840,7 @@ class Exec  {
     fun gh_10_vector_print () {
         val out = test("""
             var a: #[Int*2] = #[10]
-            print(a)
+            dump(a)
         """)
         assert(out == "#[10]\n") { out }
     }
@@ -849,7 +849,7 @@ class Exec  {
         val out = test("""
             var n = 2
             var a: #[Int*n] = #[10,20,30]
-            print([##a, #a, a])
+            dump([##a, #a, a])
         """)
         //assert(out == "#[10,20]\n") { out }
         assert(out == "anon : (lin 3, col 26) : type error : expected constant integer expression\n") { out }
@@ -860,8 +860,8 @@ class Exec  {
             var i = 10
             var v: #[Int*3] = #[1,0,i]
             set v[1] = v[1] + 2
-            print(v)
-            print(#v)
+            dump(v)
+            dump(#v)
         """)
         assert(out == "#[1,2,10]\n3\n") { out }
     }
@@ -873,8 +873,8 @@ class Exec  {
         val out = test("""
             var a: #[Int*3] = #[1,2]
             var c = a ++ #[3,4]
-            print([#a,#c,##c])
-            print(c)
+            dump([#a,#c,##c])
+            dump(c)
         """)
         assert(out == "[2,4,5]\n#[1,2,3,4]\n") { out }
     }
@@ -883,7 +883,7 @@ class Exec  {
         val out = test("""
             var a: #[Char*3] = #['a','b']
             var c = a ++ #['c','d','\0']
-            print([#c,##c])
+            dump([#c,##c])
             `puts(c.buf)`
         """)
         assert(out == "[5,6]\nabcd\n") { out }
@@ -893,7 +893,7 @@ class Exec  {
         val out = test("""
             var a: #[Char*3] = #['a','b']
             var c = a ++ "cd" ;; ++ ""
-            print([#c,##c])
+            dump([#c,##c])
             `puts(c.buf)`
         """)
         assert(out == "[4,5]\nabcd\n") { out }
@@ -903,7 +903,7 @@ class Exec  {
         val out = test("""
             var a: #[Char*3] = #['a','b']
             var c = a ++ "cd" ++ #['\0']
-            print([#c,##c])
+            dump([#c,##c])
             `puts(c.buf)`
         """)
         assert(out == "[5,6]\nabcd\n") { out }
@@ -912,7 +912,7 @@ class Exec  {
     fun gi_04_concat () {
         val out = test("""
             var c = "ab" ++ "cd" ++ #['\0']
-            print([#c,##c])
+            dump([#c,##c])
             `puts(c.buf)`
         """)
         assert(out == "[5,5]\nabcd\n") { out }
@@ -925,7 +925,7 @@ class Exec  {
         val out = test("""
             data Pos: [Bool]
             var p = Pos [true]
-            print(p)
+            dump(p)
         """)
         assert(out == "Pos [true]\n") { out }
     }
@@ -935,7 +935,7 @@ class Exec  {
             data Pos: [Int, Int]
             var p: Pos = Pos [10, 20]:[Int,Int]
             var x: Int = p.1
-            print(x)
+            dump(x)
         """)
         assert(out == "10\n") { out }
     }
@@ -947,7 +947,7 @@ class Exec  {
             data Obj: [Pos, Dim]
             var o: Obj = Obj [Pos [3,5]:[Int,Int], Dim [20,30]:[Int,Int]]: [Pos, Dim]
             var w: Int = o.2.1
-            print(w)
+            dump(w)
         """)
         assert(out == "20\n") { out }
     }
@@ -966,7 +966,7 @@ class Exec  {
             data Result: <(),Int>
             var r: Result = Result <.2=10>: <(),Int>
             var i: Int = r!2
-            print([i,r!2,r])
+            dump([i,r!2,r])
         """)
         assert(out == "[10,10,Result <.2=10>]\n") { out }
     }
@@ -978,7 +978,7 @@ class Exec  {
             var r2: Res  = Res <.Err=()>: <Err:(),Ok:Int>
             var i1: Int  = r1!Ok
             var e2: Bool = r2?Err
-            print([i1, e2])
+            dump([i1, e2])
         """)
         assert(out == "[10,true]\n") { out }
     }
@@ -988,8 +988,8 @@ class Exec  {
             data X: <A:[a:Int]>
             var xa = X.A [10]
             var x: X = xa
-            print(xa!A.a)
-            print(x!A.a)
+            dump(xa!A.a)
+            dump(x!A.a)
         """)
         assert(out == "10\n10\n") { out }
     }
@@ -998,7 +998,7 @@ class Exec  {
         val out = test("""
             data X: <A:[a:Int]>
             var x = X.A [10]
-            print(x!A.a)
+            dump(x!A.a)
         """)
         assert(out == "10\n") { out }
     }
@@ -1007,7 +1007,7 @@ class Exec  {
         val out = test("""
             data B: <T:[], F:[]>
             var b: B = B.T []
-            print(b?T)
+            dump(b?T)
         """)
         assert(out == "true\n") { out }
     }
@@ -1017,8 +1017,8 @@ class Exec  {
             data A: <B: <C: Int>>
             var c: A = A.B.C(10)
             var v = c
-            print(c)
-            print(c!B!C)
+            dump(c)
+            dump(c!B!C)
         """)
         assert(out == "A <.1=<.1=10>>\n" +
                 "10\n") { out }
@@ -1031,7 +1031,7 @@ class Exec  {
             >
             var xy = X.Y [10]
             var y = xy
-            print(y)        ;; TODO: X.Y [10]
+            dump(y)        ;; TODO: X.Y [10]
         """)
         //assert(out == "X.Y [10]\n") { out }
         assert(out == "X <.1=[10]>\n") { out }
@@ -1044,7 +1044,7 @@ class Exec  {
             }
             var xy = X.Y [10]
             var y = xy    ;; ()
-            print(y)
+            dump(y)
         """)
         assert(out == "X.Y [10]\n") { out }
     }
@@ -1053,8 +1053,8 @@ class Exec  {
         val out = test("""
             data B: <T:[], F:[]>
             var b = B.T []
-            print(b?B)      ;; OK
-            ;;print(b!B)      ;; NO: no B._o
+            dump(b?B)      ;; OK
+            ;;dump(b!B)      ;; NO: no B._o
         """)
         assert(out == "anon : (lin 4, col 20) : predicate error : types mismatch\n") { out }
         //assert(out == "true\n") { out }
@@ -1067,8 +1067,8 @@ class Exec  {
         val out = test("""
             data A.*: [Int]
             var a: A = A [100]
-            print(a)
-            print(a.1)
+            dump(a)
+            dump(a.1)
         """)
         assert(out == "A [100]\n" +
                 "100\n") { out }
@@ -1080,8 +1080,8 @@ class Exec  {
                 B: [b:Int]
             }
             var x0: A = A [100]  ;; ignore subtype B
-            print(x0)
-            print(x0.1)
+            dump(x0)
+            dump(x0.1)
         """)
         assert(out == "A [100]\n" +
                 "100\n") { out }
@@ -1093,7 +1093,7 @@ class Exec  {
                 B: [Int]
             }
             var a: A = A.B [10]
-            print(a)
+            dump(a)
         """)
         assert(out == "A []\n") { out }
     }
@@ -1105,7 +1105,7 @@ class Exec  {
             var a: A = A.B [10,20,30,40]
             `printf("%ld\n", sizeof(A));`
             `printf("%ld\n", sizeof(A_B));`
-            print(a!B)
+            dump(a!B)
         """)
         assert(out == "20\n20\nA.B [10,20,30,40]\n") { out }
     }
@@ -1118,8 +1118,8 @@ class Exec  {
                 }
             }
             var x0: A = A.B[10,20]  ;; ignore subsubtype C
-            print(x0)
-            print(x0!B)
+            dump(x0)
+            dump(x0!B)
         """)
         assert(out == "A [10]\n" +
                 "A.B [10,20]\n") { out }
@@ -1131,8 +1131,8 @@ class Exec  {
                 B: [b:Int]
             }
             var x0 = A([100])  ;; ignore subtype
-            print(x0)
-            print(x0.a)
+            dump(x0)
+            dump(x0.a)
         """)
         assert(out == "A [100]\n" +
                 "100\n") { out }
@@ -1146,15 +1146,15 @@ class Exec  {
             var x0: A   = A([100])
             var xa: A   = A.B([10,20])
             var xb: A.B = A.B([30,40])
-            print(x0)
-            print(xa)
-            print(xb)
+            dump(x0)
+            dump(xa)
+            dump(xb)
             
-            print(x0.a)
-            print(xa.a)
-            print(xa!B.b)
-            print(xb.a)
-            print(xb.b)
+            dump(x0.a)
+            dump(xa.a)
+            dump(xa!B.b)
+            dump(xb.a)
+            dump(xb.b)
         """)
         assert(out == "A [100]\n" +
                 "A [10]\n" +
@@ -1175,9 +1175,9 @@ class Exec  {
             }
             var c: A = A.B.C ([1,2,3])
             var v = c
-            print(c)
-            print(c!B!C)
-            print(c!B!C.c)
+            dump(c)
+            dump(c!B!C)
+            dump(c!B!C.c)
         """)
         assert(out == "A [1]\n" +
                 "A.B.C [1,2,3]\n" +
@@ -1200,8 +1200,8 @@ class Exec  {
             var c: A.B.C = A.B.C([10],[20],30)
             var x = c!A.x
             var y = c!B.y
-            print(x)
-            print(y)
+            dump(x)
+            dump(y)
         """)
         assert(out == "10 / 1\n") { out }
     }
@@ -1273,8 +1273,8 @@ class Exec  {
         val out = test("""
             data X: <A:[x:Int],B:[x:Int]>
             var r: X = X.B [10]
-            print(r)
-            print(r!B.x)
+            dump(r)
+            dump(r!B.x)
         """)
         assert(out == "X <.2=[10]>\n10\n") { out }
     }
@@ -1283,15 +1283,15 @@ class Exec  {
         val out = test("""
             data B: <True:(), False:()>
             var b: B = B.True ()
-            print(b?True)
+            dump(b?True)
             
             data Maybe: <Nothing:(), Just:Int>
             var x = Maybe.Just(10)
-            print(x)
+            dump(x)
             
             data Meter: Int
             var y: Meter = Meter(10)
-            print(y)
+            dump(y)
         """)
         assert(out == "true\n" +
                 "Maybe <.2=10>\n" +
@@ -1302,7 +1302,7 @@ class Exec  {
         val out = test("""
             data V: <Z:(), V:Int>
             var v: V = V.V(10)
-            print(v)
+            dump(v)
         """)
         assert(out == "V <.2=10>\n") { out }
         //assert(out == "V.V(10)\n") { out }
@@ -1318,8 +1318,8 @@ class Exec  {
             var c: A = A.B.C([10,20,30])
             var b  = c!B
             var y  = c!B.y
-            print(b)
-            print(y)
+            dump(b)
+            dump(y)
         """)
         assert(out == "A.B [10,20]\n" +
                 "20\n") { out }
@@ -1337,8 +1337,8 @@ class Exec  {
             var xz: X = X.Z [10,20]
             var x = xz    ;; 10
             var y = xz!Z    ;; 20
-            print(x)
-            print(y.2)
+            dump(x)
+            dump(y.2)
         """)
         assert(out == "X [10]\n20\n") { out }
     }
@@ -1350,7 +1350,7 @@ class Exec  {
                 Z: [Int]
             }
             var xz: X = X.Z [10,20]
-            print([xz?Y, xz?Z])
+            dump([xz?Y, xz?Z])
         """)
         assert(out == "[false,true]\n") { out }
     }
@@ -1361,7 +1361,7 @@ class Exec  {
     fun ii_01_infer () {
         val out = test("""
             var n = 10
-            print(n)
+            dump(n)
         """)
         assert(out == "10\n") { out }
     }
@@ -1369,7 +1369,7 @@ class Exec  {
     fun ii_02_infer () {
         val out = test("""
             var t = [10,20]
-            print(t.2)
+            dump(t.2)
         """)
         assert(out == "20\n") { out }
     }
@@ -1378,7 +1378,7 @@ class Exec  {
         val out = test("""
             var t: <(),Int> = <.2=10>
             var n = t!2
-            print(n)
+            dump(n)
         """)
         assert(out == "10\n") { out }
     }
@@ -1389,7 +1389,7 @@ class Exec  {
             var r1 = Res.Ok(10)
             var r2 = r1
             var ok = r2?Ok
-            print(ok)
+            dump(ok)
         """)
         assert(out == "true\n") { out }
     }
@@ -1399,21 +1399,21 @@ class Exec  {
     @Test
     fun jj_01_print_int () {
         val out = test("""
-            print(10)
+            dump(10)
         """)
         assert(out == "10\n") { out }
     }
     @Test
     fun jj_02_print_tuple () {
         val out = test("""
-            print([10,20])
+            dump([10,20])
         """)
         assert(out == "[10,20]\n") { out }
     }
     @Test
     fun jj_03_print_tuple () {
         val out = test("""
-            print([10, [20], 30])
+            dump([10, [20], 30])
         """)
         assert(out == "[10,[20],30]\n") { out }
     }
@@ -1421,7 +1421,7 @@ class Exec  {
     fun jj_04_print_union () {
         val out = test("""
             var x = <.2=10>: <(),Int>
-            print(x)
+            dump(x)
         """)
         assert(out == "<.2=10>\n") { out }
     }
@@ -1429,7 +1429,7 @@ class Exec  {
     fun jj_05_print_data () {
         val out = test("""
             data Meter: Int
-            print(Meter(10))
+            dump(Meter(10))
         """)
         assert(out == "Meter(10)\n") { out }
     }
@@ -1438,7 +1438,7 @@ class Exec  {
         val out = test("""
             data X: <Y:(), Z:Int>
             var x = X.Z(10)
-            print(x)
+            dump(x)
         """)
         assert(out == "X <.2=10>\n") { out }
     }
@@ -1510,7 +1510,7 @@ class Exec  {
             data X.*: []
             catch :X {
             }
-            print(10)
+            dump(10)
         """)
         //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
         assert(out == "10\n") { out }
@@ -1521,9 +1521,9 @@ class Exec  {
             data X.*: []
             catch {
                 throw(X [])
-                print(999)
+                dump(999)
             }
-            print(10)
+            dump(10)
         """)
         //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
         assert(out == "10\n") { out }
@@ -1533,7 +1533,7 @@ class Exec  {
         val out = test("""
             data X.*: []
             throw(X [])
-            print(10)
+            dump(10)
         """)
         assert(out == "uncaught exception\n") { out }
     }
@@ -1547,7 +1547,7 @@ class Exec  {
             catch :X.Y {
                 throw(X.Z [])
             }
-            print(10)
+            dump(10)
         """)
         assert(out == "uncaught exception\n") { out }
     }
@@ -1561,7 +1561,7 @@ class Exec  {
             catch :X {
                 throw(X.Z [])
             }
-            print(10)
+            dump(10)
         """)
         assert(out == "10\n") { out }
     }
@@ -1575,7 +1575,7 @@ class Exec  {
             catch :X.Z {
                 throw(X.Z [])
             }
-            print(10)
+            dump(10)
         """)
         assert(out == "10\n") { out }
     }
@@ -1590,13 +1590,13 @@ class Exec  {
     fun kk_08_throw_call () {
         val out = test("""
             func f: () -> () {
-                print(2)
+                dump(2)
                 throw()
-                print(99)
+                dump(99)
             }
-            print(1)
+            dump(1)
             f()
-            print(99)
+            dump(99)
         """)
         assert(out == "1\n2\nuncaught exception\n") { out }
     }
@@ -1606,9 +1606,9 @@ class Exec  {
             data X.*: []
             var e = catch :X {
                 throw(X [])
-                print(999)
+                dump(999)
             }
-            print(e)
+            dump(e)
         """)
         //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
         assert(out == "<.2=X []>\n") { out }
@@ -1618,9 +1618,9 @@ class Exec  {
         val out = test("""
             data X.*: []
             var e = catch :X {
-                print(10)
+                dump(10)
             }
-            print([e?Ok, e!Ok, e])
+            dump([e?Ok, e!Ok, e])
         """)
         //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
         assert(out == "10\n[true,(),<.1=()>]\n") { out }
@@ -1631,24 +1631,24 @@ class Exec  {
     @Test
     fun ll_01_defer () {
         val out = test("""
-            print(1)
-            defer { print(2) }
-            defer { print(3) }
-            print(4)
+            dump(1)
+            defer { dump(2) }
+            defer { dump(3) }
+            dump(4)
         """)
         assert(out == "1\n4\n3\n2\n") { out }
     }
     @Test
     fun ll_02_defer () {
         val out = test("""
-            print(1)
-            defer { print(2) }
+            dump(1)
+            defer { dump(2) }
             do {
-                defer { print(3) }
-                defer { print(4) }
+                defer { dump(3) }
+                defer { dump(4) }
             }
-            defer { print(5) }
-            print(6)
+            defer { dump(5) }
+            dump(6)
         """)
         assert(out == "1\n4\n3\n6\n5\n2\n") { out }
     }
@@ -1658,10 +1658,10 @@ class Exec  {
             data X.*: []
             do {
                 defer {
-                    print(10)
+                    dump(10)
                 }
                 throw(X[])
-                print(99)
+                dump(99)
             }
         """)
         assert(out == "10\n" +
@@ -1680,11 +1680,11 @@ class Exec  {
             do :X.Z {
                 do :X.Y {
                     escape(X.Z [])
-                    print(99)
+                    dump(99)
                 }
-                print(99)
+                dump(99)
             }
-            print(10)
+            dump(10)
         """)
         assert(out == "10\n") { out }
     }
@@ -1697,7 +1697,7 @@ class Exec  {
             `printf("%d\n", MAR_ESCAPE.tag)`
             var x: Int = f()
             `printf("%d\n", MAR_ESCAPE.tag)`
-            print(x)
+            dump(x)
         """)
         assert(out == "0\n0\n10\n") { out }
     }
@@ -1707,7 +1707,7 @@ class Exec  {
     @Test
     fun nn_01_if () {
         val out = test("""
-            print(if true => 10 => 99)
+            dump(if true => 10 => 99)
         """)
         assert(out == "10\n") { out }
     }
@@ -1715,7 +1715,7 @@ class Exec  {
     fun nn_02_match () {
         val out = test("""
             var x = match 10 { 10 => 20 ; else => 99 }
-            print(x)
+            dump(x)
         """)
         assert(out == "20\n") { out }
     }
@@ -1723,7 +1723,7 @@ class Exec  {
     fun nn_03_match () {
         val out = test("""
             var x = match 10 { 20 => 99 ; else => 10 }
-            print(x)
+            dump(x)
         """)
         assert(out == "10\n") { out }
     }
@@ -1731,7 +1731,7 @@ class Exec  {
     fun nn_04_match () {
         val out = test("""
             var x: Int = match 10 { 10 => 10 ; else => 99 ;;;throw();;; }
-            print(x)
+            dump(x)
         """)
         assert(out == "10\n") { out }
     }
@@ -1770,7 +1770,7 @@ class Exec  {
             data X: Int
             task tsk: () -> () {
                 var e = await(:X)
-                print(e)
+                dump(e)
             }
             var exe: exec task () -> () = create(tsk)
             start exe()
@@ -1785,9 +1785,9 @@ class Exec  {
             data Y: Int
             task tsk: () -> () {
                 var e = await(:X)
-                print(e)
+                dump(e)
                 var f = await(:Y)
-                print(f)
+                dump(f)
             }
             var exe: exec task () -> () = create(tsk)
             start exe()
@@ -1803,9 +1803,9 @@ class Exec  {
             data Y: Int
             task tsk: () -> () {
                 var e = await(:X)
-                print(e)
+                dump(e)
                 var f = await(:Y)
-                print(f)
+                dump(f)
             }
             var exe: exec task () -> () = create(tsk)
             start exe()
@@ -1821,9 +1821,9 @@ class Exec  {
             data Y: Int
             task tsk: () -> () {
                 var e = await(:X)
-                print(e)
+                dump(e)
                 var f = await(:Y)
-                print(f)
+                dump(f)
             }
             spawn tsk()
             emit(X(10))
@@ -1838,12 +1838,12 @@ class Exec  {
             data Y: Int
             task tsk: () -> () {
                 var e = await(:X)
-                print(e)
+                dump(e)
                 var f = await(:Y)
-                print(f)
+                dump(f)
             }
             var e = spawn tsk()
-            ;;print(e)
+            ;;dump(e)
             emit(X(10))
             emit(Y(20))
         """)
@@ -1855,10 +1855,10 @@ class Exec  {
             data X: Int
             task tsk: () -> () {
                 var e = await(:X)
-                print(e)
+                dump(e)
             }
             var e = spawn tsk()
-            ;;print(e)
+            ;;dump(e)
             emit(X(10))
         """)
         assert(out == "X(10)\n") { out }
@@ -1870,7 +1870,7 @@ class Exec  {
             data Y: Int
             task tsk: () -> () {
                 var e = await(:X, it==X(10))
-                print(e)
+                dump(e)
             }
             spawn tsk()
             emit(X(99))
@@ -1884,17 +1884,17 @@ class Exec  {
         val out = test("""
             data X: ()
             task t2: () -> () {
-                print(">>> B")
+                dump(">>> B")
                 await(:X)
-                print("<<< B")
+                dump("<<< B")
                 ;;emit(Event.Task [`mar_exe`])
             }
             spawn {
                 var exe = create(t2)
                 start exe()
-                print(">>> A")
+                dump(">>> A")
                 var e = await(exe)
-                print("<<< A")
+                dump("<<< A")
             }
             emit(X())
         """)
@@ -1906,13 +1906,13 @@ class Exec  {
             data X: ()
             task t2: () -> () {
                 defer {
-                    print("first")
+                    dump("first")
                 }
                 await(true)
             }
             spawn {
                 defer {
-                    print("last")
+                    dump("last")
                 }
                 var exe = create(t2)
                 start exe()
@@ -1927,7 +1927,7 @@ class Exec  {
                 defer {
                 }
             }
-            print(1)
+            dump(1)
         """)
         assert(out == "1\n") { out }
     }
@@ -1948,10 +1948,10 @@ class Exec  {
                 start e2()
                 start e3()
                 var e = await(e2)
-                print("nok")
+                dump("nok")
             }
             emit(Y())
-            print("ok")
+            dump("ok")
         """)
         assert(out == "ok\n") { out }
     }
@@ -1960,13 +1960,13 @@ class Exec  {
         val out = test("""
             data X: ()
             task t2: () -> () {
-                print("t2")
+                dump("t2")
             }
             spawn {
                 var exe = create(t2)
                 start exe()
                 await(exe)
-                print("main")
+                dump("main")
             }
         """)
         assert(out == "t2\nmain\n") { out }
@@ -1978,19 +1978,19 @@ class Exec  {
             spawn {
                 par_or {
                     await(:X)
-                    print("x")
+                    dump("x")
                 } with {
                     every :X {
-                        print("no")
+                        dump("no")
                     }
                 }
-                print("or")
+                dump("or")
             }
             emit(X())
             emit(X())
             emit(X())
             emit(X())
-            print("ok")
+            dump("ok")
         """)
         assert(out == "x\nor\nok\n") { out }
     }
@@ -2001,16 +2001,16 @@ class Exec  {
             spawn {
                 par_or {
                     await(:X)
-                    print("x")
+                    dump("x")
                 } with {
                     every :X {
-                        print("no")
+                        dump("no")
                     }
                 }
-                print("or")
+                dump("or")
             }
             emit(X())
-            print("ok")
+            dump("ok")
         """)
         assert(out == "x\nor\nok\n") { out }
     }
@@ -2024,9 +2024,9 @@ class Exec  {
             data Y: Int
             spawn {
                 var e = await(:X)
-                print(e)
+                dump(e)
                 var f = await(:Y)
-                print(f)
+                dump(f)
             }
             emit(X(10))
             emit(Y(10))
@@ -2041,12 +2041,12 @@ class Exec  {
             spawn {
                 par {
                     var e = await(:X)
-                    print(e)
+                    dump(e)
                 } with {
                     var f = await(:Y)
-                    print(f)
+                    dump(f)
                 }
-                print("nooo")
+                dump("nooo")
             }
             emit(X(10))
             emit(Y(10))
@@ -2064,7 +2064,7 @@ class Exec  {
                 await(false)
             }
             emit(X(10))
-            print("ok")
+            dump("ok")
         """)
         assert(out == "ok\n") { out }
     }
@@ -2073,17 +2073,17 @@ class Exec  {
         val out = test("""
             data X: ()
             task t2: () -> () {
-                print(">>> B")
+                dump(">>> B")
                 await(:X)
-                print("<<< B")
+                dump("<<< B")
                 ;;emit(Event.Task [`mar_exe`])
             }
             spawn {
                 var exe = create(t2)
                 start exe()
-                print(">>> A")
+                dump(">>> A")
                 var e = await(exe)
-                print("<<< A")
+                dump("<<< A")
             }
             emit(X())
         """)
@@ -2094,15 +2094,15 @@ class Exec  {
         val out = test("""
             data X: ()
             task t2: () -> () {
-                print(">>> B")
+                dump(">>> B")
                 await(:X)
-                print("<<< B")
+                dump("<<< B")
                 ;;emit(Event.Task [`mar_exe`])
             }
             spawn {
-                print(">>> A")
+                dump(">>> A")
                 await t2()
-                print("<<< A")
+                dump("<<< A")
             }
             emit(X())
         """)
@@ -2119,7 +2119,7 @@ class Exec  {
                 } with {
                     await(:Y)
                 }
-                print("ok")
+                dump("ok")
             }
             emit(X(10))
             emit(Y(10))
@@ -2134,12 +2134,12 @@ class Exec  {
             spawn {
                 par_or {
                     await(:X)
-                    print("x")
+                    dump("x")
                 } with {
                     await(:Y)
-                    print("y")
+                    dump("y")
                 }
-                print("ok")
+                dump("ok")
             }
             emit(X(10))
         """)
@@ -2153,12 +2153,12 @@ class Exec  {
             spawn {
                 par_or {
                     await(:X)
-                    print("x")
+                    dump("x")
                 } with {
                     await(:Y)
-                    print("y")
+                    dump("y")
                 }
-                print("ok")
+                dump("ok")
             }
             emit(Y(10))
         """)
@@ -2171,12 +2171,12 @@ class Exec  {
             data Y: Int
             spawn {
                 par_or {
-                    print("x")
+                    dump("x")
                 } with {
                     await(:Y)
-                    print("y")
+                    dump("y")
                 }
-                print("ok")
+                dump("ok")
             }
         """)
         assert(out == "x\nok\n") { out }
@@ -2189,11 +2189,11 @@ class Exec  {
             spawn {
                 par_or {
                     await(:X)
-                    print("x")
+                    dump("x")
                 } with {
-                    print("y")
+                    dump("y")
                 }
-                print("ok")
+                dump("ok")
             }
         """)
         assert(out == "y\nok\n") { out }
@@ -2204,7 +2204,7 @@ class Exec  {
             data X: ()
             spawn {
                 every :X {
-                    print("x")
+                    dump("x")
                 }
             }
             emit(X())
@@ -2217,7 +2217,7 @@ class Exec  {
         val out = test("""
             spawn {
                 every %10 {
-                    print("ms")
+                    dump("ms")
                 }
             }
             emit(Event.Clock [10])
@@ -2233,7 +2233,7 @@ class Exec  {
             spawn {
                 loop {
                     await(:X)
-                    print("x")
+                    dump("x")
                 }
             }
             emit(X())
@@ -2248,11 +2248,11 @@ class Exec  {
             spawn {
                 par {
                     every :X {
-                        print("x")
+                        dump("x")
                     }
                 } with {
                     every %10 {
-                        print("ms")
+                        dump("ms")
                     }
                 }
             }
@@ -2271,7 +2271,7 @@ class Exec  {
                 spawn {
                 }
             }
-            print("ok")
+            dump("ok")
         """)
         assert(out == "ok\n") { out }
     }
@@ -2282,12 +2282,12 @@ class Exec  {
             spawn {
                 spawn {
                     defer {
-                        print("2")
+                        dump("2")
                     }
                     await(false)
                 }
                 await(true)
-                print("1")
+                dump("1")
             }
             emit(X [])
         """)
@@ -2300,7 +2300,7 @@ class Exec  {
             spawn {
                 spawn {
                     var e = await(:X, it==X(10))
-                    print(e)
+                    dump(e)
                 }
                 await(false)
             }
@@ -2315,9 +2315,9 @@ class Exec  {
     fun oq_01_clock () {
         val out = test("""
             spawn {
-                print("antes")
+                dump("antes")
                 await(%10)
-                print("depois")
+                dump("depois")
             }
             emit(Event.Clock [10])
         """)
@@ -2327,9 +2327,9 @@ class Exec  {
     fun oq_02_clock () {
         val out = test("""
             spawn {
-                print("antes")
+                dump("antes")
                 await(%10)
-                print("depois")
+                dump("depois")
             }
             emit(Event.Clock [5])
             emit(Event.Clock [5])
@@ -2344,7 +2344,7 @@ class Exec  {
         val out = test("""
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
             var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
-            print(x!Just)
+            dump(x!Just)
         """)
         assert(out == "10\n") { out }
     }
@@ -2353,7 +2353,7 @@ class Exec  {
         val out = test("""
             data Maybe {{t:Type}}: <Nothing:(), Just:{{t}}>
             var x: Maybe {{:Int}} = Maybe {{:Int}}.Just(10)
-            print(x)
+            dump(x)
         """)
         assert(out == "Maybe <.2=10>\n") { out }
     }
@@ -2363,7 +2363,7 @@ class Exec  {
             data X.* {{t:Type}}: [{{t}}]
             catch :X {{:Int}} {
             }
-            print(10)
+            dump(10)
         """)
         //assert(out == "anon : (lin 2, col 23) : declaration error : data :T is not declared\n") { out }
         assert(out == "10\n") { out }
@@ -2374,7 +2374,7 @@ class Exec  {
             data Pos {{t:Type}}: [{{t}}, Int]
             var p: Pos = Pos [10, 20]:[Int,Int]
             var x: Int = p.1
-            print(x)
+            dump(x)
         """)
         assert(out == "10\n") { out }
     }
@@ -2383,8 +2383,8 @@ class Exec  {
         val out = test("""
             data A {{t:Type}}: [{{t}}]
             var a: A = A [100]
-            print(a)
-            print(a.1)
+            dump(a)
+            dump(a.1)
         """)
         assert(out == "A [100]\n" +
                 "100\n") { out }
@@ -2397,7 +2397,7 @@ class Exec  {
         val out = test("""
             data Vec {{n:Int}}: #[Int * {{n}}]
             var vs: Vec {{10}} = Vec {{10}} (#[])
-            print(##vs)
+            dump(##vs)
         """)
         assert(out == "10\n") { out }
     }
@@ -2410,8 +2410,8 @@ class Exec  {
             func f {{n:Int}}: () -> Int {
                 return({{n}})
             }
-            print(f {{10}} ())
-            print(f {{20}} ())
+            dump(f {{10}} ())
+            dump(f {{20}} ())
         """)
         assert(out == "10\n20\n") { out }
     }
@@ -2422,8 +2422,8 @@ class Exec  {
                 var xs: #[Int*{{n}}]
                 return(##xs+1)
             }
-            print(f {{10}} ())
-            print(f {{20}} ())
+            dump(f {{10}} ())
+            dump(f {{20}} ())
         """)
         assert(out == "11\n21\n") { out }
     }
@@ -2434,8 +2434,8 @@ class Exec  {
                 var xs: #[Int*{{w}}*{{h}}]
                 return(##xs)
             }
-            print(f {{10,20}} ())
-            print(f {{20,30}} ())
+            dump(f {{10,20}} ())
+            dump(f {{20,30}} ())
         """)
         assert(out == "200\n600\n") { out }
     }
@@ -2445,7 +2445,7 @@ class Exec  {
             func f {{n:Int}}: () -> #[Int*({{n}})] {
             }
             var rs = f {{10}} ()
-            print(##rs)
+            dump(##rs)
         """)
         assert(out == "10\n") { out }
     }
@@ -2455,7 +2455,7 @@ class Exec  {
             func f {{n:Int}}: (xs: #[Int*({{n}})]) -> Int {
                 return (##xs)
             }
-            print(f {{10}} (#[]))
+            dump(f {{10}} (#[]))
         """)
         assert(out == "10\n") { out }
     }
@@ -2465,8 +2465,8 @@ class Exec  {
             func f {{n:Int}}: (xs: #[Int*({{n}})]) -> Int {
                 return (##xs)
             }
-            print(f {{10}} (#[]))
-            print(f {{10}} (#[]))
+            dump(f {{10}} (#[]))
+            dump(f {{10}} (#[]))
         """)
         assert(out == "10\n10\n") { out }
     }
@@ -2477,11 +2477,11 @@ class Exec  {
     fun xx_01_test () {
         G.test = false
         val out = test("""
-            print("1")
+            dump("1")
             test {
-                print("2")
+                dump("2")
             }
-            print("3")
+            dump("3")
         """)
         assert(out == "1\n3\n") { out }
     }
@@ -2489,11 +2489,11 @@ class Exec  {
     fun xx_02_test () {
         G.test = true
         val out = test("""
-            print("1")
+            dump("1")
             test {
-                print("2")
+                dump("2")
             }
-            print("3")
+            dump("3")
         """)
         assert(out == "1\n2\n3\n") { out }
     }
@@ -2503,11 +2503,11 @@ class Exec  {
     @Test
     fun xj_01_pre_assert () {
         val out = test("""
-            print(1)
+            dump(1)
             expect(true)
-            print(2)
+            dump(2)
             expect(false)
-            print(3)
+            dump(3)
         """)
         assert(out == "1\n"+
             "2\n"+
@@ -2524,9 +2524,9 @@ class Exec  {
                 B: [x: Int]
             }
             var a = X.A ['a']
-            print(a.x)
+            dump(a.x)
             var b = X.B [10]
-            print(b.x)
+            dump(b.x)
         """)
         assert(out == "a\n10\n") { out }
     }
@@ -2563,7 +2563,7 @@ class Exec  {
         func f: (v: \Int) -> Int {
             return(v\)
         }
-        print(f(\1))
+        dump(f(\1))
         """)
         assert(out == "1\n") { out }
     }

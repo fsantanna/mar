@@ -139,7 +139,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
         }
         is Stmt.Dcl    -> this.id.str.let {
-            "local $it = %it"
+            "local $it = $it"
         }
         is Stmt.SetE   -> {
             val dst = this.dst.coder(tpls,pre)
@@ -645,15 +645,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     else -> "CAST(${tdst.coder(xxx)}, $src)"
                 }
             }.joinToString(",")} )"
-            """
-            ({
-                typeof($call) mar_$n = $call;
-                if (MAR_EXCEPTION.tag != __MAR_EXCEPTION_NONE__) {
-                    continue;
-                }
-                mar_$n;
-             })
-            """
+            call
         }
 
         is Expr.Tuple  -> "((${this.typex().coder(tpls)}) { ${this.vs.map { (_,tp) -> "{"+tp.coder(tpls,pre)+"}" }.joinToString(",") } })"
@@ -763,15 +755,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Expr.Unit -> "_void_"
         is Expr.Null -> "null"
         is Expr.Bool, is Expr.Chr, is Expr.Str -> this.tk.str
-        is Expr.Num -> this.to_str(pre).let {
-            if (this.xnum == null) it else {
-                val tp = this.typex()
-                val sup = tp.sup_vs(this.xnum!!)
-                if (sup == tp) it else {
-                    "((" + sup!!.coder(tpls) + ")" + it + ")"
-                }
-            }
-        }
+        is Expr.Num -> this.to_str(pre)
 
         is Expr.If -> "((${this.cnd.coder(tpls,pre)}) ? (${this.t.coder(tpls,pre)}) : (${this.f.coder(tpls,pre)}))"
         is Expr.MatchT -> """
@@ -794,24 +778,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
                 """ }.joinToString("")}
             }
         """
-    }.let {
-        when (this) {
-            is Expr.Num, is Expr.MatchT, is Expr.MatchE -> it
-            else -> {
-                val tp = this.typex()
-                when {
-                    (this.xnum == null) -> it
-                    (this.xnum!!.tk.str == tp.tk.str) -> it
-                    else -> {
-                        val sup = tp.sup_vs(this.xnum!!)
-                        if (sup == tp) it else {
-                            "((" + sup!!.coder(tpls) + ")" + it + ")"
-                        }
-                    }
-                }
-            }
-        }
-     }
+    }
 }
 
 fun coder_protos (pre: Boolean): String {

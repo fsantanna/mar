@@ -402,7 +402,7 @@ fun check_types () {
                     }
                 }
                 if (!ok) {
-                    err(me.tk, "call error : types mismatch")
+                    //err(me.tk, "call error : types mismatch")
                 }
             }
             is Expr.If -> {
