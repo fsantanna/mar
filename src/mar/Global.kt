@@ -246,18 +246,9 @@ fun exec (hold: Boolean, cmd: String): Pair<Boolean,String> {
 }
 
 fun coder (pre: Boolean): String {
-    val types = coder_types(null, G.outer!!, null, pre)
-    val protos = coder_protos(pre)
     val main = G.outer!!.coder(null,pre)
     val c = object{}::class.java.getResourceAsStream("/mar.lua")!!.bufferedReader().readText()
-        //.replace("// === MAR_TYPES === //", types.toMap().values.joinToString(""))
-        //.replace("// === MAR_TYPES === //",
-            // first reverse to keep first map entry, second reverse to keep original order
-        //    types.distinctBy { it.first }.map { it.second }.joinToString(""))
-        //.replace("// === MAR_PROTOS === //", protos)
         .replace("// === MAR_MAIN === //", main)
-        //.replace("// === MAR_BROADCAST_N === //", "TODO")
-
     return c
 }
 

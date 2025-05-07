@@ -3,7 +3,71 @@ package mar
 fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
     return when (this) {
         is Stmt.Data  -> ""
-        is Stmt.Proto -> ""
+        is Stmt.Proto -> {
+            val sig = this.x_sig(null, pre)
+            """
+            -- PROTO | ${this.dump()}
+            $sig
+                ${(this is Stmt.Proto.Func).cond {
+                    this as Stmt.Proto.Func
+                    this.tp_.inps_.map { (id,tp) ->
+                        if (tp !is Type.Vector) "" else {
+                            val xxid = id.str
+                            """
+                            $xxid.max = ${tp.max!!.coder(null,pre)};
+                            $xxid.cur = MIN($xxid.max, $xxid.cur);                            
+                            """
+                        }
+                    }.joinToString("")
+                }}
+                ${(this !is Stmt.Proto.Func).cond {
+                    """
+                    if (mar_exe->status != MAR_EXE_STATUS_YIELDED) {
+                        return;
+                    }
+                    if (mar_exe->pc == 0) {
+                        if (mar_act == MAR_EXE_ACTION_ABORT) {
+                            return;
+                        }
+                        ${this.tp.inps_().mapIndexed { i,vtp ->
+                            val (id,tp) = vtp
+                            assert(tp !is Type.Vector)
+                            id.coder(this.blk,pre) + " = mar_inps->_${i+1};\n"
+                        }.joinToString("")}
+                    }
+                    """
+                }}
+                ${(this is Stmt.Proto.Coro).cond { """
+                    switch (mar_exe->pc) {
+                        case 0:
+                """ }}
+                ${this.blk.coder(null,pre)}
+                ${(this is Stmt.Proto.Coro).cond { """
+                    }
+                """ }}
+                ${when (this) {
+                    is Stmt.Proto.Func -> "return mar_ret;"
+                    is Stmt.Proto.Coro -> {
+                        val (xuni,_) = this.tp.x_out(null,pre)
+                        """
+                            mar_exe->status = MAR_EXE_STATUS_COMPLETE;
+                            if (mar_act != MAR_EXE_ACTION_ABORT) {
+                                *mar_out = ($xuni) { .tag=2, ._2=mar_ret };
+                            }
+                        """
+                    }
+                    is Stmt.Proto.Task -> """
+                        mar_exe->status = MAR_EXE_STATUS_COMPLETE;
+                        if (mar_act != MAR_EXE_ACTION_ABORT) {
+                            Event mar_${this.n} = { .Event_Task={mar_exe} };
+                            mar_broadcast(MAR_TAG_Event_Task, &mar_${this.n});
+                        }
+                        return;
+                    """
+                }}
+            end            
+            """
+        }
 
         is Stmt.Block  -> {
             val escs = this.dn_collect_pre({
@@ -74,20 +138,6 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                     }
                     """
                 }.joinToString("")}
-                ${escs.cond { """
-                    if (MAR_ESCAPE.tag == __MAR_ESCAPE_NONE__) {
-                        // no escape
-                    ${this.esc.cond { """
-                        } else if (mar_sup(MAR_TAG_${it.ts.coder(null,pre)}, MAR_ESCAPE.tag)) {
-                            MAR_ESCAPE.tag = __MAR_ESCAPE_NONE__;   // caught escape: go ahead
-                            ${(it.ts.first().str == "Break").cond { """
-                                goto MAR_LOOP_STOP_${this.xup!!.n};
-                            """ }}                        
-                    """ }}
-                    } else {
-                        continue; // uncaught escape: propagate up
-                    }
-                """ }}
             """
 
             if (G.tsks_blks_awts[this] == null) {
@@ -168,8 +218,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Stmt.SetS   -> this.src.coder(tpls,pre)
 
         is Stmt.Escape -> """
-            MAR_ESCAPE = CAST(Escape, ${this.e.coder(tpls,pre)});
-            continue;            
+            return mar_ret
         """
         is Stmt.Defer  -> {
             val bup = this.up_first { it is Stmt.Block } as Stmt.Block
@@ -429,11 +478,11 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
         }
 
         is Stmt.If     -> """
-            if (${this.cnd.coder(tpls,pre)}) {
+            if ${this.cnd.coder(tpls,pre)} then
                 ${this.t.coder(tpls,pre)}
-            } else {
+            else
                 ${this.f.coder(tpls,pre)}
-            }
+            end
         """
         is Stmt.Loop   -> """
             // LOOP | ${this.dump()}
@@ -722,89 +771,4 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
         """
     }
-}
-
-fun coder_protos (pre: Boolean): String {
-    fun fs (me: Stmt): List<String> {
-        return when (me) {
-            !is Stmt.Proto -> emptyList()
-            else -> {
-                val xtplss: List<Tpl_Map?> = me.template_map_all() ?: listOf(null)
-                val cods = xtplss.distinctBy {
-                    me.proto(it)
-                }.map { xtpls ->
-                    val sig = me.x_sig(xtpls, pre)
-                    //println(listOf("read", me, G.tsks_blks[me]))
-                    """
-                    // PROTO | ${me.dump()}
-                    $sig {
-                        ${me.tp.out.coder(xtpls)} mar_ret;
-                        ${(me is Stmt.Proto.Func).cond {
-                            me as Stmt.Proto.Func
-                            me.tp_.inps_.map { (id,tp) ->
-                                if (tp !is Type.Vector) "" else {
-                                    val xxid = id.str
-                                    """
-                                    $xxid.max = ${tp.max!!.coder(xtpls,pre)};
-                                    $xxid.cur = MIN($xxid.max, $xxid.cur);                            
-                                    """
-                                }
-                            }.joinToString("")
-                        }}
-                        do {
-                            ${(me !is Stmt.Proto.Func).cond {
-                                """
-                                if (mar_exe->status != MAR_EXE_STATUS_YIELDED) {
-                                    return;
-                                }
-                                if (mar_exe->pc == 0) {
-                                    if (mar_act == MAR_EXE_ACTION_ABORT) {
-                                        return;
-                                    }
-                                    ${me.tp.inps_().mapIndexed { i,vtp ->
-                                        val (id,tp) = vtp
-                                        assert(tp !is Type.Vector)
-                                        id.coder(me.blk,pre) + " = mar_inps->_${i+1};\n"
-                                    }.joinToString("")}
-                                }
-                                """
-                            }}
-                            ${(me is Stmt.Proto.Coro).cond { """
-                                switch (mar_exe->pc) {
-                                    case 0:
-                            """ }}
-                            ${me.blk.coder(xtpls,pre)}
-                            ${(me is Stmt.Proto.Coro).cond { """
-                                }
-                            """ }}
-                        } while (0);
-                        ${when (me) {
-                            is Stmt.Proto.Func -> "return mar_ret;"
-                            is Stmt.Proto.Coro -> {
-                                val (xuni,_) = me.tp.x_out(null,pre)
-                                """
-                                    mar_exe->status = MAR_EXE_STATUS_COMPLETE;
-                                    if (mar_act != MAR_EXE_ACTION_ABORT) {
-                                        *mar_out = ($xuni) { .tag=2, ._2=mar_ret };
-                                    }
-                                """
-                            }
-                            is Stmt.Proto.Task -> """
-                                mar_exe->status = MAR_EXE_STATUS_COMPLETE;
-                                if (mar_act != MAR_EXE_ACTION_ABORT) {
-                                    Event mar_${me.n} = { .Event_Task={mar_exe} };
-                                    mar_broadcast(MAR_TAG_Event_Task, &mar_${me.n});
-                                }
-                                return;
-                            """
-                        }}
-                    }
-                    """
-                }
-                listOf(cods.joinToString("") + "\n")
-            }
-        }
-    }
-    val ts = G.outer!!.dn_collect_pre(::fs, {null}, {null})
-    return ts.joinToString("")
 }

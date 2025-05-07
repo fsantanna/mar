@@ -6,7 +6,7 @@ fun String.clean (): String {
 
 fun Var_Type.coder (tpls: Tpl_Map?, pre: Boolean): String {
     val (id,tp) = this
-    return tp.coder(tpls) + " " + id.str
+    return /*tp.coder(tpls) + " " +*/ id.str
 }
 
 fun Type.coder (tpls: Tpl_Map?): String {

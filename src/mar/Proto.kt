@@ -39,7 +39,7 @@ fun Stmt.Proto.x_sig (tpls: Tpl_Map?, pre: Boolean): String {
     val xid = this.proto(tpls)
     val (xout,_) = this.tp.x_out(tpls, pre)
     return when (this) {
-        is Stmt.Proto.Func -> this.tp.out.coder(tpls) + " " + xid + " (" + this.tp_.inps_.map { it.coder(tpls,pre) }.joinToString(", ") + ")"
+        is Stmt.Proto.Func -> "function " + xid + " (" + this.tp_.inps_.map { it.coder(tpls,pre) }.joinToString(", ") + ")"
         is Stmt.Proto.Coro -> {
             val (_,exe) = this.tp.x_pro_exe(null)
             val inps = this.tp.inps.x_inp_tup(this.tp.tk,null, pre).first

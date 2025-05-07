@@ -260,12 +260,12 @@ class Exec  {
     fun cc_02_if() {
         val out = test("""
             if true {
-                `puts("1");`
+                `print("1")`
             }
             if 2 < 0 {
-                `puts("err");`
+                `print("err")`
             } else {
-                `puts("2");`
+                `print("2")`
             }
         """)
         assert(out == "1\n2\n") { out }
@@ -394,7 +394,7 @@ class Exec  {
                 func f: (v: Int) -> Int {
                     return(v)
                 }
-                `printf("%d\n", f(10));`
+                `print(f(10))`
             }
         """)
         assert(out == "10\n") { out }
