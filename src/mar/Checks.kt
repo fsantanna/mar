@@ -373,14 +373,6 @@ fun check_types () {
                     //err(me.tk, "call error : types mismatch")
                 }
             }
-            is Expr.If -> {
-                if (!me.cnd.typex().is_sup_of(Type.Prim(Tk.Type("Bool",me.tk.pos)))) {
-                    err(me.cnd.tk, "if error : expected boolean condition")
-                }
-                if (me.t.typex().sup_vs(me.f.typex()) == null) {
-                    err(me.tk, "if error : types mismatch")
-                }
-            }
             is Expr.MatchT -> {
                 val fsts = listOf(me.tst.typex()) + me.cases.map { it.first }.filterNotNull()
                 val x: Type? = fsts.first()

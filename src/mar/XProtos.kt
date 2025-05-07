@@ -701,7 +701,6 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
         is Expr.Bool, is Expr.Chr, is Expr.Str -> this.tk.str
         is Expr.Num -> this.to_str(pre)
 
-        is Expr.If -> "((${this.cnd.coder(tpls,pre)}) ? (${this.t.coder(tpls,pre)}) : (${this.f.coder(tpls,pre)}))"
         is Expr.MatchT -> """
             ${this.typex().coder(TODO())} mar_$n;
             switch (${this.tst.coder(tpls,pre)}.tag) {

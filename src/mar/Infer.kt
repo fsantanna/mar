@@ -116,15 +116,6 @@ fun Expr.infer (tpe: Type?): Type? {
             this.xtpls = this.xtpls ?: emptyList()  // TODO: infer
         }
 
-        is Expr.If -> {
-            this.cnd.infer(null)
-            val t = this.t.infer(tpe)
-            val f = this.f.infer(tpe)
-            if (t!=null && f!=null) {
-                this.xtp = t.sup_vs(f)
-            }
-            this.xtp?.infer(null)
-        }
         is Expr.MatchT -> {
             val tst = this.tst.infer(null)
             val cases = this.cases.map { (dat,e) ->
@@ -135,9 +126,7 @@ fun Expr.infer (tpe: Type?): Type? {
             if (tst!=null && !cases.any { (a,b) -> b==null }) {
                 val es = cases.map { it.second } as List<Type>
                 val fst: Type? = es.first()
-                this.xtp = es.fold(fst) { a,b -> a?.sup_vs(b) }
             }
-            this.xtp?.infer(null)
         }
         is Expr.MatchE -> {
             val tst = this.tst.infer(null)
@@ -149,9 +138,7 @@ fun Expr.infer (tpe: Type?): Type? {
             if (tst!=null && !cases.any { (a,b) -> a==null||b==null }) {
                 val es = cases.map { it.second } as List<Type>
                 val fst: Type? = es.first()
-                this.xtp = es.fold(fst) { a,b -> a?.sup_vs(b) }
             }
-            this.xtp?.infer(null)
         }
     }
     return this.type()
@@ -390,12 +377,7 @@ fun infer_apply () {
 fun infer_check () {
     G.outer!!.dn_visit_pos({ me ->
         me.dn_collect_pre({if (me==it) emptyList<Unit>() else null}, {
-            val xtp = when (it) {
-                is Expr.If     -> it.xtp
-                is Expr.MatchT -> it.xtp
-                is Expr.MatchE -> it.xtp
-                else -> Unit
-            }
+            val xtp = Unit
             /*
                 println("-=-=-")
                 println(me.to_str())

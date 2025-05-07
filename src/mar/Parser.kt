@@ -387,15 +387,6 @@ fun parser_expr_4_prim (): Expr {
             Expr.Cons(tp.tk, tp, e)
         }
 
-        accept_fix("if")    -> {
-            val tk0 = G.tk0!!
-            val cnd = parser_expr()
-            accept_op_err("=>")
-            val t = parser_expr()
-            accept_op_err("=>")
-            val f = parser_expr()
-            Expr.If(tk0, null, cnd, t, f)
-        }
         accept_fix("match") -> {
             val tk0 = G.tk0!!
             val tst = parser_expr()
@@ -426,9 +417,9 @@ fun parser_expr_4_prim (): Expr {
                 Pair(cnd, se)
             }
             if (tt == true) {
-                Expr.MatchT(tk0, null, tst, cases as List<Pair<Type.Data?,Expr>>)
+                Expr.MatchT(tk0, tst, cases as List<Pair<Type.Data?,Expr>>)
             } else {
-                Expr.MatchE(tk0, null, tst, cases as List<Pair<Expr?,Expr>>)
+                Expr.MatchE(tk0, tst, cases as List<Pair<Expr?,Expr>>)
             }
         }
 

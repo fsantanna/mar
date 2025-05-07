@@ -797,13 +797,6 @@ fun Expr.type (): Type? {
         }
         is Expr.Nat -> Type.Any(this.tk)
 
-        is Expr.If -> {
-            val tt = this.t.type()
-            val tf = this.f.type()
-            if (tt == null || tf == null) null else {
-                tt.sup_vs(tf)
-            }
-        }
         is Expr.MatchT -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a?.sup_vs(b!!)})
         is Expr.MatchE -> this.cases.map { it.second.type() }.fold(this.cases.first().second.type(), {a,b->a?.sup_vs(b!!)})
     }.let {

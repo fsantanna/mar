@@ -131,7 +131,6 @@ fun Expr.to_str (pre: Boolean = false): String {
             "(" + this.f.to_str(pre) + tpls + "(" + this.args.map { it.to_str(pre) }.joinToString(",") + "))"
         }
 
-        is Expr.If     -> "if ${this.cnd.to_str(pre)} => ${this.t.to_str(pre)} => ${this.f.to_str(pre)}"
         is Expr.MatchT -> {
             val tst = this.tst.to_str(pre)
             val cases = this.cases.map {

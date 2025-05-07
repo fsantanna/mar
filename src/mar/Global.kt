@@ -131,9 +131,8 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
     class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, null, tk_)
     class Call (tk: Tk, val f: Expr, var xtpls: List<Tpl_Con>?, val args: List<Expr>): Expr(G.N++, null, tk)
 
-    class If      (tk: Tk, var xtp: Type?, val cnd: Expr, val t: Expr, val f: Expr): Expr(G.N++, null, tk)
-    class MatchT  (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Type.Data?,Expr>>): Expr(G.N++, null, tk)
-    class MatchE  (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Expr?,Expr>>): Expr(G.N++, null, tk)
+    class MatchT (tk: Tk, val tst: Expr, val cases: List<Pair<Type.Data?, Expr>>): Expr(G.N++, null, tk)
+    class MatchE (tk: Tk, val tst: Expr, val cases: List<Pair<Expr?, Expr>>): Expr(G.N++, null, tk)
 }
 
 sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
