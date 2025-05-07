@@ -108,32 +108,32 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
     }
 }
 
-sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
-    class Nat    (val tk_: Tk.Nat): Expr(G.N++, null, tk_, null)
-    class Acc    (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, null, tk_, null)
-    class It     (val tk_: Tk.Fix): Expr(G.N++, null, tk_, null)
+sealed class Expr (var n: Int, var xup: Any?, val tk: Tk) {
+    class Nat    (val tk_: Tk.Nat): Expr(G.N++, null, tk_)
+    class Acc    (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, null, tk_)
+    class It     (val tk_: Tk.Fix): Expr(G.N++, null, tk_)
 
-    class Bool   (val tk_: Tk.Fix): Expr(G.N++, null, tk_, null)
-    class Str    (val tk_: Tk.Str): Expr(G.N++, null, tk_, null)
-    class Chr    (val tk_: Tk.Chr): Expr(G.N++, null, tk_, null)
-    class Num    (val tk_: Tk.Num): Expr(G.N++, null, tk_, null)
-    class Null   (tk_: Tk): Expr(G.N++, null, tk_, null)
-    class Unit   (tk_: Tk): Expr(G.N++, null, tk_, null)
+    class Bool   (val tk_: Tk.Fix): Expr(G.N++, null, tk_)
+    class Str    (val tk_: Tk.Str): Expr(G.N++, null, tk_)
+    class Chr    (val tk_: Tk.Chr): Expr(G.N++, null, tk_)
+    class Num    (val tk_: Tk.Num): Expr(G.N++, null, tk_)
+    class Null   (tk_: Tk): Expr(G.N++, null, tk_)
+    class Unit   (tk_: Tk): Expr(G.N++, null, tk_)
 
-    class Table  (tk: Tk, val vs: List<Pair<Tk.Var?, Expr>>): Expr(G.N++, null, tk, null)
-    class Field  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)
-    class Index  (tk: Tk, val col: Expr, val idx: Expr): Expr(G.N++, null, tk, null)
-    class Pred   (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)
-    class Disc   (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)
-    class Cons   (tk: Tk, val tp: Type.Data, val e: Expr): Expr(G.N++, null, tk, null)
+    class Table  (tk: Tk, val vs: List<Pair<Tk.Var?, Expr>>): Expr(G.N++, null, tk)
+    class Field  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk)
+    class Index  (tk: Tk, val col: Expr, val idx: Expr): Expr(G.N++, null, tk)
+    class Pred   (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk)
+    class Disc   (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk)
+    class Cons   (tk: Tk, val tp: Type.Data, val e: Expr): Expr(G.N++, null, tk)
 
-    class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, null, tk_, null)
-    class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, null, tk_, null)
-    class Call (tk: Tk, val f: Expr, var xtpls: List<Tpl_Con>?, val args: List<Expr>): Expr(G.N++, null, tk, null)
+    class Uno  (val tk_: Tk.Op, val e: Expr): Expr(G.N++, null, tk_)
+    class Bin  (val tk_: Tk.Op, val e1: Expr, val e2: Expr): Expr(G.N++, null, tk_)
+    class Call (tk: Tk, val f: Expr, var xtpls: List<Tpl_Con>?, val args: List<Expr>): Expr(G.N++, null, tk)
 
-    class If      (tk: Tk, var xtp: Type?, val cnd: Expr, val t: Expr, val f: Expr): Expr(G.N++, null, tk, null)
-    class MatchT  (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Type.Data?,Expr>>): Expr(G.N++, null, tk, null)
-    class MatchE  (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Expr?,Expr>>): Expr(G.N++, null, tk, null)
+    class If      (tk: Tk, var xtp: Type?, val cnd: Expr, val t: Expr, val f: Expr): Expr(G.N++, null, tk)
+    class MatchT  (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Type.Data?,Expr>>): Expr(G.N++, null, tk)
+    class MatchE  (tk: Tk, var xtp: Type?, val tst: Expr, val cases: List<Pair<Expr?,Expr>>): Expr(G.N++, null, tk)
 }
 
 sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {

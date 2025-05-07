@@ -154,17 +154,7 @@ fun Expr.infer (tpe: Type?): Type? {
             this.xtp?.infer(null)
         }
     }
-
-    val xtp = this.type()
-    //println(xtp)
-    this.xnum = when {
-        (xtp == null) -> null
-        (tpe == null) -> null
-        !xtp.is_num() -> null
-        !tpe.is_num() -> null
-        else -> tpe
-    }
-    return xtp
+    return this.type()
 }
 
 fun Type.infer (tpe: Type?): Type {
