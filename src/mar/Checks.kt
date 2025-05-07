@@ -34,7 +34,7 @@ fun Stmt.Block.to_dcls (): List<XDcl> {
         .let { it as List<Stmt> }
         .map {
             when (it) {
-                is Stmt.Dcl -> Triple(it, it.id, it.xtp)
+                is Stmt.Dcl -> Triple(it, it.id, null)
                 is Stmt.Proto -> Triple(it, it.id, it.tp)
                 else -> error("impossible case")
             }
@@ -82,7 +82,6 @@ fun check_vars () {
             }
             is Stmt.SetE -> {
                 if (me.dst is Expr.Nat && me.dst.tk.str=="mar_ret") {
-                    me.dst.xtp = (me.up_first { it is Stmt.Proto } as Stmt.Proto?)?.tp?.out
                 }
             }
             is Stmt.Escape -> {
@@ -281,9 +280,6 @@ fun check_types () {
             }
             is Expr.Table -> {
                 val tp = Type.Tuple(me.tk, me.vs.map { (id,v) -> Pair(id, v.typex()) })
-                if (!tp.is_sup_of(me.xtp!!)) {  // tp=[10]: xtp=[a:Int], correct is xtp.sup(tp), but not for tuple cons
-                    //err(me.tk, "tuple error : types mismatch")
-                }
             }
             is Expr.Field -> {
                 val tp = me.col.type()

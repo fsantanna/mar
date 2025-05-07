@@ -37,9 +37,9 @@ class Check {
     fun aa_01_var() {
         val out = check("""
                 do {
-                    var x: Int
+                    var x
                     do {
-                        var y: Int
+                        var y
                     }
                 }
             """
@@ -50,9 +50,9 @@ class Check {
     fun aa_02_var_dup() {
         val out = check("""
             do {
-                var x: Int
+                var x
                 do {
-                    var x: Int
+                    var x
                 }
             }
         """

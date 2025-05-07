@@ -7,7 +7,7 @@ import org.junit.runners.MethodSorters
 
 fun test_int (src: String): String {
     return test("""
-        var v: Int = $src
+        var v = $src
         dump(v)
     """)
 }
@@ -65,7 +65,7 @@ class Exec  {
     @Test
     fun ab_01_float() {
         val out = test("""
-            var x: Float = 1/2
+            var x = 1/2
             dump(x)
         """)
         assert(out == "0.5\n") { out }
@@ -73,7 +73,7 @@ class Exec  {
     @Test
     fun ab_02_float() {
         val out = test("""
-            var x: Float = -1
+            var x = -1
             dump(x)
         """)
         assert(out == "-1\n") { out }
@@ -81,7 +81,7 @@ class Exec  {
     @Test
     fun ab_03_float() {
         val out = test("""
-            var dy: Float = (10 - 9) / (3 - 1)
+            var dy = (10 - 9) / (3 - 1)
             dump(dy)
         """)
         assert(out == "0.5\n") { out }
@@ -90,9 +90,9 @@ class Exec  {
     fun ab_04_field_float() {
         val out = test("""
             data X: [x:Int]
-            var x1: X = X [1]
-            var x2: X = X [2]
-            var dy: Float = x1.x / x2.x
+            var x1 = X [1]
+            var x2 = X [2]
+            var dy = x1.x / x2.x
             dump(dy)
         """)
         assert(out == "0.5\n") { out }
@@ -155,7 +155,7 @@ class Exec  {
     @Test
     fun bb_01_nat_printf() {
         val out = test("""
-            var x: Int = 1 + `10`
+            var x = 1 + `10`
             `print(x)`
         """)
         assert(out == "11\n") { out }
@@ -195,7 +195,7 @@ class Exec  {
             }
             ```
             data X: [Int]
-            var v: Int = `f`(X[10])
+            var v = `f`(X[10])
             dump(v)
         """)
         assert(out.contains("error: incompatible type for argument 1 of ‘f’")) { out }
@@ -225,8 +225,8 @@ class Exec  {
     @Test
     fun bb_08_nat_type() {
         val out = test("""
-            var x: `int` = 10
-            var y: Int = x
+            var x = 10
+            var y = x
             dump(y)
         """)
         assert(out == "10\n") { out }
@@ -273,8 +273,8 @@ class Exec  {
     @Test
     fun cc_03_if() {
         val out = test("""
-            var n: Int = 0
-            var i: Int = 5
+            var n = 0
+            var i = 5
             loop {
                 if i == 0 {
                     break
@@ -438,9 +438,9 @@ class Exec  {
     @Test
     fun ef_01_func_nested() {
         val out = test("""
-            var i: Int = 10
+            var i = 10
             func f: () -> () {
-                var j: Int = 20
+                var j = 20
                 func g: () -> Int {
                     return(i + j)
                 }
@@ -454,17 +454,17 @@ class Exec  {
     fun ef_02_func_nested_out() {
         val out = test("""
             do {
-                var i: Int = 10
+                var i = 10
                 func f: () -> (\func () -> Int) {
                     do {
-                        var j: Int = 20
+                        var j = 20
                         func g: () -> Int {
                             return(i + j)
                         }
                         return(\g)
                     }
                 }
-                var gg: (\func () -> Int) = f()
+                var gg = f()
                 dump(gg\())
             }
         """)

@@ -162,10 +162,7 @@ fun Stmt.coder (tpls: Tpl_Map?, pre: Boolean): String {
                         mar_$n->cur = MIN(mar_$n->max, mar_$n->cur);                        
                     }                        
                 """
-                tdst.is_same_of(tsrc) -> "$dst = $src;"
-                else -> {
-                    "$dst = CAST(${tdst.coder(tpls)}, $src);"
-                }
+                else -> "$dst = $src"
             }
         }
         is Stmt.SetS   -> this.src.coder(tpls,pre)
@@ -693,15 +690,7 @@ fun Expr.coder (tpls: Tpl_Map?, pre: Boolean): String {
             }
         }
 
-        is Expr.Nat -> when {
-            (this.tk.str == "mar_ret") -> this.tk.str
-            (this.xup is Stmt.Pass)    -> this.tk.str
-            (this.xtp is Type.Any)     -> this.tk.str
-            (this.xtp is Type.Nat)     -> this.tk.str
-            (this.xtp is Type.Prim)    -> this.tk.str
-            (this.xtp is Type.Data)    -> "CAST(${this.xtp!!.coder(tpls)}, ${this.tk.str})"
-            else -> "((${this.xtp!!.coder(tpls)}) ${this.tk.str})"
-        }
+        is Expr.Nat -> this.tk.str
         is Expr.Acc -> this.tk_.coder(this, pre)
         is Expr.It -> {
             val tp = this.typex()

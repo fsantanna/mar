@@ -68,49 +68,12 @@ fun Expr.infer (tpe: Type?): Type? {
 
         is Expr.It -> {
             val dat = this.up_first { it is Stmt.Await.Data } as Stmt.Await.Data
-            this.xtp = dat.tp
-            this.xtp
         }
 
         is Expr.Nat -> {
-            if (this.xtp == null) {
-                this.xtp = tpe ?: Type.Any(this.tk)
-            }
-            this.xtp?.infer(null)
         }
 
         is Expr.Table -> {
-            val up = this.xtp.sub_vs_null(tpe)
-            //val up = this.xtp ?: tpx
-            //println(listOf("infer-tuple", this.to_str(), this.xtp?.to_str(), xtp?.to_str()))
-            //println(listOf(up?.to_str(), upx?.to_str()))
-            val vs = this.vs.mapIndexed { i,(tk,e) ->
-                Pair(tk, e.infer(if (up !is Type.Tuple || up.ts.size<i+1) null else up.ts[i].second))
-            }
-            if (vs.any { it.second == null }) {
-                // infer error
-            } else {
-                vs as List<Pair<Tk.Var?, Type>>
-                val dn = Type.Tuple(this.tk,
-                    if (up !is Type.Tuple) {
-                        vs
-                    } else {
-                        vs.zip(up.ts).map { (vs,ts) ->
-                            Pair(vs.first ?: ts.first, vs.second)
-                        }
-                    }
-                )
-                //println(listOf("infer-tuple-dn", dn.to_str()))
-                if (this.xtp == null) {
-                    this.xtp = if (up !is Type.Tuple) {
-                        dn
-                    } else {
-                        //println(listOf("infer-tuple-dn", up.to_str(), dn.to_str()))
-                        (up.sub_vs(dn) ?: dn) as Type.Tuple  // up first b/c of int/float
-                    }
-                }
-            }
-            this.xtp?.infer(null)
         }
         is Expr.Field -> this.col.infer(null)
         is Expr.Index -> {
@@ -323,8 +286,6 @@ fun infer_apply () {
                 val dcl = dst.to_xdcl()!!.first
                 when (dcl) {
                     is Stmt.Dcl -> {
-                        dcl.xtp = xsrc
-                        dcl.xtp!!.infer(null)
                     }
                     is Stmt.Proto.Coro -> {
                         if (dcl.tp_.xpro == null) {
@@ -365,7 +326,6 @@ fun infer_apply () {
                me.esc?.infer(null)
            }
            is Stmt.Dcl -> {
-               me.xtp?.infer(null)
            }
            is Stmt.SetE -> me.set()
            is Stmt.SetS -> me.set()
@@ -441,7 +401,6 @@ fun infer_check () {
     G.outer!!.dn_visit_pos({ me ->
         me.dn_collect_pre({if (me==it) emptyList<Unit>() else null}, {
             val xtp = when (it) {
-                is Expr.Table  -> it.xtp
                 is Expr.If     -> it.xtp
                 is Expr.MatchT -> it.xtp
                 is Expr.MatchE -> it.xtp
@@ -464,9 +423,6 @@ fun infer_check () {
         when (it) {
             is Stmt.Dcl -> {
                 //println(listOf(it.to_str(), it.xtp?.to_str()))
-                if (it.xtp==null || it.xtp is Type.Any) {
-                    err(it.id, "inference error : unknown type")
-                }
             }
             else -> {}
         }

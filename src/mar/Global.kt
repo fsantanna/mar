@@ -109,9 +109,9 @@ sealed class Type (var n: Int, var xup: kotlin.Any?, val tk: Tk) {
 }
 
 sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
-    class Nat    (val tk_: Tk.Nat, var xtp: Type?): Expr(G.N++, null, tk_, null)
+    class Nat    (val tk_: Tk.Nat): Expr(G.N++, null, tk_, null)
     class Acc    (val tk_: Tk.Var, val ign: Boolean=false): Expr(G.N++, null, tk_, null)
-    class It     (val tk_: Tk.Fix, var xtp: Type?): Expr(G.N++, null, tk_, null)
+    class It     (val tk_: Tk.Fix): Expr(G.N++, null, tk_, null)
 
     class Bool   (val tk_: Tk.Fix): Expr(G.N++, null, tk_, null)
     class Str    (val tk_: Tk.Str): Expr(G.N++, null, tk_, null)
@@ -120,7 +120,7 @@ sealed class Expr (var n: Int, var xup: Any?, val tk: Tk, var xnum: Type?) {
     class Null   (tk_: Tk): Expr(G.N++, null, tk_, null)
     class Unit   (tk_: Tk): Expr(G.N++, null, tk_, null)
 
-    class Table  (tk: Tk, var xtp: Type.Tuple?, val vs: List<Pair<Tk.Var?,Expr>>): Expr(G.N++, null, tk, null)
+    class Table  (tk: Tk, val vs: List<Pair<Tk.Var?, Expr>>): Expr(G.N++, null, tk, null)
     class Field  (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)
     class Index  (tk: Tk, val col: Expr, val idx: Expr): Expr(G.N++, null, tk, null)
     class Pred   (tk: Tk, val col: Expr, val idx: String): Expr(G.N++, null, tk, null)
@@ -145,7 +145,7 @@ sealed class Stmt (var n: Int, var xup: Stmt?, val tk: Tk) {
     }
 
     class Block  (tk: Tk, val esc: Type.Data?, val ss: List<Stmt>) : Stmt(G.N++, null, tk)
-    class Dcl    (tk: Tk, val id: Tk.Var, var xtp: Type?) : Stmt(G.N++, null, tk)
+    class Dcl    (tk: Tk, val id: Tk.Var) : Stmt(G.N++, null, tk)
     class SetE   (tk: Tk, val dst: Expr, val src: Expr): Stmt(G.N++, null, tk)
     class SetS   (tk: Tk, val dst: Expr, val src: Stmt): Stmt(G.N++, null, tk)
 
@@ -279,7 +279,7 @@ fun all (tst: Boolean, verbose: Boolean, inps: List<Pair<Triple<String?, Int, In
          listOf(
                 Stmt.Data(tk0, Tk.Type("Return", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
                 Stmt.Data(tk0, Tk.Type("Break", tk0.pos), emptyList(), Type.Tuple(tk0, emptyList()), emptyList()),
-                Stmt.Dcl(tk0, Tk.Var("dump",tk0.pos), Type.Unit(tk0))
+                Stmt.Dcl(tk0, Tk.Var("dump",tk0.pos))
             ) + ss
         )
         //println(G.outer!!.to_str())

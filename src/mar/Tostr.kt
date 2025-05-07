@@ -100,14 +100,7 @@ fun Tk.Op.to_str (pre: Boolean): String {
 
 fun Expr.to_str (pre: Boolean = false): String {
     return when (this) {
-        is Expr.Nat    -> {
-            val nat = this.tk.str.let { if (it.contains("\n")) "```"+it+"```" else "`"+it+"`" }
-            if (this.xtp==null || this.xtp is Type.Any) {
-                nat
-            } else {
-                "(" + nat + ": " + this.xtp!!.to_str(pre) + ")"
-            }
-        }
+        is Expr.Nat    -> this.tk.str.let { if (it.contains("\n")) "```"+it+"```" else "`"+it+"`" }
         is Expr.Acc    -> this.ign.cond { "__" } + this.tk.str
         is Expr.It     -> "it"
         is Expr.Bool   -> this.tk.str
@@ -118,7 +111,7 @@ fun Expr.to_str (pre: Boolean = false): String {
         is Expr.Unit   -> "()"
 
         is Expr.Table  -> {
-            "([" + this.vs.map { (id,v) -> id.cond { "."+it.str+"=" } + v.to_str(pre) }.joinToString(",") + "]" + this.xtp.cond { ":${it.to_str()}" } + ")"
+            "[" + this.vs.map { (id,v) -> id.cond { "."+it.str+"=" } + v.to_str(pre) }.joinToString(",") + "]"
         }
         is Expr.Field  -> "(" + this.col.to_str(pre) + "." + this.idx + ")"
         is Expr.Index  -> "(" + this.col.to_str(pre) + "[" + this.idx.to_str(pre) + "])"
@@ -201,7 +194,7 @@ fun Stmt.to_str (pre: Boolean = false): String {
             "task " + this.id.str + tpls + ": " + this.tp.to_str(pre).drop(5) + " {\n" + this.blk.ss.to_str(pre) + "}"
         }
         is Stmt.Block  -> "do " + this.esc.cond { ":"+it.to_str(pre)+" " } + "{\n" + (this.ss.map { it.to_str(pre) + "\n" }.joinToString("")) + "}"
-        is Stmt.Dcl    -> "var ${this.id.str}" + this.xtp.cond { ": ${it.to_str()}" }
+        is Stmt.Dcl    -> "var ${this.id.str}"
         is Stmt.SetE   -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
         is Stmt.SetS   -> "set " + this.dst.to_str(pre) + " = " + this.src.to_str(pre)
         is Stmt.Escape -> "escape(" + this.e.to_str(pre) + ")"

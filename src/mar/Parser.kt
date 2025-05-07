@@ -327,10 +327,10 @@ fun parser_expr_4_prim (): Expr {
             val tp = if (!accept_fix(":")) null else {
                 parser_type(null, false, false)
             }
-            Expr.Nat(tk0, tp)
+            Expr.Nat(tk0)
         }
         accept_enu("Var")  -> Expr.Acc(G.tk0 as Tk.Var)
-        accept_fix("it")    -> Expr.It(G.tk0 as Tk.Fix, null)
+        accept_fix("it")    -> Expr.It(G.tk0 as Tk.Fix)
         accept_fix("false") -> Expr.Bool(G.tk0 as Tk.Fix)
         accept_fix("true")  -> Expr.Bool(G.tk0 as Tk.Fix)
         accept_enu("Str")  -> Expr.Str(G.tk0 as Tk.Str)
@@ -362,7 +362,7 @@ fun parser_expr_4_prim (): Expr {
                 check_fix_err("[")
                 parser_type(null, false, false) as Type.Tuple
             }
-            Expr.Table(tk0, tp, l)
+            Expr.Table(tk0, l)
         }
 
         check_enu("Type") -> {
@@ -532,7 +532,7 @@ fun check_stmt_as_set_src (): Boolean {
 fun gen_spawn (tk: Tk, N: Int, pro: Expr, args: List<Expr>): List<Stmt> {
     return listOf(
         //Stmt.Dcl(tk, Tk.Var("mar_exe_$N", tk.pos), Type.Nat(Tk.Nat("TODO", tk.pos))),
-        Stmt.Dcl(tk, Tk.Var("mar_exe_$N", tk.pos), null),
+        Stmt.Dcl(tk, Tk.Var("mar_exe_$N", tk.pos)),
         Stmt.SetS(
             tk,
             Expr.Acc(Tk.Var("mar_exe_$N", tk.pos)),
@@ -582,11 +582,11 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
             val e = parser_expr()
             listOf (
                 Stmt.SetE(tk0,
-                    Expr.Nat(Tk.Nat("mar_ret", tk0.pos), null),
+                    Expr.Nat(Tk.Nat("mar_ret", tk0.pos)),
                     e),
                 Stmt.Escape(tk0,
                     Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Return", tk0.pos))),
-                        Expr.Table(tk0,null, emptyList())))
+                        Expr.Table(tk0,emptyList())))
             )
         }
 
@@ -629,14 +629,10 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
             val tk0 = G.tk0 as Tk.Fix
             accept_enu_err("Var")
             val id = G.tk0 as Tk.Var
-            val (_,tp) = if (accept_fix(":")) parser_var_type(id) else {
-                Pair(id, null)
-            }
-            val tk1 = G.tk1
-            listOf(Stmt.Dcl(tk0, id, tp)) + when {
+            listOf(Stmt.Dcl(tk0, id)) + when {
                 !accept_op("=") -> emptyList()
                 check_stmt_as_set_src() -> parser_stmt(Expr.Acc(id))
-                else -> listOf(Stmt.SetE(tk1!!, Expr.Acc(id), parser_expr()))
+                else -> listOf(Stmt.SetE(G.tk0!!, Expr.Acc(id), parser_expr()))
             }
         }
 
@@ -678,7 +674,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
             val tk0 = G.tk0!!
             accept_fix_err("(")
             val e = if (check_fix(")")) {
-                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Table(tk0, null, emptyList()))
+                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Table(tk0, emptyList()))
             } else {
                 parser_expr()
             }
@@ -714,9 +710,9 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
                 val (id,n) = num
                 val lim = Tk.Var("mar_lim_${G.N}", n.tk.pos)
                 listOf (
-                    Stmt.Dcl(tk0, id, Type.Prim(Tk.Type("Int",id.pos))),
+                    Stmt.Dcl(tk0, id),
                     Stmt.SetE(tk0, Expr.Acc(id), Expr.Num(Tk.Num("0",id.pos))),
-                    Stmt.Dcl(tk0, lim, Type.Prim(Tk.Type("Int",id.pos))),
+                    Stmt.Dcl(tk0, lim),
                     Stmt.SetE(tk0, Expr.Acc(lim), n),
                     Stmt.Loop(tk0,
                         Stmt.Block(tk0, brk,blk + listOf(
@@ -725,7 +721,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
                                 Stmt.Block(tk0, null, listOf(
                                     Stmt.Escape(tk0,
                                         Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
-                                        Expr.Table(tk0,null, emptyList())))
+                                        Expr.Table(tk0,emptyList())))
                                     )
                                 ),
                                 Stmt.Block(tk0, null, emptyList()))
@@ -739,7 +735,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
             listOf (
                 Stmt.Escape(tk0,
                     Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
-                        Expr.Table(tk0,null, emptyList())))
+                        Expr.Table(tk0,emptyList())))
             )
         }
         (accept_fix("while") || accept_fix("until")) -> {
@@ -756,7 +752,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
                     Stmt.Block(tk0, null, listOf(
                         Stmt.Escape(tk0,
                             Expr.Cons(tk0, Type.Data(tk0,null,listOf(Tk.Type("Break", tk0.pos))),
-                                Expr.Table(tk0,null, emptyList()))))
+                                Expr.Table(tk0,emptyList()))))
                     ),
                     Stmt.Block(tk0, null, emptyList()))
             )
@@ -833,7 +829,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
                         err(call.tk, "await error : expected task call")
                     }
                     return listOf(
-                        Stmt.Dcl(tk0, id, null),
+                        Stmt.Dcl(tk0, id),
                         Stmt.SetS(tk0, Expr.Acc(id), Stmt.Create(tk0, call.f)),
                         Stmt.Start(tk0, Expr.Acc(id), call.args),
                         Stmt.Await.Task(tk0, Expr.Acc(id))
@@ -878,7 +874,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
             val tk0 = G.tk0!!
             accept_fix_err("(")
             val e = if (check_fix(")")) {
-                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Table(tk0, null, emptyList()))
+                Expr.Cons(tk0, Type.Data(tk0, null, listOf(Tk.Type("Error",tk0.pos))), Expr.Table(tk0, emptyList()))
             } else {
                 parser_expr()
             }
@@ -1090,7 +1086,7 @@ fun parser_stmt (set: Expr?=null): List<Stmt> {
                 accept_op_err("=")
                 val e = parser_expr()
                 listOf (
-                    Stmt.Dcl(tk0, id, null),
+                    Stmt.Dcl(tk0, id),
                     Stmt.SetE(G.tk0!!, Expr.Acc(id), e)
                 )
             }.flatten()

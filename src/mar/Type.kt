@@ -656,7 +656,7 @@ fun Stmt.type (): Type? {
 }
 
 fun Expr.typex (): Type {
-    return this.type()!!
+    return this.type() ?: Type.Unit(this.tk)
 }
 
 fun Expr.type (): Type? {
@@ -759,7 +759,7 @@ fun Expr.type (): Type? {
             }
         }
 
-        is Expr.Table -> this.xtp ?: Type.Any(this.tk)
+        is Expr.Table -> Type.Any(this.tk)
         is Expr.Field -> {
             val tup = this.col.type().let { tp ->
                 when (tp) {
@@ -785,7 +785,7 @@ fun Expr.type (): Type? {
             }
         }
         is Expr.Acc -> this.tk_.type(this)
-        is Expr.It -> this.xtp
+        is Expr.It -> Type.Any(this.tk)
         is Expr.Bool -> Type.Prim(Tk.Type( "Bool", this.tk.pos))
         is Expr.Str -> Type.Pointer(this.tk, Type.Prim(Tk.Type( "Char", this.tk.pos)))
         is Expr.Chr -> Type.Prim(Tk.Type( "Char", this.tk.pos))
@@ -795,7 +795,7 @@ fun Expr.type (): Type? {
             val x = if (this.tk.str.contains(".")) "Float" else "Int"
             Type.Prim(Tk.Type(x, this.tk.pos))
         }
-        is Expr.Nat -> this.xtp ?: Type.Any(this.tk)
+        is Expr.Nat -> Type.Any(this.tk)
 
         is Expr.If -> {
             val tt = this.t.type()

@@ -23,7 +23,7 @@ fun cache_ups () {
                 me.esc?.xup = me
                 me.ss.forEach { it.xup = me }
             }
-            is Stmt.Dcl -> me.xtp?.xup = me
+            is Stmt.Dcl -> {}
             is Stmt.SetE -> {
                 me.dst.xup = me
                 me.src.xup = me
@@ -111,7 +111,6 @@ fun cache_ups () {
             }
 
             is Expr.Table -> {
-                me.xtp?.xup = me
                 me.vs.forEach { (_,e) -> e.xup = me }
             }
             is Expr.Field -> me.col.xup = me
@@ -126,7 +125,6 @@ fun cache_ups () {
                 me.e.xup = me
             }
             is Expr.Nat -> {
-                me.xtp?.xup = me
             }
 
             is Expr.Acc, is Expr.It, is Expr.Bool, is Expr.Chr, is Expr.Str,

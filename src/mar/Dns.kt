@@ -6,7 +6,7 @@ fun <V> Stmt.dn_collect_pos (fs: (Stmt)->List<V>, fe: (Expr)->List<V>, ft: (Type
         is Stmt.Proto  -> this.blk.dn_collect_pos(fs,fe,ft) + this.tp.dn_collect_pos(fe,ft)
 
         is Stmt.Block -> (this.esc?.dn_collect_pos(fe,ft) ?: emptyList()) + this.ss.map { it.dn_collect_pos(fs,fe,ft) }.flatten()
-        is Stmt.Dcl -> this.xtp?.dn_collect_pos(fe,ft) ?: emptyList()
+        is Stmt.Dcl -> emptyList()
         is Stmt.SetE -> this.src.dn_collect_pos(fe,ft) + this.dst.dn_collect_pos(fe,ft)
         is Stmt.SetS -> this.src.dn_collect_pos(fs,fe,ft) + this.dst.dn_collect_pos(fe,ft)
 
@@ -41,7 +41,7 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
     return when (this) {
         is Expr.Uno    -> this.e.dn_collect_pos(fe,ft)
         is Expr.Bin    -> this.e1.dn_collect_pos(fe,ft) + this.e2.dn_collect_pos(fe,ft)
-        is Expr.Table  -> (this.xtp?.dn_collect_pos(fe,ft) ?: emptyList()) + this.vs.map { (_,tp) -> tp.dn_collect_pos(fe,ft) }.flatten()
+        is Expr.Table  -> this.vs.map { (_,tp) -> tp.dn_collect_pos(fe,ft) }.flatten()
         is Expr.Field  -> this.col.dn_collect_pos(fe,ft)
         is Expr.Index  -> this.col.dn_collect_pos(fe,ft) + this.idx.dn_collect_pos(fe,ft)
         is Expr.Disc   -> this.col.dn_collect_pos(fe,ft)
@@ -51,7 +51,7 @@ fun <V> Expr.dn_collect_pos (fe: (Expr)->List<V>, ft: (Type)->List<V>): List<V> 
         is Expr.If     -> this.cnd.dn_collect_pos(fe,ft) + this.t.dn_collect_pos(fe,ft) + this.f.dn_collect_pos(fe,ft)
         is Expr.MatchT -> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(fe,ft) ?: emptyList()) + it.second.dn_collect_pos(fe,ft) }.flatten()
         is Expr.MatchE -> this.tst.dn_collect_pos(fe,ft) + this.cases.map { (it.first?.dn_collect_pos(fe,ft) ?: emptyList()) + it.second.dn_collect_pos(fe,ft) }.flatten()
-        is Expr.Nat    -> (this.xtp?.dn_collect_pos(fe,ft) ?: emptyList())
+        is Expr.Nat    -> emptyList()
         is Expr.Acc, is Expr.It, is Expr.Null, is Expr.Unit, is Expr.Str,
         is Expr.Bool, is Expr.Chr, is Expr.Num -> emptyList()
     } + fe(this)
@@ -105,7 +105,7 @@ fun <V> Stmt.dn_collect_pre (fs: (Stmt)->List<V>?, fe: (Expr)->List<V>?, ft: (Ty
         is Stmt.Proto  -> this.blk.dn_collect_pre(fs,fe,ft) + this.tp.dn_collect_pre(fe,ft)
 
         is Stmt.Block -> (this.esc?.dn_collect_pre(fe,ft) ?: emptyList()) + this.ss.map { it.dn_collect_pre(fs,fe,ft) }.flatten()
-        is Stmt.Dcl -> this.xtp?.dn_collect_pre(fe,ft) ?: emptyList()
+        is Stmt.Dcl -> emptyList()
         is Stmt.SetE -> this.dst.dn_collect_pre(fe,ft) + this.src.dn_collect_pre(fe,ft)
         is Stmt.SetS -> this.dst.dn_collect_pre(fe,ft) + this.src.dn_collect_pre(fs,fe,ft)
 
@@ -144,7 +144,7 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
     return v + when (this) {
         is Expr.Uno   -> this.e.dn_collect_pre(fe,ft)
         is Expr.Bin   -> this.e1.dn_collect_pre(fe,ft) + this.e2.dn_collect_pre(fe,ft)
-        is Expr.Table -> (this.xtp?.dn_collect_pre(fe,ft) ?: emptyList()) + this.vs.map { (_,tp) -> tp.dn_collect_pre(fe,ft) }.flatten()
+        is Expr.Table -> this.vs.map { (_,tp) -> tp.dn_collect_pre(fe,ft) }.flatten()
         is Expr.Field -> this.col.dn_collect_pre(fe,ft)
         is Expr.Index  -> this.col.dn_collect_pre(fe,ft) + this.idx.dn_collect_pre(fe,ft)
         is Expr.Disc  -> this.col.dn_collect_pre(fe,ft)
@@ -154,7 +154,7 @@ fun <V> Expr.dn_collect_pre (fe: (Expr)->List<V>?, ft: (Type)->List<V>?): List<V
         is Expr.If     -> this.cnd.dn_collect_pre(fe,ft) + this.t.dn_collect_pre(fe,ft) + this.f.dn_collect_pre(fe,ft)
         is Expr.MatchT -> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(fe,ft) ?: emptyList()) + it.second.dn_collect_pre(fe,ft) }.flatten()
         is Expr.MatchE -> this.tst.dn_collect_pre(fe,ft) + this.cases.map { (it.first?.dn_collect_pre(fe,ft) ?: emptyList()) + it.second.dn_collect_pre(fe,ft) }.flatten()
-        is Expr.Nat    -> (this.xtp?.dn_collect_pre(fe,ft) ?: emptyList())
+        is Expr.Nat    -> emptyList()
         is Expr.Acc, is Expr.It, is Expr.Null, is Expr.Unit, is Expr.Str,
         is Expr.Bool, is Expr.Chr, is Expr.Num -> emptyList()
     }
