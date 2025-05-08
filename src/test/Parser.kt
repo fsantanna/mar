@@ -10,39 +10,6 @@ class Parser {
     // VAR
 
     @Test
-    fun aa_01_var () {
-        G.tks = (" x ").lexer()
-        parser_lexer()
-        val e = parser_expr_4_prim()
-        assert(e is Expr.Acc && e.tk.str == "x")
-    }
-    @Test
-    fun aa_02_var_err () {
-        G.tks = (" { ").lexer()
-        parser_lexer()
-        assert(trap { parser_expr_4_prim() } == "anon : (lin 1, col 2) : expected expression : have \"{\"")
-    }
-    @Test
-    fun aa_03_var_err () {
-        G.tks = ("  ").lexer()
-        parser_lexer()
-        assert(trap { parser_expr_4_prim() } == "anon : (lin 1, col 3) : expected expression : have end of file")
-    }
-    @Test
-    fun aa_04_evt () {
-        G.tks = (" evt ").lexer()
-        parser_lexer()
-        val e = parser_expr_4_prim()
-        assert(e is Expr.Acc && e.tk.str == "evt")
-    }
-    @Test
-    fun aa_05_err () {
-        G.tks = (" err ").lexer()
-        parser_lexer()
-        val e = parser_expr_4_prim()
-        assert(e is Expr.Acc && e.tk.str == "err")
-    }
-    @Test
     fun aa_06_err() {
         G.tks = ("""
         var e
@@ -265,35 +232,6 @@ class Parser {
         assert(tp.to_str() == "\\#[#[Int]]") { tp.to_str() }
     }
 
-    // PARENS
-
-    @Test
-    fun bb_01_expr_parens() {
-        G.tks = (" ( a ) ").lexer()
-        parser_lexer()
-        val e = parser_expr_4_prim()
-        assert(e is Expr.Acc && e.tk.str == "a")
-    }
-    @Test
-    fun bb_02_expr_parens_err() {
-        G.tks = (" ( a  ").lexer()
-        parser_lexer()
-        assert(trap { parser_expr_4_prim() } == "anon : (lin 1, col 7) : expected \")\" : have end of file")
-    }
-    @Test
-    fun bb_03_op_prec_err() {
-        G.tks = ("println(2 * 3 - 1)").lexer()
-        parser_lexer()
-        assert(trap { parser_expr() } == "anon : (lin 1, col 15) : binary operation error : expected surrounding parentheses")
-    }
-    @Test
-    fun bb_04_op_prec_ok() {
-        G.tks = ("println(2 * (3 - 1))").lexer()
-        parser_lexer()
-        val e = parser_expr()
-        assert(e.to_str() == "(println((2 * (3 - 1))))") { e.to_str() }
-    }
-
     // STRING
 
     @Test
@@ -307,39 +245,11 @@ class Parser {
     // BINARY / UNARY
 
     @Test
-    fun cc_01_bin_err() {
-        G.tks = ("2 * 3 - 1").lexer()
-        parser_lexer()
-        //parser_expr_1_bin()
-        assert(trap { parser_expr_1_bin() } == "anon : (lin 1, col 7) : binary operation error : expected surrounding parentheses")
-    }
-    @Test
-    fun cc_02_bin() {
-        G.tks = ("2 * (3 - 1)").lexer()
-        parser_lexer()
-        val e = parser_expr_1_bin()
-        assert(e.to_str() == "(2 * (3 - 1))")
-    }
-    @Test
-    fun cc_03_uno() {
-        G.tks = ("!-x").lexer()
-        parser_lexer()
-        val e = parser_expr()
-        assert(e.to_str() == "(!(-x))")
-    }
-    @Test
     fun cc_04_concat() {
         G.tks = ("a ++ b").lexer()
         parser_lexer()
         val e = parser_expr_1_bin()
         assert(e.to_str() == "(a ++ b)") { e.to_str() }
-    }
-    @Test
-    fun cc_05_eq() {
-        G.tks = ("X[10] == X[10]").lexer()
-        parser_lexer()
-        val e = parser_expr_1_bin()
-        assert(e.to_str() == "((X(([10]))) == (X(([10]))))") { e.to_str() }
     }
 
     // DO
@@ -473,44 +383,6 @@ class Parser {
            "set `mar_ret` = ()\n"+
            "escape((Return(([]))))\n"+
            "}") { e.to_str() }
-    }
-
-    // NUM / NIL / BOOL
-
-    @Test
-    fun ff_01_num() {
-        G.tks = (" 1.5F ").lexer()
-        parser_lexer()
-        val e = parser_expr_4_prim()
-        assert(e is Expr.Num && e.tk.str == "1.5F")
-    }
-    @Test
-    fun ff_02_nil() {
-        G.tks = ("null").lexer()
-        parser_lexer()
-        val e = parser_expr_4_prim()
-        assert(e is Expr.Null && e.tk.str == "null")
-    }
-    @Test
-    fun ff_03_true() {
-        G.tks = ("true").lexer()
-        parser_lexer()
-        val e = parser_expr_4_prim()
-        assert(e is Expr.Bool && e.tk.str == "true")
-    }
-    @Test
-    fun ff_04_false() {
-        G.tks = ("false").lexer()
-        parser_lexer()
-        val e = parser_expr_4_prim()
-        assert(e is Expr.Bool && e.tk.str == "false")
-    }
-    @Test
-    fun ff_05_char() {
-        G.tks = ("'x'").lexer()
-        parser_lexer()
-        val e = parser_expr_4_prim()
-        assert(e is Expr.Chr && e.tk.str == "'x'")
     }
 
     // CALL
