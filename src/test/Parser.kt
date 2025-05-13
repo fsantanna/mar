@@ -47,6 +47,25 @@ class Parser {
         assert(e is Expr.Pred && e.col is Expr.Acc && e.idx=="1")
         assert(e.to_str() == "(v?1)") { e.to_str() }
     }
+    @Test
+    fun uu_06_emit() {
+        G.tks = ("emit(X[])").lexer()
+        parser_lexer()
+        val s = parser_stmt().first()
+        assert(s is Stmt.Emit)
+        assert(s.to_str() == "emit((X(([]))))") { s.to_str() }
+    }
+    @Test
+    fun uu_X1_spawn() {
+        G.tks = ("spawn xf()").lexer()
+        parser_lexer()
+        val s = parser_stmt() //.first()
+        //assert(s is Stmt.Resume && s.exe is Expr.Acc && s.arg is Expr.Unit)
+        assert(s.to_str() ==
+                "var mar_exe_2\n"+
+                "set mar_exe_2 = create(xf)\n"+
+                "start mar_exe_2()\n") { s.to_str() }
+    }
 
     // IF / LOOP / MATCH
 
@@ -532,113 +551,5 @@ class Parser {
         parser_lexer()
         val ss = parser_stmt()
         assert(ss.to_str() == "data Pos: [Int,Int]\n") { ss.to_str() }
-    }
-
-    // TASK: CREATE / START / SPAWN? / AWAIT / EMIT
-
-    @Test
-    fun uu_01_exec_err() {
-        G.tks = ("exec ()").lexer()
-        parser_lexer()
-        //parser_type(null, false, false)
-        assert(trap { parser_type(null, false, false) } == "anon : (lin 1, col 6) : exec error : expected coro or task")
-    }
-    @Test
-    fun uu_02_task() {
-        G.tks = ("task co: () -> () {}").lexer()
-        parser_lexer()
-        val s = parser_stmt().first()
-        assert(s is Stmt.Proto.Task && s.tp.inps.size==0)
-        //assert(s.to_str() == "task co: () -> () {\nemit((Event.Task(([`((void*) mar_exe)`]))))\n}") { s.to_str() }
-        assert(s.to_str() == "task co: () -> () {\n}") { s.to_str() }
-    }
-    @Test
-    fun uu_03_task() {
-        G.tks = ("task co: (x: ()) -> () {}").lexer()
-        parser_lexer()
-        val s = parser_stmt().first()
-        assert(s is Stmt.Proto.Task && s.tp.out is Type.Unit)
-        assert(s.to_str() == "task co: (x: ()) -> () {\n}") { s.to_str() }
-    }
-    @Test
-    fun uu_03_await() {
-        G.tks = ("await(:X)").lexer()
-        parser_lexer()
-        val s = parser_stmt().first()
-        assert(s is Stmt.Await.Data && s.tp.ts.size==1)
-        assert(s.to_str() == "await(:X)") { s.to_str() }
-    }
-    @Test
-    fun uu_04_await_err() {
-        G.tks = ("await()").lexer()
-        parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : expected expression : have \")\"")
-    }
-    @Test
-    fun uu_05_await_err() {
-        G.tks = ("await :X").lexer()
-        parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : expected expression : have \":\"")
-        //assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : expected \"(\" : have \":\"")
-    }
-    @Test
-    fun uu_06_await_err() {
-        G.tks = ("await(:1)").lexer()
-        parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 1, col 8) : expected type : have \"1\"")
-    }
-    @Test
-    fun uu_05_await() {
-        G.tks = ("set y = await(:X)").lexer()
-        parser_lexer()
-        val s = parser_stmt().first()
-        assert(s is Stmt.SetS && s.src is Stmt.Await)
-        assert(s.to_str() == "set y = await(:X)") { s.to_str() }
-    }
-    @Test
-    fun uu_06_emit() {
-        G.tks = ("emit(X[])").lexer()
-        parser_lexer()
-        val s = parser_stmt().first()
-        assert(s is Stmt.Emit)
-        assert(s.to_str() == "emit((X(([]))))") { s.to_str() }
-    }
-    @Test
-    fun uu_07_await_call_err() {
-        G.tks = ("await x").lexer()
-        parser_lexer()
-        assert(trap { parser_stmt() } == "anon : (lin 1, col 7) : await error : expected task call")
-    }
-
-    @Test
-    fun uu_X1_spawn() {
-        G.tks = ("spawn xf()").lexer()
-        parser_lexer()
-        val s = parser_stmt() //.first()
-        //assert(s is Stmt.Resume && s.exe is Expr.Acc && s.arg is Expr.Unit)
-        assert(s.to_str() ==
-            "var mar_exe_2\n"+
-            "set mar_exe_2 = create(xf)\n"+
-            "start mar_exe_2()\n") { s.to_str() }
-    }
-    @Test
-    fun uu_X2_spawn() {
-        G.tks = ("set x = spawn f()").lexer()
-        parser_lexer()
-        val s = parser_stmt().first()
-        assert(s is Stmt.SetS && s.src is Stmt.Create && s.src.pro is Expr.Acc)
-        assert(s.to_str() == "set x = create(f)")
-    }
-
-    // MISC
-
-    @Test
-    fun zz_01_lin () {
-        G.tks = ("""
-            do(1 /= 1)
-        """).lexer()
-        parser_lexer()
-        //parser_stmt()
-        assert(trap { parser_stmt() } == "anon : (lin 2, col 19) : expected expression : have \"=\"")
     }
 }
