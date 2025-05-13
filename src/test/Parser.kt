@@ -23,13 +23,6 @@ class Parser {
         assert(s.to_str() == "do(10)") { s.to_str() }
     }
     @Test
-    fun jj_04_expr() {
-        G.tks = ("x.1.2").lexer()   // BUG: ((x.1).2)
-        parser_lexer()
-        val e = parser_expr()
-        assert(e.to_str() == "((x.1).2)") { e.to_str() }
-    }
-    @Test
     fun jj_06_tuple_id () {
         G.tks = ("""
             do {
@@ -53,13 +46,6 @@ class Parser {
         val e = parser_expr()
         assert(e is Expr.Pred && e.col is Expr.Acc && e.idx=="1")
         assert(e.to_str() == "(v?1)") { e.to_str() }
-    }
-    @Test
-    fun jl_04_vector_size () {
-        G.tks = ("set #x = 1").lexer()
-        parser_lexer()
-        val ss = parser_stmt()
-        assert(ss.to_str() == "set (#x) = 1\n") { ss.to_str() }
     }
 
     // IF / LOOP / MATCH

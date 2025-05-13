@@ -582,14 +582,6 @@ fun gen_proto_spawn (tk: Tk, N: Int, blk: List<Stmt>): List<Stmt> {
 
 fun parser_stmt (set: Expr?=null): List<Stmt> {
     return when {
-        accept_fix("escape") -> {
-            val tk0 = G.tk0!!
-            accept_fix_err("(")
-            check_enu_err("Type")
-            val e = parser_expr() as Expr.Cons
-            accept_fix_err(")")
-            listOf(Stmt.Escape(tk0, e))
-        }
         accept_fix("await") -> {
             val tk0 = G.tk0 as Tk.Fix
             val awt: Stmt.Await = when {
