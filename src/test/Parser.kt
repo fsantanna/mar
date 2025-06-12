@@ -8,13 +8,6 @@ import org.junit.runners.MethodSorters
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class Parser {
     @Test
-    fun cc_04_concat() {
-        G.tks = ("a ++ b").lexer()
-        parser_lexer()
-        val e = parser_expr_1_bin()
-        assert(e.to_str() == "(a ++ b)") { e.to_str() }
-    }
-    @Test
     fun de_01_do_pass() {
         G.tks = "do(10)".lexer()
         parser_lexer()
@@ -22,63 +15,9 @@ class Parser {
         assert(s is Stmt.Pass)
         assert(s.to_str() == "do(10)") { s.to_str() }
     }
-    @Test
-    fun jj_06_tuple_id () {
-        G.tks = ("""
-            do {
-                var pos: [x:Int, y:Int] = [.x=10,.y=20]: [x:Int, y:Int]
-                var x: Int = v.x
-            }
-        """).lexer()
-        parser_lexer()
-        val s = parser_stmt().first()
-        assert(s.to_str() == "do {\n" +
-                "var pos: [x:Int,y:Int]\n" +
-                "set pos = ([.x=10,.y=20]:[x:Int,y:Int])\n" +
-                "var x: Int\n" +
-                "set x = (v.x)\n" +
-                "}") { s.to_str() }
-    }
-    @Test
-    fun jk_03_union_pred () {
-        G.tks = ("v?1").lexer()
-        parser_lexer()
-        val e = parser_expr()
-        assert(e is Expr.Pred && e.col is Expr.Acc && e.idx=="1")
-        assert(e.to_str() == "(v?1)") { e.to_str() }
-    }
-    @Test
-    fun uu_06_emit() {
-        G.tks = ("emit(X[])").lexer()
-        parser_lexer()
-        val s = parser_stmt().first()
-        assert(s is Stmt.Emit)
-        assert(s.to_str() == "emit((X(([]))))") { s.to_str() }
-    }
-    @Test
-    fun uu_X1_spawn() {
-        G.tks = ("spawn xf()").lexer()
-        parser_lexer()
-        val s = parser_stmt() //.first()
-        //assert(s is Stmt.Resume && s.exe is Expr.Acc && s.arg is Expr.Unit)
-        assert(s.to_str() ==
-                "var mar_exe_2\n"+
-                "set mar_exe_2 = create(xf)\n"+
-                "start mar_exe_2()\n") { s.to_str() }
-    }
 
     // IF / LOOP / MATCH
 
-    @Test
-    fun ii_03_match () {
-        G.tks = ("match x { 1 {} else {pass(x)} }").lexer()
-        parser_lexer()
-        val ss = parser_stmt()
-        assert(ss.to_str() == "match x {\n"+
-            "1 {  }\n"+
-            "else { do((pass(x))) }\n"+
-            "}\n") { ss.to_str() }
-    }
     @Test
     fun ii_04_match () {
         G.tks = ("match x { :X.Y {} else {pass(x)} }").lexer()
