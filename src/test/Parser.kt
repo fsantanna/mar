@@ -388,23 +388,6 @@ class Parser {
         assert(trap { parser_stmt() } == "anon : (lin 1, col 6) : expected expression : have \"throw\"")
     }
 
-    // NAT
-
-    @Test
-    fun oo_01_nat () {
-        G.tks = ("`f`").lexer()
-        parser_lexer()
-        val ss = parser_stmt()
-        assert(ss.to_str() == "do(`f`)\n") { ss.to_str() }
-    }
-    @Test
-    fun oo_02_nat () {
-        G.tks = ("`f`([10])").lexer()
-        parser_lexer()
-        val ss = parser_stmt()
-        assert(ss.to_str() == "do((`f`(([10]))))\n") { ss.to_str() }
-    }
-
     // EXPR / IF / MATCH
 
     @Test

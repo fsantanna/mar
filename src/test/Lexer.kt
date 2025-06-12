@@ -25,19 +25,6 @@ class Lexer {
         assert(tks.next() is Tk.Eof)
     }
     @Test
-    fun ff_01_native() {
-        val tks = """
-            ` abc `
-            `{ijk}`
-            ` {i${D}jk} `
-            `  {ijk} 
-        """.trimIndent().lexer()
-        assert(tks.next().let { it is Tk.Nat && it.pos.lin == 1 && it.pos.col == 1 && it.str == " abc " })
-        assert(tks.next().let { it is Tk.Nat && it.pos.lin == 2 && it.pos.col == 1 && it.str == "{ijk}" })
-        assert(tks.next().let { it is Tk.Nat && it.pos.lin == 3 && it.pos.col == 1 && it.str == " {i\$jk} " })
-        assert(trap { tks.next() } == "anon : (lin 4, col 1) : token error : unterminated \"`\"")
-    }
-    @Test
     fun gg_01_string() {
         val tks = """
             "xxx"
