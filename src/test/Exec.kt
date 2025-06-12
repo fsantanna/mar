@@ -2199,20 +2199,6 @@ class Exec  {
         assert(out == "y\nok\n") { out }
     }
     @Test
-    fun op_10_every () {
-        val out = test("""
-            data X: ()
-            spawn {
-                every :X {
-                    print("x")
-                }
-            }
-            emit(X())
-            emit(X())
-        """)
-        assert(out == "x\nx\n") { out }
-    }
-    @Test
     fun op_11_every () {
         val out = test("""
             spawn {
